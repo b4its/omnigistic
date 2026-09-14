@@ -1,0 +1,12 @@
+# Pakai:  docker compose -f docker-compose.yml -f docker-compose.db.yml --profile db up -d
+# Frontend Svelte + Backend FastAPI + Postgres (db) — backend KONEK DB sungguhan (SKIP_DB=0),
+# seed via service db-seed; chat/qa jatuh ke baris DB, tetap fallback JSON bila DB tumbang.
+# (db & db-seed berasal dari file dasar lewat profile "db".)
+name: omnigistic
+
+services:
+  backend:
+    environment:
+      SKIP_DB: "0"
+      DATABASE_URL: postgresql://omnigistic:omnigistic@db:5432/omnigistic
+

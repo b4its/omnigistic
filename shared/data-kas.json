@@ -1,0 +1,1605 @@
+{
+  "meta": {
+    "title": "Omnigistic",
+    "source": "ISCEA Global Case Competition 2026 — 'Delivering Promises'",
+    "generated": "2026-09-07T11:04:34.243Z"
+  },
+  "hubs": [
+    {
+      "name": "Jakarta",
+      "region": "Java",
+      "capacityM": 0.563,
+      "utilizationPct": 90.4,
+      "outlets": 420,
+      "code": "JKT"
+    },
+    {
+      "name": "Bekasi-Karawang",
+      "region": "Java",
+      "capacityM": 0.43,
+      "utilizationPct": 69.6,
+      "outlets": 300,
+      "code": "BKS"
+    },
+    {
+      "name": "Bandung",
+      "region": "Java",
+      "capacityM": 0.328,
+      "utilizationPct": 68.9,
+      "outlets": 240,
+      "code": "BDG"
+    },
+    {
+      "name": "Semarang",
+      "region": "Java",
+      "capacityM": 0.287,
+      "utilizationPct": 65.9,
+      "outlets": 180,
+      "code": "SMG"
+    },
+    {
+      "name": "Yogyakarta",
+      "region": "Java",
+      "capacityM": 0.184,
+      "utilizationPct": 62.5,
+      "outlets": 120,
+      "code": "YOG"
+    },
+    {
+      "name": "Solo",
+      "region": "Java",
+      "capacityM": 0.174,
+      "utilizationPct": 60.9,
+      "outlets": 110,
+      "code": "SOL"
+    },
+    {
+      "name": "Surabaya",
+      "region": "Java",
+      "capacityM": 0.43,
+      "utilizationPct": 71.8,
+      "outlets": 300,
+      "code": "SUB"
+    },
+    {
+      "name": "Malang",
+      "region": "Java",
+      "capacityM": 0.184,
+      "utilizationPct": 65,
+      "outlets": 110,
+      "code": "MLG"
+    },
+    {
+      "name": "Denpasar",
+      "region": "Bali & Nusa Tenggara",
+      "capacityM": 0.225,
+      "utilizationPct": 59.3,
+      "outlets": 150,
+      "code": "DPS"
+    },
+    {
+      "name": "Mataram",
+      "region": "Bali & Nusa Tenggara",
+      "capacityM": 0.102,
+      "utilizationPct": 49.5,
+      "outlets": 75,
+      "code": "MTR"
+    },
+    {
+      "name": "Medan",
+      "region": "Sumatra",
+      "capacityM": 0.307,
+      "utilizationPct": 61.5,
+      "outlets": 240,
+      "code": "MDN"
+    },
+    {
+      "name": "Pekanbaru",
+      "region": "Sumatra",
+      "capacityM": 0.205,
+      "utilizationPct": 56.2,
+      "outlets": 150,
+      "code": "PKB"
+    },
+    {
+      "name": "Palembang",
+      "region": "Sumatra",
+      "capacityM": 0.225,
+      "utilizationPct": 57.3,
+      "outlets": 170,
+      "code": "PLB"
+    },
+    {
+      "name": "Bandar Lampung",
+      "region": "Sumatra",
+      "capacityM": 0.184,
+      "utilizationPct": 52.5,
+      "outlets": 130,
+      "code": "BLL"
+    },
+    {
+      "name": "Padang",
+      "region": "Sumatra",
+      "capacityM": 0.154,
+      "utilizationPct": 51,
+      "outlets": 100,
+      "code": "PDG"
+    },
+    {
+      "name": "Banda Aceh",
+      "region": "Sumatra",
+      "capacityM": 0.102,
+      "utilizationPct": 40.5,
+      "outlets": 70,
+      "code": "BTJ"
+    },
+    {
+      "name": "Banjarmasin",
+      "region": "Kalimantan",
+      "capacityM": 0.184,
+      "utilizationPct": 47.5,
+      "outlets": 140,
+      "code": "BDJ"
+    },
+    {
+      "name": "Balikpapan",
+      "region": "Kalimantan",
+      "capacityM": 0.164,
+      "utilizationPct": 47.8,
+      "outlets": 120,
+      "code": "BPN"
+    },
+    {
+      "name": "Pontianak",
+      "region": "Kalimantan",
+      "capacityM": 0.133,
+      "utilizationPct": 45,
+      "outlets": 100,
+      "code": "PNK"
+    },
+    {
+      "name": "Makassar",
+      "region": "Sulawesi",
+      "capacityM": 0.256,
+      "utilizationPct": 48.6,
+      "outlets": 180,
+      "code": "MKS"
+    },
+    {
+      "name": "Manado",
+      "region": "Sulawesi",
+      "capacityM": 0.123,
+      "utilizationPct": 41.2,
+      "outlets": 75,
+      "code": "MDO"
+    },
+    {
+      "name": "Ambon",
+      "region": "Maluku & Papua",
+      "capacityM": 0.072,
+      "utilizationPct": 32.1,
+      "outlets": 55,
+      "code": "AMQ"
+    },
+    {
+      "name": "Jayapura",
+      "region": "Maluku & Papua",
+      "capacityM": 0.082,
+      "utilizationPct": 28.1,
+      "outlets": 55,
+      "code": "DJJ"
+    }
+  ],
+  "regions": [
+    "Java",
+    "Sumatra",
+    "Kalimantan",
+    "Sulawesi",
+    "Bali & Nusa Tenggara",
+    "Maluku & Papua"
+  ],
+  "monthlyDemand": [
+    {
+      "month": "Jan",
+      "totalM": 78,
+      "ecommerceM": 46
+    },
+    {
+      "month": "Feb",
+      "totalM": 82,
+      "ecommerceM": 61
+    },
+    {
+      "month": "Mar",
+      "totalM": 92,
+      "ecommerceM": 58
+    },
+    {
+      "month": "Apr",
+      "totalM": 105,
+      "ecommerceM": 64
+    },
+    {
+      "month": "May",
+      "totalM": 92,
+      "ecommerceM": 54
+    },
+    {
+      "month": "Jun",
+      "totalM": 98,
+      "ecommerceM": 60
+    },
+    {
+      "month": "Jul",
+      "totalM": 101,
+      "ecommerceM": 62
+    },
+    {
+      "month": "Aug",
+      "totalM": 105,
+      "ecommerceM": 65
+    },
+    {
+      "month": "Sep",
+      "totalM": 98,
+      "ecommerceM": 57
+    },
+    {
+      "month": "Oct",
+      "totalM": 82,
+      "ecommerceM": 40
+    },
+    {
+      "month": "Nov",
+      "totalM": 86,
+      "ecommerceM": 41
+    },
+    {
+      "month": "Dec",
+      "totalM": 91,
+      "ecommerceM": 43
+    }
+  ],
+  "financial": [
+    {
+      "year": 2020,
+      "fulfilmentT": 32.34,
+      "shippingT": 33.76,
+      "netSalesT": 213.64
+    },
+    {
+      "year": 2021,
+      "fulfilmentT": 41.51,
+      "shippingT": 42.38,
+      "netSalesT": 259.62
+    },
+    {
+      "year": 2022,
+      "fulfilmentT": 46.97,
+      "shippingT": 46.14,
+      "netSalesT": 284
+    },
+    {
+      "year": 2023,
+      "fulfilmentT": 50.08,
+      "shippingT": 49.46,
+      "netSalesT": 317.63
+    }
+  ],
+  "networkGrowth": [
+    {
+      "item": "Network Partner",
+      "v2020": 20,
+      "v2023": 478
+    },
+    {
+      "item": "P/D Outlets",
+      "v2020": 750,
+      "v2023": 2500
+    },
+    {
+      "item": "Regional Hub",
+      "v2020": 10,
+      "v2023": 23
+    },
+    {
+      "item": "Line-Haul Vehicles",
+      "v2020": 545,
+      "v2023": 840
+    },
+    {
+      "item": "Self-owned Vehicles",
+      "v2020": 194,
+      "v2023": 260
+    },
+    {
+      "item": "Auto Sorting Machines",
+      "v2020": 0,
+      "v2023": 7
+    }
+  ],
+  "ambiguousAddresses": [
+    {
+      "street": "Jl. Raya Jakarta-Bogor No.12",
+      "city": "Kabupaten Bogor",
+      "district": "Cibinong",
+      "coordinate": "-6.4817, 106.8526"
+    },
+    {
+      "street": "Jl. Raya Jakarta-Bogor No.12",
+      "city": "Kota Depok",
+      "district": "Sukamaju",
+      "coordinate": "-6.4035, 106.8174"
+    },
+    {
+      "street": "Jl. Raya Jakarta-Bogor No.12",
+      "city": "Kota Tangerang Selatan",
+      "district": "Rempoa",
+      "coordinate": "-6.2934, 106.7551"
+    }
+  ],
+  "routeCompare": [
+    {
+      "type": "Non-COD",
+      "packages": 8,
+      "distanceKm": 5.3,
+      "durationMin": 75,
+      "productivity": 6.4
+    },
+    {
+      "type": "COD",
+      "packages": 8,
+      "distanceKm": 5.3,
+      "durationMin": 138,
+      "productivity": 3.48
+    }
+  ],
+  "courierQuotes": [
+    {
+      "city": "Jakarta",
+      "quote": "Kalau sampai rumah tapi orangnya belum ada, kita mau tidak mau harus menunggu. Kadang lima menit, kadang bisa sampai 15-20 menit."
+    },
+    {
+      "city": "Surabaya",
+      "quote": "Kalau COD lebih susah. Kita bukan cuma antar paket, tapi harus tunggu orangnya siap bayar. Kalau harus menunggu, rute berikutnya ikut terlambat."
+    },
+    {
+      "city": "Bandung",
+      "quote": "Di hari biasa mungkin masih bisa dikejar. Tapi kalau paket sedang banyak, waktu 10 menit di satu rumah bisa membuat kita kehilangan beberapa delivery berikutnya."
+    }
+  ],
+  "fleet": {
+    "motorcycles": 12500,
+    "vans": 280,
+    "trucks": 560,
+    "lineHaul": 840,
+    "selfOwned": 260,
+    "totalArmada": 14180,
+    "evTarget": 200,
+    "lastMileMotorPct": 70,
+    "motorcycleSharePct": 93.7
+  },
+  "kpiTargets": [
+    {
+      "kpi": "Utilisasi hub timur",
+      "baseline": "41.5%",
+      "target": "≥55% (24 bulan)"
+    },
+    {
+      "kpi": "Complaint rate",
+      "baseline": "5.5/juta",
+      "target": "<3/juta"
+    },
+    {
+      "kpi": "Rute COD (8 paket)",
+      "baseline": "138 menit",
+      "target": "≤100 menit"
+    },
+    {
+      "kpi": "Produktivitas COD",
+      "baseline": "3.48/jam",
+      "target": "≥4.8/jam"
+    },
+    {
+      "kpi": "Forecast accuracy",
+      "baseline": "-",
+      "target": "MAPE <10%"
+    },
+    {
+      "kpi": "Eksposur per platform",
+      "baseline": "57.7%",
+      "target": "<20%"
+    },
+    {
+      "kpi": "Armada bersih",
+      "baseline": "0%",
+      "target": "Roadmap 3 fase; 14.180 basis (13.340 motor+van+truk)"
+    }
+  ],
+  "rootCauses": [
+    {
+      "code": "RC1",
+      "title": "Unchecked Expansion Without Demand Alignment",
+      "titleId": "Ekspansi tak selaras",
+      "symptoms": "Fulfilment expense naik 54,9% (Rp32,34T→Rp50,08T) vs net sales naik 48,7%. Rugi 2023. Utilisasi Jakarta 90,4% vs Jayapura 28,1%.",
+      "solution": "Model hibrida berbasis utilisasi wilayah: Jawa tetap Direct Operation, Kalimantan-Sulawesi Regional Sponsor bertahap, Maluku-Papua penuh. Digital Twin 23 hub.",
+      "kpiBaseline": "Timur 41,5%",
+      "kpiTarget": "Timur ≥55% (24 bulan)"
+    },
+    {
+      "code": "RC2",
+      "title": "Fixed Capacity Amid Volatile Concentrated Demand",
+      "titleId": "Kapasitas fixed + demand tunggal",
+      "symptoms": "Fluktuasi 78-105M/bulan (34,6%). E-commerce turun 29,8% saat suspensi TikTok Shop Sep-Okt 2023. Hub Jawa overload saat Double 12 2022.",
+      "solution": "Demand Forecasting per hub + kapasitas elastis 3 tingkat (lembah/normal/puncak) + diversifikasi sumber demand.",
+      "kpiBaseline": "57,7% terpusat e-commerce",
+      "kpiTarget": "MAPE <10%, eksposur <20%/platform"
+    },
+    {
+      "code": "RC3",
+      "title": "Manual Last-Mile and Cash-Based Processes",
+      "titleId": "Last-mile manual-cash",
+      "symptoms": "Rute COD 138 min vs non-COD 75 min (+84%). Produktivitas COD 3,48 paket/jam vs 6,4 (54,3%). Rekonsiliasi kas kompleks rawan human error.",
+      "solution": "Predictive COD + clustering rute COD + PUDO Network + digitalisasi rekonsiliasi. Kompensasi kurir per tugas layanan.",
+      "kpiBaseline": "COD 138 min",
+      "kpiTarget": "COD ≤100 min, kapasitas +38%"
+    },
+    {
+      "code": "RC4",
+      "title": "Unstandardized Data Without External Visibility",
+      "titleId": "Data kotor + buta multimoda",
+      "symptoms": "Complaint rate 5,5 per juta paket. Alamat ambigu (Figure 1: jalan sama di 3 kota berbeda). Koordinasi multimoda makin kompleks.",
+      "solution": "Address Intelligence (NLP + fuzzy matching + geotag wajib) + Control Tower multimoda + Modal Shift Optimizer.",
+      "kpiBaseline": "5,5/juta, 0% geotag",
+      "kpiTarget": "<3/juta, ≥95% checkout geotag"
+    },
+    {
+      "code": "RC5",
+      "title": "Organizational Capability Lagging Growth",
+      "titleId": "Kapabilitas tertinggal",
+      "symptoms": "Diakui dalam kasus: 'lacked deep operational expertise, management experience, and technical knowledge'. Model bisnis masih 'under review'.",
+      "solution": "GC Academy + tim data science internal + Digital Twin sebagai alat uji keputusan.",
+      "kpiBaseline": "0% tersertifikasi",
+      "kpiTarget": "100% manajer hub tersertifikasi dalam 18 bulan"
+    },
+    {
+      "code": "RC6",
+      "title": "Sustainability Treated as Asset Purchase, Not System Design",
+      "titleId": "Keberlanjutan bukan sistem",
+      "symptoms": "Target 200 EV hanya 1,4% dari 14.180 armada. Pendekatan berbasis pembelian tidak mengubah keputusan operasional.",
+      "solution": "Carbon accounting per rute + Modal shift ke laut + Roadmap 3 fase: baseline→50 EV→200 EV + replacement policy 8 tahun.",
+      "kpiBaseline": "0% armada bersih",
+      "kpiTarget": "Emisi/paket -20% per 2027"
+    }
+  ],
+  "fallbackInsights": {
+    "PUSAT": {
+      "greeting": "Halo Dalila. Pendapatan naik 48,7% sejak 2020, tapi biaya fulfilment naik 54,9% — lebih cepat 6,2 poin. EBIT baru pulih di 2024. Mau lihat detail biaya per kategori?",
+      "insights": [
+        {
+          "title": "Biaya Tumbuh Lebih Cepat",
+          "message": "Fulfilment expense naik 54,9% vs net sales 48,7%. Selisih 6,2 poin didorong ekspansi network partner 23,9x lipat (20→478).",
+          "priority": "high"
+        },
+        {
+          "title": "Jakarta Overload",
+          "message": "Jakarta 90,4% — di atas ambang. Sementara Jayapura hanya 28,1%. Selisih 62,3 poin.",
+          "priority": "high"
+        },
+        {
+          "title": "Digital Twin Siap",
+          "message": "Simulasi Direct Operation vs Regional Sponsor sudah bisa dicoba. Geser slider untuk lihat dampak ke biaya dan utilisasi.",
+          "priority": "medium"
+        }
+      ]
+    },
+    "HUB": {
+      "greeting": "Halo Marwah, hub Bandung hari ini 68,9% — 3,9 poin di atas ambang. Demand diprediksi naik 8% minggu depan. Siapkan buffer kurir musiman.",
+      "insights": [
+        {
+          "title": "Demand Naik",
+          "message": "Berdasarkan pola 2023, demand Bandung diperkirakan naik dalam waktu dekat.",
+          "priority": "high"
+        },
+        {
+          "title": "Utilisasi Di Atas Ambang",
+          "message": "68,9% > 65%. Perlu perhatian khusus untuk mencegah overload.",
+          "priority": "high"
+        },
+        {
+          "title": "Bandingkan dengan Hub Lain",
+          "message": "Hub Jawa rata-rata 69,4%. Bandung masih di bawah Surabaya (71,8%) tapi di atas Semarang (65,9%).",
+          "priority": "medium"
+        }
+      ]
+    },
+    "KURIR": {
+      "greeting": "Halo Baits! Rute non-COD hari ini selesai ~75 menit. Tapi COD makan 138 menit — 84% lebih lama. Saranku: klusterkan paket COD di rute terpisah.",
+      "insights": [
+        {
+          "title": "COD 84% Lebih Lambat",
+          "message": "8 paket COD butuh 138 menit vs non-COD 75 menit. Produktivitas turun dari 6,4 ke 3,48 paket/jam.",
+          "priority": "high"
+        },
+        {
+          "title": "Slot Confirmation",
+          "message": "Aktifkan notifikasi 3 tahap untuk kurangi waktu tunggu 10-20 menit per upaya gagal.",
+          "priority": "medium"
+        },
+        {
+          "title": "Digital Payment",
+          "message": "Rekonsiliasi digital kurangi human error -80%.",
+          "priority": "medium"
+        }
+      ]
+    },
+    "DATA": {
+      "greeting": "Virgiawan, komplain turun didorong perbaikan alamat. 3 alamat ambigu baru perlu verifikasi — Jl. Raya Jakarta-Bogor No.12 di Cibinong, Depok, dan Tangsel.",
+      "insights": [
+        {
+          "title": "Masalah Alamat",
+          "message": "'Jl. Raya Jakarta-Bogor No.12' muncul di 3 lokasi berbeda berjarak puluhan km.",
+          "priority": "high"
+        },
+        {
+          "title": "Complaint Rate",
+          "message": "5,5 per juta paket = ~6.105 kasus/tahun dari volume 1.110 juta paket.",
+          "priority": "high"
+        },
+        {
+          "title": "Armada & Emisi",
+          "message": "Motor 93,7% armada (12.500 unit). Target 200 EV hanya 1,4% dari total 14.180 unit.",
+          "priority": "medium"
+        }
+      ]
+    }
+  },
+  "fallbackChatQA": [
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "biaya",
+        "biaya naik",
+        "fulfilment expense",
+        "kenapa biaya"
+      ],
+      "question": "Kenapa biaya naik lebih cepat dari sales?",
+      "answer": "Fulfilment expense naik 54,9% (Rp32,34T→Rp50,08T) dari 2020 ke 2023, sementara net sales cuma naik 48,7% (Rp213,64T→Rp317,63T). Selisih 6,2 poin ini didorong ekspansi network partner 23,9x lipat (20→478) tanpa uji kesinambungan demand.",
+      "followups": [
+        "Apa penyebab utamanya?",
+        "Bagaimana solusinya?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "digital twin",
+        "apa itu"
+      ],
+      "question": "Apa itu Digital Twin?",
+      "answer": "Simulator yang menguji skenario Direct Operation Model vs Regional Sponsor Model sebelum keputusan diambil. Geser slider untuk melihat dampak ke biaya tetap, utilisasi, dan on-time rate per region.",
+      "followups": [
+        "Apa beda kedua model itu?",
+        "Region mana yang cocok untuk sponsor model?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "jakarta",
+        "jakarta overload",
+        "kenapa jakarta",
+        "overload"
+      ],
+      "question": "Kenapa Jakarta overload?",
+      "answer": "Hub Jakarta punya utilisasi 90,4% (tertinggi dari 23 hub), kadang melebihi kapasitas terutama saat festival belanja seperti Double 12 2022. Sementara Jayapura hanya 28,1% — selisih 62,3 poin.",
+      "followups": [
+        "Hub mana yang bisa menampung overflow?",
+        "Kenapa ketimpangan ini terjadi?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "direct operation",
+        "regional sponsor",
+        "beda model"
+      ],
+      "question": "Apa beda Direct Operation dan Regional Sponsor?",
+      "answer": "Direct Operation: kantor pusat memiliki dan mengelola semua aset (hub, outlet, armada) secara terpusat. Regional Sponsor: kemitraan lokal dengan partisipasi ekuitas dan otonomi operasional lebih besar, tapi kantor pusat kehilangan kendali penuh atas strategi harga lokal.",
+      "followups": [
+        "Model mana yang direkomendasikan?",
+        "Apa risiko transisinya?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "untung",
+        "rugi",
+        "profit"
+      ],
+      "question": "Apakah GC Logistics untung atau rugi?",
+      "answer": "GC Logistics mencatat rugi di 2023, lalu EBIT yang disesuaikan kembali positif di 2024. Rasio biaya terhadap penjualan relatif stabil (30,9%→31,3%), tapi ekspansi jaringan yang terlalu cepat 2021-2023 membuat operasional jadi kompleks.",
+      "followups": [
+        "Apa yang menyebabkan kerugian 2023?",
+        "Bagaimana proyeksi ke depan?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "pangsa pasar",
+        "market share"
+      ],
+      "question": "Berapa pangsa pasar GC Logistics?",
+      "answer": "20,6% pangsa pasar berdasarkan volume paket di 2024, bertahan sebagai market leader selama lima tahun berturut-turut. Volume naik dari 1,14 miliar paket (2023) ke 1,46 miliar paket (2024), pertumbuhan 28%.",
+      "followups": [
+        "Bagaimana tren volume paket bulanan?",
+        "Siapa kompetitor utamanya?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "network partner",
+        "partner naik"
+      ],
+      "question": "Kenapa network partner naik drastis?",
+      "answer": "Network partner naik 23,9x lipat dari 20 (2020) ke 478 (2023), didorong lonjakan demand pandemi dan pertumbuhan e-commerce. Ekspansi ini lebih dari dua kali lipat ukuran jaringan dalam tiga tahun, tapi biaya operasional tumbuh lebih cepat dari penjualan.",
+      "followups": [
+        "Apa dampaknya ke biaya?",
+        "Bagaimana solusi Omnigistic?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "target",
+        "roadmap",
+        "kpi"
+      ],
+      "question": "Apa target roadmap Omnigistic?",
+      "answer": "Utilisasi hub timur ditargetkan naik dari 41,5% ke minimal 55% dalam 24 bulan, complaint rate turun dari 5,5 ke di bawah 3 per juta paket, dan rute COD dipangkas dari 138 menit ke maksimal 100 menit.",
+      "followups": [
+        "Lihat detail KPI lengkap",
+        "Bagaimana tahapan implementasinya?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "penulis",
+        "siapa",
+        "kasus"
+      ],
+      "question": "Siapa yang menulis kasus ini?",
+      "answer": "Studi kasus ini ditulis oleh Lala Ayu Kantari dan Prof. I Nyoman Pujawan dari ISCEA Indonesia, untuk kompetisi tingkat negara ISCEA Global Case Competition 2026. Data dan deskripsi dalam kasus tidak mewakili perusahaan nyata.",
+      "followups": [
+        "Apa tema kompetisi tahun ini?",
+        "Apa 6 pertanyaan strategis di kasus ini?"
+      ]
+    },
+    {
+      "role": "HUB",
+      "keywords": [
+        "demand fluktuasi",
+        "naik turun",
+        "kenapa demand"
+      ],
+      "question": "Kenapa demand naik turun?",
+      "answer": "Demand bulanan berfluktuasi antara 78 juta (Januari) sampai 105 juta paket (April dan Agustus), rentang 34,6%. E-commerce demand lebih volatil lagi — turun 29,8% saat suspensi TikTok Shop di September-Oktober 2023.",
+      "followups": [
+        "Apa penyebab shock TikTok Shop?",
+        "Bagaimana cara mengantisipasinya?"
+      ]
+    },
+    {
+      "role": "HUB",
+      "keywords": [
+        "alihkan",
+        "apa itu",
+        "balancing",
+        "load",
+        "load balancing"
+      ],
+      "question": "Apa itu Load Balancing?",
+      "answer": "Mengalihkan sebagian paket dari hub yang penuh ke hub lain yang masih longgar. Contoh nyata: saat Double 12 2022, Hub Jakarta 1 mengalihkan sebagian paket ke hub lain karena kapasitasnya penuh.",
+      "followups": [
+        "Hub mana yang jadi tujuan overflow?",
+        "Berapa kapasitas Bandung sekarang?"
+      ]
+    },
+    {
+      "role": "HUB",
+      "keywords": [
+        "bandung",
+        "kapasitas bandung",
+        "utilisasi bandung"
+      ],
+      "question": "Berapa utilisasi hub Bandung?",
+      "answer": "Hub Bandung punya kapasitas 0,328 juta paket/hari dengan utilisasi 68,9%, melayani 240 titik pickup/delivery. Ini di atas ambang 65% yang butuh perhatian, tapi masih di bawah Jakarta (90,4%).",
+      "followups": [
+        "Bagaimana dibanding hub Jawa lain?",
+        "Kapan perlu buffer tambahan?"
+      ]
+    },
+    {
+      "role": "HUB",
+      "keywords": [
+        "buffer",
+        "kurir musiman",
+        "kapan"
+      ],
+      "question": "Kapan hub perlu buffer kurir musiman?",
+      "answer": "Sistem menggunakan tiga tingkat kapasitas: lembah (78 juta paket, kurir inti saja), normal (92,5 juta), dan puncak (105 juta + buffer 15%, aktivasi kurir sewa). Aktivasi berbasis forecast, bukan menunggu kejadian overload.",
+      "followups": [
+        "Bagaimana cara forecast bekerja?",
+        "Apa yang terjadi kalau kapasitas terlampaui?"
+      ]
+    },
+    {
+      "role": "HUB",
+      "keywords": [
+        "hub timur",
+        "utilisasi rendah",
+        "kenapa timur"
+      ],
+      "question": "Kenapa hub timur utilisasinya rendah?",
+      "answer": "Tujuh hub di Kalimantan, Sulawesi, Maluku, dan Papua rata-rata utilisasinya di bawah 50%. Jayapura terendah di 28,1%. Ini karena kapasitas dibangun mengikuti ekspansi 2021-2023 tanpa penyesuaian dengan demand riil di wilayah tersebut.",
+      "followups": [
+        "Apa solusinya?",
+        "Berapa target utilisasi timur ke depan?"
+      ]
+    },
+    {
+      "role": "HUB",
+      "keywords": [
+        "festival",
+        "belanja",
+        "double 12"
+      ],
+      "question": "Apa yang terjadi saat festival belanja?",
+      "answer": "Rekor tertinggi industri logistik Indonesia bisa menangani lebih dari 3 juta paket per hari saat peak season. Volume yang melonjak membuat proses sortasi melambat dan berdampak ke kepuasan pelanggan, seperti yang terjadi di Double 12 2022.",
+      "followups": [
+        "Bagaimana hub Jawa menghadapinya?",
+        "Apa strategi kapasitas elastis?"
+      ]
+    },
+    {
+      "role": "HUB",
+      "keywords": [
+        "outlet",
+        "pickup delivery bandung"
+      ],
+      "question": "Berapa outlet pickup delivery di hub Bandung?",
+      "answer": "Hub Bandung melayani 240 titik pickup/delivery outlet, di bawah Jakarta (420) tapi setara dengan Surabaya (300) dan Medan (240).",
+      "followups": [
+        "Bagaimana perbandingan dengan hub lain di Jawa?",
+        "Apa rencana ekspansi outlet?"
+      ]
+    },
+    {
+      "role": "HUB",
+      "keywords": [
+        "jawa padat",
+        "kenapa jawa"
+      ],
+      "question": "Kenapa hub Jawa selalu padat?",
+      "answer": "Delapan hub di Pulau Jawa punya kapasitas gabungan 2,58 juta paket per hari dari total 23 hub, dengan rata-rata utilisasi di atas 65%. Ini mencerminkan konsentrasi demand yang tinggi di Jawa dibanding wilayah lain.",
+      "followups": [
+        "Apa strategi redistribusi ke luar Jawa?",
+        "Bagaimana peran Regional Sponsor Model?"
+      ]
+    },
+    {
+      "role": "HUB",
+      "keywords": [
+        "capacity alert",
+        "peringatan"
+      ],
+      "question": "Apa itu Capacity Alert?",
+      "answer": "Sistem peringatan dini yang memberi notifikasi sebelum hub mengalami overload, khususnya untuk hub Jawa yang rata-rata utilisasinya sudah di atas 65%. Ini mencegah pengalihan mendadak seperti kasus Double 12.",
+      "followups": [
+        "Hub mana saja yang di atas ambang saat ini?",
+        "Bagaimana cara kerja notifikasinya?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "cod",
+        "cod lambat",
+        "kenapa cod",
+        "lambat",
+        "lebih lambat",
+        "rute cod"
+      ],
+      "question": "Kenapa COD lebih lambat?",
+      "answer": "Rute COD 8 paket butuh 138 menit, sementara non-COD hanya 75 menit untuk jarak dan jumlah paket yang sama — 84% lebih lambat. Penyebabnya: kurir harus verifikasi penerima, tunggu pembayaran siap, dan tangkap konfirmasi sebelum serah paket.",
+      "followups": [
+        "Berapa produktivitas kurir COD?",
+        "Apa solusi Predictive COD?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "apa itu",
+        "pred",
+        "predictive",
+        "predictive cod"
+      ],
+      "question": "Apa itu Predictive COD?",
+      "answer": "Model yang menghitung probabilitas sukses COD per paket dari riwayat alamat, nilai paket, dan jam antar. Paket berisiko rendah tetap diantar normal, paket berisiko tinggi dialihkan ke titik bayar (PUDO) atau pre-payment digital.",
+      "followups": [
+        "Berapa potensi peningkatan kapasitas?",
+        "Bagaimana cara kerja PUDO?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "produktivitas",
+        "cod vs non cod"
+      ],
+      "question": "Berapa produktivitas kurir COD vs non-COD?",
+      "answer": "Kurir non-COD bisa selesaikan 6,4 paket per jam. Kurir COD hanya 3,48 paket per jam — cuma 54,3% dari produktivitas non-COD, karena waktu tunggu verifikasi dan pembayaran.",
+      "followups": [
+        "Apa dampak jika COD dikurangi?",
+        "Kenapa COD masih dominan di Indonesia?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "menunggu",
+        "tunggu penerima",
+        "kenapa nunggu"
+      ],
+      "question": "Kenapa harus menunggu penerima?",
+      "answer": "Kurir sering harus menunggu karena penerima tidak di rumah, tidak bisa dihubungi, atau butuh waktu siapkan pembayaran COD. Individual attempt bisa makan 10-20 menit saat akses sulit, dan percobaan gagal berarti paket kembali ke titik drop.",
+      "followups": [
+        "Apa solusi notifikasi bertahap?",
+        "Bagaimana slot confirmation bekerja?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "apa itu",
+        "konfirmasi",
+        "slot",
+        "slot confirmation"
+      ],
+      "question": "Apa itu Slot Confirmation?",
+      "answer": "Sistem notifikasi 3 tahap sebelum kurir tiba: H-1 (pemberitahuan), 30-60 menit sebelum tiba (estimasi), dan konfirmasi kesiapan penerima. Tujuannya kurangi waktu tunggu tidak produktif di lokasi.",
+      "followups": [
+        "Berapa potensi penghematan waktu?",
+        "Bagaimana testimoni kurir soal ini?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "cod populer",
+        "kenapa cod masih"
+      ],
+      "question": "Kenapa COD masih populer di Indonesia?",
+      "answer": "Sebagian besar pembeli online belum punya kartu kredit, rekening bank, atau dompet digital untuk transaksi online. Cash tetap jadi metode pembayaran paling dipercaya, meski memperlambat proses pengantaran.",
+      "followups": [
+        "Bagaimana digital payment membantu?",
+        "Apa risiko rekonsiliasi kas manual?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "rekonsiliasi",
+        "kas rumit"
+      ],
+      "question": "Kenapa rekonsiliasi kas rumit?",
+      "answer": "Kurir mengumpulkan uang tunai yang dicatat dan direkonsiliasi sebelum settlement ke merchant. Saat ini hub mengelola sistem manajemen kas ini, tapi prosesnya kompleks, memakan waktu, dan rawan human error.",
+      "followups": [
+        "Apa solusi digital payment?",
+        "Berapa potensi pengurangan error?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "motor",
+        "persen",
+        "armada"
+      ],
+      "question": "Berapa persen paket diantar pakai motor?",
+      "answer": "Sekitar 70% paket last-mile di wilayah perkotaan utama diantar via motor. Dari total 13.340 unit armada, motor mendominasi 93,7% (12.500 unit).",
+      "followups": [
+        "Apa tantangan armada motor?",
+        "Bagaimana rencana transisi ke EV?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "kategori",
+        "paket terbanyak",
+        "fashion"
+      ],
+      "question": "Apa kategori paket terbanyak?",
+      "answer": "Fashion adalah kategori pengiriman terbesar, menyumbang lebih dari 45% dari total volume pengiriman, diikuti dokumen dan produk kecantikan.",
+      "followups": [
+        "Bagaimana pola musiman pengirimannya?",
+        "Apa dampaknya ke rute kurir?"
+      ]
+    },
+    {
+      "role": "DATA",
+      "keywords": [
+        "alamat",
+        "alamat ambigu",
+        "ambigu",
+        "kenapa alamat",
+        "salah alamat"
+      ],
+      "question": "Kenapa alamat bisa ambigu?",
+      "answer": "Nama jalan yang sama, 'Jl. Raya Jakarta-Bogor No.12', muncul di tiga lokasi berbeda: Cibinong (Kabupaten Bogor), Sukamaju (Kota Depok), dan Rempoa (Kota Tangerang Selatan) — berjarak puluhan kilometer satu sama lain.",
+      "followups": [
+        "Bagaimana Address Intelligence mengatasinya?",
+        "Berapa dampaknya ke komplain?"
+      ]
+    },
+    {
+      "role": "DATA",
+      "keywords": [
+        "5.5",
+        "keluhan",
+        "komplain",
+        "tingkat komplain"
+      ],
+      "question": "Berapa tingkat komplain GC Logistics?",
+      "answer": "Rata-rata 5,5 komplain per juta paket di 2023. Dari total volume 1.110 juta paket setahun, ini setara sekitar 6.105 kasus — kecil secara rasio tapi signifikan dalam angka absolut mengingat skala operasi.",
+      "followups": [
+        "Apa penyebab utama komplain?",
+        "Berapa target penurunannya?"
+      ]
+    },
+    {
+      "role": "DATA",
+      "keywords": [
+        "address intelligence",
+        "apa itu"
+      ],
+      "question": "Apa itu Address Intelligence?",
+      "answer": "Sistem NLP yang memecah alamat jadi komponen terstruktur, mencocokkan dengan koordinat menggunakan fuzzy matching, dan mewajibkan geotag saat checkout untuk mencegah kesalahan routing sejak hulu.",
+      "followups": [
+        "Bagaimana cara kerja fuzzy matching?",
+        "Apa target akurasi alamat?"
+      ]
+    },
+    {
+      "role": "DATA",
+      "keywords": [
+        "laut",
+        "udara",
+        "multimoda",
+        "moda"
+      ],
+      "question": "Kenapa GC tidak kelola langsung moda laut dan udara?",
+      "answer": "GC Logistics menggunakan tiga moda transportasi: darat (van, truk, motor, dikelola sendiri), udara (kapasitas belly pesawat komersial plus cargo plane khusus), dan laut (kargo kontainer via mitra pihak ketiga). Pengelolaan moda laut dan udara dipegang penuh oleh mitra, bukan GC.",
+      "followups": [
+        "Apa itu Multimodal Control Tower?",
+        "Bagaimana koordinasi jadi lebih kompleks?"
+      ]
+    },
+    {
+      "role": "DATA",
+      "keywords": [
+        "control tower",
+        "apa itu"
+      ],
+      "question": "Apa itu Multimodal Control Tower?",
+      "answer": "Integrasi API dan GPS/IoT dengan partner laut-udara, menampilkan semua estimasi waktu tiba (ETA) dalam satu dashboard. Sistem memprediksi keterlambatan dan menawarkan alternatif otomatis tanpa GC harus memiliki aset moda tersebut.",
+      "followups": [
+        "Berapa persen shipment yang terintegrasi ETA-nya?",
+        "Bagaimana modal shift optimizer bekerja?"
+      ]
+    },
+    {
+      "role": "DATA",
+      "keywords": [
+        "target ev",
+        "kendaraan listrik",
+        "200"
+      ],
+      "question": "Berapa target kendaraan listrik?",
+      "answer": "Target lebih dari 200 kendaraan bersih di akhir 2026, tapi ini hanya sekitar 1,4% dari total armada 14.180 unit (840 line-haul, 12.500 motor, 280 van, 560 truk). Angka target relatif kecil terhadap skala operasi.",
+      "followups": [
+        "Apa solusi roadmap penyusutan 8 tahun?",
+        "Kenapa motor mendominasi armada?"
+      ]
+    },
+    {
+      "role": "DATA",
+      "keywords": [
+        "keberlanjutan",
+        "sustainability",
+        "strategi"
+      ],
+      "question": "Apa strategi keberlanjutan GC Logistics?",
+      "answer": "Fokus pada dekarbonisasi armada dan kemasan ramah lingkungan: tas pengiriman waterproof yang bisa terurai penuh, dan tas transit yang bisa dipakai berulang untuk sortasi dan transportasi.",
+      "followups": [
+        "Bagaimana roadmap 3 fase keberlanjutan?",
+        "Apa dampak emisi per paket?"
+      ]
+    },
+    {
+      "role": "DATA",
+      "keywords": [
+        "armada",
+        "berapa",
+        "jumlah"
+      ],
+      "question": "Berapa armada GC Logistics?",
+      "answer": "Di akhir 2023: sekitar 12.500 motor, 280 van, dan 560 truk. Total infrastruktur line-haul vehicles naik dari 545 (2020) ke 840 (2023), dengan kendaraan self-owned naik dari 194 ke 260 unit.",
+      "followups": [
+        "Berapa persen last-mile pakai motor?",
+        "Apa target elektrifikasi armada?"
+      ]
+    },
+    {
+      "role": "DATA",
+      "keywords": [
+        "penting",
+        "address intelligence",
+        "juri"
+      ],
+      "question": "Kenapa data address intelligence penting?",
+      "answer": "Masalah alamat adalah akar paling dasar yang meracuni sistem lain — routing salah, prediksi ETA salah, dan komplain naik. Menyelesaikannya di hulu (saat checkout) mencegah biaya berulang di sortasi dan pengantaran.",
+      "followups": [
+        "Apa dampak ke complaint rate?",
+        "Bagaimana ini terhubung ke akar masalah lain?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "shipping expense",
+        "shipping naik",
+        "ongkos kirim"
+      ],
+      "question": "Kenapa shipping expense ikut naik?",
+      "answer": "Shipping expense naik 46,5% (Rp33,76T→Rp49,46T) dari 2020 ke 2023, di bawah fulfilment (+54,9%) tapi tetap di atas pertumbuhan penjualan (+48,7%). Outbound transport, sortasi, dan delivery hubs adalah komponen terbesar biaya logistik.",
+      "followups": [
+        "Apa komponen terbesar biaya?",
+        "Bagaimana Omnigistic menekannya?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "real time",
+        "tracking",
+        "inovasi"
+      ],
+      "question": "Apa inovasi utama GC Logistics?",
+      "answer": "GC Logistics adalah perusahaan logistik pertama di Indonesia yang menyediakan real-time package tracking, fitur terobosan di Asia Tenggara pada masanya. Ini membedakannya dari kompetitor lokal dan menegaskan komitmen pada teknologi.",
+      "followups": [
+        "Apa inovasi lain yang ada?",
+        "Bagaimana Nigi AI berkontribusi?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "62",
+        "38",
+        "merchant",
+        "individu"
+      ],
+      "question": "Berapa proporsi paket dari merchant?",
+      "answer": "Sekitar 62% paket dikumpulkan dari merchant (service points, agen, corporate pickup, marketplace pickup), sementara 38% dari pelanggan individu dan service point lain.",
+      "followups": [
+        "Apa artinya untuk volume B2B?",
+        "Bagaimana struktur jaringan menanganinya?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "regional sponsor",
+        "tradeoff",
+        "kehilangan kendali"
+      ],
+      "question": "Apa trade-off Regional Sponsor?",
+      "answer": "Model sponsor menciptakan kemitraan lokal dengan partisipasi ekuitas dan kemandirian operasional. Keuntungan: scaling lebih cepat & hemat modal. Risiko: kantor pusat tidak bisa mendikte strategi harga lokal atau penyesuaian operasional, dan perlu standardisasi puluhan proses.",
+      "followups": [
+        "Model mana yang direkomendasikan?",
+        "Apa risiko transisinya?"
+      ]
+    },
+    {
+      "role": "PUSAT",
+      "keywords": [
+        "3 juta",
+        "rekor",
+        "industri"
+      ],
+      "question": "Apa arti rekor 3 juta paket per hari?",
+      "answer": "Rekor tertinggi industri logistik Indonesia bisa menangani lebih dari 3 juta paket per hari saat peak season. Rata-rata harian GC sendiri di 2023 sudah 3,04 juta paket dan bulan puncak (April/Agustus) menyentuh ~3,5 juta per hari — kapasitas internal harus dirancang menyerap lonjakan pasar, bukan sekadar rata-rata sendiri.",
+      "followups": [
+        "Apa implikasinya untuk kapasitas?",
+        "Bagaimana load balancing membantu?"
+      ]
+    },
+    {
+      "role": "HUB",
+      "keywords": [
+        "kategori",
+        "fashion",
+        "terbesar"
+      ],
+      "question": "Apa kategori paket terbesar?",
+      "answer": "Fashion adalah kategori pengiriman terbesar, menyumbang lebih dari 45% dari total volume pengiriman, diikuti dokumen dan produk kecantikan (beauty).",
+      "followups": [
+        "Bagaimana pola musimannya?",
+        "Apa implikasinya ke rute?"
+      ]
+    },
+    {
+      "role": "HUB",
+      "keywords": [
+        "collect sort transport deliver",
+        "4 langkah"
+      ],
+      "question": "Apa 4 langkah alur operasi GC?",
+      "answer": "GC Logistics menyalurkan supply chain lewat empat langkah: collect, sort, transport, deliver. Proses ini dijalankan di lanskap kepulauan yang terfragmentasi dan distandardisasi melalui Omnigistic.",
+      "followups": [
+        "Di mana problem terbesar terjadi?",
+        "Bagaimana Omnigistic membantu sertial masing-masing?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "dispute",
+        "miskomunikasi",
+        "sengketa"
+      ],
+      "question": "Kenapa COD rawan dispute?",
+      "answer": "Kurir melaporkan dispute dan salah paham terkait COD yang membuat pengiriman lebih sulit: verifikasi penerima, pembayaran belum siap, keinginan membuka paket dulu — semua menambah waktu tunggu dan menggeser rute berikutnya.",
+      "followups": [
+        "Bagaimana mengurangi dispute?",
+        "Apa solusi digital payment?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "opsi bayar",
+        "unbanked",
+        "kartu kredit"
+      ],
+      "question": "Mengapa banyak pilihan pembayaran penting?",
+      "answer": "Sebagian besar pembeli online belum punya kartu kredit, rekening bank, atau dompet digital. Menyediakan beragam metode pembayaran penting untuk mengatasi keterbatasan akses kanal online dan membantu mitra e-commerce menjangkau lebih banyak pelanggan.",
+      "followups": [
+        "Bagaimana PUDO membantu unbanked?",
+        "Apa peran QRIS?"
+      ]
+    },
+    {
+      "role": "DATA",
+      "keywords": [
+        "kemasan",
+        "sustainable",
+        "tas transit"
+      ],
+      "question": "Apa solusi kemasan berkelanjutan GC Logistics?",
+      "answer": "GC Logistics mengeksplorasi tas pengiriman waterproof yang sepenuhnya bisa terurai (fully degradable) untuk mengurangi dampak kemasan sekali pakai, serta tas transit yang bisa dipakai ulang untuk sortasi dan transportasi.",
+      "followups": [
+        "Bagaimana roadmap kemasannya?",
+        "Apa dampak emisi per paket?"
+      ]
+    },
+    {
+      "role": "DATA",
+      "keywords": [
+        "13340",
+        "13480",
+        "total armada",
+        "perbedaan"
+      ],
+      "question": "Kenapa ada angka armada 13.340 dan 14.180?",
+      "answer": "13.340 mengacu unit kendaraan operasional harian (12.500 motor + 280 van + 560 truk). 14.180 menambahkan infrastruktur line-haul total 840 unit agar klaim target EV 'hanya 1,4% dari total armada' konsisten: 200/(14.180)≈1,41%.",
+      "followups": [
+        "Berapa proporsi motor?",
+        "Apa target elektrifikasi?"
+      ]
+    },
+    {
+      "role": "KURIR",
+      "keywords": [
+        "slot",
+        "notifikasi",
+        "berjenjang"
+      ],
+      "question": "Bagaimana notifikasi berjenjang bekerja?",
+      "answer": "Sistem notifikasi 3 tahap sebelum kurir tiba: H-1 pemberitahuan paket akan diantar besok; 30-60 menit sebelum tiba estimasi + konfirmasi kesiapan; lalu konfirmasi akhir. Tujuannya kurangi waktu tunggu tidak produktif di lokasi (10-20 menit per upaya gagal).",
+      "followups": [
+        "Berapa potensi penghematan waktu?",
+        "Bagaimana testimoni kurir soal ini?"
+      ]
+    }
+  ],
+  "suggestedQuestions": [
+    {
+      "page": "pusat/executive",
+      "question": "Kenapa biaya naik lebih cepat dari sales?",
+      "followups": [
+        "Apa penyebab utamanya?",
+        "Bagaimana solusinya?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "pusat/executive",
+      "question": "Apakah GC Logistics untung atau rugi?",
+      "followups": [
+        "Apa yang menyebabkan kerugian 2023?",
+        "Bagaimana proyeksi ke depan?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "pusat/executive",
+      "question": "Kenapa shipping expense ikut naik?",
+      "followups": [
+        "Apa komponen terbesar biaya?",
+        "Bagaimana Omnigistic menekannya?"
+      ],
+      "order": 3
+    },
+    {
+      "page": "pusat/digital-twin",
+      "question": "Apa itu Digital Twin?",
+      "followups": [
+        "Apa beda Direct Operation dan Regional Sponsor?",
+        "Region mana yang cocok untuk sponsor model?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "pusat/digital-twin",
+      "question": "Apa beda Direct Operation dan Regional Sponsor?",
+      "followups": [
+        "Model mana yang direkomendasikan?",
+        "Apa risiko transisinya?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "pusat/utilization",
+      "question": "Kenapa Jakarta overload?",
+      "followups": [
+        "Hub mana yang bisa menampung overflow?",
+        "Kenapa ketimpangan ini terjadi?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "pusat/utilization",
+      "question": "Kenapa hub timur utilisasinya rendah?",
+      "followups": [
+        "Apa solusinya?",
+        "Berapa target utilisasi timur ke depan?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "pusat/network",
+      "question": "Kenapa network partner naik drastis?",
+      "followups": [
+        "Apa dampaknya ke biaya?",
+        "Bagaimana solusi Omnigistic?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "pusat/network",
+      "question": "Apa arti rekor 3 juta paket per hari?",
+      "followups": [
+        "Apa implikasinya untuk kapasitas?",
+        "Bagaimana load balancing membantu?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "pusat/roi",
+      "question": "Apakah GC Logistics untung atau rugi?",
+      "followups": [
+        "Apa yang menyebabkan kerugian 2023?",
+        "Bagaimana proyeksi ke depan?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "pusat/roi",
+      "question": "Apa target roadmap Omnigistic?",
+      "followups": [
+        "Lihat detail KPI lengkap",
+        "Bagaimana tahapan implementasinya?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "hub/dashboard",
+      "question": "Berapa utilisasi hub Bandung?",
+      "followups": [
+        "Bagaimana dibanding hub Jawa lain?",
+        "Kapan perlu buffer tambahan?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "hub/dashboard",
+      "question": "Kenapa hub Jawa selalu padat?",
+      "followups": [
+        "Apa strategi redistribusi ke luar Jawa?",
+        "Bagaimana peran Regional Sponsor Model?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "hub/forecast",
+      "question": "Kenapa demand naik turun?",
+      "followups": [
+        "Apa penyebab shock TikTok Shop?",
+        "Bagaimana cara mengantisipasinya?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "hub/forecast",
+      "question": "Apa yang terjadi saat festival belanja?",
+      "followups": [
+        "Bagaimana hub Jawa menghadapinya?",
+        "Apa strategi kapasitas elastis?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "hub/load-balance",
+      "question": "Apa itu Load Balancing?",
+      "followups": [
+        "Hub mana yang jadi tujuan overflow?",
+        "Berapa kapasitas Bandung sekarang?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "hub/capacity",
+      "question": "Kapan hub perlu buffer kurir musiman?",
+      "followups": [
+        "Bagaimana cara forecast bekerja?",
+        "Apa yang terjadi kalau kapasitas terlampaui?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "hub/capacity",
+      "question": "Apa itu Capacity Alert?",
+      "followups": [
+        "Hub mana saja yang di atas ambang saat ini?",
+        "Bagaimana cara kerja notifikasinya?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "kurir/routes",
+      "question": "Kenapa COD lebih lambat?",
+      "followups": [
+        "Berapa produktivitas kurir COD?",
+        "Apa solusi Predictive COD?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "kurir/routes",
+      "question": "Berapa produktivitas kurir COD vs non-COD?",
+      "followups": [
+        "Apa dampak jika COD dikurangi?",
+        "Kenapa COD masih dominan?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "kurir/cod-risk",
+      "question": "Apa itu Predictive COD?",
+      "followups": [
+        "Berapa potensi peningkatan kapasitas?",
+        "Bagaimana cara kerja PUDO?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "kurir/cod-risk",
+      "question": "Berapa produktivitas kurir COD vs non-COD?",
+      "followups": [
+        "Apa dampak jika COD dikurangi?",
+        "Kenapa COD masih dominan?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "kurir/slot",
+      "question": "Apa itu Slot Confirmation?",
+      "followups": [
+        "Berapa potensi penghematan waktu?",
+        "Bagaimana testimoni kurir soal ini?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "kurir/slot",
+      "question": "Kenapa harus menunggu penerima?",
+      "followups": [
+        "Apa solusi notifikasi bertahap?",
+        "Bagaimana slot confirmation bekerja?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "kurir/payment",
+      "question": "Kenapa COD masih populer di Indonesia?",
+      "followups": [
+        "Bagaimana digital payment membantu?",
+        "Apa risiko rekonsiliasi kas manual?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "kurir/payment",
+      "question": "Kenapa rekonsiliasi kas rumit?",
+      "followups": [
+        "Apa solusi digital payment?",
+        "Berapa potensi pengurangan error?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "kurir/payment",
+      "question": "Kenapa COD rawan dispute?",
+      "followups": [
+        "Bagaimana mengurangi dispute?",
+        "Apa solusi digital payment?"
+      ],
+      "order": 3
+    },
+    {
+      "page": "kurir/pudo",
+      "question": "Apa itu PUDO?",
+      "followups": [
+        "Berapa potensi peningkatan kapasitas?",
+        "Bagaimana kemitraan ritel bekerja?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "kurir/pudo",
+      "question": "Bagaimana Predictive COD menentukan PUDO?",
+      "followups": [
+        "Apa yang terjadi pada paket berisiko tinggi?",
+        "Bagaimana akses unbanked terjaga?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "kurir/pudo",
+      "question": "Berapa jaringan titik PUDO yang dibutuhkan?",
+      "followups": [
+        "Kenapa ritel modern menjadi node?",
+        "Apa model komisinya?"
+      ],
+      "order": 3
+    },
+    {
+      "page": "data/address",
+      "question": "Kenapa alamat bisa ambigu?",
+      "followups": [
+        "Bagaimana Address Intelligence mengatasinya?",
+        "Berapa dampaknya ke komplain?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "data/address",
+      "question": "Apa itu Address Intelligence?",
+      "followups": [
+        "Bagaimana cara kerja fuzzy matching?",
+        "Apa target akurasi alamat?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "data/complaint",
+      "question": "Berapa tingkat komplain GC Logistics?",
+      "followups": [
+        "Apa penyebab utama komplain?",
+        "Berapa target penurunannya?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "data/complaint",
+      "question": "Kenapa data address intelligence penting?",
+      "followups": [
+        "Apa dampak ke complaint rate?",
+        "Bagaimana ini terhubung ke akar masalah lain?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "data/multimodal",
+      "question": "Kenapa GC tidak kelola langsung moda laut dan udara?",
+      "followups": [
+        "Apa itu Multimodal Control Tower?",
+        "Bagaimana koordinasi jadi lebih kompleks?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "data/multimodal",
+      "question": "Apa itu Multimodal Control Tower?",
+      "followups": [
+        "Berapa persen shipment yang terintegrasi ETA-nya?",
+        "Bagaimana modal shift optimizer bekerja?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "data/fleet",
+      "question": "Berapa armada GC Logistics?",
+      "followups": [
+        "Berapa persen last-mile pakai motor?",
+        "Apa target elektrifikasi armada?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "data/fleet",
+      "question": "Berapa target kendaraan listrik?",
+      "followups": [
+        "Apa solusi roadmap penyusutan 8 tahun?",
+        "Kenapa motor mendominasi armada?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "data/fleet",
+      "question": "Apa strategi keberlanjutan GC Logistics?",
+      "followups": [
+        "Bagaimana roadmap 3 fase keberlanjutan?",
+        "Apa dampak emisi per paket?"
+      ],
+      "order": 3
+    },
+    {
+      "page": "data/ev-sites",
+      "question": "Bagaimana GC memilih lokasi charging EV?",
+      "followups": [
+        "Apa saja sumber datanya?",
+        "Apa metrik kelayakannya?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "data/ev-sites",
+      "question": "Bagaimana depresiasi 8 tahun bekerja?",
+      "followups": [
+        "Berapa tingkat penggantian tahunan?",
+        "Apa saja risiko transisinya?"
+      ],
+      "order": 2
+    }
+  ]
+}

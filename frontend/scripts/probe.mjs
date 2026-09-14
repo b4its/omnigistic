@@ -1,0 +1,16 @@
+import { chromium } from "playwright-core";
+const B = await chromium.launch({ executablePath: "/home/sleepy/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome", args: ["--no-sandbox"] });
+const p = await (await B.newContext({ viewport: { width: 1600, height: 900 } })).newPage();
+const errs = [];
+p.on("pageerror", e => errs.push(String(e.message).slice(0,90)));
+p.on("console", m => { if (m.type() === "error") errs.push("C:"+m.text().slice(0,90)); });
+await p.goto("http://127.0.0.1:3000/", { waitUntil: "load" }); await p.waitForTimeout(2500);
+console.log("landing loaded-class:", await p.evaluate(() => document.querySelector(".landing")?.className));
+console.log("hero line transform:", await p.evaluate(() => getComputedStyle(document.querySelector(".line-inner")).transform));
+console.log("hero stats opacity:", await p.evaluate(() => getComputedStyle(document.querySelector(".animate-rise")||document.body).opacity));
+console.log("marquee anim:", await p.evaluate(() => getComputedStyle(document.querySelector(".marquee-track")).animationName));
+await p.goto("http://127.0.0.1:3000/dashboard/pusat/executive", { waitUntil: "load" }); await p.waitForTimeout(2200);
+const box = await p.evaluate(() => { const m = document.querySelector("main > div"); const r = m?.getBoundingClientRect(); return { x: r?.left, w: r?.width, vw: innerWidth }; });
+console.log("dashboard content box:", JSON.stringify(box));
+console.log("errors:", errs.length ? errs.join(" | ") : "none");
+await B.close();

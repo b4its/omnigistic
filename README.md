@@ -1,0 +1,110 @@
+# Omnigistic — SvelteKit + FastAPI (Local-only)
+
+**ISCEA Global Case Competition 2026** — proposed "Delivering Promises" solution (GC Logistics).
+This is a **full 1:1 migration** from Next.js → **SvelteKit 2 (full-stack server adapter-node) + FastAPI (Python 3.14 + ML)**.
+
+**No deploy.** Everything runs at `localhost` for recording a **≤15-minute video** submission (judges only see video, not the server). The frontend + backend + optional Postgres all work offline; API falls back to `data-kas.json` if Postgres/Neon is unreachable.
+
+---
+
+## What runs locally
+
+| Service | Command | URL |
+|---|---|---|
+| FastAPI backend | `cd backend && .venv/bin/uvicorn app.main:app --port 8000` | http://127.0.0.1:8000 |
+| Swagger "API evidence" | (same process, open docs) | **http://127.0.0.1:8000/docs** |
+| SvelteKit frontend node build | `cd frontend && node build/index.js` (env `PORT=3102`) | http://127.0.0.1:3102 |
+
+First time / on changes: `cd frontend && npm run build` (uses vite).
+
+---
+
+## Cara pakai Docker (paling enak — 2 container, tinggal up)
+
+```bash
+# 1) Tanpa DB sama sekali (mode default — fallback JSON). Browser buka port host.
+docker compose up -d
+# FE: http://127.0.0.1:3000   API: http://127.0.0.1:8000   Swagger/bukti: http://127.0.0.1:8000/docs
+
+# 2) Postgres LOKAL + backend benar2 pakai DB (override file):
+docker compose -f docker-compose.yml -f docker-compose.db.yml up --build -d
+#   → db(:5433) + db-seed jalan, backend SKIP_DB=0 connected; chat/qa dari baris DB.
+#   Tanpa file ini default = SKIP_DB=1 (semua /api dari shared/data-kas.json — nol dependensi, paling aman utk demo).
+
+# 3) Neon asli (bukan lokal):
+SKIP_DB=0 DATABASE_URL="postgres://user:pass@ep-xxx.aws.neon.tech/db?sslmode=require" docker compose up -d
+# auto init table.
+
+# Hentikan + bersihin:
+docker compose down -v     # (-v = hapus volume db + data)
+```
+
+**API base buat browser** = dibuild dari `frontend/.env` (`PUBLIC_API_BASE_URL=http://127.0.0.1:8000`) supaya client-side fetch ke container backend via port host. Untuk akses dari jaringan lain, ubah file itu ke IP host → `docker compose build frontend`.
+
+| File | Untuk apa |
+|---|---|
+| `docker-compose.yml` | service `backend` + `frontend` (+`db`/`db-seed` profile) |
+| `backend/Dockerfile` | python:3.12-slim multi-stage (deps→runtime slim, copy `backend/app` + `shared/data-kas.json`) |
+| `frontend/Dockerfile` | node:22-slim multi-stage (`npm ci`→`vite build`→run `build/index.js`, port 3000) |
+| `.dockerignore` | context = repo root; exclude Next lama/venv/build agar image ramping |
+
+## Cara pakai lokal klasik (tanpa Docker, sama seperti sebelumnya)
+
+| Service | Command | URL |
+|---|---|---|
+| FastAPI backend | `cd backend && SKIP_DB=1 .venv/bin/uvicorn app.main:app --port 8000` | http://127.0.0.1:8000 |
+| SvelteKit frontend node build | `cd frontend && npm run build && PORT=3102 HOST=127.0.0.1 node build/index.js` | http://127.0.0.1:3102 |
+
+First time / on changes: `cd frontend && npm run build` (uses vite).
+
+## Project structure (monorepo)
+
+```
+omnigistic/
+├── shared/data-kas.json         ← Single source of truth (48 QA · 41 suggested · 23 hub · 6 root-causes)
+├── backend/                     ← FastAPI (Python 3.14), uvicorn app.main:app:8000
+│   ├── app/
+│   │   ├── main.py              ← FastAPI + Swagger /docs
+│   │   ├── api/                 ← /api (chat, qa, insights, data, ml-routes)
+│   │   ├── ml/                  ← forecast.py (statsmodels ETS), cod_risk.py (sklearn), address_parse.py (rapidfuzz)
+│   │   ├── security/            ← OWASP-aligned guard/port, port formatter.ts (scrub AI), port quota.ts, prompts (anonim)
+│   │   └── db/                  ← loader.py + seed.py + SQLModel (opsional — fallback JSON)
+│   └── requirements.txt
+├── frontend/                    ← SvelteKit 2 (Svelte 5 runes), adapter-node
+│   ├── src/
+│   │   ├── app.css              ← Tailwind v4 + token CSS penuh (bone/ink/terracotta + dark)
+│   │   ├── routes/              ← landing, login/**; dashboard (M3+role), 13+3 halaman + 3 shared
+│   │   └── lib/                 ← components (M3Nav, nigi-ai, role, drawer, chat, map), stores, charts (ECharts), api
+│   │   ├── lib/map/             ← Leaflet AddressMap (offline-tile fallback, kurir-animated)
+│   │   └── lib/charts/options.ts ← token-aware ECharts helpers
+│   └── tsconfig, svelte.config, vite
+├── docs/                        ← audit laporan (angka + audit codebase 2026-09-08)
+├── scripts/                     ← harness lokal: e2e.mjs, shot-audit/chat-evidence, redteam, ai-security-test
+├── docker-compose.yml + .dockerignore   ← dev container lokal (fe :3000, be :8000, profil db opsional)
+└── .gitignore                   ← + venv, node_modules, build, __pycache__
+```
+
+## Architecture
+
+- **Data flow**: `shared/data-kas.json` → FastAPI `/api/*` + `/ml/*` (read-only JSON fallback, if Neon up, seed) → SvelteKit `onMount` `fetch(API_BASE)/data-kas.json`
+- **Nigi AI (AI)**: LLM via env `AI_API_{BASE_URL,KEY,MODEL}`; tanpa key → fallback (650000 QA/insights) → non-crash
+- **ML (3 model)**: forecast (statsmodels ETS + event-flags), COD-risk (sklearn LogisticRegression + data sintetik), address-parse (rapidfuzz fuzzy); label "prototipe presentasi". `/ml/sim/digital-twin` + `cod-impact` ported from TS.
+- **Material 3**: NavigationRail (medium) / bottom Navigation Bar (compact) / Drawer (full) 600/840
+- **Auto-demo** (non-interaktif) di semua simulasi (Digital Twin preset, COD skenario, Load-Balance)
+- **Map**: Leaflet + 3 kandidat ambigu, path animasi + ETA menit ("Jl. Raya Jakarta-Bogor No.12") dengan Nigi AI saran
+
+## Env (backend/.env or .env.local di repo root, di-ignore)
+
+```
+DATABASE_URL=postgresql://user:pass@... (Neon, optional)
+AI_API_BASE_URL=https://api.provider/v1
+AI_API_KEY=...
+AI_MODEL=omnigistic-model
+```
+
+## Verifikasi angka → studi kasus
+
+- Table 1 (23 hub), Table 2 (network), Table 3 (expenses), Table 4 (demand), Figure 2 (COD), Figure 1 (alamat), 6 akar 13 gejala + KPI, QA: **100% identik**.
+- **Fixes**: Sumatra region average **53,2%** (computed, bukan hardcoded 54,5), label KPI DB (bukan duplikat target), **14.180 basis / 1,41%** konsisten, QA +suggested (PUDO/EV/ROI).
+
+Laporan audit detail: `docs/angka-audit-2026-09-07.md`.

@@ -1,0 +1,74 @@
+# omnigistic — dev container (lokal saja, tanpa deploy)
+#   docker compose up -d --build        → :3000 Svelte, :8000 FastAPI+swagger, JSON fallback ON.
+#   +DB: docker compose --profile db up -d --build  → postgres lokal + auto-seed via db-seed.
+#   neon:  SKIP_DB=0 DATABASE_URL=postgres://.. docker compose up -d   (override dari .env host).
+#   API public default browser = http://127.0.0.1:8000 (override: edit frontend/.env → rebuild).
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: omnigistic-backend:local
+    container_name: omnigistic-backend
+    environment:
+      SKIP_DB: "1"                          # default: tidak konek DB, serve dari data-kas.json
+      DATA_KAS_PATH: /shared/data-kas.json
+      # Override bawaan dengan env host:
+      AI_API_BASE_URL: ${AI_API_BASE_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+    ports:
+      - "${BACKEND_HOST:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: omnigistic-frontend:local
+    container_name: omnigistic-frontend
+    # .env di commit hanya var public → inlined saat build ke bundle (browser).
+    environment:
+      HOST: 0.0.0.0
+      PORT: "3000"
+    ports:
+      - "${FRONTEND_HOST:-127.0.0.1}:${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ---- DB opsional (profile "db"). Nyalakan: docker compose --profile db up --build ----
+  db:
+    image: postgres:17-alpine
+    container_name: omnigistic-db
+    environment:
+      POSTGRES_USER: omnigistic
+      POSTGRES_PASSWORD: omnigistic
+      POSTGRES_DB: omnigistic
+    profiles: ["db"]
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - omnigistic-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U omnigistic -d omnigistic"]
+      interval: 4s
+      timeout: 2s
+      retries: 10
+
+  # seeder one-shot (profile db): jalankan seed.py ke Postgres db.
+  db-seed:
+    image: omnigistic-backend:local
+    profiles: ["db"]
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://omnigistic:omnigistic@db:5432/omnigistic
+      DB_DRIVER: postgresql+psycopg
+      SKIP_DB: "0"
+    command: python -c "import sys;sys.path.insert(0,'/code');from app.db.seed import seed;print('seed:',seed())"
+
+volumes:
+  omnigistic-pg:

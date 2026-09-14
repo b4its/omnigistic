@@ -1,0 +1,7 @@
+# Dev/build artifacts — jangan ikut context image
+node_modules
+.svelte-kit
+build
+.env.local
+Dockerfile
+.dockerignore

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f1ede4" />
+    <meta
+      name="description"
+      content="Omnigistic — sistem usulan ISCEA Global Case Competition 2026 (studi kasus GC Logistics)"
+    />
+    <script>
+      try {
+        var t = localStorage.getItem("omnigistic-theme");
+        if (t === "dark" || (t == null && matchMedia("(prefers-color-scheme: dark)").matches))
+          document.documentElement.classList.add("dark");
+      } catch (e) {}
+    </script>
+    %sveltekit.head%
+  </head>
+  <body data-sveltekit-preload-data="hover">
+    <div style="display: contents">%sveltekit.body%</div>
+  </body>
+</html>

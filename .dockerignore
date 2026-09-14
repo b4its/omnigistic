@@ -1,0 +1,31 @@
+# context build = repo root (service backend) — keep image lean
+.git
+.env
+.env.local
+.env.*.local
+*.log
+
+# Python venv & cache — deps di-install dari requirements.txt di stage `deps`
+backend/.venv
+**/__pycache__
+**/*.pyc
+backend/models/*.pkl
+
+# Frontend: di-build lewat service context ./frontend sendiri
+frontend/node_modules
+frontend/.svelte-kit
+frontend/build
+frontend/Dockerfile
+frontend/.dockerignore
+
+# artefak non-app (docs, evidence, tooling) tidak dibutuhkan dalam image
+docs
+images
+scripts
+.opencode
+.vercel
+run
+
+# catatan lokal
+AGENTS.md
+README.md
