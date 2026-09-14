@@ -21,31 +21,40 @@ First time / on changes: `cd frontend && npm run build` (uses vite).
 
 ## Cara pakai Docker (paling enak — 2 container, tinggal up)
 
+**Default `docker compose up -d` = mode DEV + HOT RELOAD.** Source di-bind-mount dari host:
+edit file di `frontend/src` atau `backend/app` → browser/API reload otomatis tanpa rebuild.
+
 ```bash
 # 1) Tanpa DB sama sekali (mode default — fallback JSON). Browser buka port host.
 docker compose up -d
-# FE: http://127.0.0.1:3000   API: http://127.0.0.1:8000   Swagger/bukti: http://127.0.0.1:8000/docs
+# FE: http://127.0.0.1:3000 (vite dev + HMR)   API: http://127.0.0.1:8000 (uvicorn --reload)
+# Swagger/bukti: http://127.0.0.1:8000/docs
 
-# 2) Postgres LOKAL + backend benar2 pakai DB (override file):
-docker compose -f docker-compose.yml -f docker-compose.db.yml up --build -d
+# 2) Postgres LOKAL + backend benar2 pakai DB (profile db):
+docker compose --profile db up -d --build
 #   → db(:5433) + db-seed jalan, backend SKIP_DB=0 connected; chat/qa dari baris DB.
-#   Tanpa file ini default = SKIP_DB=1 (semua /api dari shared/data-kas.json — nol dependensi, paling aman utk demo).
+#   Tanpa profile ini default = SKIP_DB=1 (semua /api dari shared/data-kas.json — nol dependensi, paling aman utk demo).
 
 # 3) Neon asli (bukan lokal):
 SKIP_DB=0 DATABASE_URL="postgres://user:pass@ep-xxx.aws.neon.tech/db?sslmode=require" docker compose up -d
 # auto init table.
 
+# 4) PROD (image build, tanpa bind mount):
+docker compose --profile prod up -d --build
+
 # Hentikan + bersihin:
 docker compose down -v     # (-v = hapus volume db + data)
 ```
 
-**API base buat browser** = dibuild dari `frontend/.env` (`PUBLIC_API_BASE_URL=http://127.0.0.1:8000`) supaya client-side fetch ke container backend via port host. Untuk akses dari jaringan lain, ubah file itu ke IP host → `docker compose build frontend`.
+**API base buat browser** = `PUBLIC_API_BASE_URL` (default `http://127.0.0.1:8000`) supaya client-side fetch ke container backend via port host. Untuk akses dari jaringan lain, ubah `PUBLIC_API_BASE_URL` → `docker compose up -d` (dev) atau `docker compose --profile prod up -d --build` (prod).
 
 | File | Untuk apa |
 |---|---|
-| `docker-compose.yml` | service `backend` + `frontend` (+`db`/`db-seed` profile) |
-| `backend/Dockerfile` | python:3.12-slim multi-stage (deps→runtime slim, copy `backend/app` + `shared/data-kas.json`) |
-| `frontend/Dockerfile` | node:22-slim multi-stage (`npm ci`→`vite build`→run `build/index.js`, port 3000) |
+| `docker-compose.yml` | default `backend`+`frontend` **dev (hot reload)**; profile `prod` utk image produksi; profile `db` utk postgres+seeder |
+| `backend/Dockerfile.dev` | python:3.12-slim + deps; `uvicorn --reload` (bind-mount `backend/app`) |
+| `backend/Dockerfile` | python:3.12-slim multi-stage (deps→runtime slim) — **prod** |
+| `frontend/Dockerfile.dev` | node:22-slim + `npm ci`; `vite dev` (bind-mount `frontend`, node_modules dari image) — **dev** |
+| `frontend/Dockerfile` | node:22-slim multi-stage (`npm ci`→`vite build`→run `build/index.js`) — **prod** |
 | `.dockerignore` | context = repo root; exclude Next lama/venv/build agar image ramping |
 
 ## Cara pakai lokal klasik (tanpa Docker, sama seperti sebelumnya)

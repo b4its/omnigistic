@@ -1,15 +1,18 @@
 # omnigistic — dev container (lokal saja, tanpa deploy)
-#   docker compose up -d --build        → :3000 Svelte, :8000 FastAPI+swagger, JSON fallback ON.
+# DEFAULT (hot reload): sumber di-bind-mount dari host, edit file → langsung reload.
+#   docker compose up -d --build      → :3000 Svelte (vite dev + HMR), :8000 FastAPI (uvicorn --reload).
 #   +DB: docker compose --profile db up -d --build  → postgres lokal + auto-seed via db-seed.
 #   neon:  SKIP_DB=0 DATABASE_URL=postgres://.. docker compose up -d   (override dari .env host).
+#   PROD (image build, tanpa mount):  docker compose --profile prod up -d --build
 #   API public default browser = http://127.0.0.1:8000 (override: edit frontend/.env → rebuild).
 
 services:
+  # ================= DEFAULT: DEV + HOT RELOAD =================
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
-    image: omnigistic-backend:local
+      dockerfile: backend/Dockerfile.dev
+    image: omnigistic-backend:dev
     container_name: omnigistic-backend
     environment:
       SKIP_DB: "1"                          # default: tidak konek DB, serve dari data-kas.json
@@ -20,21 +23,68 @@ services:
       AI_MODEL: ${AI_MODEL:-}
     ports:
       - "${BACKEND_HOST:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
+    volumes:
+      # Hot reload: source host → container (uvicorn --reload memantau /code/app).
+      - ./backend/app:/code/app
+      - ./shared/data-kas.json:/shared/data-kas.json:ro
+    develop:
+      watch:
+        - action: rebuild
+          path: ./backend/requirements.txt
 
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile.dev
+    image: omnigistic-frontend:dev
+    container_name: omnigistic-frontend
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-http://127.0.0.1:8000}
+    ports:
+      - "${FRONTEND_HOST:-127.0.0.1}:${FRONTEND_PORT:-3000}:3100"
+    volumes:
+      # Hot reload: source host → container (vite HMR memantau /app/src, dsb).
+      - ./frontend:/app
+      # node_modules tetap milik image (jangan ditimpa oleh host).
+      - /app/node_modules
+      - /app/.svelte-kit
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ================= PROD: image build, tanpa bind mount =================
+  backend-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: omnigistic-backend:local
+    container_name: omnigistic-backend-prod
+    environment:
+      SKIP_DB: "1"
+      DATA_KAS_PATH: /shared/data-kas.json
+      AI_API_BASE_URL: ${AI_API_BASE_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+    ports:
+      - "${BACKEND_HOST:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
+
+  frontend-prod:
+    profiles: ["prod"]
+    build:
+      context: ./frontend
       dockerfile: Dockerfile
     image: omnigistic-frontend:local
-    container_name: omnigistic-frontend
-    # .env di commit hanya var public → inlined saat build ke bundle (browser).
+    container_name: omnigistic-frontend-prod
     environment:
       HOST: 0.0.0.0
       PORT: "3000"
     ports:
       - "${FRONTEND_HOST:-127.0.0.1}:${FRONTEND_PORT:-3000}:3000"
     depends_on:
-      - backend
+      - backend-prod
     restart: unless-stopped
 
   # ---- DB opsional (profile "db"). Nyalakan: docker compose --profile db up --build ----
@@ -58,7 +108,7 @@ services:
 
   # seeder one-shot (profile db): jalankan seed.py ke Postgres db.
   db-seed:
-    image: omnigistic-backend:local
+    image: omnigistic-backend:dev
     profiles: ["db"]
     restart: "no"
     depends_on:

@@ -1,0 +1,18 @@
+# syntax=docker/dockerfile:1
+# ---- DEV image: vite dev server + HMR (bind-mount source dari host) ----
+FROM node:22-slim
+
+WORKDIR /app
+ENV NODE_ENV=development \
+    HOST=0.0.0.0 \
+    PUBLIC_API_BASE_URL=http://127.0.0.1:8000
+
+# Install deps lebih dulu utk layer cache; source akan di-overlay oleh bind mount.
+COPY package.json package-lock.json ./
+RUN npm ci --prefer-offline --loglevel=error
+
+COPY . .
+
+EXPOSE 3100
+# --host 0.0.0.0 supaya bisa diakses dari host; port tetap 3100 (strictPort).
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
