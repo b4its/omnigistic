@@ -4,6 +4,7 @@
   import Icon from "$lib/components/Icon.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, cartDetail, shippingCost, buyerReputation, type ResolvedCartItem, type Address, type PaymentMethod } from "$lib/stores/shop";
+  import { CITIES } from "$lib/logistics";
   import { api, type CodRiskResult } from "$lib/api";
   import type { Reputation } from "$lib/shop/reputation";
 
@@ -32,7 +33,6 @@
   let phone = $state("");
   let street = $state("");
   let city = $state("Jakarta");
-  const CITIES = ["Jakarta", "Depok", "Tangerang", "Bogor", "Bandung", "Surabaya"];
 
   // Metode bayar
   let payment = $state<PaymentMethod>("COD");
@@ -59,7 +59,8 @@
   const total = $derived(subtotal + shipping);
   const totalWeight = $derived(items.reduce((w, i) => w + i.product.weightKg * i.qty, 0));
 
-  const addressValid = $derived(recipient.trim().length > 1 && phone.trim().length >= 8 && street.trim().length > 4 && !!city);
+  const phoneValid = $derived(/^[0-9+\-\s()]{8,}$/.test(phone.trim()));
+  const addressValid = $derived(recipient.trim().length > 1 && phoneValid && street.trim().length > 4 && !!city);
 
   // Skor risiko COD diturunkan dari model Predictive: nilai paket, jam, berat→proxy
   // zona, alamat (street length→proxy ambiguitas ringan). Non-COD tidak di-skor.
@@ -185,15 +186,15 @@
           <div class="grid gap-3 sm:grid-cols-2">
             <label class="space-y-1.5 text-xs font-medium text-muted-foreground">
               Nama penerima
-              <input bind:value={recipient} placeholder="mis. Sari Wulandari" class="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50" />
+              <input type="text" autocomplete="name" bind:value={recipient} placeholder="mis. Sari Wulandari" class="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50" />
             </label>
             <label class="space-y-1.5 text-xs font-medium text-muted-foreground">
               Nomor HP
-              <input bind:value={phone} inputmode="tel" placeholder="08xxxxxxxxxx" class="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50" />
+              <input type="tel" inputmode="tel" autocomplete="tel" bind:value={phone} placeholder="08xxxxxxxxxx" class="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50" />
             </label>
             <label class="space-y-1.5 text-xs font-medium text-muted-foreground sm:col-span-2">
               Alamat lengkap
-              <textarea bind:value={street} rows="2" placeholder="Jl. Raya Jakarta-Bogor No.12, RT 03/RW 05" class="w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"></textarea>
+              <textarea autocomplete="street-address" bind:value={street} rows="2" placeholder="Jl. Raya Jakarta-Bogor No.12, RT 03/RW 05" class="w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"></textarea>
             </label>
             <label class="space-y-1.5 text-xs font-medium text-muted-foreground">
               Kota

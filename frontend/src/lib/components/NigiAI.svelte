@@ -234,6 +234,8 @@
       >
         <div class="flex items-center gap-2 rounded-full border border-border bg-muted/50 py-1 pl-4 pr-1 transition-colors focus-within:border-primary/50 focus-within:bg-card focus-within:ring-2 focus-within:ring-primary/15">
           <input
+            type="text"
+            autocomplete="off"
             bind:value={input}
             placeholder="Tanya apa saja soal data GC Logistics"
             aria-label="Pesan untuk Nigi Chat"

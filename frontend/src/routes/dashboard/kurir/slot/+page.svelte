@@ -3,7 +3,7 @@
   import { resolveHref } from "$lib/utils";
   import { api } from "$lib/api";
   import { shop, ORDER_STATUS_LABEL, type Order } from "$lib/stores/shop";
-  import { COURIER, etaForCity } from "$lib/logistics";
+  import { COURIER, etaForCity, buildSlot } from "$lib/logistics";
 
   const stages = [
     { step: "H-1", desc: "Pemberitahuan paket akan diantar besok", en: "Notify" },
@@ -16,14 +16,30 @@
 
   /** Pesanan nyata yang menunggu konfirmasi slot. */
   let orders = $state<Order[]>([]);
-  let slotDraft = $state<Record<string, string>>({});
+  let slotDraft = $state<Record<string, { start: string; end: string }>>({});
 
   onMount(() => {
     shop.init();
-    const unsub = shop.subscribe((s) => (orders = s.orders));
+    const unsub = shop.subscribe((s) => {
+      orders = s.orders;
+      ensureSlotDrafts(s.orders);
+    });
     void loadQuotes();
     return unsub;
   });
+
+  /** Pastikan tiap pesanan punya draf slot {start,end} agar bind:value aman. */
+  function ensureSlotDrafts(list: Order[]) {
+    const next = { ...slotDraft };
+    let changed = false;
+    for (const o of list) {
+      if (!next[o.id]) {
+        next[o.id] = { start: "", end: "" };
+        changed = true;
+      }
+    }
+    if (changed) slotDraft = next;
+  }
 
   async function loadQuotes() {
     try {
@@ -40,17 +56,20 @@
     orders.filter((o) => o.status !== "terkirim" && o.slot).sort((a, b) => (a.slot ?? "").localeCompare(b.slot ?? ""))
   );
 
+  // Pastikan tiap pesanan punya draf slot {start,end} agar bind:value aman.
+
   function toast(detail: string) {
     window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail }));
   }
   function confirm(o: Order) {
-    const clean = slotDraft[o.id]?.trim();
-    if (!clean) {
-      toast("Isi slot dulu (mis. 14:00-16:00)");
+    const d = slotDraft[o.id];
+    const slot = buildSlot(d?.start ?? "", d?.end ?? "");
+    const err = shop.confirmSlot(o.id, COURIER.actor, slot);
+    if (err) {
+      toast(err);
       return;
     }
-    shop.confirmSlot(o.id, COURIER.actor, clean);
-    slotDraft = { ...slotDraft, [o.id]: "" };
+    slotDraft = { ...slotDraft, [o.id]: { start: "", end: "" } };
     toast(`Slot ${o.id} dikonfirmasi`);
   }
 </script>
@@ -96,13 +115,24 @@
               <span class="font-mono text-xs text-muted-foreground">{o.id}</span>
               <span class="min-w-0 flex-1 truncate text-sm text-foreground">{o.address.recipient} · {o.address.city} · ETA ± {etaForCity(o.address.city)} mnt</span>
               <div class="flex items-center gap-2">
-                <input
-                  type="text"
-                  bind:value={slotDraft[o.id]}
-                  placeholder="14:00-16:00"
-                  aria-label={`Slot untuk ${o.id}`}
-                  class="w-32 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/50"
-                />
+                <label class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  Mulai
+                  <input
+                    type="time"
+                    bind:value={slotDraft[o.id].start}
+                    aria-label={`Jam mulai slot ${o.id}`}
+                    class="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-primary/50"
+                  />
+                </label>
+                <label class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  Selesai
+                  <input
+                    type="time"
+                    bind:value={slotDraft[o.id].end}
+                    aria-label={`Jam selesai slot ${o.id}`}
+                    class="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-primary/50"
+                  />
+                </label>
                 <button type="button" onclick={() => confirm(o)} class="rounded-lg border border-primary/40 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-accent">Konfirmasi</button>
               </div>
             </li>

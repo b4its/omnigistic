@@ -262,8 +262,10 @@
       <div class="flex items-center gap-2 rounded-xl border border-border bg-muted/50 px-3 py-1.5 transition-colors focus-within:border-primary/50 focus-within:bg-card focus-within:ring-2 focus-within:ring-primary/15">
         <Icon name="search" cls="h-4 w-4 text-muted-foreground" />
         <input
+          type="search"
+          enterkeyhint="search"
           bind:value={search}
-          class="h-7 min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
+          class="h-7 min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none"
           placeholder="Cari percakapan…"
           aria-label="Cari percakapan"
           autocomplete="off"
@@ -286,6 +288,8 @@
         >
           {#if renamingId === c.id}
             <input
+              type="text"
+              maxlength="60"
               bind:value={renameValue}
               onblur={commitRename}
               onkeydown={(e) => {
@@ -477,11 +481,13 @@
       >
         <div class="flex items-center gap-2 rounded-full border border-border bg-muted/50 py-1 pl-4 pr-1 transition-colors focus-within:border-primary/50 focus-within:bg-card focus-within:ring-2 focus-within:ring-primary/15">
           <input
+            type="text"
             bind:value={input}
             class="h-9 min-w-0 flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
             placeholder="Tanya apa saja soal data GC Logistics…"
             aria-label="Pesan untuk Nigi AI"
             autocomplete="off"
+            enterkeyhint="send"
             disabled={busy}
           />
           <button

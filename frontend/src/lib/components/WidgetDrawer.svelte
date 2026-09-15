@@ -74,10 +74,12 @@
   <label class="mx-5 mt-3 flex items-center gap-2 rounded-lg border border-transparent bg-muted px-3 py-2.5 text-muted-foreground transition-colors focus-within:border-primary focus-within:bg-card">
     <span aria-hidden="true">&#8981;</span>
     <input
+      type="search"
+      enterkeyhint="search"
       bind:value={q}
       placeholder="Cari widget"
       aria-label="Cari widget"
-      class="flex-1 bg-transparent text-sm outline-none"
+      class="flex-1 bg-transparent text-sm outline-none [&::-webkit-search-cancel-button]:appearance-none"
     />
   </label>
   <div class="flex-1 space-y-2.5 overflow-y-auto px-5 py-3">

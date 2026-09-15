@@ -118,6 +118,8 @@
     onsubmit={(e) => { e.preventDefault(); ask(input); }}
   >
     <input
+      type="text"
+      autocomplete="off"
       bind:value={input}
       placeholder="Tanya apa saja"
       aria-label="Tanya Nigi Chat"

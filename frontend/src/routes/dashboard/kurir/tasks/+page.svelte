@@ -23,7 +23,7 @@
     progressForStatus,
     type Order
   } from "$lib/stores/shop";
-  import { COURIER, HUB_LABEL, etaForCity, COD_DECISION_LABEL } from "$lib/logistics";
+  import { COURIER, HUB_LABEL, etaForCity, buildSlot, COD_DECISION_LABEL } from "$lib/logistics";
 
   /** Identitas kurir — satu sumber (logistics.ts) agar konsisten dgn Topbar. */
   const actor = (): string => COURIER.actor;
@@ -32,14 +32,30 @@
   let openMapId = $state<string | null>(null);
   /** Draf keterangan kondisi per pesanan (dipetakan ke id pesanan). */
   let noteDraft = $state<Record<string, string>>({});
-  /** Draf slot pengantaran per pesanan. */
-  let slotDraft = $state<Record<string, string>>({});
+  /** Draf slot pengantaran per pesanan (jam mulai & selesai terpisah). */
+  let slotDraft = $state<Record<string, { start: string; end: string }>>({});
 
   onMount(() => {
     shop.init();
-    const unsub = shop.subscribe((s) => (orders = s.orders));
+    const unsub = shop.subscribe((s) => {
+      orders = s.orders;
+      ensureSlotDrafts(s.orders);
+    });
     return unsub;
   });
+
+  /** Pastikan tiap pesanan punya draf slot {start,end} agar bind:value aman. */
+  function ensureSlotDrafts(list: Order[]) {
+    const next = { ...slotDraft };
+    let changed = false;
+    for (const o of list) {
+      if (!next[o.id]) {
+        next[o.id] = { start: "", end: "" };
+        changed = true;
+      }
+    }
+    if (changed) slotDraft = next;
+  }
 
   const statusIndex = (s: Order["status"]) => ORDER_STATUS_FLOW.indexOf(s);
 
@@ -83,15 +99,16 @@
     toast(`Kondisi ${o.id} diperbarui`);
   }
 
-  /** Kurir konfirmasi slot pengantaran. */
+  /** Kurir konfirmasi slot pengantaran (dua input jam: mulai & selesai). */
   function confirmSlot(o: Order) {
-    const clean = slotDraft[o.id]?.trim();
-    if (!clean) {
-      toast("Isi slot pengantaran dulu (mis. 14:00-16:00)");
+    const d = slotDraft[o.id];
+    const slot = buildSlot(d?.start ?? "", d?.end ?? "");
+    const err = shop.confirmSlot(o.id, actor(), slot);
+    if (err) {
+      toast(err);
       return;
     }
-    shop.confirmSlot(o.id, actor(), clean);
-    slotDraft = { ...slotDraft, [o.id]: "" };
+    slotDraft = { ...slotDraft, [o.id]: { start: "", end: "" } };
     toast(`Slot ${o.id} dikonfirmasi`);
   }
 
@@ -237,14 +254,25 @@
 
                   <!-- Aksi lanjutan: slot, tunai COD, PUDO -->
                   <div class="flex flex-wrap items-center gap-2 border-t border-border pt-3">
-                    <div class="flex min-w-0 flex-1 items-center gap-2">
-                      <input
-                        type="text"
-                        bind:value={slotDraft[o.id]}
-                        placeholder="Slot, mis. 14:00-16:00"
-                        aria-label={`Slot pengantaran ${o.id}`}
-                        class="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/50"
-                      />
+                    <div class="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                      <label class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        Mulai
+                        <input
+                          type="time"
+                          bind:value={slotDraft[o.id].start}
+                          aria-label={`Jam mulai slot ${o.id}`}
+                          class="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-primary/50"
+                        />
+                      </label>
+                      <label class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        Selesai
+                        <input
+                          type="time"
+                          bind:value={slotDraft[o.id].end}
+                          aria-label={`Jam selesai slot ${o.id}`}
+                          class="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-primary/50"
+                        />
+                      </label>
                       <button type="button" onclick={() => confirmSlot(o)} class="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent">
                         Konfirmasi slot
                       </button>

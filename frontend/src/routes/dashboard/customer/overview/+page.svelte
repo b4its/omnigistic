@@ -135,10 +135,12 @@
       <label class="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 transition-colors focus-within:border-primary/50">
         <Icon name="search" cls="h-4 w-4 shrink-0 text-muted-foreground" />
         <input
+          type="search"
+          enterkeyhint="search"
           bind:value={query}
           placeholder="Cari produk, kategori, atau toko…"
           aria-label="Cari produk"
-          class="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          class="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none"
         />
         {#if query}
           <button type="button" onclick={() => (query = "")} aria-label="Hapus pencarian" class="text-muted-foreground hover:text-foreground"><Icon name="x" cls="h-4 w-4" /></button>
