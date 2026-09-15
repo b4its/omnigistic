@@ -75,9 +75,11 @@ omnigistic/
 │   ├── app/
 │   │   ├── main.py              ← FastAPI + Swagger /docs
 │   │   ├── api/                 ← /api (chat, qa, insights, data, ml-routes)
-│   │   ├── ml/                  ← forecast.py (statsmodels ETS), cod_risk.py (sklearn), address_parse.py (rapidfuzz)
+│   │   ├── ml/                  ← forecast.py (musiman+tren OLS), cod_risk.py (sklearn), address_parse.py (rapidfuzz),
+│   │   │                          optimize.py (Network Optimization Engine), cod_intel.py (COD per-shift), metrics.py (turunan+rekonsiliasi)
 │   │   ├── security/            ← OWASP-aligned guard/port, port formatter.ts (scrub AI), port quota.ts, prompts (anonim)
 │   │   └── db/                  ← loader.py + seed.py + SQLModel (opsional — fallback JSON)
+│   ├── tests/run_tests.py       ← harness uji backend tanpa pytest (57 assert, TestClient)
 │   └── requirements.txt
 ├── frontend/                    ← SvelteKit 2 (Svelte 5 runes), adapter-node
 │   ├── src/
@@ -96,8 +98,12 @@ omnigistic/
 ## Architecture
 
 - **Data flow**: `shared/data-kas.json` → FastAPI `/api/*` + `/ml/*` (read-only JSON fallback, if Neon up, seed) → SvelteKit `onMount` `fetch(API_BASE)/data-kas.json`
-- **Nigi AI (AI)**: LLM via env `AI_API_{BASE_URL,KEY,MODEL}`; tanpa key → fallback (650000 QA/insights) → non-crash
-- **ML (3 model)**: forecast (statsmodels ETS + event-flags), COD-risk (sklearn LogisticRegression + data sintetik), address-parse (rapidfuzz fuzzy); label "prototipe presentasi". `/ml/sim/digital-twin` + `cod-impact` ported from TS.
+- **Nigi AI (AI)**: LLM via env `AI_API_{BASE_URL,KEY,MODEL}`; tanpa key → fallback (54 QA/insights) → non-crash
+- **ML (3 model dasar)**: forecast (seasonal-index sentris + tren OLS + event-flags, backtest MAPE ~1,3%), COD-risk (sklearn LogisticRegression + data sintetik), address-parse (rapidfuzz fuzzy); label "prototipe presentasi". `/ml/sim/digital-twin` + `cod-impact` ported from TS.
+- **Mesin analitik baru**:
+  - `GET /ml/optimize/load-balance` — Network Optimization Engine (transportation heuristic greedy cheapest-link-first): alihkan overflow hub >65% ke hub <50% dengan kendala headroom, lantai aman 60%, maks 35%. Output: moves, util sebelum/sesudah per hub, agregat timur.
+  - `POST /ml/cod-intel` + `GET /ml/cod-intel/scenarios` — COD Decision Intelligence: dampak per-shift kurir dari Figure 2 (138 vs 75 mnt), 4 intervensi digital, hemat menit/paket/rupiah/CO₂.
+  - `GET /ml/metrics/{regions,financial,demand,fleet,audit}` — metrik turunan + rekonsiliasi (temuan dokumen: e-commerce Tabel 4 tertulis 641 vs hasil jumlah baris 651).
 - **Material 3**: NavigationRail (medium) / bottom Navigation Bar (compact) / Drawer (full) 600/840
 - **Auto-demo** (non-interaktif) di semua simulasi (Digital Twin preset, COD skenario, Load-Balance)
 - **Map**: Leaflet + 3 kandidat ambigu, path animasi + ETA menit ("Jl. Raya Jakarta-Bogor No.12") dengan Nigi AI saran
@@ -115,5 +121,18 @@ AI_MODEL=omnigistic-model
 
 - Table 1 (23 hub), Table 2 (network), Table 3 (expenses), Table 4 (demand), Figure 2 (COD), Figure 1 (alamat), 6 akar 13 gejala + KPI, QA: **100% identik**.
 - **Fixes**: Sumatra region average **53,2%** (computed, bukan hardcoded 54,5), label KPI DB (bukan duplikat target), **14.180 basis / 1,41%** konsisten, QA +suggested (PUDO/EV/ROI).
+- **Temuan rekonsiliasi**: total e-commerce Tabel 4 pada dokumen tertulis **641** juta, tetapi baris dijumlahkan = **651** juta (selisih 10). Nilai kanonik = hitung baris; selisih dilaporkan via `/ml/metrics/audit` dan halaman Methodology. Total demand (1.110 juta) cocok.
+- Semua angka turunan kini dihitung oleh `backend/app/ml/metrics.py` (bukan hardcode FE) → satu sumber kebenaran.
+
+## Testing
+
+```bash
+# Backend (57 assert, tanpa pytest)
+cd backend && SKIP_DB=1 .venv/bin/python tests/run_tests.py
+
+# Frontend E2E (51 assert; butuh backend :8000 + frontend dev :3000)
+cd frontend
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 E2E_API=http://127.0.0.1:8000 node scripts/e2e.mjs
+```
 
 Laporan audit detail: `docs/angka-audit-2026-09-07.md`.
