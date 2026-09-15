@@ -89,6 +89,7 @@
       { label: "EV Site Selection", href: "/dashboard/data/ev-sites", icon: "grad" }
     ],
     CUSTOMER: [
+      { label: "Dashboard", href: "/dashboard/customer/dashboard", icon: "chart", short: "Dashboard" },
       { label: "Belanja", href: "/dashboard/customer/overview", icon: "grid", short: "Belanja" },
       { label: "Keranjang", href: "/dashboard/customer/cart", icon: "stack", short: "Keranjang" },
       { label: "Pesanan Saya", href: "/dashboard/customer/orders", icon: "map", short: "Pesanan" },
@@ -130,7 +131,9 @@
     const r = roleFromPath(pathname);
     if (r) roleStore.set(r);
   });
-  let routeLabel = $derived(titleMap[seg3(pathname)] ?? "Omnigistic");
+  let routeLabel = $derived(
+    seg3(pathname) === "dashboard" && role === "CUSTOMER" ? "Dashboard" : (titleMap[seg3(pathname)] ?? "Omnigistic")
+  );
 
   const questionMap: Record<string, string> = {
     "digital-twin": "1", network: "1", utilization: "1",
