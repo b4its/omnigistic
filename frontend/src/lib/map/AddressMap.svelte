@@ -7,6 +7,7 @@
   import { api } from "$lib/api";
   import { ROUTE_COORDS } from "$lib/map/route";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
+  import { pudosForCity } from "$lib/logistics";
 
   let { demo = true }: { demo?: boolean } = $props();
 
@@ -106,6 +107,20 @@
       const km = Math.round(haversine(origin, loc) * 10) / 10;
       mk.bindTooltip(`${loc.city} — ${loc.label} · ~${km} km`, { direction: "top", permanent: false });
     }
+
+    // Titik PUDO mitra area Jabodetabek (informasi alternatif drop/ambil).
+    for (const p of [...pudosForCity("Jakarta"), ...pudosForCity("Bogor"), ...pudosForCity("Depok")]) {
+      const mk = L.circleMarker(p.coord as unknown as L.LatLngExpression, {
+        radius: 6,
+        color: "#8b5cf6",
+        weight: 2,
+        fillColor: "#ddd6fe",
+        fillOpacity: 0.9,
+        dashArray: "2 3"
+      }).addTo(map);
+      mk.bindTooltip(`PUDO · ${p.name} (${p.partner})`, { direction: "top" });
+      mk.bindPopup(`<strong>${p.name}</strong> · ${p.partner}<br/>${p.city} · jam ${p.hours}`);
+    }
     void api;
 
     map.fitBounds(route as unknown as L.LatLngBoundsExpression, { padding: [40, 40] });
@@ -172,7 +187,7 @@
 <div class="relative isolate z-0 h-[340px] w-full overflow-hidden rounded-2xl border border-border">
   <div bind:this={mapEl} aria-label="Peta Leaflet: 3 alamat ambigu, ML memetakan target, animasi kurir mengikuti rute jalan, ETA 75 menit" role="application" class="absolute inset-0"></div>
   <div class="pointer-events-none absolute right-2 top-2 z-[1000] rounded-lg border border-border bg-background/90 px-3 py-2 text-[13px] font-semibold shadow-pop">
-    <span class="text-success-foreground">●</span> alamat benar · <span class="text-muted-foreground">○</span> kandidat salah
+    <span class="text-success-foreground">●</span> alamat benar · <span class="text-muted-foreground">○</span> kandidat salah · <span style="color:#8b5cf6">●</span> PUDO
   </div>
 </div>
 <p class="mt-2 text-[14px] text-muted-foreground">

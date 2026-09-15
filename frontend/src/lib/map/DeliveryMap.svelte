@@ -12,7 +12,7 @@
   import type * as LeafletNS from "leaflet";
   import { get } from "svelte/store";
   import { themeStore } from "$lib/stores/theme";
-  import { coordsForCity, HUB_LABEL, etaForCity, distanceForCity } from "$lib/logistics";
+  import { coordsForCity, HUB_LABEL, etaForCity, distanceForCity, pudosForCity, pudoDropRecommendation } from "$lib/logistics";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
 
   interface Props {
@@ -25,9 +25,16 @@
     /** Estimasi waktu tempuh total (menit). Default dari data kota. */
     etaMin?: number;
     height?: number;
+    /** Role pengguna — menentukan nada label PUDO (KURIR = aksi, lain = info). */
+    role?: string;
+    /** Tampilkan titik PUDO + rekomendasi drop (default true). */
+    showPudo?: boolean;
   }
 
-  let { progress = 0, city = "Bogor", originLabel = HUB_LABEL, destLabel = "Alamat penerima", etaMin, height = 360 }: Props = $props();
+  let { progress = 0, city = "Bogor", originLabel = HUB_LABEL, destLabel = "Alamat penerima", etaMin, height = 360, role = "", showPudo = true }: Props = $props();
+
+  /** true bila pengguna adalah kurir (PUDO = titik aksi, bukan sekadar info). */
+  const isCourier = $derived(role.toUpperCase() === "KURIR");
 
   let mapEl = $state<HTMLElement | undefined>();
 
@@ -44,6 +51,10 @@
   /** ETA total (menit): prop eksplisit bila ada, jika tidak dari data kota. */
   const tripMin = $derived(etaMin ?? etaForCity(city));
   const tripKm = $derived(distanceForCity(city));
+
+  /** Titik PUDO di kota ini + rekomendasi drop terdekat dari tujuan. */
+  const pudos = $derived(showPudo ? pudosForCity(city) : []);
+  const dropRec = $derived(showPudo ? pudoDropRecommendation(city) : null);
 
   function haversine(a: LL, b: LL): number {
     const R = 6371.0;
@@ -148,6 +159,31 @@
       courierMk = L.circleMarker(rgeo.origin as unknown as LeafletNS.LatLngExpression, { radius: 8, color: "#2563eb", fillColor: "#dbeafe", fillOpacity: 1, weight: 3 }).addTo(map);
       courierMk.bindTooltip("Kurir", { direction: "top", permanent: true }).openTooltip();
 
+      // ── PUDO: semua titik mitra + rekomendasi drop terdekat ──
+      const recId = dropRec?.pudo.id;
+      for (const p of pudos) {
+        const isRec = p.id === recId;
+        const mk = L.circleMarker(p.coord as unknown as LeafletNS.LatLngExpression, {
+          radius: isRec ? 11 : 7,
+          color: isRec ? "#7c3aed" : "#8b5cf6",
+          weight: isRec ? 4 : 2,
+          fillColor: isRec ? "#ede9fe" : "#ddd6fe",
+          fillOpacity: isRec ? 1 : 0.85,
+          dashArray: isRec ? undefined : "2 3",
+        }).addTo(map);
+        const tag = isRec ? (isCourier ? "★ Titik drop rekomendasi (kurir)" : "★ PUDO terdekat") : "PUDO mitra";
+        mk.bindTooltip(`${tag} · ${p.name} (${p.partner})`, { direction: "top" });
+        mk.bindPopup(
+          `<strong>${p.name}</strong> · ${p.partner}<br/>${isCourier ? "Titik drop paket rekomendasi" : "Titik ambil/bayar paket"}<br/>Jam layanan ${p.hours} · kapasitas ${p.capacityPerDay} paket/hari` +
+            (isRec && dropRec ? `<br/>Jarak dari tujuan ± ${dropRec.distanceKm} km · ETA ± ${dropRec.etaMin} menit` : "")
+        );
+      }
+
+      // Garis rekomendasi: tujuan penerima → PUDO terdekat.
+      if (dropRec) {
+        L.polyline(dropRec.route as unknown as LeafletNS.LatLngExpression[], { color: "#7c3aed", weight: 4, opacity: 0.85, dashArray: "5 7" }).addTo(map);
+      }
+
       map.fitBounds(rgeo.route as unknown as LeafletNS.LatLngBoundsExpression, { padding: [48, 48] });
 
       paint(progress);
@@ -179,7 +215,7 @@
 <div class="relative isolate z-0 w-full overflow-hidden rounded-2xl border border-border" style="height:{height}px">
   <div
     bind:this={mapEl}
-    aria-label={`Peta pengantaran: titik awal ${originLabel}, titik tujuan ${destLabel}, posisi kurir bergerak mengikuti jalan`}
+    aria-label={`Peta pengantaran: titik awal ${originLabel}, titik tujuan ${destLabel}, posisi kurir bergerak mengikuti jalan${showPudo ? ", serta titik PUDO mitra dan rekomendasi drop terdekat" : ""}`}
     role="application"
     class="absolute inset-0"
   ></div>
@@ -187,5 +223,20 @@
     <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-[#16a34a]"></span> Titik awal (hub)</span>
     <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-[#2563eb]"></span> Posisi kurir</span>
     <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-[#c14a21]"></span> Titik tujuan</span>
+    {#if showPudo && pudos.length > 0}
+      <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:#8b5cf6"></span> PUDO mitra</span>
+      <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full ring-2 ring-[#7c3aed]" style="background:#ede9fe"></span> {isCourier ? "Drop rekomendasi" : "PUDO terdekat"}</span>
+    {/if}
   </div>
+  {#if showPudo && dropRec}
+    <div class="pointer-events-none absolute bottom-2 left-2 z-[1000] max-w-[calc(100%-1rem)] rounded-lg border border-[#7c3aed]/40 bg-background/95 px-3 py-2 text-[12px] shadow-pop">
+      <p class="font-semibold text-foreground">
+        {#if isCourier}★ Titik drop paket rekomendasi{:else}★ PUDO terdekat untuk penerima{/if}
+      </p>
+      <p class="text-muted-foreground">{dropRec.pudo.name} · {dropRec.pudo.partner} · ± {dropRec.distanceKm} km · ETA ± {dropRec.etaMin} mnt · {dropRec.pudo.hours}</p>
+      <p class="mt-0.5 text-[11px] text-muted-foreground">
+        {#if isCourier}Arahkan paket berisiko COD ke titik ini alih-alih menunggu di alamat.{:else}Penerima dapat mengambil/membayar paket di gerai mitra ini.{/if}
+      </p>
+    </div>
+  {/if}
 </div>

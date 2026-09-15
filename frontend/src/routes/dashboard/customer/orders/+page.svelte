@@ -132,6 +132,7 @@
                   destLabel={`${o.address.city} · ${o.address.recipient}`}
                   etaMin={etaForCity(o.address.city)}
                   height={300}
+                  role="CUSTOMER"
                 />
                 <p class="mt-2 text-[11px] text-muted-foreground">
                   Garis hijau = jalur kurir yang sudah ditempuh; garis putus-putus = sisa rute menuju alamatmu. Data peta © OpenStreetMap.

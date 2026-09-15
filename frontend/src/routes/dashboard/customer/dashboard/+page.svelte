@@ -132,7 +132,7 @@
       <div class="grid gap-5 lg:grid-cols-[1fr_340px]">
         <!-- Peta -->
         <div class="space-y-3">
-          <DeliveryMap progress={progress} city={tracked.address.city} originLabel={HUB_LABEL} destLabel={reachLabel} etaMin={tripMinutes} height={380} />
+          <DeliveryMap progress={progress} city={tracked.address.city} originLabel={HUB_LABEL} destLabel={reachLabel} etaMin={tripMinutes} height={380} role="CUSTOMER" />
 
           <!-- Linimasa status -->
           <ol class="flex items-center gap-1" aria-label="Status pengantaran">

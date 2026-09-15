@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Icon from "$lib/components/Icon.svelte";
+  import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { resolveHref } from "$lib/utils";
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, type Order } from "$lib/stores/shop";
-  import { COURIER, COD_DECISION_LABEL } from "$lib/logistics";
+  import { COURIER, COD_DECISION_LABEL, PUDO_POINTS, pudosForCity } from "$lib/logistics";
   import { notify } from "$lib/toast";
 
   const network = [
@@ -38,6 +39,9 @@
     orders.filter((o) => !o.routedToPudo && o.payment === "COD" && (o.codDecision === "pudo" || o.codDecision === "pre-payment"))
   );
 
+  /** Kota contoh untuk peta: pesanan PUDO pertama, atau Jakarta bila belum ada. */
+  const mapCity = $derived((routed[0] ?? candidates[0])?.address.city ?? "Jakarta");
+
   function reroute(o: Order) {
     shop.routeToPudo(o.id, COURIER.actor);
     notify({ message: `Pesanan ${o.id} dialihkan ke PUDO`, type: "info", title: "PUDO" });
@@ -49,6 +53,21 @@
     <h1 class="font-heading text-xl font-semibold tracking-tight">PUDO Network</h1>
     <span class="hub-label text-muted-foreground">Pick-Up Drop-Off</span>
   </div>
+
+  <!-- Peta titik PUDO + rekomendasi drop kurir -->
+  <section class="space-y-3 rounded-2xl border border-border bg-card p-5">
+    <div class="flex flex-wrap items-end justify-between gap-2">
+      <div>
+        <p class="text-base font-semibold">Titik PUDO &amp; rekomendasi drop</p>
+        <p class="text-[13.5px] text-muted-foreground">
+          Peta menampilkan seluruh titik mitra. Titik <span class="font-semibold" style="color:#7c3aed">★ rekomendasi</span> adalah arah drop terdekat dari alamat penerima untuk kurir.
+        </p>
+      </div>
+      <span class="rounded-full bg-muted px-3 py-1 text-[13px] font-semibold text-muted-foreground">{PUDO_POINTS.length} titik mitra</span>
+    </div>
+    <DeliveryMap progress={0.75} city={mapCity} originLabel="Hub Jakarta" destLabel={`Alamat penerima · ${mapCity}`} height={380} role="KURIR" />
+    <p class="text-[11px] text-muted-foreground">Contoh kota: {mapCity} ({pudosForCity(mapCity).length} PUDO). Angka &amp; koordinat bersifat simulasi presentasi.</p>
+  </section>
 
   <!-- Paket nyata untuk PUDO -->
   <section class="rounded-2xl border border-border bg-card p-5">

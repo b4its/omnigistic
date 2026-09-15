@@ -3,8 +3,15 @@
   import type * as LeafletNS from "leaflet";
   import type { Hub } from "$lib/api";
   import { OSM_TILE } from "$lib/map/tiles";
+  import { PUDO_POINTS } from "$lib/logistics";
 
-  let { hubs = [] as Hub[], height = 520 }: { hubs?: Hub[]; height?: number } = $props();
+  interface Props {
+    hubs?: Hub[];
+    height?: number;
+    /** Tampilkan titik PUDO mitra (default true). */
+    showPudo?: boolean;
+  }
+  let { hubs = [] as Hub[], height = 520, showPudo = true }: Props = $props();
 
   let mapEl = $state<HTMLElement | undefined>();
 
@@ -62,6 +69,22 @@
         bounds.push(c);
       }
 
+      // ── Titik PUDO mitra (overlay informasi di seluruh wilayah) ──
+      if (showPudo) {
+        for (const p of PUDO_POINTS) {
+          const mk = L.circleMarker(p.coord as unknown as LeafletNS.LatLngExpression, {
+            radius: 5,
+            color: "#8b5cf6",
+            weight: 2,
+            fillColor: "#ddd6fe",
+            fillOpacity: 0.9,
+            dashArray: "2 3",
+          }).addTo(m);
+          mk.bindTooltip(`PUDO · ${p.name} (${p.partner})`, { direction: "top" });
+          mk.bindPopup(`<strong>${p.name}</strong> · ${p.partner}<br/>${p.city} · jam ${p.hours}<br/>Kapasitas ${p.capacityPerDay} paket/hari`);
+        }
+      }
+
       if (bounds.length) {
         m.fitBounds(bounds as LeafletNS.LatLngBoundsExpression, { padding: [40, 40], maxZoom: 6 });
       } else {
@@ -88,5 +111,8 @@
     <p class="flex items-center gap-2"><span class="inline-block h-2.5 w-2.5 rounded-full" style="background:#d9a441"></span> Perhatian, 50-65%</p>
     <p class="flex items-center gap-2"><span class="inline-block h-2.5 w-2.5 rounded-full" style="background:#a03123"></span> Overload, &gt; 65%</p>
     <p class="pt-1 text-[11.5px] font-normal text-muted-foreground">Ukuran bulatan = kapasitas hub</p>
+    {#if showPudo}
+      <p class="flex items-center gap-2 border-t border-border pt-1 text-[11.5px] font-normal text-muted-foreground"><span class="inline-block h-2.5 w-2.5 rounded-full" style="background:#8b5cf6"></span> Titik PUDO mitra (informasi)</p>
+    {/if}
   </div>
 </div>
