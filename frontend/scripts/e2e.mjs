@@ -170,6 +170,8 @@ const pass = results.filter(r => r.ok).length;
 const fail = results.filter(r => !r.ok);
 console.log(`\n===== E2E ${pass}/${results.length} PASS =====`);
 for (const r of results) console.log(`  ${r.ok ? "✅" : "❌"} ${r.name}${r.info ? " — " + r.info : ""}`);
-console.log("\n--- FAILED ---");
-for (const f of fail) console.log(`  ${f.name} :: ${f.info}`);
+if (fail.length) {
+  console.log("\n--- FAILED ---");
+  for (const f of fail) console.log(`  ${f.name} :: ${f.info}`);
+}
 process.exit(fail.length ? 1 : 0);
