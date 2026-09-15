@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Role } from "$lib/stores/role";
-  import { cn } from "$lib/utils";
-  import { api, online } from "$lib/api";
+  import { cn, resolveHref } from "$lib/utils";
+  import { api, online, type Hub } from "$lib/api";
   import ThemeToggle from "./ThemeToggle.svelte";
   import Icon from "./Icon.svelte";
 
@@ -22,7 +22,6 @@
   };
 
   const meta = $derived(roleMeta[role] ?? { name: "Guest", sub: "", letter: "G" });
-  const pageTitle = $derived(role.replace(/\//g, ""));
 
   let range = $state(RANGES[1]);
   let openPop = $state<null | "range" | "notif" | "profile">(null);
@@ -34,11 +33,6 @@
     GUEST: ["Selamat datang — pilih portal peran."]
   };
   let exporting = $state(false);
-  let ol = $state(true);
-  $effect(() => {
-    const u = online.subscribe((v) => (ol = v));
-    return u;
-  });
   const notifsList = $derived(notifCounts[role as string] ?? notifCounts.GUEST);
   const notifs = $derived(notifsList.length);
   let headerEl = $state<HTMLElement | undefined>();
@@ -65,7 +59,7 @@
     try {
       const hubs = await api.hubs();
       const head = "name,region,capacityM_perDay,utilizationPct,outlets,code";
-      const body = hubs.map((h: any) => [h.name, h.region, h.capacityM, h.utilizationPct, h.outlets, h.code].join(",")).join("\n");
+      const body = hubs.map((h: Hub) => [h.name, h.region, h.capacityM, h.utilizationPct, h.outlets, h.code].join(",")).join("\n");
       const blob = new Blob([head + "\n" + body], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -105,7 +99,7 @@
       </button>
       {#if openPop === "range"}
         <div class="absolute left-0 top-[calc(100%+8px)] z-30 w-44 rounded-xl border border-border bg-card p-1 shadow-pop">
-          {#each RANGES as r}
+          {#each RANGES as r (r)}
             <button
               type="button"
               onclick={() => { range = r; openPop = null; }}
@@ -197,13 +191,13 @@
           </div>
           <div class="border-b border-border px-4 py-2">
             <p class="px-1 pb-1 pt-0.5 text-[13.5px] font-semibold uppercase tracking-wider text-muted-foreground">Ganti peran</p>
-            {#each Object.entries(roleRoutes) as [slug, href]}
-              <a href={href} class="block rounded-md px-2 py-1.5 text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
+            {#each Object.entries(roleRoutes) as [slug, href] (slug)}
+              <a href={resolveHref(href)} class="block rounded-md px-2 py-1.5 text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
                 {roleMeta[slug]?.name} · {slug}
               </a>
             {/each}
           </div>
-          <a href="/" class="block px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">Kembali ke halaman utama</a>
+          <a href={resolveHref("/")} class="block px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">Kembali ke halaman utama</a>
         </div>
       {/if}
     </div>

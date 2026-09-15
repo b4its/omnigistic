@@ -32,7 +32,7 @@ class PackageBody(BaseModel):
 
 @router.post("/cod-risk")
 def cod_risk(pkg: PackageBody):
-    return score_package(pkg.dict())
+    return score_package(pkg.model_dump())
 
 
 @router.get("/cod-risk/demo")

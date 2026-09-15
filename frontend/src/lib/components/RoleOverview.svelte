@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { api, type Insights } from "$lib/api";
   import { greetingByTime, cn, priorityCls } from "$lib/utils";
   import Icon from "./Icon.svelte";
   import MetricCard from "./MetricCard.svelte";
-  import AiCard from "./AiCard.svelte";
 
   interface Kpi { label: string; value: string; sub?: string; accent?: string; spark?: number[] }
 
@@ -25,8 +24,8 @@
   const roleName: Record<string, string> = { PUSAT: "Dalila", HUB: "Marwah", KURIR: "Baits", DATA: "Virgiawan" };
   const priorityIcon: Record<string, string> = { high: "!", medium: "\u2191", low: "\u2022" };
 
-  let ins = $state<Insights["insights"]>(insights);
-  let grt = $state(greeting);
+  let ins = $state<Insights["insights"]>(untrack(() => insights));
+  let grt = $state(untrack(() => greeting));
 
   onMount(() => {
     if (!greeting && !insights.length) {

@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import echarts from "$lib/charts/core";
   import type { EChartsCoreOption as EChartsOption } from "echarts/core";
-  import type { ECharts } from "echarts/core";
   import { themeStore } from "$lib/stores/theme";
 
   interface Props {

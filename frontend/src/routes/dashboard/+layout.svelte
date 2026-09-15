@@ -4,7 +4,7 @@
   import { onMount } from "svelte";
   import { windowClass, type M3Window } from "$lib/stores/window-class";
   import { roleStore, roleFromPath, type Role } from "$lib/stores/role";
-  import { cn } from "$lib/utils";
+  import { cn, resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import M3Nav, { type NavItem } from "$lib/components/M3Nav.svelte";
   import Topbar from "$lib/components/Topbar.svelte";
@@ -12,7 +12,7 @@
   import WidgetDrawer from "$lib/components/WidgetDrawer.svelte";
   import ToastStack from "$lib/components/ToastStack.svelte";
   import ThemeToggle from "$lib/components/ThemeToggle.svelte";
-  import { probeBackend, online } from "$lib/api";
+  import { probeBackend } from "$lib/api";
 
   interface Props {
     children: import("svelte").Snippet;
@@ -150,7 +150,7 @@
     {:else}
       <header class="flex h-16 shrink-0 items-center justify-between border-b border-sidebar-border px-6">
         <div class="flex items-center gap-3">
-          <a href="/dashboard" aria-label="Kembali ke dashboard peran" class="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary"><Icon name="arrow-left" cls="h-4 w-4" /></a>
+          <a href={resolveHref("/dashboard")} aria-label="Kembali ke dashboard peran" class="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary"><Icon name="arrow-left" cls="h-4 w-4" /></a>
           <span class="text-sm font-semibold text-foreground">Omnigistic</span>
         </div>
         <ThemeToggle />

@@ -1,6 +1,7 @@
 <script lang="ts">
   import Icon from "$lib/components/Icon.svelte";
   import type { IconName } from "$lib/icon-names";
+  import { resolveHref } from "$lib/utils";
 
   const routes: Record<string, string> = {
     PUSAT: "/dashboard/pusat/overview",
@@ -60,7 +61,7 @@
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2">
         {#each roles as r (r.slug)}
-          <a href={routes[r.slug]} class="group flex h-full flex-col gap-3 rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6 transition-colors hover:border-[var(--lnd-accent-ink)] hover:bg-[var(--lnd-bg-raise)]">
+          <a href={resolveHref(routes[r.slug])} class="group flex h-full flex-col gap-3 rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6 transition-colors hover:border-[var(--lnd-accent-ink)] hover:bg-[var(--lnd-bg-raise)]">
             <div class="flex items-center justify-between">
               <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--lnd-accent-ink)] text-[var(--lnd-bg)]">
                 <Icon name={r.icon} cls="h-5 w-5" />
@@ -82,7 +83,7 @@
       </div>
 
       <div class="mt-8 flex justify-center">
-        <a href="/" class="text-xs text-[var(--lnd-soft)] underline-offset-4 hover:text-[color:var(--lnd-accent-ink)] hover:underline">&larr; Kembali ke halaman utama</a>
+        <a href={resolveHref("/")} class="text-xs text-[var(--lnd-soft)] underline-offset-4 hover:text-[color:var(--lnd-accent-ink)] hover:underline">&larr; Kembali ke halaman utama</a>
       </div>
     </div>
   </div>

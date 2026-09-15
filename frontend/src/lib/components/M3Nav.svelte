@@ -1,8 +1,7 @@
 <script lang="ts">
   import { page } from "$app/state";
   import { windowClass } from "$lib/stores/window-class";
-  import type { Role } from "$lib/stores/role";
-  import { cn } from "$lib/utils";
+  import { cn, resolveHref } from "$lib/utils";
   import Icon from "./Icon.svelte";
   import type { IconName } from "$lib/icon-names";
 
@@ -42,7 +41,7 @@
   <nav aria-label="Primary" class="fixed inset-x-0 bottom-0 z-40 flex h-20 items-stretch justify-around gap-1 border-t border-sidebar-border bg-sidebar" style="padding-bottom: env(safe-area-inset-bottom)">
     {#each items.slice(0, 4) as item (item.href)}
       <a
-        href={item.href}
+        href={resolveHref(item.href)}
         aria-current={isActive(item.href) ? "page" : undefined}
         class="relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5"
       >
@@ -70,7 +69,7 @@
           <div class="absolute bottom-[calc(100%+8px)] left-1/2 z-50 w-56 -translate-x-1/2 rounded-xl border border-border bg-card p-1.5 shadow-pop">
             {#each overflowItems as item (item.href)}
               <a
-                href={item.href}
+                href={resolveHref(item.href)}
                 onclick={() => (overflowOpen = false)}
                 class={cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors", isActive(item.href) ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}
               >
@@ -89,7 +88,7 @@
     <div class="my-1 h-px w-8 bg-sidebar-border"></div>
     {#each items as item (item.href)}
       <a
-        href={item.href}
+        href={resolveHref(item.href)}
         title={item.label}
         aria-current={isActive(item.href) ? "page" : undefined}
         class={cn("flex w-full min-h-14 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1.5 text-[13px] transition-colors", isActive(item.href) ? "bg-accent text-accent-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50")}
@@ -115,7 +114,7 @@
             <div class="absolute left-[calc(100%+12px)] top-0 z-50 w-56 rounded-xl border border-border bg-card p-1.5 shadow-pop">
               {#each sharedItems as item (item.href)}
                 <a
-                  href={item.href}
+                  href={resolveHref(item.href)}
                   onclick={() => (overflowOpen = false)}
                   class={cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors", isActive(item.href) ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}
                 >
@@ -142,7 +141,7 @@
       <p class="px-2 pb-1.5 pt-3 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70">{userName}</p>
       {#each items as item (item.href)}
         <a
-          href={item.href}
+          href={resolveHref(item.href)}
           aria-current={isActive(item.href) ? "page" : undefined}
           class={cn("group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors", isActive(item.href) ? "bg-accent font-medium text-accent-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-accent-foreground")}
         >
@@ -157,7 +156,7 @@
         <p class="px-2 pb-1.5 pt-5 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70">Shared</p>
         {#each sharedItems as item (item.href)}
           <a
-            href={item.href}
+            href={resolveHref(item.href)}
             aria-current={isActive(item.href) ? "page" : undefined}
             class={cn("group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors", isActive(item.href) ? "bg-accent font-medium text-accent-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-accent-foreground")}
           >

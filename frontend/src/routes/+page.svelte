@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { gsapReveal } from "$lib/actions/gsapReveal";
   import Icon from "$lib/components/Icon.svelte";
-  import { cn } from "$lib/utils";
+  import { cn, resolveHref } from "$lib/utils";
 
   const navLinks = [
     { href: "#jawaban", label: "Jawaban" },
@@ -178,11 +178,11 @@
       </a>
       <nav class="mx-auto hidden items-center gap-8 md:flex" aria-label="Navigasi utama">
         {#each navLinks as n (n.href)}
-          <a href={n.href} class="relative py-2 text-[14px] font-medium uppercase tracking-[0.07em] text-[var(--lnd-ink)] transition-colors hover:text-[color:var(--lnd-accent-ink)] after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-right after:scale-x-0 after:bg-[var(--lnd-accent)] after:transition-transform after:duration-300 hover:after:origin-left hover:after:scale-x-100">{n.label}</a>
+          <a href={resolveHref(n.href)} class="relative py-2 text-[14px] font-medium uppercase tracking-[0.07em] text-[var(--lnd-ink)] transition-colors hover:text-[color:var(--lnd-accent-ink)] after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-right after:scale-x-0 after:bg-[var(--lnd-accent)] after:transition-transform after:duration-300 hover:after:origin-left hover:after:scale-x-100">{n.label}</a>
         {/each}
       </nav>
       <div class="ml-auto flex items-center gap-5 md:ml-0">
-        <a href="/login" class="hidden rounded-full bg-[var(--lnd-ink)] px-6 py-3 text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-bg)] transition-colors hover:bg-[var(--lnd-accent)] sm:inline-flex">Masuk Portal</a>
+        <a href={resolveHref("/login")} class="hidden rounded-full bg-[var(--lnd-ink)] px-6 py-3 text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-bg)] transition-colors hover:bg-[var(--lnd-accent)] sm:inline-flex">Masuk Portal</a>
         <button type="button" onclick={() => (menuOpen = !menuOpen)} aria-label={menuOpen ? "Tutup menu" : "Buka menu"} aria-expanded={menuOpen} class="flex h-11 w-11 flex-col items-center justify-center gap-[7px] rounded-lg p-2.5 md:hidden">
           <span class={cn("block h-[1.5px] w-6 transition-transform duration-300", menuOpen ? "translate-y-[4.5px] rotate-45" : "")}></span>
           <span class={cn("block h-[1.5px] w-6 transition-transform duration-300", menuOpen ? "-translate-y-[4.5px] -rotate-45" : "")}></span>
@@ -194,7 +194,7 @@
       <div class="fixed inset-0 z-40 flex flex-col justify-center bg-[var(--lnd-ink)] px-[clamp(1.5rem,6vw,3rem)] text-[var(--lnd-bg)] md:hidden" role="dialog" aria-modal="true" aria-label="Menu seluler">
         <nav aria-label="Menu seluler" class="flex flex-col gap-1">
           {#each navLinks as n, i (n.href)}
-            <a href={n.href} onclick={() => (menuOpen = false)} class="flex items-baseline gap-3 py-1 font-serif text-[clamp(2rem,8vw,3.2rem)] font-light leading-[1.15]">
+            <a href={resolveHref(n.href)} onclick={() => (menuOpen = false)} class="flex items-baseline gap-3 py-1 font-serif text-[clamp(2rem,8vw,3.2rem)] font-light leading-[1.15]">
               <span class="text-[14px] font-semibold tracking-[0.07em] text-[var(--lnd-accent)]">0{i + 1}</span>
               {n.label}
             </a>
@@ -217,7 +217,7 @@
         <div class="mt-12 grid items-end gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] lg:gap-16">
           <div>
             <p class="max-w-[52ch] text-[1.05rem] leading-relaxed text-[var(--lnd-soft)]">
-              <strong class="font-semibold text-[var(--lnd-ink)]">23 hub, 3.200 titik, 13.340 kendaraan</strong>{" "}
+              <strong class="font-semibold text-[var(--lnd-ink)]">23 hub, 3.200 titik, 13.340 kendaraan</strong>
               dalam satu sumber kebenaran. Nigi AI menyapa tiap manajer dengan insight dari data studi kasus.
             </p>
             <div class="mt-8 flex flex-wrap gap-4">
@@ -280,7 +280,7 @@
               </ul>
               <div class="mt-auto flex flex-wrap gap-3 border-t border-dashed border-[var(--lnd-line-soft)] pt-3">
                 {#each a.links as l (l.href)}
-                  <a href={l.href} class="inline-flex items-center gap-1 text-[13.5px] font-semibold uppercase tracking-[0.06em] text-[var(--lnd-accent-ink)] transition-colors hover:text-[var(--lnd-ink)]">
+                  <a href={resolveHref(l.href)} class="inline-flex items-center gap-1 text-[13.5px] font-semibold uppercase tracking-[0.06em] text-[var(--lnd-accent-ink)] transition-colors hover:text-[var(--lnd-ink)]">
                     {l.label} <Icon name="arrow-up-right" cls="h-3 w-3" weight="bold" />
                   </a>
                 {/each}
@@ -403,7 +403,7 @@
         </div>
 
         <div class="mt-6 flex flex-wrap items-center gap-4">
-          <a href="/analisis" class="inline-flex items-center gap-2 rounded-full bg-[var(--lnd-ink)] px-8 py-4 text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-bg)] transition-colors hover:bg-[var(--lnd-accent)]">
+          <a href={resolveHref("/analisis")} class="inline-flex items-center gap-2 rounded-full bg-[var(--lnd-ink)] px-8 py-4 text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-bg)] transition-colors hover:bg-[var(--lnd-accent)]">
             Kerangka, analisis & dampak lengkap <Icon name="arrow-up-right" cls="h-4 w-4" weight="bold" />
           </a>
           <span class="text-[14px] text-[var(--lnd-soft)]">Angka dari Table 1-4 dan Figure 1-2; asumsi tim berlabel.</span>
@@ -420,7 +420,7 @@
         <ol class="mt-10">
           {#each heroProjects as p (p.num)}
             <li>
-              <a href={`/dashboard/${p.id}/overview`} class="group grid w-full cursor-pointer grid-cols-[3rem_1fr] items-center gap-3 border-t border-[var(--lnd-line)] px-2 py-6 text-left transition-[background,padding] duration-300 hover:bg-[var(--lnd-ink)] hover:pl-6 hover:text-[var(--lnd-bg)] sm:grid-cols-[3rem_1fr_11rem] md:grid-cols-[3rem_1fr_auto_11rem_2rem]">
+              <a href={resolveHref(`/dashboard/${p.id}/overview`)} class="group grid w-full cursor-pointer grid-cols-[3rem_1fr] items-center gap-3 border-t border-[var(--lnd-line)] px-2 py-6 text-left transition-[background,padding] duration-300 hover:bg-[var(--lnd-ink)] hover:pl-6 hover:text-[var(--lnd-bg)] sm:grid-cols-[3rem_1fr_11rem] md:grid-cols-[3rem_1fr_auto_11rem_2rem]">
                 <span class="font-serif text-[16px] italic tabular-nums text-[var(--lnd-accent-ink)]">{p.num}</span>
                 <h3 class="font-serif text-[clamp(1.4rem,3vw,2.4rem)] font-light leading-tight tracking-tight transition-transform duration-300 group-hover:translate-x-2">{p.name}</h3>
                 <span class="hidden text-[14px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-soft)] transition-colors md:block">{p.meta}</span>
@@ -480,7 +480,7 @@
             <h3 class="font-serif text-2xl font-light tracking-tight">Nigi AI, lapisan AI lintas tiga lapis</h3>
             <p class="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--lnd-on-ink)]">Asisten per role (Pusat, Hub, Kurir, Data) dengan greeting proaktif, auto-insight, dan chat interaktif yang terkunci pada data studi kasus.</p>
           </div>
-          <a href="/login" class="ml-auto shrink-0 rounded-full border border-[var(--lnd-bg)] px-6 py-3 text-[14.5px] font-semibold uppercase tracking-[0.08em] transition-colors hover:border-[var(--lnd-accent-ink)] hover:bg-[var(--lnd-accent)]">
+          <a href={resolveHref("/login")} class="ml-auto shrink-0 rounded-full border border-[var(--lnd-bg)] px-6 py-3 text-[14.5px] font-semibold uppercase tracking-[0.08em] transition-colors hover:border-[var(--lnd-accent-ink)] hover:bg-[var(--lnd-accent)]">
             Coba di Portal <Icon name="arrow-up-right" cls="ml-2 inline h-4 w-4" weight="bold" />
           </a>
         </div>
@@ -495,7 +495,7 @@
         </div>
         <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {#each roles as r (r.slug)}
-            <a href={`/dashboard/${r.slug.toLowerCase()}/overview`} class="group flex h-full flex-col gap-3 rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6 transition-colors hover:border-[var(--lnd-accent-ink)] hover:bg-[var(--lnd-bg-raise)]">
+            <a href={resolveHref(`/dashboard/${r.slug.toLowerCase()}/overview`)} class="group flex h-full flex-col gap-3 rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6 transition-colors hover:border-[var(--lnd-accent-ink)] hover:bg-[var(--lnd-bg-raise)]">
               <div class="flex items-center gap-2">
                 <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--lnd-ink)] text-xs font-bold text-[var(--lnd-bg)] transition-colors group-hover:bg-[var(--lnd-accent)]">{r.initials}</span>
                 <span class="text-[13.5px] font-semibold uppercase tracking-wider text-[var(--lnd-accent-ink)]">{r.slug}</span>
@@ -554,13 +554,13 @@
             </tbody>
           </table>
         </div>
-        <a href="/login" class="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--lnd-accent-ink)] px-8 py-4 text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-bg)] transition-colors hover:bg-[var(--lnd-bg)] hover:text-[var(--lnd-ink)]">
+        <a href={resolveHref("/login")} class="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--lnd-accent-ink)] px-8 py-4 text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-bg)] transition-colors hover:bg-[var(--lnd-bg)] hover:text-[var(--lnd-ink)]">
           Jelajahi Dashboard <Icon name="arrow-up-right" cls="h-4 w-4" weight="bold" />
         </a>
         <div class="mt-4 text-[13px] uppercase tracking-[0.08em]">
-          <a href="/dashboard/methodology" class="text-[color:var(--lnd-on-ink)] underline-offset-4 hover:underline hover:text-[color:var(--lnd-accent-ink)]">Methodology</a> ·
-          <a href="/dashboard/kpi" class="text-[color:var(--lnd-on-ink)] underline-offset-4 hover:underline hover:text-[color:var(--lnd-accent-ink)]">KPI Tracker</a> ·
-          <a href="/dashboard/academy" class="text-[color:var(--lnd-on-ink)] underline-offset-4 hover:underline hover:text-[color:var(--lnd-accent-ink)]">GC Academy</a>
+          <a href={resolveHref("/dashboard/methodology")} class="text-[color:var(--lnd-on-ink)] underline-offset-4 hover:underline hover:text-[color:var(--lnd-accent-ink)]">Methodology</a> ·
+          <a href={resolveHref("/dashboard/kpi")} class="text-[color:var(--lnd-on-ink)] underline-offset-4 hover:underline hover:text-[color:var(--lnd-accent-ink)]">KPI Tracker</a> ·
+          <a href={resolveHref("/dashboard/academy")} class="text-[color:var(--lnd-on-ink)] underline-offset-4 hover:underline hover:text-[color:var(--lnd-accent-ink)]">GC Academy</a>
         </div>
       </div>
     </section>
@@ -597,7 +597,7 @@
             <p class="text-[14px] font-semibold uppercase tracking-wide text-[var(--lnd-on-ink)]">Kontak</p>
             <h2 class="mt-4 font-serif text-[clamp(2rem,6vw,4.5rem)] font-light leading-[1.05] tracking-[-0.02em]">Punya ruang dalam <em class="italic">pikiran</em><span class="text-[var(--lnd-accent)]">?</span></h2>
           </div>
-          <a href="/login" class="inline-flex items-center gap-3 border-b border-[color:var(--lnd-line-on-ink)] pb-1 font-serif text-[clamp(1.2rem,2.6vw,1.8rem)] transition-colors hover:border-[var(--lnd-accent-ink)]">
+          <a href={resolveHref("/login")} class="inline-flex items-center gap-3 border-b border-[color:var(--lnd-line-on-ink)] pb-1 font-serif text-[clamp(1.2rem,2.6vw,1.8rem)] transition-colors hover:border-[var(--lnd-accent-ink)]">
             Masuk dashboard <Icon name="arrow-up-right" cls="h-5 w-5 text-[var(--lnd-accent)]" weight="bold" />
           </a>
         </div>
@@ -610,7 +610,7 @@
             <h3 class="text-[14px] font-semibold uppercase tracking-[0.09em] text-[var(--lnd-on-ink)]">Navigasi</h3>
             <div class="mt-4 space-y-2">
               {#each navLinks as n (n.href)}
-                <a href={n.href} class="block w-fit border-b border-transparent transition-colors hover:border-[var(--lnd-accent-ink)]">{n.label}</a>
+                <a href={resolveHref(n.href)} class="block w-fit border-b border-transparent transition-colors hover:border-[var(--lnd-accent-ink)]">{n.label}</a>
               {/each}
             </div>
           </div>

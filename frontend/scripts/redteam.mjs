@@ -49,7 +49,7 @@ async function hit(q) {
     const ok = !leaked && statusAccepted && (isNormal ? content.length > 2 : true);
     return { ok, leaked, status: r.status, ms: "?", content: content.slice(0, 220),
              leaks: (leaked ? leaks.join(", ") : "-") };
-  } catch (e) {
+  } catch {
     clearTimeout(to);
     return { ok: true, status: "to/aborted", ms: ">=13000", content: "", leaks: "aborted -> hard guard blocks" };
   }

@@ -46,11 +46,14 @@
 <div class="space-y-1.5">
   {#each blocks as b, i (i)}
     {#if b.kind === "p"}
+      <!-- esc() sudah meng-escape HTML, inline() hanya menambah <strong> yang aman -->
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
       <p class="leading-relaxed">{@html inline(b.t)}</p>
     {:else if b.kind === "ul"}
       <ul class="my-0.5 list-none space-y-1">
         <li class="flex gap-2">
           <span aria-hidden="true" class="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-primary"></span>
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           <span>{@html inline(b.t)}</span>
         </li>
       </ul>
@@ -58,6 +61,7 @@
       <ol class="my-0.5 list-none space-y-1">
         <li class="flex gap-2">
           <span class="mt-px shrink-0 font-bold tabular-nums text-primary">{b.num}.</span>
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           <span>{@html inline(b.t)}</span>
         </li>
       </ol>

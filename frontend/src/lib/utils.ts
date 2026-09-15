@@ -1,6 +1,20 @@
+import { resolve } from "$app/paths";
+
+/** `resolve` dengan signature longgar (runtime hanya menggabungkan base path). */
+const resolvePath = resolve as unknown as (path: string) => string;
+
 /** Ringkas: gabung class Tailwind. (cn sederhana tanpa dependensi clsx) */
 export function cn(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(" ");
+}
+
+/**
+ * Bungkus path internal dengan `resolve()` SvelteKit (menghormati `paths.base`).
+ * Anchor (#...) dan URL absolut dibiarkan apa adanya agar aman untuk nav campuran.
+ */
+export function resolveHref(path: string): string {
+  if (!path || path.startsWith("#") || /^[a-z]+:|^\/\//i.test(path)) return path;
+  return resolvePath(path);
 }
 
 export function formatId(n: number): string {

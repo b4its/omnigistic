@@ -9,7 +9,6 @@
   ];
 
   let quotes = $state<Array<{ city: string; quote: string }>>([]);
-  let loaded = $state(false);
 
   onMount(async () => {
     try {
@@ -17,7 +16,6 @@
     } catch {
       quotes = [];
     }
-    loaded = true;
   });
 </script>
 

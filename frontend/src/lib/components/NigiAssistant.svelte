@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import { api, type Insights } from "$lib/api";
-  import { greetingByTime, cn, priorityCls } from "$lib/utils";
+  import { greetingByTime, cn } from "$lib/utils";
   import ChatMarkdown from "./ChatMarkdown.svelte";
   import Icon from "./Icon.svelte";
 
@@ -187,10 +187,6 @@
     void ask(q);
   }
 
-  function reset() {
-    newConversation();
-  }
-
   function fmtTime(ts: number): string {
     const d = new Date(ts);
     return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
@@ -225,8 +221,8 @@
   });
 
   $effect(() => {
-    msgs;
-    busy;
+    void msgs;
+    void busy;
     if (logEl) logEl.scrollTop = logEl.scrollHeight;
   });
 
@@ -414,7 +410,7 @@
                       Insight {i + 1}
                     </p>
                     <p class="mt-1 text-[14.5px] leading-relaxed text-muted-foreground">
-                      <strong class="font-semibold text-foreground">{ins.title}.</strong>{" "}
+                      <strong class="font-semibold text-foreground">{ins.title}.</strong>
                       <span>{ins.message}</span>
                     </p>
                   </div>

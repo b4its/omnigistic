@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { api, type ChatResp, type Insights } from "$lib/api";
-  import { fade, fly } from "svelte/transition";
-  import { writable } from "svelte/store";
+  import { fly } from "svelte/transition";
   import { greetingByTime, cn } from "$lib/utils";
   import { windowClass, type M3Window } from "$lib/stores/window-class";
   import ChatMarkdown from "./ChatMarkdown.svelte";
@@ -29,14 +28,12 @@
   let screenOpen = $state(false);
   let panelEl = $state<HTMLElement | undefined>();
   let logEl = $state<HTMLElement | undefined>();
-  let lastTrigger: HTMLElement | null = null;
   let msgs = $state<Msg[]>([]);
   let input = $state("");
   let busy = $state(false);
-  let intro = $state<{ greeting: string; insights: InsightEntry[] }>({
-    greeting: initialGreeting,
-    insights: initialInsights
-  });
+  let intro = $state<{ greeting: string; insights: InsightEntry[] }>(
+    untrack(() => ({ greeting: initialGreeting, insights: initialInsights }))
+  );
   let introError = $state(false);
   let shownWords = $state(0);
   let introVisible = $state(false);
@@ -51,13 +48,9 @@
     return unsub;
   });
 
-  function openPanel(e?: Event) {
-    lastTrigger = (e?.currentTarget as HTMLElement) ?? document.querySelector<HTMLButtonElement>('button[aria-label="Buka Nigi Chat"]');
-    screenOpen = true;
-  }
   function closePanel() {
     screenOpen = false;
-    requestAnimationFrame(() => lastTrigger?.focus());
+    requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('button[aria-label="Buka Nigi Chat"]')?.focus());
   }
   $effect(() => {
     if (screenOpen) panelEl?.focus?.();
@@ -125,9 +118,9 @@
 
   // Auto-scroll ke pesan terbaru, seperti chat AI umumnya.
   $effect(() => {
-    msgs;
-    busy;
-    screenOpen;
+    void msgs;
+    void busy;
+    void screenOpen;
     if (logEl) logEl.scrollTop = logEl.scrollHeight;
   });
 </script>
@@ -186,7 +179,7 @@
                       <li class="flex gap-2 text-[14.5px]">
                         <span class={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", priorityDot[ins.priority] ?? "bg-muted")}></span>
                         <span>
-                          <strong class="font-semibold text-foreground">{ins.title}.</strong>{" "}
+                          <strong class="font-semibold text-foreground">{ins.title}.</strong>
                           <span class="text-muted-foreground">{ins.message}</span>
                         </span>
                       </li>

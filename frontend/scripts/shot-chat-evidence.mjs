@@ -10,10 +10,6 @@ await p.goto(BASE+"/dashboard/kurir/cod-risk",{waitUntil:"load",timeout:20000});
 await p.screenshot({path:"images/v7f-cod-risk.png"});
 const fab=p.locator('button[aria-label="Buka Nigi AI"]').first(); if(await fab.isVisible()) await fab.click();
 await p.waitForTimeout(600);
-for (const i of [0,1,2]) { try {
-  let input;
-  if(await p.locator('input[aria-label="Pesan untuk Nigi AI"]').first().isVisible() && (input=await p.locator('input[aria-label="Pesan untuk Nigi AI"]').first()) ) { break; }
-} catch(e){} }
 const inSel='input[aria-label="Pesan untuk Nigi AI"]';
 try{ await p.waitForSelector(inSel,{state:"visible",timeout:5000}); await p.fill(inSel,"kenapa COD lebih lambat"); await p.keyboard.press("Enter"); await p.waitForTimeout(2200); console.log("CHAT OK");}catch(e){console.log("CHAT FAIL",String(e).slice(0,70));}
 await p.screenshot({path:"images/v7f-chat-kurir.png"});

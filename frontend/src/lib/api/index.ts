@@ -174,6 +174,30 @@ export interface CodImpact {
   packagesFreed: number;
 }
 
+export interface ForecastPoint {
+  month: string;
+  label: string;
+  totalM: number;
+  events: string[];
+}
+export interface ForecastResult {
+  model: string;
+  note: string;
+  dataPoints: number;
+  projection: ForecastPoint[];
+  peak: { month: string; label: string; totalM: number };
+  trough: { month: string; label: string; totalM: number };
+  fluctuationPct: number;
+}
+export interface DemandActualResult {
+  year: number;
+  rows: Array<DemandRow & { events: string[] }>;
+}
+export interface AddressDemoResult {
+  street: string;
+  locations: Array<{ city: string; district: string; coordinate: string }>;
+}
+
 export const api = {
   hubs: () => get<Hub[]>("/api/hubs"),
   regions: () => get<string[]>("/api/regions"),
@@ -189,10 +213,10 @@ export const api = {
   insights: (role: string) => get<Insights>(`/api/insights?role=${encodeURIComponent(role)}`),
   suggested: (page: string) => get<SidQuery[]>(`/api/suggested?page=${encodeURIComponent(page)}`),
   chat: (role: string, query: string) => post<ChatResp>("/api/chat", { role, query }),
-  forecast: () => get<any>("/ml/forecast"),
-  demandActual: () => get<any>("/ml/demand-actual"),
+  forecast: () => get<ForecastResult>("/ml/forecast"),
+  demandActual: () => get<DemandActualResult>("/ml/demand-actual"),
   codRiskDemo: () => get<{ packages: CodRiskPkg[]; sim: CodImpact }>("/ml/cod-risk/demo"),
-  addressDemo: () => get<any>("/ml/address-demo"),
+  addressDemo: () => get<AddressDemoResult>("/ml/address-demo"),
   addressParse: (address: string) => post<AddressParseResult>("/ml/address-parse", { address }),
   digitalTwin: () => get<Record<string, TwinResult>>("/ml/sim/digital-twin"),
   codImpact: () => get<{ prob: number; result: CodImpact }>("/ml/sim/cod-impact")

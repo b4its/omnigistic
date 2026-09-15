@@ -36,7 +36,6 @@
     loaded = true;
   });
 
-  const months2023 = $derived(actual?.rows.map((r) => r.month) ?? []);
   const chart = $derived.by(() => {
     if (!forecast || !actual) return null;
     return lineChart(

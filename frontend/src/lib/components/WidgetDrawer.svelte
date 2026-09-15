@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { SvelteSet } from "svelte/reactivity";
   import Icon from "./Icon.svelte";
   import { cn } from "$lib/utils";
 
@@ -22,7 +23,7 @@
 
   let open = $state(false);
   let q = $state("");
-  let sel = $state<Set<string>>(new Set());
+  let sel = new SvelteSet<string>();
   let lastTrigger: HTMLElement | null = null;
 
   onMount(() => {
@@ -47,17 +48,15 @@
   const filtered = $derived(WIDGETS.filter((w) => w.title.toLowerCase().includes(q.toLowerCase())));
 
   function toggle(id: string) {
-    const n = new Set(sel);
-    if (n.has(id)) n.delete(id);
-    else n.add(id);
-    sel = n;
+    if (sel.has(id)) sel.delete(id);
+    else sel.add(id);
   }
 </script>
 
 {#if open}
   <button type="button" aria-label="Tutup drawer" class="fixed inset-0 z-[60] cursor-pointer bg-black/40 transition-opacity" onclick={() => (open = false)}></button>
 {/if}
-<aside
+<div
   role="dialog"
   aria-modal="true"
   aria-label="Tambah widget"
@@ -121,4 +120,4 @@
       Tambah ke dashboard
     </button>
   </div>
-</aside>
+</div>

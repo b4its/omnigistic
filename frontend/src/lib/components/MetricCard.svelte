@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import { cn } from "$lib/utils";
   import Sparkline from "./Sparkline.svelte";
 
@@ -58,7 +59,7 @@
     return `${pre}${txt}${suf}`;
   }
 
-  let shown = $state(value);
+  let shown = $state(untrack(() => value));
   $effect(() => {
     const src = value;
     if (!src) {

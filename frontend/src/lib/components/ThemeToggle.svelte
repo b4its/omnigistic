@@ -1,6 +1,5 @@
 <script lang="ts">
   import { themeStore } from "$lib/stores/theme";
-  import Icon from "./Icon.svelte";
   let cur = $state<"light" | "dark">("light");
   themeStore.subscribe((t) => (cur = t));
 </script>

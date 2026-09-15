@@ -3,7 +3,6 @@ const B = await chromium.launch({ executablePath: "/home/sleepy/.cache/ms-playwr
 const ctx = await B.newContext({ viewport: { width: 1440, height: 900 } });
 const page = await ctx.newPage();
 // CLS measurement on dashboard first paint (cookie absent) — expect ~0 after reserved? measure
-let cls = 0;
 await page.addInitScript(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: "layout-shift", buffered: true }); });
 const t0 = Date.now();
 await page.goto("http://127.0.0.1:3000/dashboard/kurir/cod-risk", { waitUntil: "load" });
@@ -12,7 +11,6 @@ const res = await page.evaluate(() => ({ cls: window.__cls, clsCss: document.doc
 console.log("dashboard:", JSON.stringify(res), "nav-ms:", Date.now() - t0);
 // dark toggle FOUC check: reload with dark saved
 await page.evaluate(() => localStorage.setItem("omnigistic-theme", "dark"));
-const t1 = Date.now();
 await page.reload({ waitUntil: "commit" });
 const earlyClass = await page.evaluate(() => document.documentElement.classList.contains("dark"));
 console.log("FOUC dark early:", earlyClass);

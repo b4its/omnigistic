@@ -17,6 +17,7 @@ async function gotoClean(path, { timeout = 30000 } = {}) {
   page.on("console", hC);
   await page.goto(BASE + path, { waitUntil: "networkidle", timeout });
   const ok = errs.filter((e) => !e.startsWith("console:Failed to fetch") || true); // keep only JS errors, drop benign net noise
+  void ok;
   const jsErrs = errs.filter((e) => e.startsWith("page:"));
   const netErrs = errs.filter((e) => e.startsWith("console:"));
   R(jsErrs.length === 0, "route-no-jserror " + path, jsErrs.join(" | ") + (netErrs.length ? " [net:" + netErrs.length + "]" : ""));
@@ -110,15 +111,12 @@ try {
   if (resp) { R(resp.status() === 200, "chat POST 200", "via :8000"); }
   else R(false, "chat POST 200", "no request captured");
   // wait assistant reply text
-  let reply = "";
-  const bubbles = page.locator('div[style*="rounded-bl-sm"] , .assistant'); // fallback
   await page.waitForTimeout(2500);
   const panel = await page.locator('[aria-label="Nigi AI"]').innerText();
   R(/COD|138|75|menit|produktivitas/i.test(panel), "chat reply = case data", panel.replace(/\s+/g, " ").slice(0, 70));
   await page.screenshot({ path: `${shotDir}/e2e-chat.png` });
 
   // ===== 12. hard-block in real chat (OWASP) — need another message =====
-  const fab2 = page.locator('button[aria-label="Tutup Nigi AI"]').first();
   // test via API directly instead for speed
   const hard = await fetch(`${API}/api/chat`, {
     method: "POST", headers: { "content-type": "application/json" },

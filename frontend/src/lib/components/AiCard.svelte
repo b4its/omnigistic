@@ -53,8 +53,8 @@
 
   // Auto-scroll area jawaban ke bawah saat isinya berubah.
   $effect(() => {
-    answer;
-    busy;
+    void answer;
+    void busy;
     if (ansEl) ansEl.scrollTop = ansEl.scrollHeight;
   });
 </script>

@@ -53,7 +53,7 @@
   stroke-linejoin="round"
   aria-hidden="true"
 >
-  {#each String(d[name] ?? d.circle).split("||") as seg}
+  {#each String(d[name] ?? d.circle).split("||") as seg, i (i)}
     <path d={seg} />
   {/each}
 </svg>

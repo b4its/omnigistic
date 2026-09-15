@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { get } from "svelte/store";
   import L from "leaflet";
   import "leaflet/dist/leaflet.css";
   import { themeStore } from "$lib/stores/theme";
@@ -10,7 +11,6 @@
 
   let mapEl = $state<HTMLElement | undefined>();
   let map: L.Map | null = null;
-  let isDark = $state(false);
 
   const origin = { lat: -6.2088, lng: 106.8456 }; // Jakarta (hub)
   const locations = [
@@ -34,12 +34,11 @@
   // Rute jalan asli (OSRM). Fallback: garis lurus bila geometri kosong.
   const route: LL[] = ROUTE_COORDS.length > 1 ? ROUTE_COORDS : [[origin.lat, origin.lng], [target.lat, target.lng]];
   const segLen: number[] = [];
-  let routeTotal = 0;
   for (let i = 1; i < route.length; i++) {
     const d = haversine({ lat: route[i - 1][0], lng: route[i - 1][1] }, { lat: route[i][0], lng: route[i][1] });
     segLen.push(d);
-    routeTotal += d;
   }
+  const routeTotal = segLen.reduce((s, d) => s + d, 0);
 
   /** Titik pada fraksi jarak t (0..1) di sepanjang polyline. */
   function pointAt(t: number): LL {
@@ -77,26 +76,27 @@
     if (!mapEl) return;
     const el = mapEl;
 
-    const unsubTheme = themeStore.subscribe((t) => (isDark = t === "dark"));
-
     // fallback offline: tetap render marker + path, tanpa tile
-    const tiles: Array<{ url: string; maxZoom: number }> = [
-      { url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", maxZoom: 18 },
-      { url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png", maxZoom: 18 }
-    ];
+    const TILE_LIGHT = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
+    const TILE_DARK = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png";
 
     map = L.map(el, { worldCopyJump: true, zoomControl: true }).setView([-6.4, 106.8], 10);
 
-    const tile = L.tileLayer(tiles[0].url, { maxZoom: 12, crossOrigin: true, errorTileUrl: "" });
-    tile.addTo(map);
-    tile.on("loaderror", () => {
-      try {
-        map?.removeLayer(tile);
-      } catch {
-        /* noop */
-      }
-      const v2 = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png", { maxZoom: 20 });
-      if (map) v2.addTo(map);
+    let basemap: L.TileLayer | null = null;
+    const applyTiles = (dark: boolean) => {
+      const url = dark ? TILE_DARK : TILE_LIGHT;
+      const next = L.tileLayer(url, { maxZoom: 20, crossOrigin: true, errorTileUrl: "" });
+      next.addTo(map!);
+      if (basemap) map?.removeLayer(basemap);
+      basemap = next;
+    };
+    applyTiles(get(themeStore) === "dark");
+
+    const unsubTheme = themeStore.subscribe((t) => {
+      map?.eachLayer((l) => {
+        if (l instanceof L.TileLayer) map?.removeLayer(l);
+      });
+      applyTiles(t === "dark");
     });
 
     // origin marker (vector, hindari 404 marker-icon.png)

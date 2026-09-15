@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { api, type Insights } from "$lib/api";
   import RoleOverview from "$lib/components/RoleOverview.svelte";
-  import { cn } from "$lib/utils";
 
   let greeting = $state("");
   let insights = $state<Insights["insights"]>([]);

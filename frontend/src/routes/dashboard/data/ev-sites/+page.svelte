@@ -84,7 +84,7 @@
     <h2 class="mb-3 text-sm font-medium">Kebijakan Penyusutan 8 Tahun → Kurva Transformasi EV</h2>
     <p class="mb-3 text-sm text-muted-foreground">Setiap kendaraan fosil yang mencapai umur ekonomis 8 tahun wajib diganti EV. Tidak ada lonjakan capex · penggantian mengikuti jadwal penyusutan yang sudah ada. Turnover: ~{(12.5)}%/th.</p>
     <div class="grid grid-cols-5 gap-2 sm:grid-cols-10">
-      {#each policy.years.slice(0, 10) as y}
+      {#each policy.years.slice(0, 10) as y (y.year)}
         <div class="flex flex-col items-center gap-1">
           <div class="inline-block h-12 w-6 overflow-hidden rounded-md bg-muted relative"><div class="absolute inset-x-0 bottom-0 bg-primary transition-all" style="height: {y.cleanPct}%"></div></div>
           <p class="text-[13.5px] tabular-nums text-muted-foreground">{y.year}</p>
