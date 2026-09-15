@@ -1,11 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { get } from "svelte/store";
   import { resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, cartDetail, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, type Order } from "$lib/stores/shop";
+  import { shop, cartDetail, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, COURIER_TASK, nextStatus, progressForStatus, type Order } from "$lib/stores/shop";
   import { ROUTE_DISTANCE_KM } from "$lib/map/route";
 
   interface CartLine {
@@ -46,58 +45,18 @@
   // Pesanan yang dilacak (bukan terkirim lebih dulu; fallback ke terbaru).
   const tracked = $derived(orders.find((o) => o.status !== "terkirim") ?? orders[0] ?? null);
 
-  // ── Simulasi pengantaran (kurir mengatur waktu tempuh) ──
-  // progress 0..1 dikendalikan slider/tombol — pemetaan ke "menit tempuh".
+  // ── Pelacakan realtime dari status NYATA (hasil aksi kurir) ──
+  // Progres peta diturunkan langsung dari status pesanan; pembeli hanya
+  // memantau, bukan menggerakkan. Satu sumber dengan portal kurir.
   const tripMinutes = $derived(tracked ? Math.max(20, Math.round(ROUTE_DISTANCE_KM * 1.6)) : 45);
-  let elapsedMin = $state(0);
-  let playing = $state(false);
-  let speed = $state(1); // pengali kecepatan simulasi (1x..8x)
-  let timer: ReturnType<typeof setInterval> | undefined;
-
-  const progress = $derived(tripMinutes > 0 ? Math.min(1, elapsedMin / tripMinutes) : 0);
-  const arrived = $derived(progress >= 1);
+  const progress = $derived(tracked ? progressForStatus(tracked.status) : 0);
+  const reached = $derived(!!tracked && tracked.status === "terkirim");
   const reachLabel = $derived(tracked ? tracked.address.street.split(",")[0] : "Alamat penerima");
-
-  function tick() {
-    if (!playing) return;
-    elapsedMin = Math.min(tripMinutes, elapsedMin + Math.max(1, Math.round(speed)));
-    if (elapsedMin >= tripMinutes) {
-      playing = false;
-      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: "Kurir telah tiba di tujuan" }));
-    }
-  }
-
-  $effect(() => {
-    if (playing) {
-      timer = setInterval(tick, 500);
-      return () => clearInterval(timer);
-    }
-  });
-
-  // Sinkronkan progress simulasi dengan status pesanan (opsional, saat tiba → tandai terkirim).
-  function resetSim() {
-    elapsedMin = 0;
-    playing = false;
-  }
-  function jumpToDest() {
-    elapsedMin = tripMinutes;
-    playing = false;
-  }
 
   const steps = ORDER_STATUS_FLOW;
   const stepIndex = $derived(tracked ? steps.indexOf(tracked.status) : -1);
-
-  function markDelivered() {
-    if (!tracked || tracked.status === "terkirim") return;
-    let guard = 0;
-    while (guard < 6) {
-      const cur = get(shop).orders.find((o) => o.id === tracked.id)?.status;
-      if (cur === "terkirim" || cur === undefined) break;
-      shop.advanceStatus(tracked.id);
-      guard++;
-    }
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: "Pesanan ditandai terkirim" }));
-  }
+  const currentTask = $derived(tracked ? COURIER_TASK[tracked.status] : null);
+  const upcomingStatus = $derived(tracked ? nextStatus(tracked.status) : null);
 </script>
 
 <div class="space-y-6">
@@ -189,78 +148,59 @@
           </ol>
         </div>
 
-        <!-- Kontrol simulasi kurir -->
+        <!-- Status terkini (dari aksi kurir — hanya pantau) -->
         <aside class="space-y-4">
           <div class="space-y-4 rounded-2xl border border-border bg-card p-5">
             <div class="flex items-center justify-between">
-              <h3 class="text-sm font-semibold text-foreground">Simulasi kurir</h3>
-              <span class="rounded-full px-2.5 py-1 text-xs font-semibold {arrived ? 'bg-success/15 text-success-foreground' : 'bg-primary/10 text-primary'}">{arrived ? "Tiba" : "Dalam perjalanan"}</span>
+              <h3 class="text-sm font-semibold text-foreground">Status pengantaran</h3>
+              <span class="rounded-full px-2.5 py-1 text-xs font-semibold {reached ? 'bg-success/15 text-success-foreground' : 'bg-primary/10 text-primary'}">{reached ? "Tiba" : "Dalam perjalanan"}</span>
             </div>
 
+            <!-- Kondisi paket terkini (ditulis kurir) -->
+            <div class="rounded-xl border {reached ? 'border-success/40 bg-success/5' : 'border-primary/30 bg-accent/40'} p-3">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Kondisi paket terkini</p>
+              <p class="mt-1 text-sm font-medium text-foreground">{tracked.statusNote}</p>
+              <p class="mt-0.5 text-[11px] text-muted-foreground">
+                {new Date(tracked.updatedAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                {#if tracked.courier} · {tracked.courier}{/if}
+              </p>
+            </div>
+
+            <!-- Progres bar (dari status nyata) -->
             <div class="space-y-1">
               <div class="flex justify-between text-xs text-muted-foreground">
-                <span>Waktu tempuh</span>
-                <span class="tabular-nums">{elapsedMin} / {tripMinutes} menit</span>
+                <span>Progres</span>
+                <span class="tabular-nums">{Math.round(progress * 100)}%</span>
               </div>
-              <input
-                type="range"
-                min="0"
-                max={tripMinutes}
-                step="1"
-                value={elapsedMin}
-                oninput={(e) => { playing = false; elapsedMin = Number((e.currentTarget as HTMLInputElement).value); }}
-                aria-label="Atur waktu tempuh kurir (menit)"
-                class="w-full accent-[var(--color-primary)]"
-              />
-              <p class="text-[11px] text-muted-foreground">Geser untuk mengatur kurir sampai tepat waktu ke tujuan (~{ROUTE_DISTANCE_KM} km).</p>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onclick={() => { if (arrived) elapsedMin = 0; playing = !playing; }}
-                class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px"
-              >
-                <Icon name={playing ? "dots" : "compass"} cls="h-4 w-4" weight={playing ? "bold" : "regular"} />
-                {playing ? "Jeda" : arrived ? "Mulai ulang" : "Jalankan"}
-              </button>
-              <button type="button" onclick={resetSim} class="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
-                <Icon name="arrow-left" cls="h-4 w-4" /> Reset
-              </button>
-              <button type="button" onclick={jumpToDest} class="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
-                <Icon name="arrow-up-right" cls="h-4 w-4" /> Ke tujuan
-              </button>
-            </div>
-
-            <div class="space-y-2">
-              <p class="text-xs font-medium text-muted-foreground">Kecepatan simulasi</p>
-              <div class="flex gap-1.5">
-                {#each [1, 2, 4, 8] as s (s)}
-                  <button
-                    type="button"
-                    onclick={() => (speed = s)}
-                    aria-pressed={speed === s}
-                    class="flex-1 rounded-lg border px-2 py-1.5 text-xs font-semibold transition-colors {speed === s ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:text-foreground'}"
-                  >{s}×</button>
-                {/each}
+              <div class="h-2 overflow-hidden rounded-full bg-muted">
+                <div class="h-full rounded-full bg-primary transition-all" style="width:{Math.round(progress * 100)}%"></div>
               </div>
+              <p class="text-[11px] text-muted-foreground">± {(ROUTE_DISTANCE_KM * (1 - progress)).toFixed(1)} km menuju tujuan (~{ROUTE_DISTANCE_KM} km).</p>
             </div>
 
-            <div class="rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-              <p class="font-semibold text-foreground">Progres {Math.round(progress * 100)}%</p>
-              <p class="mt-0.5">Sisa ± {Math.max(0, tripMinutes - elapsedMin)} menit · jarak ± {(ROUTE_DISTANCE_KM * (1 - progress)).toFixed(1)} km</p>
-            </div>
-
-            {#if arrived}
-              <button
-                type="button"
-                onclick={markDelivered}
-                disabled={tracked.status === "terkirim"}
-                class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-success px-4 py-2.5 text-sm font-semibold text-success-foreground transition-transform hover:-translate-y-px disabled:opacity-50"
-              >
-                <Icon name="check" cls="h-4 w-4" weight="bold" /> {tracked.status === "terkirim" ? "Sudah terkirim" : "Tandai terkirim"}
-              </button>
+            <!-- Tugas kurir saat ini (transparansi status) -->
+            {#if currentTask}
+              <div class="flex items-start gap-3 rounded-xl border border-border bg-muted/30 p-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+                  <Icon name={currentTask.icon as never} cls="h-4 w-4" />
+                </span>
+                <div class="min-w-0">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{reached ? "Selesai" : "Kurir saat ini"}</p>
+                  <p class="text-sm font-semibold text-foreground">{currentTask.title}</p>
+                  <p class="mt-0.5 text-xs text-muted-foreground">{currentTask.detail}</p>
+                </div>
+              </div>
             {/if}
+
+            <p class="text-[11px] text-muted-foreground">
+              {#if reached}
+                Paket sudah kamu terima. Terima kasih!
+              {:else if upcomingStatus}
+                Menunggu pembaruan kurir: <span class="font-semibold text-foreground">{ORDER_STATUS_LABEL[upcomingStatus]}</span>.
+              {:else}
+                Status diperbarui otomatis oleh kurir.
+              {/if}
+            </p>
           </div>
 
           <!-- Detail tujuan -->

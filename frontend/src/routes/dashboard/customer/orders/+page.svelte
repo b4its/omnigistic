@@ -4,7 +4,7 @@
   import Icon from "$lib/components/Icon.svelte";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, type Order, type OrderStatus } from "$lib/stores/shop";
+  import { shop, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, progressForStatus, type Order, type OrderStatus } from "$lib/stores/shop";
   import { ROUTE_DISTANCE_KM } from "$lib/map/route";
 
   let orders = $state<Order[]>([]);
@@ -18,36 +18,14 @@
 
   const statusIndex = (s: OrderStatus) => ORDER_STATUS_FLOW.indexOf(s);
 
-  /** Fraksi perjalanan kurir (0..1) diturunkan dari status pengantaran. */
-  function progressFor(status: OrderStatus): number {
-    switch (status) {
-      case "dikemas":
-        return 0;
-      case "dijemput":
-        return 0.15;
-      case "transit":
-        return 0.45;
-      case "dikirim":
-        return 0.75;
-      case "terkirim":
-        return 1;
-      default:
-        return 0;
-    }
-  }
+  /** Fraksi perjalanan kurir (0..1) diturunkan dari status pengantaran nyata. */
+  const progressFor = progressForStatus;
 
   const decisionTone: Record<string, string> = {
     "antar-normal": "bg-success/15 text-success-foreground",
     pudo: "bg-warning/15 text-warning-foreground",
     "pre-payment": "bg-destructive/15 text-destructive-foreground"
   };
-
-  function advance(o: Order) {
-    shop.advanceStatus(o.id);
-    const flow = ORDER_STATUS_FLOW;
-    const nextStatus = flow[Math.min(flow.indexOf(o.status) + 1, flow.length - 1)];
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: `Pesanan ${o.id} → ${ORDER_STATUS_LABEL[nextStatus]}` }));
-  }
 
   function clearOrders() {
     shop.reset();
@@ -108,6 +86,23 @@
                 {/if}
               {/each}
             </ol>
+
+            <!-- Kondisi paket terkini (dari aksi kurir) -->
+            <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border {delivered ? 'border-success/40 bg-success/5' : 'border-primary/30 bg-accent/40'} px-4 py-3">
+              <div class="flex items-start gap-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {delivered ? 'bg-success text-success-foreground' : 'bg-primary text-primary-foreground'}">
+                  <Icon name={delivered ? "check" : "compass"} cls="h-4 w-4" weight={delivered ? "bold" : "regular"} />
+                </span>
+                <div class="min-w-0">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Kondisi paket terkini</p>
+                  <p class="text-sm font-medium text-foreground">{o.statusNote}</p>
+                  <p class="mt-0.5 text-[11px] text-muted-foreground">
+                    Diperbarui {new Date(o.updatedAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    {#if o.courier} · {o.courier}{/if}
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <!-- Pelacakan lokasi terkini (peta) -->
             <div>
@@ -180,16 +175,30 @@
               </div>
             </div>
 
-            {#if !delivered}
-              <button
-                type="button"
-                onclick={() => advance(o)}
-                class="inline-flex items-center gap-2 rounded-full border border-primary/40 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-accent"
-              >
-                <Icon name="arrow-up-right" cls="h-4 w-4" weight="bold" /> Simulasikan progres pengantaran
-              </button>
-            {:else}
+            <!-- Riwayat kondisi paket (aksi nyata kurir) -->
+            <div class="rounded-xl border border-border bg-muted/20 p-4">
+              <p class="mb-2 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                <Icon name="trend" cls="h-3.5 w-3.5" /> Riwayat perjalanan paket
+              </p>
+              <ol class="space-y-2.5">
+                {#each o.events as ev, i (ev.at + "-" + i)}
+                  <li class="flex gap-3">
+                    <span class="mt-1 flex h-2 w-2 shrink-0 rounded-full {i === 0 ? 'bg-primary' : 'bg-muted-foreground/40'}"></span>
+                    <div class="min-w-0 flex-1">
+                      <p class="text-sm text-foreground">{ev.note}</p>
+                      <p class="text-[11px] text-muted-foreground">
+                        {ORDER_STATUS_LABEL[ev.status]} · {new Date(ev.at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · {ev.actor}
+                      </p>
+                    </div>
+                  </li>
+                {/each}
+              </ol>
+            </div>
+
+            {#if delivered}
               <p class="inline-flex items-center gap-2 text-sm font-semibold text-success-foreground"><Icon name="check" cls="h-4 w-4" weight="bold" /> Paket telah sampai ke tanganmu</p>
+            {:else}
+              <p class="inline-flex items-center gap-2 text-sm text-muted-foreground"><Icon name="compass" cls="h-4 w-4" /> Kurir akan memperbarui status setiap tahap pengantaran.</p>
             {/if}
           </div>
         </li>
