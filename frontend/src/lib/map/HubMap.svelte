@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import type * as LeafletNS from "leaflet";
   import type { Hub } from "$lib/api";
+  import { OSM_TILE } from "$lib/map/tiles";
 
   let { hubs = [] as Hub[], height = 520 }: { hubs?: Hub[]; height?: number } = $props();
 
@@ -39,16 +40,8 @@
 
       const m = L.map(el, { worldCopyJump: true, zoomControl: true, scrollWheelZoom: true });
       map = m;
-      const tile = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, crossOrigin: true, errorTileUrl: "" });
-      tile.addTo(m);
-      tile.on("loaderror", () => {
-        try {
-          m.removeLayer(tile);
-        } catch {
-          /* noop */
-        }
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png", { maxZoom: 20 }).addTo(m);
-      });
+      // Tile OpenStreetMap — gratis, open-source, lengkap (tanpa API key).
+      L.tileLayer(OSM_TILE.url, { maxZoom: OSM_TILE.maxZoom, attribution: OSM_TILE.attribution, crossOrigin: true }).addTo(m);
 
       const bounds: Array<[number, number]> = [];
       for (const h of hubs) {

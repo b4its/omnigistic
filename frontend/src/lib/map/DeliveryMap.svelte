@@ -13,6 +13,7 @@
   import { get } from "svelte/store";
   import { themeStore } from "$lib/stores/theme";
   import { ROUTE_COORDS } from "$lib/map/route";
+  import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
 
   interface Props {
     /** Fraksi perjalanan 0..1 (dikendalikan pemanggil). */
@@ -103,25 +104,19 @@
       await import("leaflet/dist/leaflet.css");
       if (disposed || !el) return;
 
-      const TILE_LIGHT = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
-      const TILE_DARK = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png";
-
       map = L.map(el, { worldCopyJump: true, zoomControl: true }).setView(DEST as unknown as LeafletNS.LatLngExpression, 11);
 
-      let basemap: LeafletNS.TileLayer | null = null;
-      const applyTiles = (dark: boolean) => {
-        const next = L.tileLayer(dark ? TILE_DARK : TILE_LIGHT, { maxZoom: 20, crossOrigin: true, errorTileUrl: "" });
-        next.addTo(map!);
-        if (basemap) map?.removeLayer(basemap);
-        basemap = next;
+      // Tile OpenStreetMap — gratis, open-source, lengkap (tanpa API key).
+      const tile = L.tileLayer(OSM_TILE.url, { maxZoom: OSM_TILE.maxZoom, attribution: OSM_TILE.attribution, crossOrigin: true });
+      tile.addTo(map);
+
+      // Mode gelap: filter CSS pada tile OSM (bukan penyedia pihak ketiga).
+      const applyDark = (dark: boolean) => {
+        const pane = map?.getPane("tilePane");
+        if (pane) pane.style.filter = dark ? DARK_TILE_FILTER : "";
       };
-      applyTiles(get(themeStore) === "dark");
-      const unsubTheme = themeStore.subscribe((t) => {
-        map?.eachLayer((l) => {
-          if (l instanceof L.TileLayer) map?.removeLayer(l);
-        });
-        applyTiles(t === "dark");
-      });
+      applyDark(get(themeStore) === "dark");
+      const unsubTheme = themeStore.subscribe((t) => applyDark(t === "dark"));
 
       // Garis rute penuh — putus-putus, samar.
       L.polyline(route as unknown as LeafletNS.LatLngExpression[], { color: "#94a3b8", weight: 3, opacity: 0.55, dashArray: "6 8" }).addTo(map);

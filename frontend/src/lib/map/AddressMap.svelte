@@ -6,6 +6,7 @@
   import { themeStore } from "$lib/stores/theme";
   import { api } from "$lib/api";
   import { ROUTE_COORDS } from "$lib/map/route";
+  import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
 
   let { demo = true }: { demo?: boolean } = $props();
 
@@ -76,28 +77,18 @@
     if (!mapEl) return;
     const el = mapEl;
 
-    // fallback offline: tetap render marker + path, tanpa tile
-    const TILE_LIGHT = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
-    const TILE_DARK = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png";
-
     map = L.map(el, { worldCopyJump: true, zoomControl: true }).setView([-6.4, 106.8], 10);
 
-    let basemap: L.TileLayer | null = null;
-    const applyTiles = (dark: boolean) => {
-      const url = dark ? TILE_DARK : TILE_LIGHT;
-      const next = L.tileLayer(url, { maxZoom: 20, crossOrigin: true, errorTileUrl: "" });
-      next.addTo(map!);
-      if (basemap) map?.removeLayer(basemap);
-      basemap = next;
-    };
-    applyTiles(get(themeStore) === "dark");
+    // Tile OpenStreetMap — gratis, open-source, lengkap (tanpa API key).
+    L.tileLayer(OSM_TILE.url, { maxZoom: OSM_TILE.maxZoom, attribution: OSM_TILE.attribution, crossOrigin: true }).addTo(map);
 
-    const unsubTheme = themeStore.subscribe((t) => {
-      map?.eachLayer((l) => {
-        if (l instanceof L.TileLayer) map?.removeLayer(l);
-      });
-      applyTiles(t === "dark");
-    });
+    // Mode gelap: filter CSS pada tile OSM (bukan penyedia pihak ketiga).
+    const applyDark = (dark: boolean) => {
+      const pane = map?.getPane("tilePane");
+      if (pane) pane.style.filter = dark ? DARK_TILE_FILTER : "";
+    };
+    applyDark(get(themeStore) === "dark");
+    const unsubTheme = themeStore.subscribe((t) => applyDark(t === "dark"));
 
     // origin marker (vector, hindari 404 marker-icon.png)
     const originMk = L.circleMarker(origin, { radius: 9, color: "#16a34a", fillColor: "#dcfce7", fillOpacity: 0.7, weight: 2 }).addTo(map);
