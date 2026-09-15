@@ -62,6 +62,12 @@ export interface Order {
   updatedAt: number;
   /** Riwayat perjalanan paket, terbaru di depan. */
   events: OrderEvent[];
+  /** Slot pengantaran terkonfirmasi (mis. "14:00-16:00"); null bila belum. */
+  slot: string | null;
+  /** Tunai COD sudah diterima kurir? (hanya relevan bila payment === "COD"). */
+  codCollected: boolean;
+  /** Paket dialihkan ke PUDO (mitra ritel) alih-alih antar ke alamat? */
+  routedToPudo: boolean;
 }
 
 export interface ShopState {
@@ -82,15 +88,45 @@ function load(): ShopState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
     const parsed = JSON.parse(raw) as Partial<ShopState>;
+    const orders = (Array.isArray(parsed.orders) ? parsed.orders : []).map(normalizeOrder);
     return {
       cart: Array.isArray(parsed.cart) ? parsed.cart : [],
       address: parsed.address ?? null,
-      orders: Array.isArray(parsed.orders) ? parsed.orders : [],
+      orders,
       buyerId: typeof parsed.buyerId === "string" ? parsed.buyerId : DEFAULT_PERSONA_ID,
     };
   } catch {
     return { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
   }
+}
+
+/**
+ * Normalisasi pesanan dari localStorage agar kompatibel dengan skema lama
+ * (sebelum ada slot/codCollected/routedToPudo/events).
+ */
+function normalizeOrder(o: Partial<Order>): Order {
+  const now = Date.now();
+  const status = (o.status ?? "dikemas") as OrderStatus;
+  return {
+    id: o.id ?? `ORD-${now.toString(36).toUpperCase()}`,
+    createdAt: o.createdAt ?? now,
+    items: Array.isArray(o.items) ? o.items : [],
+    subtotal: o.subtotal ?? 0,
+    shipping: o.shipping ?? 0,
+    total: o.total ?? 0,
+    address: o.address ?? { recipient: "-", phone: "-", street: "-", city: "Jakarta" },
+    payment: o.payment ?? "Transfer",
+    codScore: o.codScore ?? null,
+    codDecision: o.codDecision ?? null,
+    status,
+    statusNote: o.statusNote ?? DEFAULT_COURIER_NOTE[status] ?? "Pesanan diproses.",
+    courier: o.courier ?? null,
+    updatedAt: o.updatedAt ?? o.createdAt ?? now,
+    events: Array.isArray(o.events) && o.events.length ? o.events : [{ at: o.createdAt ?? now, status, note: o.statusNote ?? "Pesanan diproses.", actor: "Sistem" }],
+    slot: o.slot ?? null,
+    codCollected: o.codCollected ?? false,
+    routedToPudo: o.routedToPudo ?? false,
+  };
 }
 
 function persist(state: ShopState): void {
@@ -106,6 +142,11 @@ let seq = 0;
 function newOrderId(): string {
   seq += 1;
   return `ORD-${Date.now().toString(36).toUpperCase()}-${seq}`;
+}
+
+/** Format rupiah ringkas untuk catatan event (tanpa impor katalog). */
+function formatIdr(n: number): string {
+  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 }
 
 function createShop() {
@@ -163,7 +204,7 @@ function createShop() {
       });
     },
     /** Simpan pesanan baru; kembalikan id pesanan. */
-    placeOrder(order: Omit<Order, "id" | "createdAt" | "status" | "statusNote" | "courier" | "updatedAt" | "events">): string {
+    placeOrder(order: Omit<Order, "id" | "createdAt" | "status" | "statusNote" | "courier" | "updatedAt" | "events" | "slot" | "codCollected" | "routedToPudo">): string {
       const id = newOrderId();
       const now = Date.now();
       update((s) => {
@@ -176,6 +217,9 @@ function createShop() {
           courier: null,
           updatedAt: now,
           events: [{ at: now, status: "dikemas", note: "Pesanan diterima & sedang dikemas di hub.", actor: "Sistem" }],
+          slot: null,
+          codCollected: false,
+          routedToPudo: false,
         };
         const next = { ...s, orders: [full, ...s.orders], cart: [] };
         persist(next);
@@ -245,6 +289,75 @@ function createShop() {
         return next;
       });
     },
+
+    /** Aksi kurir: konfirmasi slot pengantaran untuk sebuah pesanan. */
+    confirmSlot(orderId: string, actor: string, slot: string) {
+      const clean = slot.trim();
+      if (!clean) return;
+      update((s) => {
+        const orders = s.orders.map((o) => {
+          if (o.id !== orderId) return o;
+          const now = Date.now();
+          const note = `Slot pengantaran dikonfirmasi: ${clean}.`;
+          return {
+            ...o,
+            slot: clean,
+            statusNote: note,
+            courier: actor,
+            updatedAt: now,
+            events: [{ at: now, status: o.status, note, actor }, ...o.events],
+          };
+        });
+        const next = { ...s, orders };
+        persist(next);
+        return next;
+      });
+    },
+
+    /** Aksi kurir: tandai tunai COD sudah diterima (hanya bila payment COD). */
+    collectCod(orderId: string, actor: string) {
+      update((s) => {
+        const orders = s.orders.map((o) => {
+          if (o.id !== orderId || o.payment !== "COD" || o.codCollected) return o;
+          const now = Date.now();
+          const note = `Pembayaran COD diterima tunai ${formatIdr(o.total)}.`;
+          return {
+            ...o,
+            codCollected: true,
+            statusNote: note,
+            courier: actor,
+            updatedAt: now,
+            events: [{ at: now, status: o.status, note, actor }, ...o.events],
+          };
+        });
+        const next = { ...s, orders };
+        persist(next);
+        return next;
+      });
+    },
+
+    /** Aksi kurir: alihkan paket ke PUDO (mitra ritel) alih-alih antar ke alamat. */
+    routeToPudo(orderId: string, actor: string, partner = "Indomaret terdekat") {
+      update((s) => {
+        const orders = s.orders.map((o) => {
+          if (o.id !== orderId || o.routedToPudo) return o;
+          const now = Date.now();
+          const note = `Paket dialihkan ke PUDO ${partner}; penerima mengambil di gerai.`;
+          return {
+            ...o,
+            routedToPudo: true,
+            statusNote: note,
+            courier: actor,
+            updatedAt: now,
+            events: [{ at: now, status: o.status, note, actor }, ...o.events],
+          };
+        });
+        const next = { ...s, orders };
+        persist(next);
+        return next;
+      });
+    },
+
     reset() {
       const next: ShopState = { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
       persist(next);
@@ -389,3 +502,26 @@ export function nextStatus(status: OrderStatus): OrderStatus | null {
   const i = ORDER_STATUS_FLOW.indexOf(status);
   return i >= 0 && i < ORDER_STATUS_FLOW.length - 1 ? ORDER_STATUS_FLOW[i + 1] : null;
 }
+
+/* ── Derivasi lintas-role (dipakai kurir & seller) ──────────────────────── */
+
+/** Pesanan yang belum terkirim (masih butuh aksi kurir). */
+export const activeOrders: Readable<Order[]> = derived(shop, (s) => s.orders.filter((o) => o.status !== "terkirim"));
+
+/** Pesanan berstatus COD yang belum menerima tunai. */
+export const codOutstanding: Readable<Order[]> = derived(shop, (s) =>
+  s.orders.filter((o) => o.payment === "COD" && !o.codCollected)
+);
+
+/** Pesanan COD berisiko (keputusan model bukan antar-normal). */
+export const codAtRisk: Readable<Order[]> = derived(shop, (s) =>
+  s.orders.filter((o) => o.payment === "COD" && o.codDecision !== null && o.codDecision !== "antar-normal")
+);
+
+/** Pesanan yang dialihkan ke PUDO. */
+export const pudoOrders: Readable<Order[]> = derived(shop, (s) => s.orders.filter((o) => o.routedToPudo));
+
+/** Total tunai COD yang sudah terkumpul kurir. */
+export const codCollectedTotal: Readable<number> = derived(shop, (s) =>
+  s.orders.filter((o) => o.payment === "COD" && o.codCollected).reduce((sum, o) => sum + o.total, 0)
+);
