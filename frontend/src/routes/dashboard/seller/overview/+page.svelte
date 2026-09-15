@@ -101,14 +101,17 @@
   </header>
 
   <!-- KPI -->
-  <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    {#each kpis as k (k.label)}
-      <div class="rounded-2xl border border-border bg-card p-5">
-        <p class="text-xs font-medium text-muted-foreground">{k.label}</p>
-        <p class="mt-2 text-2xl font-bold tabular-nums" style="color:{k.accent}">{k.value}</p>
-        <p class="mt-1 text-xs text-muted-foreground">{k.sub}</p>
-      </div>
-    {/each}
+  <section class="space-y-2">
+    <p class="text-[11px] text-muted-foreground">Ringkasan katalog (estimasi 30 hari, data studi kasus) · pesanan nyata pembeli tertera pada bagian “Pesanan masuk (live)”.</p>
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {#each kpis as k (k.label)}
+        <div class="rounded-2xl border border-border bg-card p-5">
+          <p class="text-xs font-medium text-muted-foreground">{k.label}</p>
+          <p class="mt-2 text-2xl font-bold tabular-nums" style="color:{k.accent}">{k.value}</p>
+          <p class="mt-1 text-xs text-muted-foreground">{k.sub}</p>
+        </div>
+      {/each}
+    </div>
   </section>
 
   <!-- Pesanan masuk (live dari portal Customer) -->
@@ -134,12 +137,13 @@
   <!-- Laba/rugi + tren -->
   <section class="grid gap-5 lg:grid-cols-[1fr_320px]">
     <div class="rounded-2xl border border-border bg-card p-5">
-      <div class="mb-3 flex items-center justify-between">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 class="text-sm font-semibold text-foreground">Tren 14 hari — pendapatan &amp; laba</h2>
         <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold {momentum >= 0 ? 'bg-success/15 text-success-foreground' : 'bg-destructive/15 text-destructive-foreground'}">
           <Icon name={momentum >= 0 ? "trend" : "warn"} cls="h-3.5 w-3.5" /> {momentum >= 0 ? "+" : ""}{momentum}% momentum
         </span>
       </div>
+      <p class="mb-2 text-[11px] text-muted-foreground">Estimasi katalog (bukan pesanan live) — lihat bagian “Pesanan masuk (live)” di atas untuk angka nyata.</p>
       <EChart option={trendChart} height={250} label="Grafik tren pendapatan dan laba 14 hari" />
       <div class="mt-3 grid grid-cols-3 gap-3 text-center">
         <div><p class="text-xs text-muted-foreground">Pendapatan</p><p class="text-sm font-semibold tabular-nums text-foreground">{compact(totals.revenue)}</p></div>

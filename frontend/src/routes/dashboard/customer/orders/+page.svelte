@@ -5,7 +5,7 @@
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, progressForStatus, type Order, type OrderStatus } from "$lib/stores/shop";
-  import { ROUTE_DISTANCE_KM } from "$lib/map/route";
+  import { HUB_LABEL, etaForCity, COD_DECISION_LABEL } from "$lib/logistics";
 
   let orders = $state<Order[]>([]);
   let openMapId = $state<string | null>(null);
@@ -121,9 +121,10 @@
               {#if openMapId === o.id}
                 <DeliveryMap
                   progress={progressFor(o.status)}
-                  originLabel="Hub Jakarta"
+                  city={o.address.city}
+                  originLabel={HUB_LABEL}
                   destLabel={`${o.address.city} · ${o.address.recipient}`}
-                  etaMin={Math.max(20, Math.round(ROUTE_DISTANCE_KM * 1.6))}
+                  etaMin={etaForCity(o.address.city)}
                   height={300}
                 />
                 <p class="mt-2 text-[11px] text-muted-foreground">
@@ -164,9 +165,15 @@
                 {#if o.payment === "COD" && o.codScore !== null}
                   {@const tone = decisionTone[o.codDecision ?? ""] ?? "bg-muted text-foreground"}
                   <div class="rounded-lg {tone} px-3 py-2 text-xs">
-                    <p class="font-semibold">Skor risiko COD {(o.codScore * 100).toFixed(0)}%</p>
-                    <p class="opacity-90">{o.codDecision}</p>
+                    <p class="font-semibold">Kesiapan bayar COD {(o.codScore * 100).toFixed(0)}%</p>
+                    <p class="opacity-90">{o.codCollected ? "Tunai sudah diterima kurir" : COD_DECISION_LABEL[o.codDecision ?? ""] ?? o.codDecision}</p>
                   </div>
+                {/if}
+                {#if o.slot}
+                  <p class="text-xs text-muted-foreground"><span class="font-medium text-foreground">Slot pengantaran:</span> {o.slot}</p>
+                {/if}
+                {#if o.routedToPudo}
+                  <p class="text-xs font-medium text-warning-foreground">Dialihkan ke PUDO — ambil di gerai mitra terdekat.</p>
                 {/if}
                 <div class="flex justify-between border-t border-border pt-2 text-sm">
                   <span class="text-muted-foreground">Total</span>

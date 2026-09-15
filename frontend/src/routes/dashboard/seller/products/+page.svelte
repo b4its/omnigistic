@@ -1,11 +1,27 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import Icon from "$lib/components/Icon.svelte";
   import { productMetrics } from "$lib/shop/analytics";
+  import { shop, type Order } from "$lib/stores/shop";
 
   const rupiah = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 
   const metrics = productMetrics();
   let sortKey = $state<"profit" | "margin" | "revenue" | "return">("profit");
+
+  /** Pesanan nyata → qty terjual per produk (live). */
+  let orders = $state<Order[]>([]);
+  onMount(() => {
+    shop.init();
+    const unsub = shop.subscribe((s) => (orders = s.orders));
+    return unsub;
+  });
+  const liveSold = $derived.by(() => {
+    const m: Record<string, number> = {};
+    for (const o of orders) for (const it of o.items) m[it.productId] = (m[it.productId] ?? 0) + it.qty;
+    return m;
+  });
+  const liveTotalSold = $derived(Object.values(liveSold).reduce((s, n) => s + n, 0));
 
   const sorted = $derived.by(() => {
     const rows = [...metrics];
@@ -74,6 +90,7 @@
           <th scope="col" class="px-3 py-3 text-right">Harga</th>
           <th scope="col" class="px-3 py-3 text-right">HPP</th>
           <th scope="col" class="px-3 py-3 text-right">Terjual</th>
+          <th scope="col" class="px-3 py-3 text-right">Terjual (live)</th>
           <th scope="col" class="px-3 py-3 text-right">Pendapatan</th>
           <th scope="col" class="px-3 py-3 text-right">Laba kotor</th>
           <th scope="col" class="px-3 py-3 text-right">Margin</th>
@@ -96,6 +113,7 @@
             <td class="px-3 py-3 text-right tabular-nums text-foreground">{rupiah(m.sp.product.price)}</td>
             <td class="px-3 py-3 text-right tabular-nums text-muted-foreground">{rupiah(m.sp.cost)}</td>
             <td class="px-3 py-3 text-right tabular-nums text-foreground">{m.sp.sold30}</td>
+            <td class="px-3 py-3 text-right tabular-nums {liveSold[m.sp.product.id] ? 'font-semibold text-primary' : 'text-muted-foreground'}">{liveSold[m.sp.product.id] ?? 0}</td>
             <td class="px-3 py-3 text-right tabular-nums text-foreground">{rupiah(m.revenue)}</td>
             <td class="px-3 py-3 text-right tabular-nums font-semibold text-foreground">{rupiah(m.grossProfit)}</td>
             <td class="px-3 py-3 text-right">
@@ -112,5 +130,9 @@
   <p class="flex items-start gap-2 text-xs text-muted-foreground">
     <Icon name="warn" cls="h-4 w-4 mt-0.5 shrink-0 text-warning-foreground" />
     Margin tipis (&lt;34%) atau retur tinggi (&gt;3%) ditandai. Pertimbangkan penyesuaian harga, bundling, atau mengarahkan pembeli COD berisiko ke titik PUDO.
+  </p>
+
+  <p class="text-[11px] text-muted-foreground">
+    Kolom <span class="font-semibold text-foreground">Terjual</span> = estimasi katalog 30 hari (studi kasus). Kolom <span class="font-semibold text-primary">Terjual (live)</span> = unit dari pesanan nyata pembeli ({liveTotalSold} unit total saat ini).
   </p>
 </div>

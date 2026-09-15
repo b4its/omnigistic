@@ -4,6 +4,7 @@
   import Icon from "$lib/components/Icon.svelte";
   import { SELLER_PRODUCTS } from "$lib/shop/seller";
   import { shop, ORDER_STATUS_LABEL, type Order } from "$lib/stores/shop";
+  import { COD_DECISION_LABEL } from "$lib/logistics";
 
   const rupiah = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 
@@ -87,7 +88,7 @@
             {/each}
           </ul>
           {#if x.order.payment === "COD" && x.order.codScore !== null}
-            <p class="mt-3 text-xs text-muted-foreground">Skor risiko COD pembeli: <span class="font-semibold text-foreground">{(x.order.codScore * 100).toFixed(0)}%</span> ({x.order.codDecision})</p>
+            <p class="mt-3 text-xs text-muted-foreground">Kesiapan bayar COD pembeli: <span class="font-semibold text-foreground">{(x.order.codScore * 100).toFixed(0)}%</span> ({COD_DECISION_LABEL[x.order.codDecision ?? ""] ?? x.order.codDecision})</p>
           {/if}
         </li>
       {/each}

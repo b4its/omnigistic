@@ -5,7 +5,7 @@
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, cartDetail, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, COURIER_TASK, nextStatus, progressForStatus, type Order } from "$lib/stores/shop";
-  import { ROUTE_DISTANCE_KM } from "$lib/map/route";
+  import { HUB_LABEL, etaForCity, distanceForCity, remainingKm, remainingEtaMin } from "$lib/logistics";
 
   interface CartLine {
     name: string;
@@ -48,10 +48,13 @@
   // ── Pelacakan realtime dari status NYATA (hasil aksi kurir) ──
   // Progres peta diturunkan langsung dari status pesanan; pembeli hanya
   // memantau, bukan menggerakkan. Satu sumber dengan portal kurir.
-  const tripMinutes = $derived(tracked ? Math.max(20, Math.round(ROUTE_DISTANCE_KM * 1.6)) : 45);
+  const tripMinutes = $derived(tracked ? etaForCity(tracked.address.city) : 45);
+  const tripKm = $derived(tracked ? distanceForCity(tracked.address.city) : 0);
   const progress = $derived(tracked ? progressForStatus(tracked.status) : 0);
   const reached = $derived(!!tracked && tracked.status === "terkirim");
   const reachLabel = $derived(tracked ? tracked.address.street.split(",")[0] : "Alamat penerima");
+  const kmLeft = $derived(tracked ? remainingKm(tracked.address.city, progress) : 0);
+  const etaLeft = $derived(tracked ? remainingEtaMin(tracked.address.city, progress) : 0);
 
   const steps = ORDER_STATUS_FLOW;
   const stepIndex = $derived(tracked ? steps.indexOf(tracked.status) : -1);
@@ -129,7 +132,7 @@
       <div class="grid gap-5 lg:grid-cols-[1fr_340px]">
         <!-- Peta -->
         <div class="space-y-3">
-          <DeliveryMap progress={progress} originLabel="Hub Jakarta" destLabel={reachLabel} etaMin={tripMinutes} height={380} />
+          <DeliveryMap progress={progress} city={tracked.address.city} originLabel={HUB_LABEL} destLabel={reachLabel} etaMin={tripMinutes} height={380} />
 
           <!-- Linimasa status -->
           <ol class="flex items-center gap-1" aria-label="Status pengantaran">
@@ -172,10 +175,12 @@
                 <span>Progres</span>
                 <span class="tabular-nums">{Math.round(progress * 100)}%</span>
               </div>
-              <div class="h-2 overflow-hidden rounded-full bg-muted">
+              <div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label="Progres pengantaran">
                 <div class="h-full rounded-full bg-primary transition-all" style="width:{Math.round(progress * 100)}%"></div>
               </div>
-              <p class="text-[11px] text-muted-foreground">± {(ROUTE_DISTANCE_KM * (1 - progress)).toFixed(1)} km menuju tujuan (~{ROUTE_DISTANCE_KM} km).</p>
+              <p class="text-[11px] text-muted-foreground">
+                {#if reached}Paket sudah tiba di {tracked.address.city}.{:else}± {kmLeft} km · sisa ETA ± {etaLeft} menit menuju {tracked.address.city} (total {tripKm} km).{/if}
+              </p>
             </div>
 
             <!-- Tugas kurir saat ini (transparansi status) -->
