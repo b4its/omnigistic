@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { gsapReveal } from "$lib/actions/gsapReveal";
   import { resolveHref } from "$lib/utils";
+  import { api, type OptimizeResult, type CodIntelResult, type AuditResult } from "$lib/api";
 
   const layers = [
     { l: "L1", n: "Framing", t: "Pertanyaan inti + 6 pertanyaan kasus", q: "Apa masalah sebenarnya?" },
@@ -36,7 +38,7 @@
     ["Figure 1", "Alamat ambigu", "Nama jalan sama di 3 kota berjauhan", "Akar 4"],
     ["Figure 2", "COD vs non-COD", "138 vs 75 menit (8 paket, 5,3 km)", "Akar 3"]
   ];
-  const derived = [
+  const derivedMetrics = [
     "Cost-to-sales relatif stabil: 30,9% (2020) → 31,3% (2023).",
     "Produktivitas kurir 6,4 vs 3,48 paket/jam; COD hanya 54,3%.",
     "Gap utilisasi Jakarta-Jayapura 62,3 poin persen.",
@@ -71,8 +73,127 @@
     ["Kerangka", "#kerangka"],
     ["Bisnis", "#bisnis"],
     ["Data", "#data"],
+    ["Pertanyaan", "#pertanyaan"],
     ["Solusi", "#solusi"]
   ];
+
+  /* ── Jawaban 6 pertanyaan juri, dengan angka LIVE dari backend ──────────── */
+  let optimize = $state<OptimizeResult | null>(null);
+  let codIntel = $state<CodIntelResult | null>(null);
+  let audit = $state<AuditResult | null>(null);
+
+  onMount(async () => {
+    const [o, c, a] = await Promise.allSettled([api.optimizeLoadBalance(), api.codIntelScenarios(), api.metricAudit()]);
+    if (o.status === "fulfilled") optimize = o.value;
+    if (c.status === "fulfilled") codIntel = c.value["Semua intervensi aktif"] ?? null;
+    if (a.status === "fulfilled") audit = a.value;
+  });
+
+  const fmt = (n: number) => new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(n);
+
+  function buildQuestions() {
+    return [
+    {
+      no: "01",
+      q: "Haruskah Direct Operation beralih ke Regional Sponsored Model?",
+      verdict: "Hibrida, bukan beralih total",
+      answer:
+        "Tidak semua region cocok jadi sponsor. Jawa padat (utilisasi rata-rata " +
+        (audit ? fmt(audit.regionSummary.find((r) => r.region === "Java")?.avgUtilizationPct ?? 69.4) : "69,4") +
+        "%) tetap Direct Operation karena skala ekonomi. Timur under-utilisasi (Kalimantan/Sulawesi/Maluku) jadi kandidat sponsor bertahap.",
+      evidence: [
+        `Optimizer mengalihkan ${optimize ? fmt(optimize.summary.totalMovedM) + "M paket/hari" : "0,31M paket/hari"} dari hub overload ke hub ber-headroom.`,
+        `Utilisasi timur naik ${optimize ? fmt(optimize.summary.eastAvgUtilBefore) + "% → " + fmt(optimize.summary.eastAvgUtilAfter) + "%" : "41,5% → 63,6%"}.`,
+        "3 region bertanda 'kandidat sponsor' (Kalimantan, Sulawesi, Maluku & Papua) berbasis utilisasi <50%.",
+      ],
+      link: "/dashboard/pusat/digital-twin",
+      linkLabel: "Buka Digital Twin",
+    },
+    {
+      no: "02",
+      q: "Bagaimana menangani fluktuasi demand yang dramatis?",
+      verdict: "Kapasitas elastis + forecast per hub",
+      answer:
+        "Demand bergerak 78-105 juta/bulan (" +
+        (audit ? fmt(audit.demand.fluctuationPct) + "% range" : "34,6% range") +
+        "), dengan shock regulasi (TikTok Shop) menurunkan e-commerce " +
+        (audit ? fmt(Math.abs(audit.demand.tiktokEcommerceShockPct ?? 29.8)) + "%" : "29,8%") +
+        " pada Okt. Solusi: kapasitas tiga tingkat + forecast per hub + buffer pra-puncak.",
+      evidence: [
+        "Forecast musiman+tren (MAPE in-sample 1,3%) memprediksi puncak Agustus & palung Oktober jauh sebelum terjadi.",
+        "Event flag (Harbolnas, TikTok suspension) menaikkan/menurunkan proyeksi secara eksplisit.",
+        "Load Balancing mengalihkan overflow otomatis — mencegah insiden Double 12 2022 terulang.",
+      ],
+      link: "/dashboard/hub/load-balance",
+      linkLabel: "Buka Load Balancing",
+    },
+    {
+      no: "03",
+      q: "Analisis sistem COD: bandingkan proses & rekomendasi.",
+      verdict: "COD 138 vs 75 menit — kurir jangan jadi kasir keliling",
+      answer:
+        "Rute COD butuh 138 menit vs non-COD 75 menit (+84%) untuk 8 paket / 5,3 km. Intervensi digital menurunkan waktu tunggu: " +
+        (codIntel ? fmt(codIntel.impact.minutesSavedPerShift) + " menit/shift dihemat, kapasitas +" + fmt(codIntel.impact.extraCapacityPct) + "%" : "hingga 142 menit/shift dihemat") +
+        ".",
+      evidence: [
+        "Waktu tunggu COD = 63 menit / 8 paket ≈ 7,9 menit/paket (verifikasi + bayar + inspeksi).",
+        "4 intervensi: pre-payment link (−55%), PUDO (−75%), slot confirmation (−35%), clustering rute (−20%).",
+        "Setiap menit yang dihemat = paket ekstra tanpa menambah kurir maupun armada.",
+      ],
+      link: "/dashboard/kurir/cod-intel",
+      linkLabel: "Buka COD Intelligence",
+    },
+    {
+      no: "04",
+      q: "Roadmap & benefit-cost analisis inisiatif sustainability.",
+      verdict: "3 fase, EV = 1,41% armada sebagai pilot terukur",
+      answer:
+        "Roadmap 3 fase (2024→2026+) dengan target 200 kendaraan bersih = " +
+        (audit ? fmt(audit.fleet.evSharePct) + "%" : "1,41%") +
+        " dari " + (audit ? fmt(audit.fleet.totalArmada) : "14.180") +
+        " armada. Dimulai sebagai pilot rute urban, bukan belanja besar sekaligus; penyusutan 8 tahun & TCO dihitung.",
+      evidence: [
+        "Fase 1: 50 EV pilot urban Jawa + baseline emisi + reusable bag 8 hub.",
+        "Fase 2: kepenuhan 200 EV + kemasan degradable + Predictive COD/PUDO.",
+        "Fase 3: ekspansi van-truk listrik + sertifikasi ESG. Emisi/paket target −20% per 2027.",
+      ],
+      link: "/dashboard/data/ev-sites",
+      linkLabel: "Buka EV Site Selection",
+    },
+    {
+      no: "05",
+      q: "Justifikasi strategi ekspansi pasar: profitable atau tidak?",
+      verdict: "Profitable jika utilisasi & kompleksitas dikendalikan",
+      answer:
+        "Cost-to-sales relatif stabil (30,9% 2020 → 31,3% 2023), jadi masalahnya bukan margin per unit tetapi skala & kompleksitas. Ekspansi menguntungkan hanya bila utilisasi timur naik dan biaya " +
+        "fixed-wilayah-timur bergeser ke model shared-risk sponsor.",
+      evidence: [
+        "Fulfilment +54,9% vs Net Sales +48,7% (2020→2023): biaya tumbuh lebih cepat dari pendapatan.",
+        "Network partner tumbuh 23,9× (20→478) tetapi outlet hanya 3,3× — kompleksitas melonjak.",
+        "Optimizer membebaskan kapasitas tanpa capex baru (utilisasi timur +" + (optimize ? fmt(optimize.summary.eastAvgUtilAfter - optimize.summary.eastAvgUtilBefore) : "22,1") + " poin).",
+      ],
+      link: "/dashboard/pusat/roi",
+      linkLabel: "Buka ROI & BCA",
+    },
+    {
+      no: "06",
+      q: "Strategi lain menurunkan biaya sambil menjaga pendapatan?",
+      verdict: "Eliminasi pemborosan + modal shift, bukan pemotongan harga",
+      answer:
+        "Tiga tuas: (1) hilangkan waktu tunggu COD (last-mile), (2) modal shift laut-udara via Control Tower untuk rute jauh, (3) Address Intelligence menekan komplain & retur. Semua menurunkan biaya tanpa memotong layanan.",
+      evidence: [
+        "Komplain 5,5/juta paket — Address Intelligence + geotag menargetkan <3/juta.",
+        "Control Tower mengoordinasikan 2 moda tanpa capex armada baru.",
+        "COD idle dihindari = proxy CO₂ turun (sustainability tercapai lewat efisiensi).",
+      ],
+      link: "/dashboard/data/multimodal",
+      linkLabel: "Buka Control Tower",
+    },
+    ];
+  }
+
+  // Reaktif terhadap audit/optimize/codIntel (di-evaluasi ulang saat data live tiba).
+  const questions = $derived(buildQuestions());
 </script>
 
 <svelte:head><title>Kerangka &amp; Analisis · Omnigistic</title></svelte:head>
@@ -211,7 +332,7 @@
         <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6">
           <p class="text-sm font-semibold text-[var(--lnd-ink)]">Metrik turunan</p>
           <ul class="mt-3 space-y-2 text-[15px] leading-relaxed text-[var(--lnd-soft)]">
-            {#each derived as d (d)}<li>• {d}</li>{/each}
+            {#each derivedMetrics as d (d)}<li>• {d}</li>{/each}
           </ul>
         </div>
         <div class="rounded-2xl border border-l-4 border-[var(--lnd-line)] border-l-[var(--lnd-late)] bg-[var(--lnd-surface)] p-6">
@@ -220,6 +341,41 @@
             {#each gaps as g (g)}<li>• {g}</li>{/each}
           </ul>
         </div>
+      </div>
+    </section>
+
+    <!-- PERTANYAAN -->
+    <section use:gsapReveal id="pertanyaan" class="scroll-mt-20 border-t border-[var(--lnd-line)] py-[clamp(3.5rem,7vw,6rem)]">
+      <div class="border-t border-[var(--lnd-ink)] pt-6">
+        <p class="eyebrow">Enam pertanyaan strategis</p>
+        <h2 class="mt-6 max-w-3xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Jawaban, dengan angka yang bisa diaudit</h2>
+        <p class="mt-4 max-w-[68ch] text-sm leading-relaxed text-[var(--lnd-soft)]">
+          Setiap pertanyaan kasus dijawab dengan verdict, alasan, bukti kuantitatif dari mesin analitik, dan tautan ke karya interaktifnya. Angka live ditarik dari backend saat halaman dibuka.
+        </p>
+      </div>
+
+      <div class="mt-10 grid gap-4 lg:grid-cols-2">
+        {#each questions as q (q.no)}
+          <article class="flex flex-col rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6">
+            <div class="flex items-start gap-3">
+              <span class="font-serif text-[15px] italic text-[var(--lnd-accent-ink)]">{q.no}</span>
+              <h3 class="text-[15px] font-semibold leading-snug text-[var(--lnd-ink)]">{q.q}</h3>
+            </div>
+            <p class="mt-3 inline-flex w-fit rounded-full bg-[var(--lnd-accent)]/10 px-3 py-1 text-[13px] font-semibold text-[var(--lnd-accent-ink)]">{q.verdict}</p>
+            <p class="mt-3 text-[15px] leading-relaxed text-[var(--lnd-soft)]">{q.answer}</p>
+            <ul class="mt-4 space-y-2 border-t border-[var(--lnd-line)] pt-4 text-[14.5px] leading-relaxed text-[var(--lnd-soft)]">
+              {#each q.evidence as e (e)}
+                <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--lnd-accent)]"></span><span>{e}</span></li>
+              {/each}
+            </ul>
+            <a
+              href={resolveHref(q.link)}
+              class="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-[var(--lnd-ink)] px-4 py-2 text-[13px] font-semibold uppercase tracking-[0.07em] text-[var(--lnd-ink)] transition-colors hover:border-[var(--lnd-accent-ink)] hover:text-[var(--lnd-accent-ink)]"
+            >
+              {q.linkLabel}
+            </a>
+          </article>
+        {/each}
       </div>
     </section>
 
