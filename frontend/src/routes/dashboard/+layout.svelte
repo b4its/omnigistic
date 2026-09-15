@@ -30,6 +30,7 @@
     address: "Address Intelligence", complaint: "Complaint Monitor", multimodal: "Control Tower",
     fleet: "Fleet & Emissions", "ev-sites": "EV Site Selection", methodology: "Methodology",
     academy: "Nigi Academy", kpi: "KPI Tracker", assistant: "Nigi AI", "": "Dashboard",
+    tasks: "Tugas Pengantaran",
     shop: "Belanja", orders: "Pesanan Saya", checkout: "Checkout", cart: "Keranjang",
     analytics: "Analitik Penjualan", products: "Produk Saya", customers: "Analisis Pelanggan", "seller-orders": "Pesanan Masuk",
     "predictive-cod": "Predictive COD"
@@ -73,6 +74,7 @@
     KURIR: [
       { label: "Nigi AI", href: "/dashboard/kurir/assistant", icon: "chat" },
       { label: "Overview", href: "/dashboard/kurir/overview", icon: "circle" },
+      { label: "Tugas Pengantaran", href: "/dashboard/kurir/tasks", icon: "map" },
       { label: "Route Clustering", href: "/dashboard/kurir/routes", icon: "compass" },
       { label: "Predictive COD", href: "/dashboard/kurir/cod-risk", icon: "currency" },
       { label: "Slot Confirmation", href: "/dashboard/kurir/slot", icon: "bell" },
@@ -143,7 +145,7 @@
   const questionMap: Record<string, string> = {
     "digital-twin": "1", network: "1", utilization: "1",
     forecast: "2", "load-balance": "2", capacity: "2",
-    "cod-risk": "3", routes: "3", slot: "3", payment: "3", pudo: "3",
+    "cod-risk": "3", routes: "3", slot: "3", payment: "3", pudo: "3", tasks: "3",
     address: "6", complaint: "6", multimodal: "6",
     fleet: "4", "ev-sites": "4", roi: "4",
     executive: "5",
