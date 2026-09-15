@@ -97,22 +97,51 @@ try {
   R(/saran|Nigi AI|hubungi|cluster/i.test(txt), "cod-risk: Nigi AI suggestion block");
   await page.screenshot({ path: `${shotDir}/e2e-cod.png` });
 
+  // ===== 10b. Network Optimization + COD Intel + Analisis 6 pertanyaan =====
+  await gotoClean("/dashboard/hub/load-balance");
+  const lbTxt = await page.locator("body").innerText();
+  R(/Jalankan ulang|Rencana Pergerakan|terlayani/i.test(lbTxt), "load-balance: optimizer UI");
+  R(/sebelum|sesudah|Overload/i.test(lbTxt), "load-balance: before/after");
+
+  await gotoClean("/dashboard/kurir/cod-intel");
+  const ciTxt = await page.locator("body").innerText();
+  R(/COD Decision Intelligence/.test(ciTxt), "cod-intel: judul");
+  R(/138 menit|Waktu tunggu COD/.test(ciTxt), "cod-intel: figur kasus");
+  R(/Simulator intervensi/.test(ciTxt), "cod-intel: simulator");
+
+  await page.goto(BASE + "/dashboard/methodology", { waitUntil: "load" });
+  await page.waitForTimeout(2500);
+  R(/Audit & Rekonsiliasi Angka|Jumlah hub = 23/.test(await page.locator("body").innerText()), "methodology: audit section");
+
+  await page.goto(BASE + "/analisis", { waitUntil: "load" });
+  await page.waitForTimeout(2500);
+  const anH = await page.evaluate(() => document.body.scrollHeight);
+  for (let y = 0; y < anH; y += 800) { await page.evaluate((yy) => window.scrollTo(0, yy), y); await page.waitForTimeout(120); }
+  await page.waitForTimeout(800);
+  const anTxt = await page.locator("body").innerText();
+  R(/ENAM PERTANYAAN STRATEGIS/.test(anTxt), "analisis: section 6 pertanyaan");
+  R(/Haruskah Direct Operation/.test(anTxt), "analisis: jawaban Q1");
+
   // ===== 11. REAL chat interaction (browser→ API :8000) =====
   await page.goto(BASE + "/dashboard/kurir/overview", { waitUntil: "load" });
-  const fab = page.locator('button[aria-label="Buka Nigi AI"]').first();
+  await page.waitForTimeout(1500);
+  const fab = page.locator('button[aria-label="Buka Nigi Chat"]').first();
   await fab.waitFor({ state: "visible", timeout: 8000 });
+  await fab.scrollIntoViewIfNeeded().catch(() => {});
   await fab.click();
-  R(await page.locator('[aria-label="Nigi AI"]').isVisible(), "chat panel opened");
+  const panelRegion = page.locator('[role="region"][aria-label="Nigi AI"]');
+  const panelOpened = await panelRegion.waitFor({ state: "visible", timeout: 8000 }).then(() => true).catch(() => false);
+  R(panelOpened, "chat panel opened");
   await page.waitForTimeout(600);
   const chatResp = page.waitForEvent("response", (res) => res.url().includes("/api/chat"), { timeout: 12000 }).catch(() => null);
-  await page.fill('input[aria-label="Pesan untuk Nigi AI"]', "kenapa COD lebih lambat");
+  await page.fill('input[aria-label="Pesan untuk Nigi Chat"]', "kenapa COD lebih lambat");
   await page.keyboard.press("Enter");
   const resp = await chatResp;
   if (resp) { R(resp.status() === 200, "chat POST 200", "via :8000"); }
   else R(false, "chat POST 200", "no request captured");
   // wait assistant reply text
   await page.waitForTimeout(2500);
-  const panel = await page.locator('[aria-label="Nigi AI"]').innerText();
+  const panel = await panelRegion.innerText();
   R(/COD|138|75|menit|produktivitas/i.test(panel), "chat reply = case data", panel.replace(/\s+/g, " ").slice(0, 70));
   await page.screenshot({ path: `${shotDir}/e2e-chat.png` });
 
