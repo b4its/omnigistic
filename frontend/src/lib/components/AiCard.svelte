@@ -10,7 +10,8 @@
     PUSAT: ["Kenapa biaya naik lebih cepat dari sales?", "Kenapa Jakarta overload?"],
     HUB: ["Berapa utilisasi hub Bandung?", "Kenapa demand naik turun?"],
     KURIR: ["Kenapa COD lebih lambat?", "Apa itu Slot Confirmation?"],
-    DATA: ["Kenapa alamat bisa ambigu?", "Berapa tingkat komplain?"]
+    DATA: ["Kenapa alamat bisa ambigu?", "Berapa tingkat komplain?"],
+    CUSTOMER: ["Kenapa COD lebih lambat?", "Apa itu PUDO?"]
   };
 
   let greeting = $state("");

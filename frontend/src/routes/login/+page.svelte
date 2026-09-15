@@ -7,7 +7,8 @@
     PUSAT: "/dashboard/pusat/overview",
     HUB: "/dashboard/hub/overview",
     KURIR: "/dashboard/kurir/overview",
-    DATA: "/dashboard/data/overview"
+    DATA: "/dashboard/data/overview",
+    CUSTOMER: "/dashboard/customer/overview"
   };
 
   const roles: { slug: string; name: string; sub: string; initials: string; desc: string; icon: IconName }[] = [
@@ -30,6 +31,11 @@
       slug: "DATA", name: "Virgiawan", sub: "Data & IT", initials: "V",
       desc: "Address intelligence 3 alamat ambigu, monitoring komplain, control tower multimoda, emisi armada.",
       icon: "map"
+    },
+    {
+      slug: "CUSTOMER", name: "Sari", sub: "Pembeli", initials: "S",
+      desc: "Belanja di e-commerce Omnigistic: cari produk, keranjang, checkout COD, lalu lacak pengantaran.",
+      icon: "globe"
     }
   ];
 </script>
@@ -45,7 +51,7 @@
       Angka yang tidak <em class="italic text-[var(--lnd-accent-ink)]">berteriak</em><span class="text-[var(--lnd-accent-ink)]">.</span>
     </p>
     <div class="flex justify-between gap-4 text-[14px] font-semibold uppercase tracking-[0.09em] text-[var(--lnd-on-ink)]">
-      <span>Empat portal</span><span>ISCEA 2026</span>
+      <span>Lima portal</span><span>ISCEA 2026</span>
     </div>
   </div>
 

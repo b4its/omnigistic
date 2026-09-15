@@ -552,6 +552,46 @@
           "priority": "medium"
         }
       ]
+    },
+    "CUSTOMER": {
+      "greeting": "Sari, 3 paket COD-mu sedang dalam pengantaran hari ini. Rute COD rata-rata 138 menit — pilih konfirmasi slot agar kurir tak menunggu.",
+      "insights": [
+        {
+          "title": "Bayar di Tempat",
+          "message": "COD memakai 138 menit untuk 8 paket vs 75 menit non-COD. Siapkan uang pas agar pengantaran lebih cepat.",
+          "priority": "high"
+        },
+        {
+          "title": "Alamat Presisi",
+          "message": "Isi alamat lengkap + patokan. 'Jl. Raya Jakarta-Bogor No.12' bisa menunjuk 3 kota berbeda.",
+          "priority": "high"
+        },
+        {
+          "title": "Pilih PUDO",
+          "message": "Bila sering tak di rumah, arahkan ke titik PUDO terdekat untuk ambil paket sesuai waktu sendiri.",
+          "priority": "medium"
+        }
+      ]
+    },
+    "SELLER": {
+      "greeting": "Rina, margin bulan ini sehat tapi 2 dari 10 pesananmu berisiko gagal antar (COD tinggi). Atur threshold PUDO untuk menekan retur.",
+      "insights": [
+        {
+          "title": "Risiko COD",
+          "message": "Paket nilai tinggi di jam malam dengan alamat ambigu paling sering gagal COD — skor risiko >65%.",
+          "priority": "high"
+        },
+        {
+          "title": "Retur & Komplain",
+          "message": "Complaint rate jaringan 5,5 per juta paket. Alamat presisi dan estimasi tiba jelas menekan retur.",
+          "priority": "high"
+        },
+        {
+          "title": "Pelanggan Setia",
+          "message": "Skor pelanggan memakai recency, frekuensi, dan nilai belanja. Beri insentif transfer ke pelanggan berisiko COD tinggi.",
+          "priority": "medium"
+        }
+      ]
     }
   },
   "fallbackChatQA": [
@@ -1229,6 +1269,48 @@
         "Berapa potensi penghematan waktu?",
         "Bagaimana testimoni kurir soal ini?"
       ]
+    },
+    {
+      "role": "CUSTOMER",
+      "keywords": ["cod", "bayar di tempat", "tunai", "lambat", "kenapa cod"],
+      "question": "Kenapa pesanan COD saya lebih lama?",
+      "answer": "Rute COD 8 paket butuh 138 menit sedangkan non-COD hanya 75 menit untuk jarak dan jumlah paket sama — 84% lebih lambat. Kurir harus verifikasi penerima dan menunggu uang siap. Siapkan uang pas dan konfirmasi slot agar pengantaran lebih cepat.",
+      "followups": ["Apa itu Slot Confirmation?", "Apa itu PUDO?"]
+    },
+    {
+      "role": "CUSTOMER",
+      "keywords": ["pudo", "titik ambil", "ambil sendiri", "antar ke mana"],
+      "question": "Apa itu PUDO?",
+      "answer": "PUDO (Pick-Up Drop-Off) adalah titik ambil paket terdekat, misalnya minimarket. Paket diarahkan ke sana bila penerima sering tidak di rumah. Keuntungannya kamu bisa ambil sesuai waktu sendiri dan kurir tidak menunggu di depan pintu.",
+      "followups": ["Kenapa pesanan COD saya lebih lama?", "Bagaimana cara melacak paket saya?"]
+    },
+    {
+      "role": "CUSTOMER",
+      "keywords": ["lacak", "tracking", "melacak paket", "posisi paket", "sampai"],
+      "question": "Bagaimana cara melacak paket saya?",
+      "answer": "Buka menu Pesanan Saya. Ada linimasa 5 tahap: dikemas, dijemput kurir, transit hub, dalam pengantaran, terkirim. Untuk paket COD, skor risiko dan estimasi tunggu juga ditampilkan agar kamu bisa bersiap.",
+      "followups": ["Kenapa pesanan COD saya lebih lama?", "Apa itu PUDO?"]
+    },
+    {
+      "role": "SELLER",
+      "keywords": ["komplain", "retur", "komplain turun", "tingkat komplain"],
+      "question": "Berapa tingkat komplain jaringan dan bagaimana menurunkannya?",
+      "answer": "Complaint rate 2023 sebesar 5,5 per juta paket, sekitar 6.105 kasus dari volume 1.110 juta paket. Target di bawah 3 per juta. Penurunan terdorong alamat yang presisi, estimasi tiba yang jelas, dan pengalihan paket COD berisiko ke PUDO atau pre-payment.",
+      "followups": ["Kenapa COD lebih lambat?", "Bagaimana memilih PUDO untuk pembeli?"]
+    },
+    {
+      "role": "SELLER",
+      "keywords": ["cod", "risiko", "gagal antar", "gagal cod", "lambat"],
+      "question": "Kenapa COD lebih lambat dan berisiko?",
+      "answer": "Rute COD memakai 138 menit untuk 8 paket vs 75 menit non-COD (84% lebih lambat) dengan produktivitas 3,48 vs 6,4 paket/jam. Risiko naik untuk nilai paket tinggi, jam antar malam, alamat ambigu, dan zona sulit. Model Predictive COD memberi skor 0-1 dan menyarankan antar normal, PUDO, atau pre-payment.",
+      "followups": ["Berapa tingkat komplain jaringan dan bagaimana menurunkannya?", "Bagaimana memilih PUDO untuk pembeli?"]
+    },
+    {
+      "role": "SELLER",
+      "keywords": ["pudo", "pilih pudo", "pembeli", "arahkan pudo"],
+      "question": "Bagaimana memilih PUDO untuk pembeli?",
+      "answer": "Prioritaskan pembeli dengan skor risiko COD tinggi, riwayat gagal antar, atau alamat di zona sulit. Arahkan paket ke titik PUDO terdekat dari pembeli agar bisa diambil sesuai waktu mereka. Ini menekan upaya antar berulang yang memakan 10-20 menit per kunjungan gagal.",
+      "followups": ["Kenapa COD lebih lambat dan berisiko?", "Berapa tingkat komplain jaringan dan bagaimana menurunkannya?"]
     }
   ],
   "suggestedQuestions": [

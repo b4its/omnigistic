@@ -48,7 +48,8 @@
     { slug: "PUSAT", name: "Dalila", role: "Decision Maker Pusat", desc: "KPI finansial, Digital Twin, utilisasi 23 hub, ekspansi.", initials: "D" },
     { slug: "HUB", name: "Marwah", role: "Hub Manager Bandung", desc: "Forecast, load balancing, kapasitas, alert dini.", initials: "M" },
     { slug: "KURIR", name: "Baits", role: "Courier Jakarta", desc: "Clustering rute, Predictive COD, slot, pembayaran digital.", initials: "B" },
-    { slug: "DATA", name: "Virgiawan", role: "Data & IT", desc: "Address Intelligence, komplain, control tower, emisi.", initials: "V" }
+    { slug: "DATA", name: "Virgiawan", role: "Data & IT", desc: "Address Intelligence, komplain, control tower, emisi.", initials: "V" },
+    { slug: "CUSTOMER", name: "Sari", role: "Pembeli", desc: "Belanja di e-commerce, checkout COD dengan skor risiko, lacak pengantaran.", initials: "S" }
   ];
 
   let menuOpen = $state(false);
@@ -478,7 +479,7 @@
           </span>
           <div class="min-w-0">
             <h3 class="font-serif text-2xl font-light tracking-tight">Nigi AI, lapisan AI lintas tiga lapis</h3>
-            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--lnd-on-ink)]">Asisten per role (Pusat, Hub, Kurir, Data) dengan greeting proaktif, auto-insight, dan chat interaktif yang terkunci pada data studi kasus.</p>
+            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--lnd-on-ink)]">Asisten per role (Pusat, Hub, Kurir, Data, Customer) dengan greeting proaktif, auto-insight, dan chat interaktif yang terkunci pada data studi kasus.</p>
           </div>
           <a href={resolveHref("/login")} class="ml-auto shrink-0 rounded-full border border-[var(--lnd-bg)] px-6 py-3 text-[14.5px] font-semibold uppercase tracking-[0.08em] transition-colors hover:border-[var(--lnd-accent-ink)] hover:bg-[var(--lnd-accent)]">
             Coba di Portal <Icon name="arrow-up-right" cls="ml-2 inline h-4 w-4" weight="bold" />

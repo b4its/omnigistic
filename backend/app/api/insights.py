@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from app.db.loader import load
 
 router = APIRouter(prefix="/api", tags=["insights"])
-VALID = {"PUSAT", "HUB", "KURIR", "DATA"}
+VALID = {"PUSAT", "HUB", "KURIR", "DATA", "CUSTOMER", "SELLER"}
 
 
 def get_insights(role: str) -> dict:

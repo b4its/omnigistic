@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 
-export type Role = "PUSAT" | "HUB" | "KURIR" | "DATA";
-const ROLES: Role[] = ["PUSAT", "HUB", "KURIR", "DATA"];
+export type Role = "PUSAT" | "HUB" | "KURIR" | "DATA" | "CUSTOMER";
+const ROLES: Role[] = ["PUSAT", "HUB", "KURIR", "DATA", "CUSTOMER"];
 
 export function roleFromPath(path: string): Role | null {
   const seg = path.split("/")[2]?.toUpperCase();

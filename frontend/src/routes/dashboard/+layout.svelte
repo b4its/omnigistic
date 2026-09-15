@@ -29,7 +29,8 @@
     slot: "Slot Confirmation", payment: "Digital Payment", pudo: "PUDO Network",
     address: "Address Intelligence", complaint: "Complaint Monitor", multimodal: "Control Tower",
     fleet: "Fleet & Emissions", "ev-sites": "EV Site Selection", methodology: "Methodology",
-    academy: "Nigi Academy", kpi: "KPI Tracker", assistant: "Nigi AI", "": "Dashboard"
+    academy: "Nigi Academy", kpi: "KPI Tracker", assistant: "Nigi AI", "": "Dashboard",
+    shop: "Belanja", orders: "Pesanan Saya", checkout: "Checkout", cart: "Keranjang"
   };
   const seg3 = (path: string) => {
     const parts = path.split("/").filter(Boolean);
@@ -78,15 +79,22 @@
       { label: "Control Tower", href: "/dashboard/data/multimodal", icon: "compass" },
       { label: "Fleet & Emissions", href: "/dashboard/data/fleet", icon: "stack" },
       { label: "EV Site Selection", href: "/dashboard/data/ev-sites", icon: "grad" }
+    ],
+    CUSTOMER: [
+      { label: "Belanja", href: "/dashboard/customer/overview", icon: "grid", short: "Belanja" },
+      { label: "Keranjang", href: "/dashboard/customer/cart", icon: "stack", short: "Keranjang" },
+      { label: "Pesanan Saya", href: "/dashboard/customer/orders", icon: "map", short: "Pesanan" },
+      { label: "Nigi AI", href: "/dashboard/customer/assistant", icon: "chat", short: "Nigi AI" }
     ]
   };
 
-  const roleShort: Record<string, string> = { PUSAT: "PUSAT", HUB: "HUB", KURIR: "KURIR", DATA: "DATA" };
+  const roleShort: Record<string, string> = { PUSAT: "PUSAT", HUB: "HUB", KURIR: "KURIR", DATA: "DATA", CUSTOMER: "CUSTOMER" };
   const userNameFor: Record<string, string> = {
     PUSAT: "Dalila · Pusat",
     HUB: "Marwah · Hub Bandung",
     KURIR: "Baits · Kurir Jakarta",
-    DATA: "Virgiawan · Data & IT"
+    DATA: "Virgiawan · Data & IT",
+    CUSTOMER: "Sari · Pembeli"
   };
 
   // role DERIVED dari path+cookie → SSR pertama kali render sudah pasangkan shell (CLS 0), tanpa onMount
@@ -114,9 +122,10 @@
     "cod-risk": "3", routes: "3", slot: "3", payment: "3", pudo: "3",
     address: "6", complaint: "6", multimodal: "6",
     fleet: "4", "ev-sites": "4", roi: "4",
-    executive: "5"
+    executive: "5",
+    shop: "3", cart: "3", checkout: "3", orders: "3"
   };
-  const roleQuestion: Record<Role, string> = { PUSAT: "1 dan 5", HUB: "2", KURIR: "3", DATA: "6" };
+  const roleQuestion: Record<Role, string> = { PUSAT: "1 dan 5", HUB: "2", KURIR: "3", DATA: "6", CUSTOMER: "3" };
   const questionLabel = $derived.by(() => {
     const seg = seg3(pathname);
     if (seg === "overview") return role ? `Menjawab pertanyaan #${roleQuestion[role as Role]}` : undefined;

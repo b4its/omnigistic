@@ -11,14 +11,16 @@
     PUSAT: { name: "Dalila", sub: "Manajer Pusat", letter: "D" },
     HUB: { name: "Marwah", sub: "Manajer Hub Bandung", letter: "M" },
     KURIR: { name: "Baits", sub: "Kurir Jakarta", letter: "B" },
-    DATA: { name: "Virgiawan", sub: "Data & IT", letter: "V" }
+    DATA: { name: "Virgiawan", sub: "Data & IT", letter: "V" },
+    CUSTOMER: { name: "Sari", sub: "Pembeli", letter: "S" }
   };
   const RANGES = ["7 hari terakhir", "30 hari terakhir", "90 hari terakhir", "Tahun berjalan"];
   const roleRoutes: Record<string, string> = {
     PUSAT: "/dashboard/pusat/overview",
     HUB: "/dashboard/hub/overview",
     KURIR: "/dashboard/kurir/overview",
-    DATA: "/dashboard/data/overview"
+    DATA: "/dashboard/data/overview",
+    CUSTOMER: "/dashboard/customer/overview"
   };
 
   const meta = $derived(roleMeta[role] ?? { name: "Guest", sub: "", letter: "G" });
@@ -30,6 +32,7 @@
     HUB: ["Utilisasi Bandung 68,9% di atas ambang.", "Forecast: demand naik 8% pekan depan.", "Buffer musiman siap diaktivasi."],
     KURIR: ["3 paket COD perlu diarahkan ke PUDO.", "Slot konfirmasi: 18 penerima sudah siap.", "Rute COD terpangkas ke ±100 menit hari ini."],
     DATA: ["3 alamat ambigu baru perlu verifikasi.", "Geotag checkout naik ke 62%.", "Pipeline ETA partner laut tersambung."],
+    CUSTOMER: ["Pesananmu sedang dikemas di hub Jakarta.", "Kurir menjadwalkan slot konfirmasi sebelum tiba.", "Pilih COD untuk bayar di tempat, atau transfer lebih cepat."],
     GUEST: ["Selamat datang — pilih portal peran."]
   };
   let exporting = $state(false);

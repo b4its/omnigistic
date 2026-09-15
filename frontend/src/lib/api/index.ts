@@ -122,13 +122,17 @@ export interface CodFactor {
   direction: string;
 }
 
-export interface CodRiskPkg {
+export interface CodRiskPkg extends CodRiskResult {
   id: string;
   hub_util: number;
   value: number;
   hour: number;
   ambiguous: number;
   zone: number;
+}
+
+/** Hasil `score_package` untuk satu paket (tanpa id preset). */
+export interface CodRiskResult {
   score: number;
   decision: string;
   cluster?: string;
@@ -216,6 +220,8 @@ export const api = {
   forecast: () => get<ForecastResult>("/ml/forecast"),
   demandActual: () => get<DemandActualResult>("/ml/demand-actual"),
   codRiskDemo: () => get<{ packages: CodRiskPkg[]; sim: CodImpact }>("/ml/cod-risk/demo"),
+  codRisk: (pkg: { hub_util?: number; value?: number; hour?: number; ambiguous?: number; zone?: number }) =>
+    post<CodRiskResult>("/ml/cod-risk", pkg),
   addressDemo: () => get<AddressDemoResult>("/ml/address-demo"),
   addressParse: (address: string) => post<AddressParseResult>("/ml/address-parse", { address }),
   digitalTwin: () => get<Record<string, TwinResult>>("/ml/sim/digital-twin"),

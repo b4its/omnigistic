@@ -16,7 +16,7 @@ from app.api.qa import match_chat_qa
 
 router = APIRouter(prefix="/api", tags=["chat"])
 log = logging.getLogger("omnigistic.chat")
-VALID = {"PUSAT", "HUB", "KURIR", "DATA"}
+VALID = {"PUSAT", "HUB", "KURIR", "DATA", "CUSTOMER", "SELLER"}
 # chip saran HARUS punya padanan di bank QA (48 entri) supaya klik → jawab DB, bukan "offline"
 _DEFAULT_SUGGESTIONS: list[str] = ["Apa masalah utama GC Logistics?", "Bagaimana solusi Omnigistic?", "Berapa utilisasi Jakarta?"]
 _ROLE_SUGGESTIONS = {
@@ -24,6 +24,8 @@ _ROLE_SUGGESTIONS = {
     "HUB": ["Berapa utilisasi hub Bandung?", "Kenapa demand naik turun?", "Apa itu Capacity Alert?"],
     "KURIR": ["Kenapa COD lebih lambat?", "Apa itu Slot Confirmation?", "Berapa persen paket diantar pakai motor?"],
     "DATA": ["Kenapa alamat bisa ambigu?", "Berapa tingkat komplain GC Logistics?", "Apa itu Address Intelligence?"],
+    "CUSTOMER": ["Kenapa COD lebih lambat?", "Apa itu PUDO?", "Bagaimana cara melacak paket saya?"],
+    "SELLER": ["Berapa tingkat komplain GC Logistics?", "Kenapa COD lebih lambat?", "Bagaimana memilih PUDO untuk pembeli?"],
 }
 
 

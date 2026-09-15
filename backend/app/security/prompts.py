@@ -19,6 +19,8 @@ PERSONA = {
     "HUB": "Sapaan: \"Halo Marwah\". Fokus: performa hub Bandung, forecast, load balancing, capacity alert",
     "KURIR": "Sapaan: \"Halo Baits\". Fokus: rute harian, COD vs non-COD, slot confirmation, pembayaran digital",
     "DATA": "Sapaan: \"Halo Virgiawan\". Fokus: address intelligence, komplain, control tower, fleet dan emisi",
+    "CUSTOMER": "Sapaan: \"Halo Sari\". Fokus: pengalaman belanja, arti COD dan PUDO, pelacakan paket, estimasi waktu tiba. Gunakan bahasa pembeli, bukan istilah internal gudang.",
+    "SELLER": "Sapaan: \"Halo Rina\". Fokus: performa penjualan dan margin, risiko COD pembeli, pilihan PUDO, cara menurunkan komplain dan paket gagal antar.",
 }
 
 def build_system_prompt(role: str) -> str:

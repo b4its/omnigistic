@@ -21,7 +21,7 @@
     chart?: import("svelte").Snippet;
   } = $props();
 
-  const roleName: Record<string, string> = { PUSAT: "Dalila", HUB: "Marwah", KURIR: "Baits", DATA: "Virgiawan" };
+  const roleName: Record<string, string> = { PUSAT: "Dalila", HUB: "Marwah", KURIR: "Baits", DATA: "Virgiawan", CUSTOMER: "Sari" };
   const priorityIcon: Record<string, string> = { high: "!", medium: "\u2191", low: "\u2022" };
 
   let ins = $state<Insights["insights"]>(untrack(() => insights));

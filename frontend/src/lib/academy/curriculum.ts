@@ -6,7 +6,7 @@
  * berasal dari Table 1-4 / Figure 1-2, sedangkan ilustrasi simulasi berlabel "prototipe".
  */
 
-export type Role = "PUSAT" | "HUB" | "KURIR" | "DATA";
+export type Role = "PUSAT" | "HUB" | "KURIR" | "DATA" | "CUSTOMER";
 
 export interface QuizOption {
   /** Teks jawaban. */
