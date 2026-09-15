@@ -11,6 +11,7 @@
   import { onMount } from "svelte";
   import Icon from "$lib/components/Icon.svelte";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
+  import { resolveHref } from "$lib/utils";
   import { formatRupiah } from "$lib/shop/catalog";
   import {
     shop,
@@ -22,16 +23,17 @@
     progressForStatus,
     type Order
   } from "$lib/stores/shop";
+  import { COURIER, HUB_LABEL, etaForCity, COD_DECISION_LABEL } from "$lib/logistics";
 
-  /** Identitas kurir (samakan dengan Topbar: Baits · Kurir Jakarta). */
-  const COURIER_NAME = "Baits";
-  const COURIER_CODE = "JKT-04";
-  const actor = () => `Kurir ${COURIER_NAME} · ${COURIER_CODE}`;
+  /** Identitas kurir — satu sumber (logistics.ts) agar konsisten dgn Topbar. */
+  const actor = (): string => COURIER.actor;
 
   let orders = $state<Order[]>([]);
   let openMapId = $state<string | null>(null);
   /** Draf keterangan kondisi per pesanan (dipetakan ke id pesanan). */
   let noteDraft = $state<Record<string, string>>({});
+  /** Draf slot pengantaran per pesanan. */
+  let slotDraft = $state<Record<string, string>>({});
 
   onMount(() => {
     shop.init();
@@ -52,6 +54,8 @@
   );
   const activeCount = $derived(orders.filter((o) => o.status !== "terkirim").length);
   const doneCount = $derived(orders.filter((o) => o.status === "terkirim").length);
+  /** Total tunai COD yang harus ditagih (belum terkumpul). */
+  const cashDue = $derived(orders.filter((o) => o.payment === "COD" && !o.codCollected).reduce((s, o) => s + o.total, 0));
 
   function toast(detail: string) {
     window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail }));
@@ -79,6 +83,30 @@
     toast(`Kondisi ${o.id} diperbarui`);
   }
 
+  /** Kurir konfirmasi slot pengantaran. */
+  function confirmSlot(o: Order) {
+    const clean = slotDraft[o.id]?.trim();
+    if (!clean) {
+      toast("Isi slot pengantaran dulu (mis. 14:00-16:00)");
+      return;
+    }
+    shop.confirmSlot(o.id, actor(), clean);
+    slotDraft = { ...slotDraft, [o.id]: "" };
+    toast(`Slot ${o.id} dikonfirmasi`);
+  }
+
+  /** Kurir tandai tunai COD sudah diterima. */
+  function collect(o: Order) {
+    shop.collectCod(o.id, actor());
+    toast(`Tunai ${o.id} diterima`);
+  }
+
+  /** Kurir alihkan paket ke PUDO. */
+  function toPudo(o: Order) {
+    shop.routeToPudo(o.id, actor());
+    toast(`Paket ${o.id} dialihkan ke PUDO`);
+  }
+
   function reset() {
     shop.reset();
     toast("Riwayat pesanan dihapus");
@@ -99,13 +127,18 @@
         Paket dari pembeli yang perlu kamu tangani. Perbarui status &amp; kondisi terkini — pembeli langsung melihatnya.
       </p>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
       <span class="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground">
         <Icon name="stack" cls="h-3.5 w-3.5" /> {activeCount} aktif
       </span>
       <span class="inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success-foreground">
         <Icon name="check" cls="h-3.5 w-3.5" weight="bold" /> {doneCount} selesai
       </span>
+      {#if cashDue > 0}
+        <a href={resolveHref("/dashboard/kurir/payment")} class="inline-flex items-center gap-1.5 rounded-full border border-warning/40 bg-warning/10 px-3 py-1.5 text-xs font-semibold text-warning-foreground transition-colors hover:bg-warning/20">
+          <Icon name="currency" cls="h-3.5 w-3.5" /> Tunai tertagih {formatRupiah(cashDue)}
+        </a>
+      {/if}
     </div>
   </header>
 
@@ -201,6 +234,37 @@
                       <Icon name="edit" cls="h-4 w-4" /> Perbarui kondisi
                     </button>
                   </div>
+
+                  <!-- Aksi lanjutan: slot, tunai COD, PUDO -->
+                  <div class="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+                    <div class="flex min-w-0 flex-1 items-center gap-2">
+                      <input
+                        type="text"
+                        bind:value={slotDraft[o.id]}
+                        placeholder="Slot, mis. 14:00-16:00"
+                        aria-label={`Slot pengantaran ${o.id}`}
+                        class="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/50"
+                      />
+                      <button type="button" onclick={() => confirmSlot(o)} class="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent">
+                        Konfirmasi slot
+                      </button>
+                    </div>
+                    {#if o.payment === "COD"}
+                      <button
+                        type="button"
+                        onclick={() => collect(o)}
+                        disabled={o.codCollected}
+                        class="rounded-lg border border-success/50 px-3 py-1.5 text-xs font-semibold text-success-foreground transition-colors hover:bg-success/10 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {o.codCollected ? "Tunai diterima" : `Terima tunai ${formatRupiah(o.total)}`}
+                      </button>
+                    {/if}
+                    {#if !o.routedToPudo}
+                      <button type="button" onclick={() => toPudo(o)} class="rounded-lg border border-warning/50 px-3 py-1.5 text-xs font-semibold text-warning-foreground transition-colors hover:bg-warning/10">
+                        Alihkan ke PUDO
+                      </button>
+                    {/if}
+                  </div>
                 </div>
               {:else}
                 <p class="inline-flex items-center gap-2 text-sm font-semibold text-success-foreground"><Icon name="check" cls="h-4 w-4" weight="bold" /> Paket telah sampai ke penerima</p>
@@ -230,9 +294,20 @@
                 {#if o.payment === "COD" && o.codScore !== null}
                   {@const tone = decisionTone[o.codDecision ?? ""] ?? "bg-muted text-foreground"}
                   <div class="rounded-lg {tone} px-3 py-2 text-xs">
-                    <p class="font-semibold">Skor risiko COD {(o.codScore * 100).toFixed(0)}%</p>
-                    <p class="opacity-90">{o.codDecision}</p>
+                    <p class="font-semibold">Kesiapan bayar COD {(o.codScore * 100).toFixed(0)}%</p>
+                    <p class="opacity-90">{COD_DECISION_LABEL[o.codDecision ?? ""] ?? o.codDecision}</p>
                   </div>
+                {/if}
+                {#if o.slot}
+                  <p class="text-xs text-muted-foreground">Slot: <span class="font-medium text-foreground">{o.slot}</span></p>
+                {/if}
+                {#if o.routedToPudo}
+                  <p class="text-xs font-semibold text-warning-foreground">Sudah dialihkan ke PUDO</p>
+                {/if}
+                {#if o.payment === "COD"}
+                  <p class="text-xs {o.codCollected ? 'font-semibold text-success-foreground' : 'text-muted-foreground'}">
+                    {o.codCollected ? "Tunai sudah diterima" : "Tunai belum diterima"}
+                  </p>
                 {/if}
               </div>
 
@@ -246,9 +321,10 @@
               {#if openMapId === o.id}
                 <DeliveryMap
                   progress={progressForStatus(o.status)}
-                  originLabel="Hub Jakarta"
+                  city={o.address.city}
+                  originLabel={HUB_LABEL}
                   destLabel={`${o.address.city} · ${o.address.recipient}`}
-                  etaMin={45}
+                  etaMin={etaForCity(o.address.city)}
                   height={220}
                 />
               {/if}

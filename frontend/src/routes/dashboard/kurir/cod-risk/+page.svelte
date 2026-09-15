@@ -4,13 +4,29 @@
   import Icon from "$lib/components/Icon.svelte";
   import EChart from "$lib/components/EChart.svelte";
   import { donutChart } from "$lib/charts/options";
+  import { resolveHref } from "$lib/utils";
+  import { formatRupiah } from "$lib/shop/catalog";
+  import { shop, type Order } from "$lib/stores/shop";
+  import { COURIER, COD_DECISION_LABEL } from "$lib/logistics";
 
   let packages = $state<CodRiskPkg[]>([]);
   let sim = $state<CodImpact | null>(null);
   let loaded = $state(false);
+  let errored = $state(false);
   let openId = $state<string | null>(null);
 
-  onMount(async () => {
+  /** Pesanan COD NYATA dari checkout pembeli (dipenuhi lewat store bersama). */
+  let orders = $state<Order[]>([]);
+
+  onMount(() => {
+    shop.init();
+    const unsub = shop.subscribe((s) => (orders = s.orders));
+    void loadDemo();
+    return unsub;
+  });
+
+  async function loadDemo() {
+    errored = false;
     try {
       const d = await api.codRiskDemo();
       packages = d.packages;
@@ -18,9 +34,25 @@
     } catch {
       packages = [];
       sim = null;
+      errored = true;
     }
     loaded = true;
-  });
+  }
+
+  /** Pesanan COD nyata, diurutkan dari skor risiko tertinggi. */
+  const realCod = $derived(
+    orders
+      .filter((o) => o.payment === "COD")
+      .sort((a, b) => (b.codScore ?? 0) - (a.codScore ?? 0))
+  );
+
+  function toast(detail: string) {
+    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail }));
+  }
+  function reroute(o: Order) {
+    shop.routeToPudo(o.id, COURIER.actor);
+    toast(`Paket ${o.id} dialihkan ke PUDO`);
+  }
 
   const decisionCls: Record<string, string> = {
     "antar-normal": "bg-success text-success-foreground",
@@ -66,10 +98,73 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <h1 class="font-heading text-xl font-semibold tracking-tight">Predictive COD</h1>
-    <span class="hub-label text-muted-foreground">Risk scoring · auto-demo</span>
+    <span class="hub-label text-muted-foreground">Risk scoring · triase nyata</span>
   </div>
 
-  {#if loaded && sim && packages.length}
+  <!-- Paket COD NYATA dari pesanan pembeli (dipenuhi lewat store bersama) -->
+  <section class="rounded-2xl border border-border bg-card p-5">
+    <div class="flex flex-wrap items-end justify-between gap-2">
+      <div>
+        <p class="text-base font-semibold">Paket COD pembeli (nyata)</p>
+        <p class="text-[13.5px] text-muted-foreground">Pesanan dari checkout Customer yang dibayar di tempat, diurutkan dari risiko tertinggi. Aksi kurir langsung tersimpan untuk pembeli.</p>
+      </div>
+      <a href={resolveHref("/dashboard/kurir/tasks")} class="rounded-full border border-border px-3 py-1 text-[13px] font-semibold text-foreground transition-colors hover:bg-accent">Buka tugas pengantaran</a>
+    </div>
+    {#if realCod.length === 0}
+      <div class="mt-4 rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
+        <p class="text-sm font-semibold text-foreground">Belum ada pesanan COD dari pembeli</p>
+        <p class="mt-1 text-xs text-muted-foreground">Buat pesanan COD di portal Customer; skor &amp; keputusan model akan muncul di sini untuk ditriase kurir.</p>
+      </div>
+    {:else}
+      <div class="mt-4 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b bg-muted/50 text-left text-[13px] text-muted-foreground">
+              <th scope="col" class="px-3 py-2">Pesanan</th>
+              <th scope="col" class="px-3 py-2">Penerima</th>
+              <th scope="col" class="px-3 py-2 text-right">Nilai</th>
+              <th scope="col" class="px-3 py-2 text-center">Skor risiko</th>
+              <th scope="col" class="px-3 py-2">Keputusan</th>
+              <th scope="col" class="px-3 py-2">Status</th>
+              <th scope="col" class="px-3 py-2 text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each realCod as o (o.id)}
+              {@const score = o.codScore ?? 0}
+              <tr class="border-b last:border-0">
+                <td class="px-3 py-2 font-mono text-xs">{o.id}</td>
+                <td class="px-3 py-2">{o.address.recipient} <span class="text-muted-foreground">· {o.address.city}</span></td>
+                <td class="px-3 py-2 text-right tabular-nums">{formatRupiah(o.total)}</td>
+                <td class="px-3 py-2 text-center">
+                  <span class="inline-block w-16 rounded-full bg-muted px-2 py-0.5 text-[13px] font-semibold tabular-nums">{(score * 100).toFixed(0)}%</span>
+                </td>
+                <td class="px-3 py-2">
+                  <span class="inline-block rounded-md px-2 py-0.5 text-[13px] font-semibold {decisionCls[o.codDecision ?? 'antar-normal']}">{COD_DECISION_LABEL[o.codDecision ?? ""] ?? o.codDecision ?? "-"}</span>
+                </td>
+                <td class="px-3 py-2 text-[13px] text-muted-foreground">{o.codCollected ? "Tunai diterima" : o.routedToPudo ? "Ke PUDO" : "Belum dibayar"}</td>
+                <td class="px-3 py-2 text-right">
+                  {#if !o.routedToPudo && score >= 0.35}
+                    <button type="button" onclick={() => reroute(o)} class="rounded-lg border border-warning/50 px-3 py-1.5 text-[13px] font-semibold text-warning-foreground transition-colors hover:bg-warning/10">Alihkan PUDO</button>
+                  {:else}
+                    <span class="text-[13px] text-muted-foreground">—</span>
+                  {/if}
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    {/if}
+  </section>
+
+  {#if errored}
+    <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
+      <p class="text-sm font-semibold text-foreground">Gagal memuat preset demo risk scoring</p>
+      <p class="mt-1 text-xs text-muted-foreground">Backend offline? Data pesanan nyata di atas tetap tersedia.</p>
+      <button type="button" onclick={() => loadDemo()} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
+    </div>
+  {:else if loaded && sim && packages.length}
     <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
       <div class="flex items-start gap-3">
         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -219,7 +314,7 @@
         </table>
       </div>
     </div>
-  {:else}
+  {:else if !errored}
     <div class="h-64 animate-pulse rounded-2xl border border-border bg-card/60"></div>
   {/if}
 </div>

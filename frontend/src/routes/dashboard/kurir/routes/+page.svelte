@@ -1,22 +1,49 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { api } from "$lib/api";
+  import Icon from "$lib/components/Icon.svelte";
   import EChart from "$lib/components/EChart.svelte";
   import { barChart } from "$lib/charts/options";
+  import { shop, ORDER_STATUS_LABEL, type Order } from "$lib/stores/shop";
 
   let route = $state<Array<{ type: string; packages: number; distanceKm: number; durationMin: number; productivity: number }>>([]);
   let quotes = $state<Array<{ city: string; quote: string }>>([]);
   let loaded = $state(false);
+  let failed = $state(false);
 
-  onMount(async () => {
+  /** Aktivitas pengantaran nyata (cluster kurir dari pesanan aktual). */
+  let orders = $state<Order[]>([]);
+
+  onMount(() => {
+    shop.init();
+    const unsub = shop.subscribe((s) => (orders = s.orders));
+    void load();
+    return unsub;
+  });
+
+  async function load() {
+    failed = false;
     try {
       [route, quotes] = await Promise.all([api.routes(), api.courierQuotes()]);
     } catch {
       route = [];
       quotes = [];
+      failed = true;
     }
     loaded = true;
-  });
+  }
+
+  // Cluster nyata: kelompokkan pesanan aktif per status menjadi "rute" kurir.
+  const active = $derived(orders.filter((o) => o.status !== "terkirim"));
+  const STAGE_KEYS: Array<{ k: Order["status"]; l: string }> = [
+    { k: "dikemas", l: ORDER_STATUS_LABEL.dikemas },
+    { k: "dijemput", l: ORDER_STATUS_LABEL.dijemput },
+    { k: "transit", l: ORDER_STATUS_LABEL.transit },
+    { k: "dikirim", l: ORDER_STATUS_LABEL.dikirim }
+  ];
+  const byStatus = $derived(
+    STAGE_KEYS.map((s) => ({ type: s.l, n: active.filter((o) => o.status === s.k).length })).filter((x) => x.n > 0)
+  );
 </script>
 
 <div class="space-y-6">
@@ -25,11 +52,34 @@
     <span class="hub-label text-muted-foreground">KURIR · Baits</span>
   </div>
 
-  {#if loaded && route.length}
+  <!-- Cluster pengantaran nyata -->
+  {#if byStatus.length > 0}
+    <section class="rounded-2xl border border-border bg-card p-5">
+      <p class="text-base font-semibold">Cluster pengantaran aktif (nyata)</p>
+      <p class="text-[13.5px] text-muted-foreground">Pesanan yang sedang kamu tangani, dikelompokkan per tahap rute.</p>
+      <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {#each byStatus as b (b.type)}
+          <div class="rounded-xl border border-border bg-background/40 p-4">
+            <p class="hub-label text-xs text-muted-foreground">{b.type}</p>
+            <p class="kpi-value mt-1 text-2xl">{b.n}</p>
+            <p class="text-xs text-muted-foreground">paket</p>
+          </div>
+        {/each}
+      </div>
+    </section>
+  {/if}
+
+  {#if failed && !route.length}
+    <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
+      <p class="text-sm font-semibold text-foreground">Gagal memuat data rute studi kasus</p>
+      <p class="mt-1 text-xs text-muted-foreground">Backend offline. Cluster pengantaran nyata di atas tetap tampil bila ada pesanan.</p>
+      <button type="button" onclick={() => load()} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
+    </div>
+  {:else if loaded && route.length}
     <div class="grid gap-6 sm:grid-cols-2">
       {#each route as t (t.type)}
         <div class="rounded-2xl border border-border bg-card p-5 {t.type === 'COD' ? 'border-l-4 border-l-chart-4' : ''}">
-          <p class="hub-label text-xs text-muted-foreground">{t.type}</p>
+          <p class="hub-label text-xs text-muted-foreground">{t.type} · studi kasus</p>
           <p class="kpi-value mt-2 text-3xl">{t.durationMin} min</p>
           <p class="mt-1 text-sm text-muted-foreground">{t.packages} paket · {t.distanceKm} km</p>
           <p class="kpi-value mt-2 text-lg text-primary">{t.productivity}/jam</p>
@@ -38,25 +88,29 @@
     </div>
 
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="mb-3 text-sm font-medium">COD vs Non-COD, selisih</p>
+      <p class="mb-3 text-sm font-medium">COD vs Non-COD, selisih (studi kasus)</p>
       <EChart
         option={barChart(
           route.map((r) => r.type),
           [{ name: "Durasi (menit)", data: route.map((r) => r.durationMin) }]
         )}
         height={200}
+        label="Perbandingan durasi rute COD dan Non-COD"
       />
     </div>
-
-    <div class="space-y-3">
-      {#each quotes as q (q.city)}
-        <blockquote class="rounded-2xl border-l-4 border-primary bg-muted/30 p-4 text-sm italic">
-          &ldquo;{q.quote}&rdquo;
-          <span class="mt-1 block text-xs not-italic text-muted-foreground">dari Kurir {q.city}</span>
-        </blockquote>
-      {/each}
-    </div>
-  {:else}
+  {:else if !failed}
     <div class="h-64 animate-pulse rounded-2xl border border-border bg-card/60"></div>
   {/if}
+
+  <div class="space-y-3">
+    {#each quotes as q (q.city)}
+      <blockquote class="rounded-2xl border-l-4 border-primary bg-muted/30 p-4 text-sm italic">
+        &ldquo;{q.quote}&rdquo;
+        <span class="mt-1 block text-xs not-italic text-muted-foreground">dari Kurir {q.city}</span>
+      </blockquote>
+    {/each}
+    {#if loaded && quotes.length === 0}
+      <p class="flex items-center gap-2 rounded-2xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center text-xs text-muted-foreground"><Icon name="bell" cls="h-4 w-4" /> Kutipan kurir tidak tersedia (backend offline).</p>
+    {/if}
+  </div>
 </div>

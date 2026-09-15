@@ -1,5 +1,10 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import Icon from "$lib/components/Icon.svelte";
+  import { resolveHref } from "$lib/utils";
+  import { formatRupiah } from "$lib/shop/catalog";
+  import { shop, type Order } from "$lib/stores/shop";
+  import { COURIER, COD_DECISION_LABEL } from "$lib/logistics";
 
   const network = [
     { label: "PUDO GC saat ini", value: "3.200 titik", sub: "self-built + agen" },
@@ -18,6 +23,27 @@
     { n: 2, t: "Paket berisiko diarahkan ke PUDO", d: "Penerima memilih gerai mitra terdekat via aplikasi (notifikasi tahap 3)." },
     { n: 3, t: "Mitra ritel jadi node bayar-ambil", d: "Komisi per transaksi, tunai tetap tersedia, biaya GC variabel (pay-per-use)." }
   ];
+
+  /** Pesanan NYATA yang dialihkan ke PUDO (dari store bersama). */
+  let orders = $state<Order[]>([]);
+  onMount(() => {
+    shop.init();
+    const unsub = shop.subscribe((s) => (orders = s.orders));
+    return unsub;
+  });
+
+  const routed = $derived(orders.filter((o) => o.routedToPudo));
+  const candidates = $derived(
+    orders.filter((o) => !o.routedToPudo && o.payment === "COD" && (o.codDecision === "pudo" || o.codDecision === "pre-payment"))
+  );
+
+  function toast(detail: string) {
+    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail }));
+  }
+  function reroute(o: Order) {
+    shop.routeToPudo(o.id, COURIER.actor);
+    toast(`Pesanan ${o.id} dialihkan ke PUDO`);
+  }
 </script>
 
 <div class="space-y-6">
@@ -25,6 +51,42 @@
     <h1 class="font-heading text-xl font-semibold tracking-tight">PUDO Network</h1>
     <span class="hub-label text-muted-foreground">Pick-Up Drop-Off</span>
   </div>
+
+  <!-- Paket nyata untuk PUDO -->
+  <section class="rounded-2xl border border-border bg-card p-5">
+    <div class="flex flex-wrap items-end justify-between gap-2">
+      <div>
+        <p class="text-base font-semibold">Paket COD berisiko (nyata)</p>
+        <p class="text-[13.5px] text-muted-foreground">Pesanan pembeli yang disarankan dialihkan ke gerai mitra (PUDO) alih-alih antar ke alamat.</p>
+      </div>
+      <a href={resolveHref("/dashboard/kurir/tasks")} class="rounded-full border border-border px-3 py-1 text-[13px] font-semibold text-foreground transition-colors hover:bg-accent">Buka tugas pengantaran</a>
+    </div>
+
+    {#if routed.length === 0 && candidates.length === 0}
+      <div class="mt-4 rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
+        <p class="text-sm font-semibold text-foreground">Belum ada paket dialihkan ke PUDO</p>
+        <p class="mt-1 text-xs text-muted-foreground">Paket muncul di sini bila pembeli membuat pesanan COD dan model menandainya berisiko (pudo / pre-payment).</p>
+      </div>
+    {:else}
+      <ul class="mt-4 space-y-2">
+        {#each routed as o (o.id)}
+          <li class="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/20 px-4 py-3">
+            <span class="font-mono text-xs text-muted-foreground">{o.id}</span>
+            <span class="min-w-0 flex-1 truncate text-sm text-foreground">{o.address.recipient} · {o.address.city} · {formatRupiah(o.total)}</span>
+            <span class="rounded-full bg-success/15 px-2.5 py-0.5 text-[11px] font-semibold text-success-foreground">Dialihkan ke PUDO</span>
+          </li>
+        {/each}
+        {#each candidates as o (o.id)}
+          <li class="flex flex-wrap items-center gap-3 rounded-xl border border-warning/40 bg-warning/5 px-4 py-3">
+            <span class="font-mono text-xs text-muted-foreground">{o.id}</span>
+            <span class="min-w-0 flex-1 truncate text-sm text-foreground">{o.address.recipient} · {o.address.city} · {formatRupiah(o.total)}</span>
+            <span class="rounded-full bg-warning/15 px-2.5 py-0.5 text-[11px] font-semibold text-warning-foreground">{COD_DECISION_LABEL[o.codDecision ?? ""] ?? "Berisiko"}</span>
+            <button type="button" onclick={() => reroute(o)} class="rounded-lg border border-warning/50 px-3 py-1.5 text-xs font-semibold text-warning-foreground transition-colors hover:bg-warning/10">Alihkan ke PUDO</button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </section>
 
   <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
     <div class="flex items-start gap-3">
