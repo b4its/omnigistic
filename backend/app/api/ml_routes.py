@@ -1,13 +1,18 @@
 """REST untuk ML — forecast, cod-risk, address-parse, simulations. Semua label 'prototipe'."""
 from __future__ import annotations
+
 from typing import Any
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.ml.forecast import forecast_next_12, demand_actual_tiktok
-from app.ml.cod_risk import score_package, demo_packages
-from app.ml.address_parse import parse_address, demo_address
-from app.ml.simulations import calculate_digital_twin, DIGITAL_TWIN_SCENARIOS, calculate_cod_impact
+from app.ml import metrics
+from app.ml.address_parse import demo_address, parse_address
+from app.ml.cod_intel import analyze_cod_impact, default_scenarios
+from app.ml.cod_risk import demo_packages, score_package
+from app.ml.forecast import demand_actual_tiktok, forecast_next_12
+from app.ml.optimize import optimize_load_balance
+from app.ml.simulations import DIGITAL_TWIN_SCENARIOS, calculate_cod_impact, calculate_digital_twin
 
 router = APIRouter(prefix="/ml", tags=["ml"])
 
@@ -61,3 +66,54 @@ def digital_twin():
 @router.get("/sim/cod-impact")
 def sim_cod():
     return {"prob": 60, "result": calculate_cod_impact(8, 60)}
+
+
+# ── Network Optimization Engine (load balancing) ──────────────────────────
+@router.get("/optimize/load-balance")
+def optimize_balance():
+    """Rencana alokasi ulang volume hub over-utilisasi → hub ber-headroom."""
+    return optimize_load_balance()
+
+
+# ── COD Decision Intelligence (dampak per shift kurir) ────────────────────
+class CodIntelBody(BaseModel):
+    cod_share_pct: float = 60.0
+    interventions: list[str] = []
+    packages_per_shift: int = 40
+
+
+@router.post("/cod-intel")
+def cod_intel(body: CodIntelBody):
+    return analyze_cod_impact(body.cod_share_pct, body.interventions, body.packages_per_shift)
+
+
+@router.get("/cod-intel/scenarios")
+def cod_intel_scenarios():
+    return default_scenarios()
+
+
+# ── Metrik turunan & rekonsiliasi angka ───────────────────────────────────
+@router.get("/metrics/regions")
+def metric_regions():
+    return metrics.region_summary()
+
+
+@router.get("/metrics/financial")
+def metric_financial():
+    return metrics.financial_summary()
+
+
+@router.get("/metrics/demand")
+def metric_demand():
+    return metrics.demand_summary()
+
+
+@router.get("/metrics/fleet")
+def metric_fleet():
+    return metrics.fleet_summary()
+
+
+@router.get("/metrics/audit")
+def metric_audit():
+    """Bukti telusur angka: checklist cocok-dokumen + temuan inkonsistensi."""
+    return metrics.data_audit()
