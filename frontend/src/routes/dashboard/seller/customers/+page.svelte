@@ -1,12 +1,23 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import Icon from "$lib/components/Icon.svelte";
   import { customerScores, segmentCounts, avgCustomerScore, type CustomerScore } from "$lib/shop/analytics";
+  import { shop, type Order } from "$lib/stores/shop";
+  import { liveCustomers } from "$lib/shop/orderbook";
 
   const rupiah = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 
-  const customers = customerScores();
-  const segments = segmentCounts();
-  const avgScore = avgCustomerScore();
+  // Pelanggan nyata dari pesanan checkout digabung dengan basis demo.
+  let liveRecs = $state<ReturnType<typeof liveCustomers>>([]);
+  onMount(() => {
+    shop.init();
+    const unsub = shop.subscribe((s: { orders: Order[] }) => (liveRecs = liveCustomers(s.orders)));
+    return unsub;
+  });
+
+  const customers = $derived(customerScores(liveRecs));
+  const segments = $derived(segmentCounts(liveRecs));
+  const avgScore = $derived(avgCustomerScore(liveRecs));
 
   /** Komponen skor untuk satu pelanggan (dipakai di kartu). */
   const componentsFor = (c: CustomerScore) => [

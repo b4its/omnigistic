@@ -1,4 +1,4 @@
-import { writable, derived, type Readable } from "svelte/store";
+import { writable } from "svelte/store";
 
 export type M3Window = "compact" | "medium" | "expanded";
 
@@ -26,7 +26,3 @@ function createWindowClass() {
 }
 
 export const windowClass = createWindowClass();
-
-export const isCompact: Readable<boolean> = derived(windowClass, (w) => w === "compact");
-export const isMedium: Readable<boolean> = derived(windowClass, (w) => w === "medium");
-export const isExpanded: Readable<boolean> = derived(windowClass, (w) => w === "expanded");

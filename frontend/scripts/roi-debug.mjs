@@ -1,8 +1,6 @@
 import { chromium } from "playwright-core";
-const B = await chromium.launch({
-  executablePath: "/home/sleepy/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
-  args: ["--no-sandbox"]
-});
+import { launchOptions } from "./_browser.mjs";
+const B = await chromium.launch(launchOptions());
 const p = await (await B.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
 const logs = [];
 p.on("console", (m) => logs.push(m.type() + ":" + m.text().slice(0, 140)));

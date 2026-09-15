@@ -140,21 +140,23 @@ export function scoreCustomer(rec: CustomerRecord): CustomerScore {
   return { record: rec, score: round1(score), recency: round1(recency), frequency: round1(frequency), monetary: round1(monetary), risk: round1(risk), segment, action };
 }
 
-/** Semua pelanggan, skor menurun. */
-export function customerScores(): CustomerScore[] {
-  return CUSTOMERS.map(scoreCustomer).sort((a, b) => b.score - a.score);
+/** Semua pelanggan (basis demo + pelanggan nyata opsional), skor menurun. */
+export function customerScores(extra: CustomerRecord[] = []): CustomerScore[] {
+  const seen = new Set(CUSTOMERS.map((c) => `${c.name.toLowerCase()}|${c.city.toLowerCase()}`));
+  const merged = [...CUSTOMERS, ...extra.filter((c) => !seen.has(`${c.name.toLowerCase()}|${c.city.toLowerCase()}`))];
+  return merged.map(scoreCustomer).sort((a, b) => b.score - a.score);
 }
 
-/** Distribusi segmen untuk ringkasan. */
-export function segmentCounts(): Record<CustomerScore["segment"], number> {
+/** Distribusi segmen untuk ringkasan (boleh menyertakan pelanggan nyata). */
+export function segmentCounts(extra: CustomerRecord[] = []): Record<CustomerScore["segment"], number> {
   const base: Record<CustomerScore["segment"], number> = { Champion: 0, Loyal: 0, Potensial: 0, Berisiko: 0, Pasif: 0 };
-  for (const c of customerScores()) base[c.segment]++;
+  for (const c of customerScores(extra)) base[c.segment]++;
   return base;
 }
 
-/** Rata-rata skor pelanggan. */
-export function avgCustomerScore(): number {
-  const all = customerScores();
+/** Rata-rata skor pelanggan (boleh menyertakan pelanggan nyata). */
+export function avgCustomerScore(extra: CustomerRecord[] = []): number {
+  const all = customerScores(extra);
   return all.length ? round1(all.reduce((s, c) => s + c.score, 0) / all.length) : 0;
 }
 

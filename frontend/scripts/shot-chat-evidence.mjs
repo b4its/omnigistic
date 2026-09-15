@@ -1,7 +1,7 @@
 import { chromium } from "playwright-core";
-const BR="/home/sleepy/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome";
+import { launchOptions } from "./_browser.mjs";
 const BASE="http://127.0.0.1:3104";
-const b=await chromium.launch({executablePath:BR,args:["--no-sandbox"]});
+const b=await chromium.launch(launchOptions());
 const c=await b.newContext({viewport:{width:1440,height:900}});
 const p=await c.newPage();
 p.on("pageerror",(e)=>console.log("PE",String(e.message).slice(0,80))); 

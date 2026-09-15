@@ -20,7 +20,7 @@
   ];
   const biz = [
     { t: "Konteks industri", d: "E-commerce Indonesia Rp453,75 triliun (2023), geografi 17.000+ pulau, COD dominan karena keterbatasan akses finansial, dan guncangan regulasi (suspend TikTok Shop)." },
-    { t: "Posisi & model", d: "GC Logistics, berdiri 2018. Pemimpin pasar 5 tahun, pangsa 20,6% (2024). Direct Operation Model terpusat; 23 hub, 3.200 titik; laut dan udara via mitra." },
+    { t: "Posisi & model", d: "GC Logistics, berdiri 2018. Pemimpin pasar 5 tahun, pangsa 20,6% (2024). Direct Operation Model terpusat; 23 hub, 2.500 titik; laut dan udara via mitra." },
     { t: "Pemangku kepentingan", d: "VP, manajer keuangan, manajer hub, kurir, mitra e-commerce, pelanggan unbanked, regulator, dan klien yang menuntut ESG." }
   ];
   const fin = [

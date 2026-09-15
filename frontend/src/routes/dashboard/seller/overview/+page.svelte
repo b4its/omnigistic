@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import EChart from "$lib/components/EChart.svelte";
   import { lineChart, donutChart } from "$lib/charts/options";
   import { SELLER } from "$lib/shop/seller";
   import { pnlSummary, productMetrics, avgCustomerScore, segmentCounts, salesTrend, trendTotals, momentumPct } from "$lib/shop/analytics";
+  import { shop, type Order } from "$lib/stores/shop";
+  import { liveSummary, liveCustomers } from "$lib/shop/orderbook";
 
   const rupiah = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
   const compact = (n: number) => {
@@ -14,21 +17,33 @@
     return rupiah(n);
   };
 
+  // Pesanan nyata dari portal Customer (localStorage) → membuat dashboard hidup.
+  let live = $state(liveSummary([]));
+  let liveRecs = $state(liveCustomers([]));
+  onMount(() => {
+    shop.init();
+    const unsub = shop.subscribe((s: { orders: Order[] }) => {
+      live = liveSummary(s.orders);
+      liveRecs = liveCustomers(s.orders);
+    });
+    return unsub;
+  });
+
   const pnl = pnlSummary();
   const metrics = productMetrics();
   const trend = salesTrend();
   const totals = trendTotals();
   const momentum = momentumPct();
-  const avgScore = avgCustomerScore();
-  const segments = segmentCounts();
+  const segments = $derived(segmentCounts(liveRecs));
+  const avgScore = $derived(avgCustomerScore(liveRecs));
 
-  const segmentRows = [
+  const segmentRows = $derived([
     { name: "Champion", count: segments.Champion, color: "var(--color-chart-1)" },
     { name: "Loyal", count: segments.Loyal, color: "var(--color-chart-2)" },
     { name: "Potensial", count: segments.Potensial, color: "var(--color-chart-3)" },
     { name: "Berisiko", count: segments.Berisiko, color: "var(--color-chart-5)" },
     { name: "Pasif", count: segments.Pasif, color: "var(--color-muted-foreground)" }
-  ];
+  ]);
 
   const topProfit = $derived(metrics.slice(0, 5));
   const danger = $derived(metrics.filter((m) => m.marginPct < 34 || m.returnRatePct > 3).slice(0, 4));
@@ -94,6 +109,26 @@
         <p class="mt-1 text-xs text-muted-foreground">{k.sub}</p>
       </div>
     {/each}
+  </section>
+
+  <!-- Pesanan masuk (live dari portal Customer) -->
+  <section class="rounded-2xl border border-primary/30 bg-primary/5 p-5">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <h2 class="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Icon name="globe" cls="h-4 w-4 text-primary" /> Pesanan masuk (live)
+      </h2>
+      <a href={resolveHref("/dashboard/seller/orders")} class="text-xs font-semibold text-primary hover:underline">Lihat semua →</a>
+    </div>
+    {#if live.orderCount === 0}
+      <p class="text-sm text-muted-foreground">Belum ada pesanan dari pembeli. Buat pesanan di portal Customer untuk melihatnya masuk ke sini secara langsung.</p>
+    {:else}
+      <div class="grid gap-3 sm:grid-cols-4">
+        <div><p class="text-xs text-muted-foreground">Pesanan</p><p class="text-xl font-bold tabular-nums text-foreground">{live.orderCount}</p><p class="text-[11px] text-muted-foreground">{live.activeCount} aktif · {live.deliveredCount} terkirim</p></div>
+        <div><p class="text-xs text-muted-foreground">Nilai penjualan</p><p class="text-xl font-bold tabular-nums text-success-foreground">{compact(live.revenue)}</p></div>
+        <div><p class="text-xs text-muted-foreground">Laba kotor</p><p class="text-xl font-bold tabular-nums text-foreground">{compact(live.profit)}</p></div>
+        <div><p class="text-xs text-muted-foreground">COD vs digital</p><p class="text-sm font-semibold tabular-nums text-foreground">{compact(live.codRevenue)} · {compact(live.digitalRevenue)}</p></div>
+      </div>
+    {/if}
   </section>
 
   <!-- Laba/rugi + tren -->

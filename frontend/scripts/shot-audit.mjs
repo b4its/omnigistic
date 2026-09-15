@@ -1,7 +1,8 @@
 import { chromium } from "playwright-core";
+import { launchOptions } from "./_browser.mjs";
 import fs from "node:fs";
 fs.mkdirSync("images", { recursive: true });
-const B = await chromium.launch({ executablePath: "/home/sleepy/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome", args: ["--no-sandbox"] });
+const B = await chromium.launch(launchOptions());
 const c = await B.newContext({ viewport: { width: 1400, height: 1000 } });
 const p = await c.newPage();
 p.on("pageerror", (e) => console.log("PAGEERR address:", String(e.message).slice(0, 100)));

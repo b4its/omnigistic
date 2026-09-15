@@ -1,5 +1,6 @@
 import { chromium } from "playwright-core";
-const B = await chromium.launch({ executablePath: "/home/sleepy/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome", args: ["--no-sandbox"] });
+import { launchOptions } from "./_browser.mjs";
+const B = await chromium.launch(launchOptions());
 const ctx = await B.newContext({ viewport: { width: 1440, height: 900 } });
 const page = await ctx.newPage();
 // CLS measurement on dashboard first paint (cookie absent) — expect ~0 after reserved? measure

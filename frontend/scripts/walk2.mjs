@@ -1,5 +1,6 @@
 import { chromium } from "playwright-core";
-const B = await chromium.launch({ executablePath: "/home/sleepy/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome", args: ["--no-sandbox"] });
+import { launchOptions } from "./_browser.mjs";
+const B = await chromium.launch(launchOptions());
 const p = await (await B.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
 const errs = []; p.on("pageerror", e => errs.push(e.message.slice(0, 100)));
 const pages = [["/dashboard/pusat/roi","r-roi"], ["/dashboard/hub/capacity","r-capacity"], ["/dashboard/kurir/pudo","r-pudo"], ["/dashboard/data/fleet","r-fleet"], ["/dashboard/pusat/digital-twin","r-twin"], ["/dashboard/kpi","r-kpi"], ["/dashboard/methodology","r-method"], ["/", "r-landing"]];

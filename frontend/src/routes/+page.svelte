@@ -219,7 +219,7 @@
         <div class="mt-12 grid items-end gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] lg:gap-16">
           <div>
             <p class="max-w-[52ch] text-[1.05rem] leading-relaxed text-[var(--lnd-soft)]">
-              <strong class="font-semibold text-[var(--lnd-ink)]">23 hub, 3.200 titik, 13.340 kendaraan</strong>
+              <strong class="font-semibold text-[var(--lnd-ink)]">23 hub, 2.500 titik, 14.180 kendaraan</strong>
               dalam satu sumber kebenaran. Nigi AI menyapa tiap manajer dengan insight dari data studi kasus.
             </p>
             <div class="mt-8 flex flex-wrap gap-4">

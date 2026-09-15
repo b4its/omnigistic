@@ -1,6 +1,6 @@
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs"; mkdirSync("/tmp/opencode/shots", { recursive: true });
-const EXE = "/home/sleepy/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome";
+import { launchOptions } from "./_browser.mjs";
 const BASE = process.env.E2E_BASE || "http://127.0.0.1:3104";
 const API = process.env.E2E_API || "http://127.0.0.1:8000";
 const results = [];
@@ -26,7 +26,7 @@ async function gotoClean(path, { timeout = 30000 } = {}) {
 }
 
 try {
-  browser = await chromium.launch({ executablePath: EXE, args: ["--no-sandbox"] });
+  browser = await chromium.launch(launchOptions());
   const ctx = await browser.newContext({ viewport: { width: 1360, height: 900 } });
   page = await ctx.newPage();
 

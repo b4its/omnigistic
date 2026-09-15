@@ -1,13 +1,46 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+  import { api } from "$lib/api";
+
   interface Root { n: string; name: string; theory: string; solution: string; kpi: string }
-  const roots: Root[] = [
-    { n: "1", name: "Ekspansi tanpa keselarasan kapasitas-demand", theory: "Transaction Cost Economics", solution: "Hibrida Direct vs Regional Sponsor berbasis utilisasi", kpi: "Utilisasi timur 41,5% → ≥55%" },
-    { n: "2", name: "Kapasitas fixed vs demand fluktuatif", theory: "Aggregate planning + Queueing theory", solution: "Kapasitas elastis 3 tingkat + forecast per hub", kpi: "MAPE <10%; eksposur <20%/platform" },
-    { n: "3", name: "Last-mile manual dan cash-based", theory: "Business Process Reengineering + VRPTW", solution: "Predictive COD + clustering rute + PUDO + rekonsiliasi digital", kpi: "Rute COD ≤100 menit; ≥4,8 paket/jam" },
-    { n: "4", name: "Data tidak terstandar dan buta multimoda", theory: "Record Linkage / Fuzzy Matching", solution: "Address Intelligence + Control Tower + modal shift", kpi: "Komplain <3/juta; geotag ≥95%" },
-    { n: "5", name: "Kapabilitas tertinggal dari pertumbuhan", theory: "Dynamic Capabilities", solution: "Nigi Academy + tim data internal + Digital Twin", kpi: "100% manajer tersertifikasi" },
-    { n: "6", name: "Keberlanjutan sebagai pembelian, bukan desain sistem", theory: "Triple Bottom Line + TCO", solution: "Carbon per rute + roadmap 3 fase + penyusutan 8 tahun", kpi: "Emisi/paket −20% per 2027" }
+  // Teori jangkar bersifat editorial (tidak ada di data kasus) — tetap lokal.
+  const THEORY: string[] = [
+    "Transaction Cost Economics",
+    "Aggregate planning + Queueing theory",
+    "Business Process Reengineering + VRPTW",
+    "Record Linkage / Fuzzy Matching",
+    "Dynamic Capabilities",
+    "Triple Bottom Line + TCO"
   ];
+  // Fallback bila backend offline (nilai identik dgn data-kas.json).
+  const rootsFallback: Root[] = [
+    { n: "1", name: "Ekspansi tak selaras", theory: THEORY[0], solution: "Hibrida Direct vs Regional Sponsor berbasis utilisasi", kpi: "Timur ≥55% (24 bulan)" },
+    { n: "2", name: "Kapasitas fixed vs demand fluktuatif", theory: THEORY[1], solution: "Kapasitas elastis 3 tingkat + forecast per hub", kpi: "MAPE <10%; eksposur <20%/platform" },
+    { n: "3", name: "Last-mile manual dan cash-based", theory: THEORY[2], solution: "Predictive COD + clustering rute + PUDO + rekonsiliasi digital", kpi: "Rute COD ≤100 menit; ≥4,8 paket/jam" },
+    { n: "4", name: "Data tidak terstandar dan buta multimoda", theory: THEORY[3], solution: "Address Intelligence + Control Tower + modal shift", kpi: "Komplain <3/juta; geotag ≥95%" },
+    { n: "5", name: "Kapabilitas tertinggal dari pertumbuhan", theory: THEORY[4], solution: "Nigi Academy + tim data internal + Digital Twin", kpi: "100% manajer tersertifikasi" },
+    { n: "6", name: "Keberlanjutan sebagai pembelian, bukan desain sistem", theory: THEORY[5], solution: "Carbon per rute + roadmap 3 fase + penyusutan 8 tahun", kpi: "Emisi/paket −20% per 2027" }
+  ];
+
+  let roots = $state<Root[]>(rootsFallback);
+
+  onMount(async () => {
+    try {
+      const rc = await api.rootCauses();
+      if (Array.isArray(rc) && rc.length) {
+        roots = rc.map((r, i) => ({
+          n: String(i + 1),
+          name: r.titleId || r.title,
+          theory: THEORY[i] ?? "—",
+          solution: r.solution,
+          kpi: r.kpiTarget
+        }));
+      }
+    } catch {
+      roots = rootsFallback;
+    }
+  });
+
   const steps = [
     { step: "Collect", problem: "Alamat ambigu · 62% dari merchant · 38% individu", solution: "Address Intelligence · geotag wajib" },
     { step: "Sort", problem: "Hub overload (JKT 90,4%) · sortasi lambat saat puncak", solution: "WMS + kapasitas elastis 3 tingkat" },

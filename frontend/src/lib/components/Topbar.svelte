@@ -1,7 +1,11 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import type { Role } from "$lib/stores/role";
   import { cn, resolveHref } from "$lib/utils";
   import { api, online, type Hub } from "$lib/api";
+  import { shop, type Order } from "$lib/stores/shop";
+  import { pnlSummary } from "$lib/shop/analytics";
+  import { liveSummary } from "$lib/shop/orderbook";
   import ThemeToggle from "./ThemeToggle.svelte";
   import Icon from "./Icon.svelte";
 
@@ -29,17 +33,52 @@
 
   let range = $state(RANGES[1]);
   let openPop = $state<null | "range" | "notif" | "profile">(null);
-  const notifCounts: Record<string, string[]> = {
-    PUSAT: ["Hub Jakarta utilisasi 90,4%, di atas ambang 65%.", "2 paket COD berisiko tinggi di rute Bandung.", "Complaint rate bulan ini turun 8%."],
-    HUB: ["Utilisasi Bandung 68,9% di atas ambang.", "Forecast: demand naik 8% pekan depan.", "Buffer musiman siap diaktivasi."],
-    KURIR: ["3 paket COD perlu diarahkan ke PUDO.", "Slot konfirmasi: 18 penerima sudah siap.", "Rute COD terpangkas ke ±100 menit hari ini."],
-    DATA: ["3 alamat ambigu baru perlu verifikasi.", "Geotag checkout naik ke 62%.", "Pipeline ETA partner laut tersambung."],
-    CUSTOMER: ["Pesananmu sedang dikemas di hub Jakarta.", "Kurir menjadwalkan slot konfirmasi sebelum tiba.", "Pilih COD untuk bayar di tempat, atau transfer lebih cepat."],
-    SELLER: ["Margin kotor 30 hari: 31,4% — sehat.", "2 produk margin tipis perlu penyesuaian harga.", "5 pelanggan berisiko tinggi COD, arahkan ke PUDO."],
+
+  // Notifikasi statis per role (klaim umum, tanpa angka yang bisa bertentangan).
+  const staticNotifs: Record<string, string[]> = {
+    PUSAT: ["Hub Jakarta utilisasi 90,4%, di atas ambang 65%.", "2 paket COD berisiko tinggi di rute Bandung.", "EBIT positif 2024 — fokus jaga cost-to-sales."],
+    HUB: ["Utilisasi Bandung 68,9% di atas ambang.", "Forecast: demand naik pada puncak promo.", "Buffer musiman siap diaktivasi."],
+    KURIR: ["3 paket COD perlu diarahkan ke PUDO.", "Slot konfirmasi: penerima sudah siap.", "Rute COD terpangkas dengan cluster terpisah."],
+    DATA: ["3 alamat ambigu baru perlu verifikasi.", "Geotag checkout mendorong alamat presisi.", "Pipeline ETA partner multimoda tersambung."],
     GUEST: ["Selamat datang — pilih portal peran."]
   };
+
+  // Notifikasi live dari store (pesanan nyata) → tidak bertentangan dgn data turunan.
+  let liveOrders = $state<Order[]>([]);
+  onMount(() => {
+    shop.init();
+    const unsub = shop.subscribe((s: { orders: Order[] }) => (liveOrders = s.orders));
+    return unsub;
+  });
+
+  const liveNotifs = $derived.by<string[]>(() => {
+    if (role === "CUSTOMER") {
+      const active = liveOrders.filter((o) => o.status !== "terkirim");
+      if (active.length === 0) return ["Belanja dulu — pesanan & pelacakan muncul di sini.", "Bayar COD bila reputasi akunmu baik.", "Lacak kurir realtime di Dashboard."];
+      return [
+        `Kamu punya ${active.length} pesanan aktif yang sedang diproses.`,
+        `Pesanan terbaru: ${active[0].address.recipient} · ${active[0].address.city}.`,
+        "Buka Dashboard untuk melacak kurir menuju alamatmu."
+      ];
+    }
+    if (role === "SELLER") {
+      const live = liveSummary(liveOrders);
+      const pnl = pnlSummary();
+      const list = [`Margin kotor (katalog): ${pnl.grossMarginPct}% — sehat.`];
+      if (live.orderCount > 0) {
+        list.unshift(`${live.orderCount} pesanan masuk dari pembeli (${live.activeCount} aktif).`);
+        list.push(`Nilai penjualan live: ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(live.revenue)}.`);
+      } else {
+        list.push("Belum ada pesanan masuk dari pembeli.");
+        list.push("Pantau skor pelanggan untuk menekan risiko COD.");
+      }
+      return list.slice(0, 3);
+    }
+    return staticNotifs[role as string] ?? staticNotifs.GUEST;
+  });
+
   let exporting = $state(false);
-  const notifsList = $derived(notifCounts[role as string] ?? notifCounts.GUEST);
+  const notifsList = $derived(liveNotifs);
   const notifs = $derived(notifsList.length);
   let headerEl = $state<HTMLElement | undefined>();
 

@@ -3,7 +3,7 @@
   import { fade } from "svelte/transition";
   import { onMount } from "svelte";
   import { windowClass, type M3Window } from "$lib/stores/window-class";
-  import { roleStore, roleFromPath, type Role } from "$lib/stores/role";
+  import { roleFromPath, roleFromValue, setRoleCookie, type Role } from "$lib/stores/role";
   import { cn, resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import M3Nav, { type NavItem } from "$lib/components/M3Nav.svelte";
@@ -104,7 +104,6 @@
     ]
   };
 
-  const roleShort: Record<string, string> = { PUSAT: "PUSAT", HUB: "HUB", KURIR: "KURIR", DATA: "DATA", CUSTOMER: "CUSTOMER", SELLER: "SELLER" };
   const userNameFor: Record<string, string> = {
     PUSAT: "Dalila · Pusat",
     HUB: "Marwah · Hub Bandung",
@@ -116,7 +115,7 @@
 
   // role DERIVED dari path+cookie → SSR pertama kali render sudah pasangkan shell (CLS 0), tanpa onMount
   const pathname = $derived(String(page.url.pathname));
-  let role = $derived<Role | null>(roleFromPath(pathname) ?? (roleShort[(data?.cookieRole ?? "").toUpperCase() || ""] ? ((data?.cookieRole ?? "").toUpperCase() as Role) : null));
+  let role = $derived<Role | null>(roleFromPath(pathname) ?? roleFromValue(data?.cookieRole));
   let reduceMotion = $derived(typeof window !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);
   let mode = $state<M3Window>("expanded");
 
@@ -129,11 +128,17 @@
 
   $effect(() => {
     const r = roleFromPath(pathname);
-    if (r) roleStore.set(r);
+    if (r) setRoleCookie(r);
   });
-  let routeLabel = $derived(
-    seg3(pathname) === "dashboard" && role === "CUSTOMER" ? "Dashboard" : (titleMap[seg3(pathname)] ?? "Omnigistic")
-  );
+  // Judul halaman: utamakan label nav role (mis. "Belanja" utk customer overview,
+  // "Dashboard" utk customer dashboard), lalu titleMap global.
+  const navLabelFor = (r: Role | null, seg: string): string | undefined =>
+    r ? roleNav[r]?.find((i) => i.href.endsWith(`/${seg}`))?.label : undefined;
+
+  let routeLabel = $derived.by(() => {
+    const seg = seg3(pathname);
+    return navLabelFor(role, seg) ?? titleMap[seg] ?? "Omnigistic";
+  });
 
   const questionMap: Record<string, string> = {
     "digital-twin": "1", network: "1", utilization: "1",
@@ -153,9 +158,7 @@
     return q ? `Menjawab pertanyaan #${q}` : undefined;
   });
 
-  const isRole = $derived(!!role && !!roleShort[role]);
-
-  const navItems = $derived(isRole ? roleNav[role as Role] : []);
+  const navItems = $derived(role ? roleNav[role] : []);
   const userLabel = $derived(role && userNameFor[role] ? userNameFor[role] : "Guest");
 </script>
 

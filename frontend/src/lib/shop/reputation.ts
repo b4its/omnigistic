@@ -53,11 +53,6 @@ export function computeReputation(p: BuyerProfile): Reputation {
   return finalize(p, score);
 }
 
-/** Bangun ulang Reputation bila skor sudah diketahui (mis. dari override manual). */
-export function reputationFromScore(p: BuyerProfile, score: number): Reputation {
-  return finalize(p, clamp(score, 0, 100));
-}
-
 function finalize(p: BuyerProfile, score: number): Reputation {
   const codAllowed = score >= COD_MIN_SCORE;
   return {
@@ -87,8 +82,8 @@ export const BUYER_PERSONAS: BuyerProfile[] = [
   },
   {
     id: "BUY-RISK",
-    name: "Sari Wulandari",
-    city: "Jakarta",
+    name: "Budi Santoso",
+    city: "Depok",
     failedRate: 0.42,
     onTimeRate: 0.55,
     accountMonths: 4,
@@ -108,9 +103,6 @@ export const TIER_LABEL: Record<Reputation["tier"], string> = { baik: "Reputasi 
 // ── util ──
 function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
-}
-function clamp(n: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, n));
 }
 function round1(n: number): number {
   return Math.round(n * 10) / 10;

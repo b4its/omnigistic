@@ -1,6 +1,6 @@
 import { chromium } from "playwright-core";
-const EXE = "/home/sleepy/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome";
-const B = await chromium.launch({ executablePath: EXE, args: ["--no-sandbox"] });
+import { launchOptions } from "./_browser.mjs";
+const B = await chromium.launch(launchOptions());
 const ctx = await B.newContext({ viewport: { width: 1440, height: 900 } });
 const p = await ctx.newPage();
 const shots = [

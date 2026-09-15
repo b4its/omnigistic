@@ -1,6 +1,6 @@
 import { chromium } from "playwright-core";
+import { launchOptions } from "./_browser.mjs";
 
-const EXE = "/home/sleepy/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome";
 const BASE = process.env.AUDIT_BASE || "http://127.0.0.1:4173";
 
 const paths = [
@@ -36,7 +36,7 @@ const paths = [
   "/dashboard/data/ev-sites"
 ];
 
-const browser = await chromium.launch({ executablePath: EXE, args: ["--no-sandbox"] });
+const browser = await chromium.launch(launchOptions());
 
 async function audit(width, height) {
   const ctx = await browser.newContext({ viewport: { width, height } });
