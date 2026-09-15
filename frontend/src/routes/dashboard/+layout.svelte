@@ -26,6 +26,7 @@
     utilization: "Utilization Map", network: "Network Expansion", roi: "ROI & Benefit-Cost",
     dashboard: "Hub Dashboard", forecast: "Demand Forecast", "load-balance": "Load Balancing",
     capacity: "Capacity Alert", routes: "Route Clustering", "cod-risk": "Predictive COD",
+    "cod-intel": "COD Decision Intelligence",
     slot: "Slot Confirmation", payment: "Digital Payment", pudo: "PUDO Network",
     address: "Address Intelligence", complaint: "Complaint Monitor", multimodal: "Control Tower",
     fleet: "Fleet & Emissions", "ev-sites": "EV Site Selection", methodology: "Methodology",
@@ -77,6 +78,7 @@
       { label: "Tugas Pengantaran", href: "/dashboard/kurir/tasks", icon: "map" },
       { label: "Route Clustering", href: "/dashboard/kurir/routes", icon: "compass" },
       { label: "Predictive COD", href: "/dashboard/kurir/cod-risk", icon: "currency" },
+      { label: "COD Intelligence", href: "/dashboard/kurir/cod-intel", icon: "trend" },
       { label: "Slot Confirmation", href: "/dashboard/kurir/slot", icon: "bell" },
       { label: "Digital Payment", href: "/dashboard/kurir/payment", icon: "shield" },
       { label: "PUDO Network", href: "/dashboard/kurir/pudo", icon: "map" }
