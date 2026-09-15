@@ -5,6 +5,7 @@
 import { browser } from "$app/environment";
 import { writable, derived, type Readable } from "svelte/store";
 import { getProduct, type Product } from "$lib/shop/catalog";
+import { DEFAULT_PERSONA_ID, getPersona, computeReputation, type Reputation } from "$lib/shop/reputation";
 
 export interface CartItem {
   productId: string;
@@ -49,25 +50,28 @@ export interface ShopState {
   cart: CartItem[];
   address: Address | null;
   orders: Order[];
+  /** Persona pembeli aktif (menentukan kelayakan COD). */
+  buyerId: string;
 }
 
 const STORAGE_KEY = "omnigistic-shop-v1";
 
-const EMPTY: ShopState = { cart: [], address: null, orders: [] };
+const EMPTY: ShopState = { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
 
 function load(): ShopState {
-  if (!browser) return { cart: [], address: null, orders: [] };
+  if (!browser) return { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { cart: [], address: null, orders: [] };
+    if (!raw) return { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
     const parsed = JSON.parse(raw) as Partial<ShopState>;
     return {
       cart: Array.isArray(parsed.cart) ? parsed.cart : [],
       address: parsed.address ?? null,
       orders: Array.isArray(parsed.orders) ? parsed.orders : [],
+      buyerId: typeof parsed.buyerId === "string" ? parsed.buyerId : DEFAULT_PERSONA_ID,
     };
   } catch {
-    return { cart: [], address: null, orders: [] };
+    return { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
   }
 }
 
@@ -165,8 +169,16 @@ function createShop() {
         return next;
       });
     },
+    /** Ganti persona pembeli aktif (menentukan kelayakan COD). */
+    setBuyer(buyerId: string) {
+      update((s) => {
+        const next = { ...s, buyerId };
+        persist(next);
+        return next;
+      });
+    },
     reset() {
-      const next: ShopState = { cart: [], address: null, orders: [] };
+      const next: ShopState = { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
       persist(next);
       set(next);
     },
@@ -199,6 +211,9 @@ export const cartCount: Readable<number> = derived(cartDetail, (d) => d.count);
 
 /** Derived: jumlah pesanan aktif. */
 export const orderCount: Readable<number> = derived(shop, (s) => s.orders.length);
+
+/** Derived: reputasi persona pembeli aktif (menentukan kelayakan COD). */
+export const buyerReputation: Readable<Reputation> = derived(shop, (s) => computeReputation(getPersona(s.buyerId)));
 
 /** Hitung ongkir sederhana: basis per-kota + berat total. */
 export function shippingCost(items: ResolvedCartItem[], city: string): number {

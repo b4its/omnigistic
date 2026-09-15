@@ -3,13 +3,16 @@
   import { resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import { PRODUCTS, CATEGORIES, searchProducts, formatRupiah, type Product } from "$lib/shop/catalog";
-  import { shop, cartCount, orderCount } from "$lib/stores/shop";
+  import { shop, cartCount, orderCount, buyerReputation } from "$lib/stores/shop";
+  import { BUYER_PERSONAS, type Reputation } from "$lib/shop/reputation";
 
   let query = $state("");
   let category = $state<string>("Semua");
   let sort = $state<"populer" | "murah" | "mahal" | "rating">("populer");
   let cart = $state(0);
   let orders = $state(0);
+  let rep = $state<Reputation | null>(null);
+  let buyerId = $state(BUYER_PERSONAS[0].id);
   let justAdded = $state<string | null>(null);
   let addedTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -17,12 +20,22 @@
     shop.init();
     const unsubCart = cartCount.subscribe((n) => (cart = n));
     const unsubOrders = orderCount.subscribe((n) => (orders = n));
+    const unsubRep = buyerReputation.subscribe((r) => (rep = r));
+    const unsubShop = shop.subscribe((s) => (buyerId = s.buyerId));
     return () => {
       unsubCart();
       unsubOrders();
+      unsubRep();
+      unsubShop();
       if (addedTimer) clearTimeout(addedTimer);
     };
   });
+
+  function setPersona(id: string) {
+    shop.setBuyer(id);
+    const p = BUYER_PERSONAS.find((x) => x.id === id);
+    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: `Mode demo: ${p?.name} (${id === "BUY-GOOD" ? "reputasi baik" : "reputasi buruk"})` }));
+  }
 
   const results = $derived.by(() => {
     const list = searchProducts(query, category);
@@ -72,12 +85,38 @@
     </div>
   </header>
 
+  <!-- Status reputasi (pembeli hanya lihat status, bukan skor internal) -->
+  {#if rep}
+    <section class="flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between {rep.codAllowed ? 'border-success/40 bg-success/5' : 'border-destructive/40 bg-destructive/5'}">
+      <div class="flex items-start gap-3">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {rep.codAllowed ? 'bg-success text-success-foreground' : 'bg-destructive text-destructive-foreground'}">
+          <Icon name={rep.codAllowed ? "check" : "warn"} cls="h-5 w-5" weight="bold" />
+        </span>
+        <div class="space-y-0.5">
+          <p class="text-sm font-semibold text-foreground">{rep.codAllowed ? "Reputasi baik — COD tersedia" : "Reputasi buruk — COD tidak tersedia"}</p>
+          <p class="text-xs text-muted-foreground">{rep.buyerNote}</p>
+        </div>
+      </div>
+      <!-- Pengalih persona demo (presentasi): tunjukkan kedua skenario -->
+      <div class="flex shrink-0 items-center gap-1 rounded-full border border-border bg-card p-1">
+        {#each BUYER_PERSONAS as p (p.id)}
+          <button
+            type="button"
+            onclick={() => setPersona(p.id)}
+            aria-pressed={buyerId === p.id}
+            class="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors {buyerId === p.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}"
+          >{p.id === "BUY-GOOD" ? "Demo: baik" : "Demo: buruk"}</button>
+        {/each}
+      </div>
+    </section>
+  {/if}
+
   <!-- Banner alur -->
   <section class="grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-4">
     {#each [
       { icon: "search", t: "Cari produk", d: "Filter kategori & urutkan" },
       { icon: "stack", t: "Keranjang", d: "Atur jumlah item" },
-      { icon: "currency", t: "Checkout COD", d: "Skor risiko otomatis" },
+      { icon: "currency", t: "Checkout", d: "COD bila reputasi baik" },
       { icon: "map", t: "Lacak kirim", d: "Sampai ke tanganmu" }
     ] as step, i (step.t)}
       <div class="flex items-start gap-3">

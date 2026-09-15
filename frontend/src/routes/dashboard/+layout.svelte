@@ -31,19 +31,26 @@
     fleet: "Fleet & Emissions", "ev-sites": "EV Site Selection", methodology: "Methodology",
     academy: "Nigi Academy", kpi: "KPI Tracker", assistant: "Nigi AI", "": "Dashboard",
     shop: "Belanja", orders: "Pesanan Saya", checkout: "Checkout", cart: "Keranjang",
-    analytics: "Analitik Penjualan", products: "Produk Saya", customers: "Analisis Pelanggan", "seller-orders": "Pesanan Masuk"
+    analytics: "Analitik Penjualan", products: "Produk Saya", customers: "Analisis Pelanggan", "seller-orders": "Pesanan Masuk",
+    "predictive-cod": "Predictive COD"
   };
   const seg3 = (path: string) => {
     const parts = path.split("/").filter(Boolean);
     return parts.length <= 1 ? (parts[0] ?? "") : parts[parts.length - 1];
   };
 
-  const sharedNav: NavItem[] = [
-    { label: "Kerangka & Analisis", href: "/analisis", icon: "book" },
-    { label: "Methodology", href: "/dashboard/methodology", icon: "book" },
-    { label: "KPI Tracker", href: "/dashboard/kpi", icon: "chart" },
-    { label: "Nigi Academy", href: "/dashboard/academy", icon: "grad" }
-  ];
+  // Predictive COD = visibilitas internal. Pembeli (CUSTOMER) TIDAK melihat skor
+  // prediktif pelanggan, jadi item ini disembunyikan untuk role CUSTOMER.
+  const sharedNavFor = (r: Role | null): NavItem[] => {
+    const base: NavItem[] = [
+      { label: "Kerangka & Analisis", href: "/analisis", icon: "book" },
+      { label: "Methodology", href: "/dashboard/methodology", icon: "book" },
+      { label: "KPI Tracker", href: "/dashboard/kpi", icon: "chart" },
+      { label: "Nigi Academy", href: "/dashboard/academy", icon: "grad" }
+    ];
+    if (r && r !== "CUSTOMER") base.push({ label: "Predictive COD", href: "/dashboard/predictive-cod", icon: "shield" });
+    return base;
+  };
 
   const roleNav: Record<Role, NavItem[]> = {
     PUSAT: [
@@ -160,7 +167,7 @@
     >Lewati ke konten</a
   >
   {#if role}
-    <M3Nav items={navItems} sharedItems={sharedNav} userName={userLabel} />
+    <M3Nav items={navItems} sharedItems={sharedNavFor(role)} userName={userLabel} />
   {/if}
 
   <div class="flex min-w-0 flex-1 flex-col">

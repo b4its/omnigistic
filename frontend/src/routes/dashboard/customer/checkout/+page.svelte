@@ -3,12 +3,14 @@
   import { resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, cartDetail, shippingCost, type ResolvedCartItem, type Address, type PaymentMethod } from "$lib/stores/shop";
+  import { shop, cartDetail, shippingCost, buyerReputation, type ResolvedCartItem, type Address, type PaymentMethod } from "$lib/stores/shop";
   import { api, type CodRiskResult } from "$lib/api";
+  import type { Reputation } from "$lib/shop/reputation";
 
   let items = $state<ResolvedCartItem[]>([]);
   let subtotal = $state(0);
   let savedAddress = $state<Address | null>(null);
+  let reputation = $state<Reputation | null>(null);
 
   onMount(() => {
     shop.init();
@@ -17,9 +19,11 @@
       subtotal = d.subtotal;
     });
     const unsubShop = shop.subscribe((s) => (savedAddress = s.address));
+    const unsubRep = buyerReputation.subscribe((r) => (reputation = r));
     return () => {
       unsub();
       unsubShop();
+      unsubRep();
     };
   });
 
@@ -33,13 +37,24 @@
   // Metode bayar
   let payment = $state<PaymentMethod>("COD");
 
+  // Bila COD tidak tersedia (produk/reputasi), paksa ke Transfer.
+  $effect(() => {
+    if (!codAllowed && payment === "COD") {
+      payment = "Transfer";
+      codResult = null;
+    }
+  });
+
   // State scoring COD
   let scoring = $state(false);
   let codResult = $state<CodRiskResult | null>(null);
   let scoringError = $state(false);
   let placedId = $state<string | null>(null);
 
-  const allCodEligible = $derived(items.every((i) => i.product.codEligible));
+  const itemsCodEligible = $derived(items.every((i) => i.product.codEligible));
+  // COD hanya tersedia bila: semua produk mendukung COD DAN reputasi pembeli baik.
+  const codAllowed = $derived(itemsCodEligible && !!reputation?.codAllowed);
+  const codBlockedByReputation = $derived(!!reputation && !reputation.codAllowed);
   const shipping = $derived(shippingCost(items, city));
   const total = $derived(subtotal + shipping);
   const totalWeight = $derived(items.reduce((w, i) => w + i.product.weightKg * i.qty, 0));
@@ -49,7 +64,7 @@
   // Skor risiko COD diturunkan dari model Predictive: nilai paket, jam, berat→proxy
   // zona, alamat (street length→proxy ambiguitas ringan). Non-COD tidak di-skor.
   async function scoreCod(): Promise<void> {
-    if (payment !== "COD") {
+    if (payment !== "COD" || !codAllowed) {
       codResult = null;
       return;
     }
@@ -78,6 +93,10 @@
   }
 
   function choosePayment(m: PaymentMethod) {
+    if (m === "COD" && !codAllowed) {
+      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: "COD tidak tersedia untuk akun ini" }));
+      return;
+    }
     payment = m;
     codResult = null;
     if (m === "COD") void scoreCod();
@@ -195,15 +214,21 @@
             <button
               type="button"
               onclick={() => choosePayment("COD")}
-              disabled={!allCodEligible}
+              disabled={!codAllowed}
               aria-pressed={payment === "COD"}
               class="flex items-start gap-3 rounded-xl border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 {payment === 'COD' ? 'border-primary bg-accent' : 'border-border hover:border-primary/40'}"
             >
               <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Icon name="currency" cls="h-4 w-4" /></span>
               <span class="min-w-0">
                 <span class="block text-sm font-semibold text-foreground">Bayar di Tempat (COD)</span>
-                <span class="block text-xs text-muted-foreground">Bayar tunai saat paket tiba. Dinilai otomatis dengan Predictive COD.</span>
-                {#if !allCodEligible}<span class="mt-1 block text-xs font-medium text-warning-foreground">Ada item berat yang belum mendukung COD.</span>{/if}
+                <span class="block text-xs text-muted-foreground">Bayar tunai saat paket tiba.</span>
+                {#if codBlockedByReputation}
+                  <span class="mt-1 block text-xs font-medium text-destructive-foreground">Tidak tersedia untuk akunmu — reputasi belum memenuhi syarat.</span>
+                {:else if !itemsCodEligible}
+                  <span class="mt-1 block text-xs font-medium text-warning-foreground">Ada item berat yang belum mendukung COD.</span>
+                {:else}
+                  <span class="mt-1 block text-xs font-medium text-success-foreground">Tersedia untuk akunmu.</span>
+                {/if}
               </span>
             </button>
             <button
@@ -223,24 +248,18 @@
           {#if payment === "COD"}
             <div class="rounded-xl border border-border bg-muted/40 p-4">
               {#if scoring}
-                <p class="flex items-center gap-2 text-sm text-muted-foreground"><Icon name="dots" cls="h-4 w-4 animate-pulse" weight="bold" /> Menilai risiko COD…</p>
+                <p class="flex items-center gap-2 text-sm text-muted-foreground"><Icon name="dots" cls="h-4 w-4 animate-pulse" weight="bold" /> Menyiapkan pengantaran COD…</p>
               {:else if scoringError}
-                <p class="text-sm text-destructive-foreground">Gagal menghubungi model COD — pesanan tetap bisa dibuat (antar normal).</p>
+                <p class="text-sm text-muted-foreground">Pengantaran COD akan dikonfirmasi kurir sebelum tiba.</p>
               {:else if codResult}
                 {@const d = decisionLabel[codResult.decision] ?? { text: codResult.decision, tone: "bg-muted text-foreground", icon: "bell" }}
-                <div class="space-y-2">
-                  <div class="flex items-center justify-between">
-                    <span class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold {d.tone}"><Icon name={d.icon as never} cls="h-3.5 w-3.5" weight="bold" /> {d.text}</span>
-                    <span class="text-xs text-muted-foreground">Skor {(codResult.score * 100).toFixed(0)}%</span>
-                  </div>
-                  <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div class="h-full rounded-full {codResult.score >= 0.65 ? 'bg-destructive' : codResult.score >= 0.35 ? 'bg-warning' : 'bg-success'}" style="width:{Math.round(codResult.score * 100)}%"></div>
-                  </div>
-                  <p class="text-xs text-muted-foreground">{codResult.clusterAction} · perkiraan tunggu {codResult.pickupWaitMin} menit.</p>
+                <div class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold {d.tone}">
+                  <Icon name={d.icon as never} cls="h-3.5 w-3.5" weight="bold" /> {d.text}
+                  <span class="font-normal opacity-80">· perkiraan tunggu {codResult.pickupWaitMin} menit</span>
                 </div>
               {:else}
                 <button type="button" onclick={() => scoreCod()} class="inline-flex items-center gap-2 rounded-full border border-primary/40 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-accent">
-                  <Icon name="chart" cls="h-4 w-4" /> Nilai risiko COD
+                  <Icon name="chart" cls="h-4 w-4" /> Cek kesiapan pengantaran COD
                 </button>
               {/if}
             </div>
