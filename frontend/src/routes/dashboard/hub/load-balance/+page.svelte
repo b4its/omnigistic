@@ -1,100 +1,180 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Icon from "$lib/components/Icon.svelte";
-  import { api, type Hub } from "$lib/api";
+  import MetricCard from "$lib/components/MetricCard.svelte";
+  import EChart from "$lib/components/EChart.svelte";
+  import { barChart } from "$lib/charts/options";
+  import { api, type OptimizeResult } from "$lib/api";
   import { notify } from "$lib/toast";
 
-  let hubs = $state<Hub[]>([]);
+  let opt = $state<OptimizeResult | null>(null);
   let loaded = $state(false);
   let failed = $state(false);
 
   async function load(userTriggered = false) {
     failed = false;
     loaded = false;
-    if (userTriggered) notify({ message: "Memuat ulang data hub…", type: "info", title: "Load Balancing" });
+    if (userTriggered) notify({ message: "Menjalankan optimizer jaringan…", type: "info", title: "Load Balancing" });
     try {
-      hubs = await api.hubs();
-      if (userTriggered) notify({ message: "Data hub dimuat ulang", type: "success", title: "Load Balancing" });
+      opt = await api.optimizeLoadBalance();
+      if (userTriggered) notify({ message: "Rencana optimal diperbarui", type: "success", title: "Load Balancing" });
     } catch {
-      hubs = [];
+      opt = null;
       failed = true;
-      if (userTriggered) notify({ message: "Gagal memuat data hub", type: "error", title: "Load Balancing" });
+      if (userTriggered) notify({ message: "Gagal memuat optimizer", type: "error", title: "Load Balancing" });
     }
     loaded = true;
   }
 
   onMount(() => void load());
 
-  // Simulasi pengalihan overflow Jakarta → hub penerima. Slider interaktif (0-40%).
-  let overflowPct = $state(25);
-  const jkt = $derived(hubs.find((h) => h.name === "Jakarta") ?? hubs[0]);
-  const target = $derived(hubs.find((h) => h.name === "Bekasi-Karawang") ?? hubs[1]);
+  const fmt3 = (n: number) => new Intl.NumberFormat("id-ID", { maximumFractionDigits: 3 }).format(n);
+  const fmt1 = (n: number) => new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(n);
 
-  const overflowM = $derived(jkt ? Math.round(jkt.capacityM * (overflowPct / 100) * 1000) / 1000 : 0);
-  const jktAfter = $derived(jkt && jkt.capacityM ? Math.max(0, jkt.utilizationPct - (overflowM / jkt.capacityM) * 100).toFixed(1) : "0");
-  const tgtAfter = $derived(target && target.capacityM ? Math.min(100, target.utilizationPct + (overflowM / target.capacityM) * 100).toFixed(1) : "0");
+  // Grafik util sebelum/sesudah hanya untuk hub yang berubah (|delta| > 0).
+  const changed = $derived(opt ? opt.hubs.filter((h) => Math.abs(h.deltaPct) > 0.05) : []);
+  const chartHubs = $derived(changed.length ? changed : (opt?.hubs ?? []).slice(0, 10));
+  const utilChart = $derived(
+    barChart(
+      chartHubs.map((h) => h.code),
+      [
+        { name: "Sebelum", data: chartHubs.map((h) => h.beforePct), color: "var(--color-muted-foreground)" },
+        { name: "Sesudah", data: chartHubs.map((h) => h.afterPct), color: "var(--color-primary)" }
+      ],
+      { maxBarWidth: 26 }
+    )
+  );
 </script>
 
 <div class="space-y-6">
-  <h1 class="font-heading text-xl font-semibold tracking-tight">Load Balancing</h1>
-  <p class="text-sm text-muted-foreground">Simulasi pengalihan overflow Double 12 2022 · geser untuk mengatur porsi overflow.</p>
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="font-heading text-xl font-semibold tracking-tight">Load Balancing</h1>
+      <p class="text-sm text-muted-foreground">
+        Optimizer jaringan: alihkan overflow hub over-utilisasi (&gt;65%) ke hub ber-headroom (&lt;50%). Kasus: Double 12 2022.
+      </p>
+    </div>
+    <button
+      type="button"
+      onclick={() => load(true)}
+      class="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold hover:border-primary/40"
+    >
+      <Icon name="trend" cls="h-3.5 w-3.5" /> Jalankan ulang
+    </button>
+  </div>
 
-  {#if loaded && jkt && target}
+  {#if loaded && opt}
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <MetricCard
+        label="Volume Dialihkan"
+        value={`${fmt3(opt.summary.totalMovedM)}M`}
+        sub={`${opt.summary.moves} rute pergerakan`}
+        accent
+      />
+      <MetricCard
+        label="Hub Overload"
+        value={`${opt.summary.overloadedBefore} → ${opt.summary.overloadedAfter}`}
+        sub="sebelum → sesudah (util > 65%)"
+        deltaTone={opt.summary.overloadedAfter < opt.summary.overloadedBefore ? "up" : "warn"}
+        delta={`-${opt.summary.overloadedBefore - opt.summary.overloadedAfter}`}
+      />
+      <MetricCard
+        label="Utilisasi Timur (rata²)"
+        value={`${fmt1(opt.summary.eastAvgUtilAfter)}%`}
+        sub={`dari ${fmt1(opt.summary.eastAvgUtilBefore)}%`}
+        deltaTone="up"
+        delta={`+${fmt1(opt.summary.eastAvgUtilAfter - opt.summary.eastAvgUtilBefore)}`}
+      />
+      <MetricCard
+        label="Kebutuhan Tak Terlayani"
+        value={`${fmt3(opt.summary.unmetM)}M`}
+        sub={opt.summary.unmetM === 0 ? "semua tuntas terlayani" : "kapasitas tujuan kurang"}
+        valueColor={opt.summary.unmetM === 0 ? "var(--color-success-foreground, var(--color-primary))" : "var(--color-destructive-foreground, var(--color-primary))"}
+      />
+    </div>
+
     <div class="grid gap-6 lg:grid-cols-2">
-      <div class="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <div>
-          <div class="flex items-center justify-between">
-            <p class="text-xs font-medium">Overflow dari Jakarta ({overflowPct}% · kasus Double 12)</p>
-            <span class="kpi-value text-sm">{overflowM}M/day</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="40"
-            step="1"
-            value={overflowPct}
-            oninput={(e) => (overflowPct = Number((e.currentTarget as HTMLInputElement).value))}
-            onchange={(e) => notify({ message: `Overflow diatur ${(e.currentTarget as HTMLInputElement).value}%`, type: "info", title: "Load Balancing" })}
-            aria-label="Persentase overflow dari Jakarta"
-            class="mt-2 w-full accent-[var(--color-primary)]"
-          />
-          <div class="mt-1 h-2 overflow-hidden rounded-full bg-muted">
-            <div class="h-full rounded-full bg-primary transition-all" style="width: {(overflowPct / 40) * 100}%"></div>
-          </div>
-        </div>
-        <div class="rounded-lg bg-muted p-4 text-sm">
-          <p><span class="text-muted-foreground">Volume dialihkan:</span> <span class="kpi-value">{overflowM}M/day</span></p>
-          <p class="mt-1"><span class="text-muted-foreground">Jakarta after:</span> <span class="kpi-value text-primary">{jktAfter}%</span> <span class="text-muted-foreground">(dari {jkt.utilizationPct}%)</span></p>
-          <p class="mt-1"><span class="text-muted-foreground">{target.name} {target.utilizationPct}% →</span> <span class="kpi-value text-chart-3">{tgtAfter}%</span></p>
-          {#if Number(tgtAfter) > 80}
-            <p class="mt-2 flex items-center gap-1.5 text-xs font-semibold text-warning-foreground"><Icon name="warn" cls="h-3.5 w-3.5" /> Hub penerima mendekati kapasitas — pertimbangkan hub lain.</p>
-          {/if}
-        </div>
-      </div>
       <div class="rounded-2xl border border-border bg-card p-5">
-        <p class="mb-3 text-sm font-medium">Kasus Nyata, Double 12 2022</p>
-        <p class="text-sm leading-relaxed text-muted-foreground">
-          Hub Jakarta 1 dialihkan sebagian paket ke hub lain karena kapasitas penuh. Omnigistic mencegah pengalihan mendadak ini lewat forecast + kapasitas elastis.
-        </p>
-        <div class="mt-4 space-y-2">
-          {#each hubs.filter((h) => h.name !== "Jakarta" && h.utilizationPct < 80).slice(0, 5) as h (h.name)}
+        <p class="mb-3 text-sm font-medium">Utilisasi sebelum vs sesudah (hub berubah)</p>
+        <EChart option={utilChart} height={300} label="Utilisasi hub sebelum dan sesudah optimasi" />
+      </div>
+
+      <div class="rounded-2xl border border-border bg-card p-5">
+        <p class="mb-3 text-sm font-medium">Rencana Pergerakan</p>
+        <div class="max-h-[300px] space-y-2 overflow-y-auto pr-1">
+          {#each opt.moves as m (m.fromCode + m.toCode)}
             <div class="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
-              <span>{h.name} ({h.code})</span>
-              <span class="kpi-value text-chart-3">{h.utilizationPct}%</span>
+              <span class="flex items-center gap-1.5">
+                <span class="font-medium">{m.fromCode}</span>
+                <Icon name="arrow-up-right" cls="h-3.5 w-3.5 text-muted-foreground" />
+                <span>{m.toCode}</span>
+                {#if !m.sameRegion}
+                  <span class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">antar-region</span>
+                {/if}
+              </span>
+              <span class="kpi-value text-chart-3">{fmt3(m.quantityM)}M</span>
             </div>
           {/each}
         </div>
+        <p class="mt-3 text-xs text-muted-foreground">
+          Engine: {opt.engine}. Biaya = indeks relatif antar-region (proxy prototipe), bukan tarif nyata.
+        </p>
       </div>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl border border-border bg-card">
+      <table class="w-full text-sm">
+        <thead class="bg-muted/50 text-xs text-muted-foreground">
+          <tr>
+            <th class="px-4 py-2.5 text-left font-medium">Hub</th>
+            <th class="px-4 py-2.5 text-right font-medium">Sebelum</th>
+            <th class="px-4 py-2.5 text-right font-medium">Sesudah</th>
+            <th class="px-4 py-2.5 text-right font-medium">Δ</th>
+            <th class="px-4 py-2.5 text-right font-medium">Masuk</th>
+            <th class="px-4 py-2.5 text-right font-medium">Keluar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each opt.hubs as h (h.code)}
+            <tr class="border-t border-border/60">
+              <td class="px-4 py-2">{h.name} <span class="text-xs text-muted-foreground">({h.region})</span></td>
+              <td class="px-4 py-2 text-right tabular-nums">{fmt1(h.beforePct)}%</td>
+              <td class="px-4 py-2 text-right tabular-nums font-medium">{fmt1(h.afterPct)}%</td>
+              <td
+                class="px-4 py-2 text-right tabular-nums"
+                style={h.deltaPct > 0.05
+                  ? "color:var(--color-chart-3, var(--color-primary))"
+                  : h.deltaPct < -0.05
+                    ? "color:var(--color-primary)"
+                    : ""}
+              >
+                {h.deltaPct > 0 ? "+" : ""}{fmt1(h.deltaPct)}
+              </td>
+              <td class="px-4 py-2 text-right tabular-nums text-muted-foreground">{h.movedInM ? fmt3(h.movedInM) + "M" : "—"}</td>
+              <td class="px-4 py-2 text-right tabular-nums text-muted-foreground">{h.movedOutM ? fmt3(h.movedOutM) + "M" : "—"}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm">
+      <span class="font-medium">Insight:</span> Overflow diarahkan ke hub ber-headroom terdekat secara biaya (greedy cheapest-link-first),
+      dengan lantai aman {opt.thresholds.safeFloor}% pada hub sumber dan maks {Math.round(opt.thresholds.maxDivertFrac * 100)}% kapasitas boleh dialihkan.
+      Ini mencegah pengalihan mendadak ala Double 12 2022 dan menaikkan utilisasi timur tanpa capex baru.
     </div>
   {:else if loaded && failed}
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
-      <p class="text-sm font-semibold text-foreground">Gagal memuat data hub</p>
+      <p class="text-sm font-semibold text-foreground">Gagal memuat optimizer</p>
       <p class="mt-1 text-xs text-muted-foreground">Backend offline. Muat ulang setelah backend aktif.</p>
       <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
     </div>
   {:else if loaded}
-    <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">Data hub tidak tersedia.</div>
+    <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">Data optimizer tidak tersedia.</div>
   {:else}
-    <div class="h-64 animate-pulse rounded-2xl border border-border bg-card/60"></div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {#each Array(4) as _, i (i)}<div class="h-28 animate-pulse rounded-2xl border border-border bg-card/60"></div>{/each}
+    </div>
+    <div class="h-72 animate-pulse rounded-2xl border border-border bg-card/60"></div>
   {/if}
 </div>

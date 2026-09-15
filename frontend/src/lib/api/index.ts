@@ -192,6 +192,7 @@ export interface ForecastResult {
   peak: { month: string; label: string; totalM: number };
   trough: { month: string; label: string; totalM: number };
   fluctuationPct: number;
+  backtest?: { mapePct: number; method: string };
 }
 export interface DemandActualResult {
   year: number;
@@ -200,6 +201,137 @@ export interface DemandActualResult {
 export interface AddressDemoResult {
   street: string;
   locations: Array<{ city: string; district: string; coordinate: string }>;
+}
+
+/* ── Network Optimization Engine ─────────────────────────────────────────── */
+export interface OptimizerMove {
+  from: string;
+  fromCode: string;
+  to: string;
+  toCode: string;
+  quantityM: number;
+  costIndex: number;
+  sameRegion: boolean;
+}
+export interface OptimizerHubRow {
+  name: string;
+  code: string;
+  region: string;
+  beforePct: number;
+  afterPct: number;
+  deltaPct: number;
+  movedInM: number;
+  movedOutM: number;
+}
+export interface OptimizeResult {
+  engine: string;
+  note: string;
+  thresholds: { critical: number; safeFloor: number; maxDivertFrac: number };
+  summary: {
+    totalMovedM: number;
+    moves: number;
+    overloadedBefore: number;
+    overloadedAfter: number;
+    eastAvgUtilBefore: number;
+    eastAvgUtilAfter: number;
+    unmetM: number;
+  };
+  moves: OptimizerMove[];
+  hubs: OptimizerHubRow[];
+}
+
+/* ── COD Decision Intelligence ───────────────────────────────────────────── */
+export interface CodIntelResult {
+  engine: string;
+  note: string;
+  caseFigures: {
+    nonCod: { packages: number; distanceKm: number; durationMin: number };
+    cod: { packages: number; distanceKm: number; durationMin: number };
+  };
+  input: {
+    codSharePct: number;
+    interventions: string[];
+    interventionCutPct: number;
+    packagesPerShift: number;
+  };
+  split: { codPackages: number; nonCodPackages: number };
+  baseline: { shiftDurationMin: number; waitPerCodPkgMin: number };
+  optimized: { shiftDurationMin: number; waitPerCodPkgMin: number };
+  impact: {
+    minutesSavedPerShift: number;
+    extraPackagesPerShift: number;
+    extraCapacityPct: number;
+    savedIdrPerShift: number;
+    savedCo2GramPerShift: number;
+    hoursSavedPer100Couriers: number;
+  };
+  interventionCatalog: Array<{ key: string; label: string; cutPct: number }>;
+}
+
+/* ── Metrik turunan & rekonsiliasi ───────────────────────────────────────── */
+export interface RegionSummary {
+  region: string;
+  hubs: number;
+  capacityM: number;
+  avgUtilizationPct: number;
+  outlets: number;
+  usedVolumeM: number;
+  sponsorCandidate: boolean;
+}
+export interface FinancialSummary {
+  rows: Array<{
+    year: number;
+    fulfilmentT: number;
+    shippingT: number;
+    totalCostT: number;
+    netSalesT: number;
+    costToSalesPct: number;
+  }>;
+  growth: {
+    fulfilmentPct: number;
+    shippingPct: number;
+    netSalesPct: number;
+    costGrewFasterThanSales: boolean;
+  };
+}
+export interface DemandSummary {
+  months: number;
+  totalM: number;
+  ecommerceM: number;
+  ecommerceSharePct: number;
+  peak: { month: string; totalM: number };
+  trough: { month: string; totalM: number };
+  fluctuationPct: number;
+  tiktokEcommerceShockPct: number | null;
+  reconciliation: {
+    totalM: { computed: number; document: number; delta: number };
+    ecommerceM: { computed: number; document: number; delta: number };
+    note: string;
+  };
+}
+export interface FleetSummary {
+  motorcycles: number;
+  vans: number;
+  trucks: number;
+  lineHaul: number;
+  totalArmada: number;
+  evTarget: number;
+  evSharePct: number;
+  lastMileMotorPct: number;
+}
+export interface AuditCheck {
+  id: string;
+  label: string;
+  ok: boolean;
+  value: unknown;
+  note?: string;
+}
+export interface AuditResult {
+  regionSummary: RegionSummary[];
+  financial: FinancialSummary;
+  demand: DemandSummary;
+  fleet: FleetSummary;
+  checks: AuditCheck[];
 }
 
 export const api = {
@@ -225,7 +357,16 @@ export const api = {
   addressDemo: () => get<AddressDemoResult>("/ml/address-demo"),
   addressParse: (address: string) => post<AddressParseResult>("/ml/address-parse", { address }),
   digitalTwin: () => get<Record<string, TwinResult>>("/ml/sim/digital-twin"),
-  codImpact: () => get<{ prob: number; result: CodImpact }>("/ml/sim/cod-impact")
+  codImpact: () => get<{ prob: number; result: CodImpact }>("/ml/sim/cod-impact"),
+  optimizeLoadBalance: () => get<OptimizeResult>("/ml/optimize/load-balance"),
+  codIntel: (body: { cod_share_pct?: number; interventions?: string[]; packages_per_shift?: number }) =>
+    post<CodIntelResult>("/ml/cod-intel", body),
+  codIntelScenarios: () => get<Record<string, CodIntelResult>>("/ml/cod-intel/scenarios"),
+  metricRegions: () => get<RegionSummary[]>("/ml/metrics/regions"),
+  metricFinancial: () => get<FinancialSummary>("/ml/metrics/financial"),
+  metricDemand: () => get<DemandSummary>("/ml/metrics/demand"),
+  metricFleet: () => get<FleetSummary>("/ml/metrics/fleet"),
+  metricAudit: () => get<AuditResult>("/ml/metrics/audit")
 };
 
 export const online = writable(false);
