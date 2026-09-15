@@ -30,6 +30,16 @@ export interface OrderItem {
   qty: number;
 }
 
+/** Satu entri riwayat perjalanan paket (ditulis oleh aksi kurir). */
+export interface OrderEvent {
+  at: number;
+  status: OrderStatus;
+  /** Kondisi/keterangan terkini saat itu. */
+  note: string;
+  /** Siapa yang menulis (mis. "Kurir Baits · JKT-04"). */
+  actor: string;
+}
+
 export interface Order {
   id: string;
   createdAt: number;
@@ -44,6 +54,14 @@ export interface Order {
   /** Keputusan model: antar-normal | pudo | pre-payment; null bila transfer. */
   codDecision: string | null;
   status: OrderStatus;
+  /** Keterangan kondisi paket terkini (ditulis kurir / sistem). */
+  statusNote: string;
+  /** Kurir yang menangani (nama · kode tugas). */
+  courier: string | null;
+  /** Terakhir diperbarui (ms). */
+  updatedAt: number;
+  /** Riwayat perjalanan paket, terbaru di depan. */
+  events: OrderEvent[];
 }
 
 export interface ShopState {
@@ -145,24 +163,74 @@ function createShop() {
       });
     },
     /** Simpan pesanan baru; kembalikan id pesanan. */
-    placeOrder(order: Omit<Order, "id" | "createdAt" | "status">): string {
+    placeOrder(order: Omit<Order, "id" | "createdAt" | "status" | "statusNote" | "courier" | "updatedAt" | "events">): string {
       const id = newOrderId();
+      const now = Date.now();
       update((s) => {
-        const full: Order = { ...order, id, createdAt: Date.now(), status: "dikemas" };
+        const full: Order = {
+          ...order,
+          id,
+          createdAt: now,
+          status: "dikemas",
+          statusNote: "Pesanan diterima & sedang dikemas di hub.",
+          courier: null,
+          updatedAt: now,
+          events: [{ at: now, status: "dikemas", note: "Pesanan diterima & sedang dikemas di hub.", actor: "Sistem" }],
+        };
         const next = { ...s, orders: [full, ...s.orders], cart: [] };
         persist(next);
         return next;
       });
       return id;
     },
-    /** Majukan status pengantaran sebuah pesanan. */
-    advanceStatus(orderId: string) {
-      const flow: OrderStatus[] = ["dikemas", "dijemput", "transit", "dikirim", "terkirim"];
+
+    /**
+     * Aksi kurir: majukan status paket ke tahap berikutnya, catat aktor + kondisi.
+     * Kembalikan status baru (atau null bila tak ada perubahan).
+     */
+    courierAdvance(orderId: string, actor: string, note?: string): OrderStatus | null {
+      let result: OrderStatus | null = null;
+      const flow = ORDER_STATUS_FLOW;
       update((s) => {
         const orders = s.orders.map((o) => {
           if (o.id !== orderId) return o;
           const i = flow.indexOf(o.status);
-          return { ...o, status: flow[Math.min(i + 1, flow.length - 1)] };
+          if (i < 0 || i >= flow.length - 1) return o;
+          const nextStatus = flow[i + 1];
+          const now = Date.now();
+          const mergedNote = note?.trim() ? note.trim() : DEFAULT_COURIER_NOTE[nextStatus];
+          result = nextStatus;
+          return {
+            ...o,
+            status: nextStatus,
+            statusNote: mergedNote,
+            courier: actor,
+            updatedAt: now,
+            events: [{ at: now, status: nextStatus, note: mergedNote, actor }, ...o.events],
+          };
+        });
+        const next = { ...s, orders };
+        persist(next);
+        return next;
+      });
+      return result;
+    },
+
+    /** Aksi kurir: perbarui keterangan kondisi tanpa mengubah status. */
+    courierNote(orderId: string, actor: string, note: string) {
+      const clean = note.trim();
+      if (!clean) return;
+      update((s) => {
+        const orders = s.orders.map((o) => {
+          if (o.id !== orderId) return o;
+          const now = Date.now();
+          return {
+            ...o,
+            statusNote: clean,
+            courier: actor,
+            updatedAt: now,
+            events: [{ at: now, status: o.status, note: clean, actor }, ...o.events],
+          };
         });
         const next = { ...s, orders };
         persist(next);
@@ -239,3 +307,85 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   dikirim: "Dalam pengantaran",
   terkirim: "Terkirim",
 };
+
+/**
+ * Catatan kondisi paket bawaan per status — dipakai bila kurir majukan status
+ * tanpa menulis keterangan manual. Satu sumber kebenaran agar teks yang dilihat
+ * pembeli konsisten dengan aksi kurir.
+ */
+export const DEFAULT_COURIER_NOTE: Record<OrderStatus, string> = {
+  dikemas: "Pesanan diterima & sedang dikemas di hub.",
+  dijemput: "Paket dijemput kurir dari hub.",
+  transit: "Paket tiba di hub transit, menunggu keberangkatan.",
+  dikirim: "Paket dalam perjalanan menuju alamat penerima.",
+  terkirim: "Paket diterima penerima.",
+};
+
+/**
+ * Tugas kurir saat ini per status paket — menjelaskan apa yang harus dilakukan
+ * kurir pada tahap itu (dipakai halaman tugas pengantaran KURIR).
+ */
+export interface CourierTask {
+  /** Judul singkat aksi kurir. */
+  title: string;
+  /** Keterangan tugas / instruksi. */
+  detail: string;
+  /** Ikon (nama dari Icon.svelte). */
+  icon: string;
+}
+
+export const COURIER_TASK: Record<OrderStatus, CourierTask> = {
+  dikemas: {
+    title: "Jemput paket di hub",
+    detail: "Ambil paket yang sudah dikemas dari rak hub, lalu verifikasi label alamat.",
+    icon: "stack",
+  },
+  dijemput: {
+    title: "Serahkan ke transit hub",
+    detail: "Bawa paket ke hub transit untuk sortir rute pengantaran hari ini.",
+    icon: "compass",
+  },
+  transit: {
+    title: "Mulai pengantaran",
+    detail: "Keluar dari hub transit dan menuju alamat penerima sesuai rute.",
+    icon: "map",
+  },
+  dikirim: {
+    title: "Konfirmasi paket tiba",
+    detail: "Serahkan paket ke penerima. Untuk COD, terima pembayaran tunai sebelum selesai.",
+    icon: "check",
+  },
+  terkirim: {
+    title: "Tugas selesai",
+    detail: "Paket sudah diterima penerima. Siap lanjut ke paket berikutnya.",
+    icon: "check",
+  },
+};
+
+/**
+ * Fraksi perjalanan kurir (0..1) diturunkan dari status — satu sumber agar
+ * semua peta pelacakan (customer & kurir) menunjukkan progres yang sama dengan
+ * status paket terkini hasil aksi kurir.
+ */
+export function progressForStatus(status: OrderStatus): number {
+  switch (status) {
+    case "dikemas":
+      return 0;
+    case "dijemput":
+      return 0.15;
+    case "transit":
+      return 0.45;
+    case "dikirim":
+      return 0.75;
+    case "terkirim":
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+/** Status berikutnya dalam alur, atau null bila sudah tahap akhir. */
+export function nextStatus(status: OrderStatus): OrderStatus | null {
+  const i = ORDER_STATUS_FLOW.indexOf(status);
+  return i >= 0 && i < ORDER_STATUS_FLOW.length - 1 ? ORDER_STATUS_FLOW[i + 1] : null;
+}
