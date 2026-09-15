@@ -32,14 +32,14 @@ const NOTE_PICKUP = "Paket diambil dari hub, kondisi segel utuh.";
 const NOTE_ARRIVE = "Diterima langsung oleh Sari, segel masih utuh.";
 
 const seededState = {
-  cart: [],
+  cart: [{ productId: "P-EL-01", qty: 1 }],
   address: null,
   buyerId: "BUY-GOOD",
   orders: [
     {
       id: ORDER_ID,
       createdAt: NOW,
-      items: [{ productId: "p-kopi-1", name: "Kopi Arabika Gayo 250g", emoji: "☕", price: 65000, qty: 2 }],
+      items: [{ productId: "P-EL-01", name: "TWS Bluetooth Earbuds Pro", emoji: "🎧", price: 189000, qty: 2 }],
       subtotal: 130000,
       shipping: 14000,
       total: 144000,
@@ -59,7 +59,7 @@ const seededState = {
     {
       id: RISK_ID,
       createdAt: NOW,
-      items: [{ productId: "p-kopi-1", name: "Kopi Arabika Gayo 250g", emoji: "☕", price: 65000, qty: 1 }],
+      items: [{ productId: "P-EL-01", name: "TWS Bluetooth Earbuds Pro", emoji: "🎧", price: 189000, qty: 1 }],
       subtotal: 65000,
       shipping: 18000,
       total: 83000,
@@ -178,11 +178,14 @@ try {
 
   // ── 6. KURIR: slot, tunai COD, & PUDO (aksi lanjutan lintas halaman) ──
   await goto("/dashboard/kurir/slot");
-  await page.locator(`input[aria-label="Slot untuk ${RISK_ID}"]`).fill("14:00-16:00");
+  // Input slot kini dua input waktu (type=time): mulai & selesai.
+  R((await page.locator('input[type="time"]').count()) >= 2, "kurir/slot: slot pakai input type=time");
+  await page.locator(`input[type="time"][aria-label="Jam mulai slot ${RISK_ID}"]`).fill("14:00");
+  await page.locator(`input[type="time"][aria-label="Jam selesai slot ${RISK_ID}"]`).fill("16:00");
   await page.getByRole("button", { name: /^Konfirmasi$/ }).first().click();
   await page.waitForTimeout(400);
   let ord = await readOrder(RISK_ID);
-  R(ord?.slot === "14:00-16:00", "kurir/slot: slot terkonfirmasi tersimpan", `slot=${ord?.slot}`);
+  R(ord?.slot === "14:00-16:00", "kurir/slot: slot (type=time) tersimpan 14:00-16:00", `slot=${ord?.slot}`);
 
   await goto("/dashboard/kurir/payment");
   body = await page.locator("body").innerText();
@@ -217,6 +220,16 @@ try {
   await goto("/dashboard/kurir/overview");
   body = await page.locator("body").innerText();
   R(/Tugas aktif|Tunai COD tertagih/i.test(body), "kurir/overview: KPI dari pesanan nyata", "");
+
+  // ── 9. Tipe input sesuai jenis (bukan semua "text") ──
+  await goto("/dashboard/customer/checkout");
+  R((await page.locator('input[type="tel"][autocomplete="tel"]').count()) >= 1, "checkout: nomor HP pakai type=tel");
+  R((await page.locator('select').count()) >= 1, "checkout: kota pakai <select>");
+  await goto("/dashboard/kurir/tasks");
+  R((await page.locator('input[type="time"]').count()) >= 2, "kurir/tasks: slot pakai input type=time");
+  await goto("/dashboard/customer/overview");
+  R((await page.locator('input[type="search"]').count()) >= 1, "customer/overview: pencarian pakai type=search");
+  R((await page.locator('input[type="range"]').count()) === 0, "customer/overview: tanpa range liar", "");
 } catch (e) {
   R(false, "FATAL", String(e.message).slice(0, 200));
 } finally {
