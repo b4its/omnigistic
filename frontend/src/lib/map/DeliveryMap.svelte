@@ -12,27 +12,38 @@
   import type * as LeafletNS from "leaflet";
   import { get } from "svelte/store";
   import { themeStore } from "$lib/stores/theme";
-  import { ROUTE_COORDS } from "$lib/map/route";
+  import { coordsForCity, HUB_LABEL, etaForCity, distanceForCity } from "$lib/logistics";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
 
   interface Props {
     /** Fraksi perjalanan 0..1 (dikendalikan pemanggil). */
     progress?: number;
+    /** Kota tujuan — menentukan geometri & jarak rute (satu sumber: logistics.ts). */
+    city?: string;
     originLabel?: string;
     destLabel?: string;
+    /** Estimasi waktu tempuh total (menit). Default dari data kota. */
     etaMin?: number;
     height?: number;
   }
 
-  let { progress = 0, originLabel = "Hub Jakarta", destLabel = "Alamat penerima", etaMin = 45, height = 360 }: Props = $props();
+  let { progress = 0, city = "Bogor", originLabel = HUB_LABEL, destLabel = "Alamat penerima", etaMin, height = 360 }: Props = $props();
 
   let mapEl = $state<HTMLElement | undefined>();
 
   type LL = [number, number];
 
-  const route: LL[] = ROUTE_COORDS;
-  const ORIGIN: LL = route[0];
-  const DEST: LL = route[route.length - 1];
+  /** Geometri + metrik rute per kota (reaktif terhadap prop `city`). */
+  const rgeo = $derived.by(() => {
+    const route: LL[] = coordsForCity(city);
+    const segLen: number[] = [];
+    for (let i = 1; i < route.length; i++) segLen.push(haversine(route[i - 1], route[i]));
+    const total = segLen.reduce((s, d) => s + d, 0) || 1;
+    return { route, segLen, total, origin: route[0], dest: route[route.length - 1] };
+  });
+  /** ETA total (menit): prop eksplisit bila ada, jika tidak dari data kota. */
+  const tripMin = $derived(etaMin ?? etaForCity(city));
+  const tripKm = $derived(distanceForCity(city));
 
   function haversine(a: LL, b: LL): number {
     const R = 6371.0;
@@ -42,12 +53,9 @@
     return 2 * R * Math.asin(Math.sqrt(s));
   }
 
-  const segLen: number[] = [];
-  for (let i = 1; i < route.length; i++) segLen.push(haversine(route[i - 1], route[i]));
-  const routeTotal = segLen.reduce((s, d) => s + d, 0) || 1;
-
   function pointAt(t: number): LL {
-    let dist = Math.max(0, Math.min(1, t)) * routeTotal;
+    const { route, segLen, total } = rgeo;
+    let dist = Math.max(0, Math.min(1, t)) * total;
     for (let i = 0; i < segLen.length; i++) {
       if (dist <= segLen[i] || i === segLen.length - 1) {
         const f = segLen[i] > 0 ? dist / segLen[i] : 0;
@@ -61,7 +69,8 @@
   }
 
   function sliceUpTo(t: number): LL[] {
-    const dist = Math.max(0, Math.min(1, t)) * routeTotal;
+    const { route, segLen, total } = rgeo;
+    const dist = Math.max(0, Math.min(1, t)) * total;
     const out: LL[] = [route[0]];
     let acc = 0;
     for (let i = 0; i < segLen.length; i++) {
@@ -84,9 +93,10 @@
     traveled.setLatLngs(sliceUpTo(frac) as unknown as LeafletNS.LatLngExpression[]);
     courierMk.setLatLng(pointAt(frac) as unknown as LeafletNS.LatLngExpression);
     const pct = Math.round(frac * 100);
-    const km = Math.round(frac * routeTotal * 10) / 10;
+    const km = Math.round(frac * tripKm * 10) / 10;
+    const etaLeft = Math.max(0, Math.round(tripMin * (1 - frac)));
     try {
-      courierMk.setTooltipContent(frac >= 1 ? `Tiba · ${destLabel}` : `Kurir · ${pct}% · ~${km} km · ETA ~${Math.max(0, Math.round(etaMin * (1 - frac)))} mnt`);
+      courierMk.setTooltipContent(frac >= 1 ? `Tiba · ${destLabel}` : `Kurir · ${pct}% · ~${km} km · ETA ~${etaLeft} mnt`);
     } catch {
       /* noop */
     }
@@ -104,7 +114,7 @@
       await import("leaflet/dist/leaflet.css");
       if (disposed || !el) return;
 
-      map = L.map(el, { worldCopyJump: true, zoomControl: true }).setView(DEST as unknown as LeafletNS.LatLngExpression, 11);
+      map = L.map(el, { worldCopyJump: true, zoomControl: true }).setView(rgeo.dest as unknown as LeafletNS.LatLngExpression, 11);
 
       // Tile OpenStreetMap — gratis, open-source, lengkap (tanpa API key).
       const tile = L.tileLayer(OSM_TILE.url, { maxZoom: OSM_TILE.maxZoom, attribution: OSM_TILE.attribution, crossOrigin: true });
@@ -119,26 +129,26 @@
       const unsubTheme = themeStore.subscribe((t) => applyDark(t === "dark"));
 
       // Garis rute penuh — putus-putus, samar.
-      L.polyline(route as unknown as LeafletNS.LatLngExpression[], { color: "#94a3b8", weight: 3, opacity: 0.55, dashArray: "6 8" }).addTo(map);
+      L.polyline(rgeo.route as unknown as LeafletNS.LatLngExpression[], { color: "#94a3b8", weight: 3, opacity: 0.55, dashArray: "6 8" }).addTo(map);
 
       // Garis jalur yang sudah ditempuh — solid.
-      traveled = L.polyline([ORIGIN] as unknown as LeafletNS.LatLngExpression[], { color: "#16a34a", weight: 5, opacity: 0.95 }).addTo(map);
+      traveled = L.polyline([rgeo.origin] as unknown as LeafletNS.LatLngExpression[], { color: "#16a34a", weight: 5, opacity: 0.95 }).addTo(map);
 
       // Titik awal (hub).
-      L.circleMarker(ORIGIN as unknown as LeafletNS.LatLngExpression, { radius: 9, color: "#16a34a", fillColor: "#dcfce7", fillOpacity: 0.9, weight: 3 })
+      L.circleMarker(rgeo.origin as unknown as LeafletNS.LatLngExpression, { radius: 9, color: "#16a34a", fillColor: "#dcfce7", fillOpacity: 0.9, weight: 3 })
         .addTo(map)
         .bindTooltip(`Awal · ${originLabel}`, { direction: "top" });
 
       // Titik tujuan (pembeli).
-      L.circleMarker(DEST as unknown as LeafletNS.LatLngExpression, { radius: 10, color: "#c14a21", fillColor: "#fde4d8", fillOpacity: 0.95, weight: 3 })
+      L.circleMarker(rgeo.dest as unknown as LeafletNS.LatLngExpression, { radius: 10, color: "#c14a21", fillColor: "#fde4d8", fillOpacity: 0.95, weight: 3 })
         .addTo(map)
         .bindTooltip(`Tujuan · ${destLabel}`, { direction: "top" });
 
       // Titik saat ini (kurir).
-      courierMk = L.circleMarker(ORIGIN as unknown as LeafletNS.LatLngExpression, { radius: 8, color: "#2563eb", fillColor: "#dbeafe", fillOpacity: 1, weight: 3 }).addTo(map);
+      courierMk = L.circleMarker(rgeo.origin as unknown as LeafletNS.LatLngExpression, { radius: 8, color: "#2563eb", fillColor: "#dbeafe", fillOpacity: 1, weight: 3 }).addTo(map);
       courierMk.bindTooltip("Kurir", { direction: "top", permanent: true }).openTooltip();
 
-      map.fitBounds(route as unknown as LeafletNS.LatLngBoundsExpression, { padding: [48, 48] });
+      map.fitBounds(rgeo.route as unknown as LeafletNS.LatLngBoundsExpression, { padding: [48, 48] });
 
       paint(progress);
 
