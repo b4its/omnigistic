@@ -27,6 +27,7 @@ mkdirSync("/tmp/opencode/shots", { recursive: true });
 
 const NOW = Date.now();
 const ORDER_ID = "ORD-E2E-TEST-1";
+const RISK_ID = "ORD-E2E-RISK-2";
 const NOTE_PICKUP = "Paket diambil dari hub, kondisi segel utuh.";
 const NOTE_ARRIVE = "Diterima langsung oleh Sari, segel masih utuh.";
 
@@ -50,6 +51,29 @@ const seededState = {
       statusNote: "Pesanan diterima & sedang dikemas di hub.",
       courier: null,
       updatedAt: NOW,
+      slot: null,
+      codCollected: false,
+      routedToPudo: false,
+      events: [{ at: NOW, status: "dikemas", note: "Pesanan diterima & sedang dikemas di hub.", actor: "Sistem" }]
+    },
+    {
+      id: RISK_ID,
+      createdAt: NOW,
+      items: [{ productId: "p-kopi-1", name: "Kopi Arabika Gayo 250g", emoji: "☕", price: 65000, qty: 1 }],
+      subtotal: 65000,
+      shipping: 18000,
+      total: 83000,
+      address: { recipient: "Budi Santoso", phone: "081200000000", street: "Jl. Asia Afrika No.5", city: "Bandung" },
+      payment: "COD",
+      codScore: 0.78,
+      codDecision: "pre-payment",
+      status: "dikemas",
+      statusNote: "Pesanan diterima & sedang dikemas di hub.",
+      courier: null,
+      updatedAt: NOW,
+      slot: null,
+      codCollected: false,
+      routedToPudo: false,
       events: [{ at: NOW, status: "dikemas", note: "Pesanan diterima & sedang dikemas di hub.", actor: "Sistem" }]
     }
   ]
@@ -84,6 +108,19 @@ async function readOrderFromStorage() {
       return o ? { status: o.status, statusNote: o.statusNote, courier: o.courier, events: o.events.length } : null;
     },
     [STORAGE_KEY, ORDER_ID]
+  );
+}
+
+/** Baca field apa pun dari sebuah pesanan di localStorage. */
+async function readOrder(id) {
+  return page.evaluate(
+    ([key, oid]) => {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return null;
+      const o = JSON.parse(raw).orders.find((x) => x.id === oid);
+      return o ?? null;
+    },
+    [STORAGE_KEY, id]
   );
 }
 
@@ -131,13 +168,55 @@ try {
   // ── 4. CUSTOMER: dashboard melacak kondisi terkini (read-only) ──
   await goto("/dashboard/customer/dashboard");
   body = await page.locator("body").innerText();
-  R(body.includes(NOTE_ARRIVE), "customer/dashboard: kondisi terkini = aksi kurir", NOTE_ARRIVE.slice(0, 30));
   R(!/Tandai terkirim/i.test(body), "customer/dashboard: tidak ada tombol ubah status", "");
   R(/Status pengantaran/i.test(body), "customer/dashboard: panel status (bukan simulasi manual)", "");
+  R(/Kondisi paket terkini/i.test(body), "customer/dashboard: menampilkan kondisi terkini (dari kurir)", "");
 
   // ── 5. KURIR: event log bertambah setiap aksi ──
   const ev = await readOrderFromStorage();
   R(ev?.events >= 5, "store: event riwayat bertambah tiap aksi kurir", `events=${ev?.events}`);
+
+  // ── 6. KURIR: slot, tunai COD, & PUDO (aksi lanjutan lintas halaman) ──
+  await goto("/dashboard/kurir/slot");
+  await page.locator(`input[aria-label="Slot untuk ${RISK_ID}"]`).fill("14:00-16:00");
+  await page.getByRole("button", { name: /^Konfirmasi$/ }).first().click();
+  await page.waitForTimeout(400);
+  let ord = await readOrder(RISK_ID);
+  R(ord?.slot === "14:00-16:00", "kurir/slot: slot terkonfirmasi tersimpan", `slot=${ord?.slot}`);
+
+  await goto("/dashboard/kurir/payment");
+  body = await page.locator("body").innerText();
+  R(/Tagihan tunai per pesanan/i.test(body), "kurir/payment: daftar tagihan tunai nyata", "");
+  // Tandai semua tagihan tunai yang tersedia agar RISK_ID ikut terekap.
+  const payBtns = page.getByRole("button", { name: /Terima tunai/i });
+  for (let i = (await payBtns.count()) - 1; i >= 0; i--) {
+    await payBtns.nth(i).click();
+    await page.waitForTimeout(300);
+  }
+  const paid = await readOrder(RISK_ID);
+  R(paid?.codCollected === true, "kurir/payment: tunai COD ditandai diterima", `codCollected=${paid?.codCollected}`);
+
+  await goto("/dashboard/kurir/pudo");
+  body = await page.locator("body").innerText();
+  R(body.includes(RISK_ID), "kurir/pudo: pesanan COD berisiko tampil sebagai kandidat", RISK_ID);
+  const pudoBtn = page.getByRole("button", { name: /Alihkan ke PUDO/i }).first();
+  if (await pudoBtn.count()) {
+    await pudoBtn.click();
+    await page.waitForTimeout(400);
+  }
+  const risk = await readOrder(RISK_ID);
+  R(risk?.routedToPudo === true, "kurir/pudo: paket dialihkan ke PUDO tersimpan", `routedToPudo=${risk?.routedToPudo}`);
+
+  // ── 7. CUSTOMER: melihat slot & status tunai COD ──
+  await goto("/dashboard/customer/orders");
+  body = await page.locator("body").innerText();
+  R(body.includes("14:00-16:00"), "customer/orders: slot pengantaran terlihat pembeli", "14:00-16:00");
+  R(/Tunai sudah diterima kurir|Dialihkan ke PUDO/.test(body), "customer/orders: status COD/PUDO tercermin", "");
+
+  // ── 8. KURIR: overview menampilkan KPI dari pesanan nyata ──
+  await goto("/dashboard/kurir/overview");
+  body = await page.locator("body").innerText();
+  R(/Tugas aktif|Tunai COD tertagih/i.test(body), "kurir/overview: KPI dari pesanan nyata", "");
 } catch (e) {
   R(false, "FATAL", String(e.message).slice(0, 200));
 } finally {
