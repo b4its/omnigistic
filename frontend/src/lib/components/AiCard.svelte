@@ -11,7 +11,8 @@
     HUB: ["Berapa utilisasi hub Bandung?", "Kenapa demand naik turun?"],
     KURIR: ["Kenapa COD lebih lambat?", "Apa itu Slot Confirmation?"],
     DATA: ["Kenapa alamat bisa ambigu?", "Berapa tingkat komplain?"],
-    CUSTOMER: ["Kenapa COD lebih lambat?", "Apa itu PUDO?"]
+    CUSTOMER: ["Kenapa COD lebih lambat?", "Apa itu PUDO?"],
+    SELLER: ["Berapa tingkat komplain?", "Kenapa COD lebih lambat?"]
   };
 
   let greeting = $state("");

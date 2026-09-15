@@ -22,8 +22,8 @@
   const done = $derived(track ? isTrackComplete(track, progress) : false);
 
   const name = $derived((data?.cookieRole ?? "").toUpperCase());
-  const roleName: Record<string, string> = { PUSAT: "Dalila", HUB: "Marwah", KURIR: "Baits", DATA: "Virgiawan", CUSTOMER: "Sari" };
-  const roleLabel: Record<string, string> = { PUSAT: "Manajer Pusat", HUB: "Manajer Hub Bandung", KURIR: "Kurir Jakarta", DATA: "Data & IT", CUSTOMER: "Pembeli" };
+  const roleName: Record<string, string> = { PUSAT: "Dalila", HUB: "Marwah", KURIR: "Baits", DATA: "Virgiawan", CUSTOMER: "Sari", SELLER: "Rina" };
+  const roleLabel: Record<string, string> = { PUSAT: "Manajer Pusat", HUB: "Manajer Hub Bandung", KURIR: "Kurir Jakarta", DATA: "Data & IT", CUSTOMER: "Pembeli", SELLER: "Penjual" };
 
   // Timestamp terbit HARUS stabil (jangan Date.now() di $derived → ID/tanggal berubah tiap render).
   // Fallback 0 → tanggal "1 Januari 1970" hanya bila progres di-seed manual tanpa aktivitas.

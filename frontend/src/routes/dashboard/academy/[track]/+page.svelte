@@ -20,7 +20,7 @@
   const prog = $derived(track ? trackProgress(track.slug, progress) : { done: 0, total: 0, pct: 0 });
   const done = $derived(track ? isTrackComplete(track, progress) : false);
 
-  const audienceLabel: Record<string, string> = { ALL: "Semua peran", PUSAT: "Manajer Pusat", HUB: "Manajer Hub", KURIR: "Kurir", DATA: "Data & IT", CUSTOMER: "Pembeli" };
+  const audienceLabel: Record<string, string> = { ALL: "Semua peran", PUSAT: "Manajer Pusat", HUB: "Manajer Hub", KURIR: "Kurir", DATA: "Data & IT", CUSTOMER: "Pembeli", SELLER: "Penjual" };
 
   function isDone(lesson: Lesson): boolean {
     return progress.completed.includes(lessonKey(slug, lesson.slug));

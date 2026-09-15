@@ -6,7 +6,8 @@
     { slug: "hub", initials: "M", name: "Marwah", role: "Hub Manager Bandung", desc: "Forecast, load balancing, kapasitas, alert dini." },
     { slug: "kurir", initials: "B", name: "Baits", role: "Courier Jakarta", desc: "Clustering rute, Predictive COD, slot, pembayaran digital." },
     { slug: "data", initials: "V", name: "Virgiawan", role: "Data & IT", desc: "Address Intelligence, komplain, control tower, emisi." },
-    { slug: "customer", initials: "S", name: "Sari", role: "Pembeli", desc: "Belanja di e-commerce, checkout COD, lacak pengantaran." }
+    { slug: "customer", initials: "S", name: "Sari", role: "Pembeli", desc: "Belanja di e-commerce, checkout COD, lacak pengantaran." },
+    { slug: "seller", initials: "R", name: "Rina", role: "Penjual", desc: "Analitik laba/rugi, margin produk, skor pelanggan." }
   ];
 </script>
 
@@ -17,7 +18,7 @@
     <h1 class="font-heading text-xl font-semibold tracking-tight">Pilih portal peran</h1>
     <a href={resolveHref("/")} class="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">&larr; Halaman utama</a>
   </div>
-  <p class="text-sm text-muted-foreground">Lima sudut pandang atas satu sumber kebenaran kasus GC Logistics.</p>
+  <p class="text-sm text-muted-foreground">Enam sudut pandang atas satu sumber kebenaran kasus GC Logistics.</p>
   <div class="grid gap-4 sm:grid-cols-2">
     {#each roles as r (r.slug)}
       <a href={resolveHref(`/dashboard/${r.slug}/overview`)} class="group flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/40">

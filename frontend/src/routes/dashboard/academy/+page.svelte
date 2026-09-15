@@ -18,7 +18,7 @@
   });
 
   const role = $derived((data?.cookieRole ?? "").toUpperCase() as Role | "");
-  const roleLabel: Record<string, string> = { PUSAT: "Manajer Pusat", HUB: "Manajer Hub", KURIR: "Kurir", DATA: "Data & IT", CUSTOMER: "Pembeli" };
+  const roleLabel: Record<string, string> = { PUSAT: "Manajer Pusat", HUB: "Manajer Hub", KURIR: "Kurir", DATA: "Data & IT", CUSTOMER: "Pembeli", SELLER: "Penjual" };
 
   // Urutkan: track relevan role lebih dulu, lalu sisa sesuai urutan kurikulum.
   const ordered = $derived(
@@ -41,7 +41,8 @@
     HUB: "Manajer Hub",
     KURIR: "Kurir",
     DATA: "Data & IT",
-    CUSTOMER: "Pembeli"
+    CUSTOMER: "Pembeli",
+    SELLER: "Penjual"
   };
 
   const levelTone: Record<string, string> = {

@@ -23,7 +23,7 @@
     updatedAt: number;
   }
 
-  const roleName: Record<string, string> = { PUSAT: "Dalila", HUB: "Marwah", KURIR: "Baits", DATA: "Virgiawan", CUSTOMER: "Sari" };
+  const roleName: Record<string, string> = { PUSAT: "Dalila", HUB: "Marwah", KURIR: "Baits", DATA: "Virgiawan", CUSTOMER: "Sari", SELLER: "Rina" };
   const priorityDot: Record<string, string> = { high: "bg-destructive", medium: "bg-warning", low: "bg-success" };
   const EMPTY_CHIPS = [
     "Apa masalah utama GC Logistics?",
