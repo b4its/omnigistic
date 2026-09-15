@@ -107,6 +107,52 @@ export function remainingEtaMin(city: string, progress: number): number {
   return Math.max(0, Math.round(etaForCity(city) * (1 - frac)));
 }
 
+/* ── Slot pengantaran (jam mulai–selesai) ───────────────────────────────── */
+
+/** Rentang slot pengantaran yang sudah diurai ke jam "HH:MM". */
+export interface SlotParts {
+  /** Jam mulai "HH:MM" (mis. "14:00"). */
+  start: string;
+  /** Jam selesai "HH:MM" (mis. "16:00"). */
+  end: string;
+}
+
+/** Ubah jam "HH:MM" menjadi menit sejak tengah malam (atau null bila tak valid). */
+export function timeToMinutes(t: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(t.trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return h * 60 + min;
+}
+
+/** Urai string slot ("14:00-16:00") → { start, end }. Mendukung pemisah "-" / "–". */
+export function parseSlot(slot: string | null | undefined): SlotParts {
+  if (!slot) return { start: "", end: "" };
+  const parts = slot.split(/\s*[-–]\s*/);
+  return { start: (parts[0] ?? "").trim(), end: (parts[1] ?? "").trim() };
+}
+
+/** Bangun string slot dari jam mulai & selesai; "" bila salah satu kosong. */
+export function buildSlot(start: string, end: string): string {
+  if (!start || !end) return "";
+  return `${start}-${end}`;
+}
+
+/**
+ * Validasi rentang slot: keduanya format jam valid DAN selesai > mulai.
+ * Kembalikan pesan error (Indonesia) atau null bila valid.
+ */
+export function validateSlot(start: string, end: string): string | null {
+  if (!start || !end) return "Isi jam mulai dan jam selesai.";
+  const s = timeToMinutes(start);
+  const e = timeToMinutes(end);
+  if (s === null || e === null) return "Format jam tidak valid.";
+  if (e <= s) return "Jam selesai harus setelah jam mulai.";
+  return null;
+}
+
 /* ── Ambang operasional bersama ─────────────────────────────────────────── */
 
 /** Ambang utilisasi hub (persen). */

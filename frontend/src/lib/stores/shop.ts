@@ -6,6 +6,7 @@ import { browser } from "$app/environment";
 import { writable, derived, type Readable } from "svelte/store";
 import { getProduct, type Product } from "$lib/shop/catalog";
 import { DEFAULT_PERSONA_ID, getPersona, computeReputation, type Reputation } from "$lib/shop/reputation";
+import { parseSlot, validateSlot } from "$lib/logistics";
 
 export interface CartItem {
   productId: string;
@@ -290,10 +291,16 @@ function createShop() {
       });
     },
 
-    /** Aksi kurir: konfirmasi slot pengantaran untuk sebuah pesanan. */
-    confirmSlot(orderId: string, actor: string, slot: string) {
+    /**
+     * Aksi kurir: konfirmasi slot pengantaran untuk sebuah pesanan.
+     * Slot harus berformat rentang jam valid ("HH:MM-HH:MM") — kembalikan pesan
+     * error bila tidak, sehingga UI dapat menampilkan alasan kegagalan.
+     */
+    confirmSlot(orderId: string, actor: string, slot: string): string | null {
       const clean = slot.trim();
-      if (!clean) return;
+      const parts = parseSlot(clean);
+      const err = validateSlot(parts.start, parts.end);
+      if (err) return err;
       update((s) => {
         const orders = s.orders.map((o) => {
           if (o.id !== orderId) return o;
@@ -312,6 +319,7 @@ function createShop() {
         persist(next);
         return next;
       });
+      return null;
     },
 
     /** Aksi kurir: tandai tunai COD sudah diterima (hanya bila payment COD). */
