@@ -5,6 +5,7 @@
   import EChart from "$lib/components/EChart.svelte";
   import { barChart } from "$lib/charts/options";
   import { shop, ORDER_STATUS_LABEL, type Order } from "$lib/stores/shop";
+  import { notify } from "$lib/toast";
 
   let route = $state<Array<{ type: string; packages: number; distanceKm: number; durationMin: number; productivity: number }>>([]);
   let quotes = $state<Array<{ city: string; quote: string }>>([]);
@@ -21,14 +22,17 @@
     return unsub;
   });
 
-  async function load() {
+  async function load(userTriggered = false) {
     failed = false;
+    if (userTriggered) notify({ message: "Memuat ulang data rute…", type: "info", title: "Route Clustering" });
     try {
       [route, quotes] = await Promise.all([api.routes(), api.courierQuotes()]);
+      if (userTriggered) notify({ message: "Data rute dimuat ulang", type: "success", title: "Route Clustering" });
     } catch {
       route = [];
       quotes = [];
       failed = true;
+      if (userTriggered) notify({ message: "Gagal memuat data rute", type: "error", title: "Route Clustering" });
     }
     loaded = true;
   }
@@ -73,7 +77,7 @@
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
       <p class="text-sm font-semibold text-foreground">Gagal memuat data rute studi kasus</p>
       <p class="mt-1 text-xs text-muted-foreground">Backend offline. Cluster pengantaran nyata di atas tetap tampil bila ada pesanan.</p>
-      <button type="button" onclick={() => load()} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
     </div>
   {:else if loaded && route.length}
     <div class="grid gap-6 sm:grid-cols-2">

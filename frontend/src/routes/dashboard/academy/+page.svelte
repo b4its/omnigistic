@@ -5,6 +5,7 @@
   import ProgressRing from "$lib/components/ProgressRing.svelte";
   import { TRACKS, trackLessons, trackMinutes, type Role } from "$lib/academy/curriculum";
   import { academy, trackProgress, isTrackComplete, totalCompleted, totalLessons, overallPct, type AcademyState } from "$lib/stores/academy-progress";
+  import { notify } from "$lib/toast";
 
   let { data }: { data?: { cookieRole?: string | null } } = $props();
 
@@ -53,7 +54,7 @@
 
   function resetProgress() {
     academy.reset();
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: "Progres Nigi Academy direset" }));
+    notify({ message: "Progres Nigi Academy direset", type: "warn", title: "Nigi Academy" });
   }
 </script>
 

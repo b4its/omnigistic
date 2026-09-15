@@ -5,6 +5,7 @@
   import { greetingByTime, cn } from "$lib/utils";
   import ChatMarkdown from "./ChatMarkdown.svelte";
   import Icon from "./Icon.svelte";
+  import { notify } from "$lib/toast";
 
   type InsightEntry = Insights["insights"][number];
 
@@ -115,6 +116,7 @@
     renameValue = c.title;
     sidebarOpen = false;
     persist();
+    notify({ message: "Percakapan baru dibuat", type: "success", title: "Nigi AI" });
   }
 
   function selectConversation(id: string) {
@@ -123,15 +125,18 @@
     activeId = id;
     msgs = cloneMsgs(c.msgs);
     sidebarOpen = false;
+    notify({ message: `Membuka percakapan "${c.title}"`, type: "info", title: "Nigi AI" });
   }
 
   function deleteConversation(id: string) {
+    const gone = conversations.find((c) => c.id === id);
     conversations = conversations.filter((c) => c.id !== id);
     if (activeId === id) {
       activeId = conversations[0]?.id ?? null;
       msgs = conversations[0] ? cloneMsgs(conversations[0].msgs) : [];
     }
     persist();
+    notify({ message: `Percakapan "${gone?.title ?? ""}" dihapus`, type: "warn", title: "Nigi AI" });
   }
 
   function startRename(c: Conversation) {
@@ -145,6 +150,7 @@
     conversations = conversations.map((c) => (c.id === renamingId ? { ...c, title: t } : c));
     renamingId = null;
     persist();
+    notify({ message: `Percakapan dinamai "${t}"`, type: "success", title: "Nigi AI" });
   }
 
   function syncActive() {

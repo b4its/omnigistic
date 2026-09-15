@@ -4,6 +4,7 @@
   import { customerScores, segmentCounts, avgCustomerScore, type CustomerScore } from "$lib/shop/analytics";
   import { shop, type Order } from "$lib/stores/shop";
   import { liveCustomers } from "$lib/shop/orderbook";
+  import { notify } from "$lib/toast";
 
   const rupiah = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 
@@ -29,6 +30,11 @@
 
   const SEGMENTS = ["Champion", "Loyal", "Potensial", "Berisiko", "Pasif"] as const;
   let filter = $state<(typeof SEGMENTS)[number] | "Semua">("Semua");
+
+  function setFilter(f: typeof filter) {
+    filter = f;
+    notify({ message: `Filter segmen: ${f}`, type: "info", title: "Pelanggan" });
+  }
 
   const filtered = $derived(filter === "Semua" ? customers : customers.filter((c) => c.segment === filter));
 
@@ -78,14 +84,14 @@
   <div class="flex flex-wrap gap-2">
     <button
       type="button"
-      onclick={() => (filter = "Semua")}
+      onclick={() => setFilter("Semua")}
       aria-pressed={filter === "Semua"}
       class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {filter === 'Semua' ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
     >Semua ({customers.length})</button>
     {#each SEGMENTS as s (s)}
       <button
         type="button"
-        onclick={() => (filter = s)}
+        onclick={() => setFilter(s)}
         aria-pressed={filter === s}
         class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {filter === s ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
       >{s} ({segments[s]})</button>

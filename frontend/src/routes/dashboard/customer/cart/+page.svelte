@@ -4,6 +4,7 @@
   import Icon from "$lib/components/Icon.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, cartDetail, shippingCost, type ResolvedCartItem } from "$lib/stores/shop";
+  import { notify } from "$lib/toast";
 
   let items = $state<ResolvedCartItem[]>([]);
   let subtotal = $state(0);
@@ -21,19 +22,21 @@
   const totalWeight = $derived(items.reduce((w, i) => w + i.product.weightKg * i.qty, 0));
   const estShipping = $derived(items.length ? shippingCost(items, "Jakarta") : 0);
 
-  function more(productId: string, qty: number) {
+  function more(productId: string, qty: number, name: string) {
     shop.setQty(productId, qty + 1);
+    notify({ message: `${name} → jumlah ${qty + 1}`, type: "info", title: "Keranjang" });
   }
-  function less(productId: string, qty: number) {
+  function less(productId: string, qty: number, name: string) {
     shop.setQty(productId, qty - 1);
+    notify({ message: qty - 1 <= 0 ? `${name} dihapus dari keranjang` : `${name} → jumlah ${qty - 1}`, type: "info", title: "Keranjang" });
   }
   function remove(productId: string, name: string) {
     shop.removeFromCart(productId);
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: `${name} dihapus dari keranjang` }));
+    notify({ message: `${name} dihapus dari keranjang`, type: "warn", title: "Keranjang" });
   }
   function clearAll() {
     shop.clearCart();
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: "Keranjang dikosongkan" }));
+    notify({ message: "Keranjang dikosongkan", type: "warn", title: "Keranjang" });
   }
 </script>
 
@@ -80,9 +83,9 @@
               </div>
               <div class="mt-auto flex items-center justify-between gap-3">
                 <div class="inline-flex items-center rounded-full border border-border">
-                  <button type="button" onclick={() => less(it.product.id, it.qty)} aria-label="Kurangi jumlah" class="flex h-8 w-8 items-center justify-center rounded-full text-foreground hover:bg-muted"><span aria-hidden="true">−</span></button>
+                  <button type="button" onclick={() => less(it.product.id, it.qty, it.product.name)} aria-label="Kurangi jumlah" class="flex h-8 w-8 items-center justify-center rounded-full text-foreground hover:bg-muted"><span aria-hidden="true">−</span></button>
                   <span class="w-8 text-center text-sm font-semibold tabular-nums text-foreground">{it.qty}</span>
-                  <button type="button" onclick={() => more(it.product.id, it.qty)} aria-label="Tambah jumlah" class="flex h-8 w-8 items-center justify-center rounded-full text-foreground hover:bg-muted"><Icon name="plus" cls="h-3.5 w-3.5" weight="bold" /></button>
+                  <button type="button" onclick={() => more(it.product.id, it.qty, it.product.name)} aria-label="Tambah jumlah" class="flex h-8 w-8 items-center justify-center rounded-full text-foreground hover:bg-muted"><Icon name="plus" cls="h-3.5 w-3.5" weight="bold" /></button>
                 </div>
                 <p class="text-base font-bold text-foreground">{formatRupiah(it.lineTotal)}</p>
               </div>

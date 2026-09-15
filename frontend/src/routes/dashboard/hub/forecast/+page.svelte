@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { api } from "$lib/api";
+  import { notify } from "$lib/toast";
   import EChart from "$lib/components/EChart.svelte";
   import MetricCard from "$lib/components/MetricCard.svelte";
   import { lineChart } from "$lib/charts/options";
@@ -28,15 +29,18 @@
   let loaded = $state(false);
   let failed = $state(false);
 
-  async function load() {
+  async function load(userTriggered = false) {
     failed = false;
     loaded = false;
+    if (userTriggered) notify({ message: "Memuat ulang forecast…", type: "info", title: "Demand Forecast" });
     try {
       [forecast, actual] = await Promise.all([api.forecast(), api.demandActual()]);
+      if (userTriggered) notify({ message: "Forecast dimuat ulang", type: "success", title: "Demand Forecast" });
     } catch {
       forecast = null;
       actual = null;
       failed = true;
+      if (userTriggered) notify({ message: "Gagal memuat forecast", type: "error", title: "Demand Forecast" });
     }
     loaded = true;
   }
@@ -104,7 +108,7 @@
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
       <p class="text-sm font-semibold text-foreground">Gagal memuat forecast demand</p>
       <p class="mt-1 text-xs text-muted-foreground">Backend offline. Coba lagi setelah backend aktif.</p>
-      <button type="button" onclick={() => load()} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
     </div>
   {:else if loaded}
     <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">Data forecast tidak tersedia.</div>

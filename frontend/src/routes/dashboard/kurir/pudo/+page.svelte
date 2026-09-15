@@ -5,6 +5,7 @@
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, type Order } from "$lib/stores/shop";
   import { COURIER, COD_DECISION_LABEL } from "$lib/logistics";
+  import { notify } from "$lib/toast";
 
   const network = [
     { label: "PUDO GC saat ini", value: "3.200 titik", sub: "self-built + agen" },
@@ -37,12 +38,9 @@
     orders.filter((o) => !o.routedToPudo && o.payment === "COD" && (o.codDecision === "pudo" || o.codDecision === "pre-payment"))
   );
 
-  function toast(detail: string) {
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail }));
-  }
   function reroute(o: Order) {
     shop.routeToPudo(o.id, COURIER.actor);
-    toast(`Pesanan ${o.id} dialihkan ke PUDO`);
+    notify({ message: `Pesanan ${o.id} dialihkan ke PUDO`, type: "info", title: "PUDO" });
   }
 </script>
 

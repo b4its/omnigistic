@@ -24,6 +24,7 @@
     type Order
   } from "$lib/stores/shop";
   import { COURIER, HUB_LABEL, etaForCity, buildSlot, COD_DECISION_LABEL } from "$lib/logistics";
+  import { notify, type ToastType as TxType } from "$lib/toast";
 
   /** Identitas kurir — satu sumber (logistics.ts) agar konsisten dgn Topbar. */
   const actor = (): string => COURIER.actor;
@@ -73,8 +74,9 @@
   /** Total tunai COD yang harus ditagih (belum terkumpul). */
   const cashDue = $derived(orders.filter((o) => o.payment === "COD" && !o.codCollected).reduce((s, o) => s + o.total, 0));
 
-  function toast(detail: string) {
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail }));
+  /** Notifikasi aksi kurir (dengan jenis: sukses/info/peringatan). */
+  function toast(message: string, type: TxType = "success") {
+    notify({ message, type, title: "Tugas Pengantaran" });
   }
 
   /** Kurir memajukan paket ke tahap berikutnya, memakai draf keterangan bila ada. */
@@ -91,7 +93,7 @@
   function writeNote(o: Order) {
     const clean = noteDraft[o.id]?.trim();
     if (!clean) {
-      toast("Tulis keterangan kondisi paket dulu");
+      toast("Tulis keterangan kondisi paket dulu", "warn");
       return;
     }
     shop.courierNote(o.id, actor(), clean);
@@ -105,7 +107,7 @@
     const slot = buildSlot(d?.start ?? "", d?.end ?? "");
     const err = shop.confirmSlot(o.id, actor(), slot);
     if (err) {
-      toast(err);
+      toast(err, "warn");
       return;
     }
     slotDraft = { ...slotDraft, [o.id]: { start: "", end: "" } };
@@ -121,12 +123,17 @@
   /** Kurir alihkan paket ke PUDO. */
   function toPudo(o: Order) {
     shop.routeToPudo(o.id, actor());
-    toast(`Paket ${o.id} dialihkan ke PUDO`);
+    toast(`Paket ${o.id} dialihkan ke PUDO`, "info");
   }
 
   function reset() {
     shop.reset();
-    toast("Riwayat pesanan dihapus");
+    toast("Riwayat pesanan dihapus", "warn");
+  }
+
+  function toggleMap(id: string) {
+    openMapId = openMapId === id ? null : id;
+    toast(openMapId ? `Rute pengantaran ${id} ditampilkan` : `Rute ${id} disembunyikan`, "info");
   }
 
   const decisionTone: Record<string, string> = {
@@ -341,7 +348,7 @@
 
               <button
                 type="button"
-                onclick={() => (openMapId = openMapId === o.id ? null : o.id)}
+                onclick={() => toggleMap(o.id)}
                 class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-accent"
               >
                 <Icon name="map" cls="h-3.5 w-3.5" /> {openMapId === o.id ? "Sembunyikan rute" : "Lihat rute pengantaran"}

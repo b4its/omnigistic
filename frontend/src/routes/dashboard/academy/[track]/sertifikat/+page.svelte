@@ -5,6 +5,7 @@
   import Icon from "$lib/components/Icon.svelte";
   import { getTrack, trackLessons, trackMinutes } from "$lib/academy/curriculum";
   import { academy, trackProgress, isTrackComplete, type AcademyState } from "$lib/stores/academy-progress";
+  import { notify } from "$lib/toast";
 
   let { data }: { data?: { cookieRole?: string | null } } = $props();
 
@@ -36,6 +37,7 @@
   );
 
   function printCert() {
+    notify({ message: "Menyiapkan cetak sertifikat…", type: "info", title: "Sertifikat" });
     window.print();
   }
 </script>

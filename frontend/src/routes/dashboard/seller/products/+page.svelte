@@ -3,11 +3,18 @@
   import Icon from "$lib/components/Icon.svelte";
   import { productMetrics } from "$lib/shop/analytics";
   import { shop, type Order } from "$lib/stores/shop";
+  import { notify } from "$lib/toast";
 
   const rupiah = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 
   const metrics = productMetrics();
   let sortKey = $state<"profit" | "margin" | "revenue" | "return">("profit");
+
+  function setSortKey(k: typeof sortKey) {
+    sortKey = k;
+    const label: Record<typeof k, string> = { profit: "Laba kotor", margin: "Margin (%)", revenue: "Pendapatan", return: "Retur (%)" };
+    notify({ message: `Urutkan produk: ${label[k]}`, type: "info", title: "Produk" });
+  }
 
   /** Pesanan nyata → qty terjual per produk (live). */
   let orders = $state<Order[]>([]);
@@ -56,7 +63,7 @@
     </div>
     <label class="flex items-center gap-2 text-sm text-muted-foreground">
       <span class="shrink-0">Urutkan</span>
-      <select bind:value={sortKey} aria-label="Urutkan produk" class="rounded-full border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50">
+      <select value={sortKey} onchange={(e) => setSortKey((e.currentTarget as HTMLSelectElement).value as typeof sortKey)} aria-label="Urutkan produk" class="rounded-full border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50">
         <option value="profit">Laba kotor</option>
         <option value="margin">Margin (%)</option>
         <option value="revenue">Pendapatan</option>

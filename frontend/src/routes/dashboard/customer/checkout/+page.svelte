@@ -5,6 +5,7 @@
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, cartDetail, shippingCost, buyerReputation, type ResolvedCartItem, type Address, type PaymentMethod } from "$lib/stores/shop";
   import { CITIES } from "$lib/logistics";
+  import { notify } from "$lib/toast";
   import { api, type CodRiskResult } from "$lib/api";
   import type { Reputation } from "$lib/shop/reputation";
 
@@ -85,9 +86,11 @@
         zone
       });
       codResult = res;
+      notify({ message: `Kesiapan bayar COD dinilai: ${res.decision}`, type: "info", title: "Skor COD" });
     } catch {
       codResult = null;
       scoringError = true;
+      notify({ message: "Gagal menilai kesiapan COD — coba lagi", type: "error", title: "Skor COD" });
     } finally {
       scoring = false;
     }
@@ -95,11 +98,12 @@
 
   function choosePayment(m: PaymentMethod) {
     if (m === "COD" && !codAllowed) {
-      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: "COD tidak tersedia untuk akun ini" }));
+      notify({ message: "COD tidak tersedia untuk akun ini", type: "warn", title: "Pembayaran" });
       return;
     }
     payment = m;
     codResult = null;
+    notify({ message: `Metode pembayaran: ${m === "COD" ? "Bayar di Tempat (COD)" : "Transfer / Digital"}`, type: "info", title: "Pembayaran" });
     if (m === "COD") void scoreCod();
   }
 
@@ -132,7 +136,7 @@
       codDecision: codResult?.decision ?? null
     });
     placedId = id;
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: `Pesanan ${id} dibuat` }));
+    notify({ message: `Pesanan ${id} berhasil dibuat`, type: "success", title: "Checkout" });
   }
 
   const decisionLabel: Record<string, { text: string; tone: string; icon: string }> = {

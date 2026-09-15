@@ -4,6 +4,7 @@
   import { api } from "$lib/api";
   import { shop, ORDER_STATUS_LABEL, type Order } from "$lib/stores/shop";
   import { COURIER, etaForCity, buildSlot } from "$lib/logistics";
+  import { notify, type ToastType as TxType } from "$lib/toast";
 
   const stages = [
     { step: "H-1", desc: "Pemberitahuan paket akan diantar besok", en: "Notify" },
@@ -58,15 +59,15 @@
 
   // Pastikan tiap pesanan punya draf slot {start,end} agar bind:value aman.
 
-  function toast(detail: string) {
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail }));
+  function toast(message: string, type: TxType = "success") {
+    notify({ message, type, title: "Slot Pengantaran" });
   }
   function confirm(o: Order) {
     const d = slotDraft[o.id];
     const slot = buildSlot(d?.start ?? "", d?.end ?? "");
     const err = shop.confirmSlot(o.id, COURIER.actor, slot);
     if (err) {
-      toast(err);
+      toast(err, "warn");
       return;
     }
     slotDraft = { ...slotDraft, [o.id]: { start: "", end: "" } };

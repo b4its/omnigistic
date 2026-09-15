@@ -8,6 +8,7 @@
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, type Order } from "$lib/stores/shop";
   import { COURIER, COD_DECISION_LABEL } from "$lib/logistics";
+  import { notify } from "$lib/toast";
 
   let packages = $state<CodRiskPkg[]>([]);
   let sim = $state<CodImpact | null>(null);
@@ -35,6 +36,7 @@
       packages = [];
       sim = null;
       errored = true;
+      notify({ message: "Gagal memuat preset risk scoring (backend offline)", type: "error", title: "Predictive COD" });
     }
     loaded = true;
   }
@@ -46,12 +48,9 @@
       .sort((a, b) => (b.codScore ?? 0) - (a.codScore ?? 0))
   );
 
-  function toast(detail: string) {
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail }));
-  }
   function reroute(o: Order) {
     shop.routeToPudo(o.id, COURIER.actor);
-    toast(`Paket ${o.id} dialihkan ke PUDO`);
+    notify({ message: `Paket ${o.id} dialihkan ke PUDO`, type: "info", title: "Predictive COD" });
   }
 
   const decisionCls: Record<string, string> = {
@@ -89,6 +88,7 @@
   }
   function toggleDetail(id: string) {
     openId = openId === id ? null : id;
+    notify({ message: openId ? `Detail penjelasan ${id} dibuka` : `Detail ${id} ditutup`, type: "info", title: "Predictive COD" });
   }
   function openChat() {
     window.dispatchEvent(new CustomEvent("omnigistic-open-nigi-chat"));

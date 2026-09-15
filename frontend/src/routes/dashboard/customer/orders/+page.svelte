@@ -6,6 +6,7 @@
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, progressForStatus, type Order, type OrderStatus } from "$lib/stores/shop";
   import { HUB_LABEL, etaForCity, COD_DECISION_LABEL } from "$lib/logistics";
+  import { notify } from "$lib/toast";
 
   let orders = $state<Order[]>([]);
   let openMapId = $state<string | null>(null);
@@ -29,7 +30,12 @@
 
   function clearOrders() {
     shop.reset();
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: "Riwayat pesanan dihapus" }));
+    notify({ message: "Riwayat pesanan dihapus", type: "warn", title: "Pesanan" });
+  }
+
+  function toggleMap(id: string) {
+    openMapId = openMapId === id ? null : id;
+    notify({ message: openMapId ? `Peta pelacakan ${id} dibuka` : `Peta ${id} ditutup`, type: "info", title: "Pelacakan" });
   }
 </script>
 
@@ -112,7 +118,7 @@
                 </p>
                 <button
                   type="button"
-                  onclick={() => (openMapId = openMapId === o.id ? null : o.id)}
+                  onclick={() => toggleMap(o.id)}
                   class="text-xs font-semibold text-primary hover:underline"
                 >
                   {openMapId === o.id ? "Sembunyikan peta" : "Lihat peta"}
@@ -133,7 +139,7 @@
               {:else}
                 <button
                   type="button"
-                  onclick={() => (openMapId = o.id)}
+                  onclick={() => toggleMap(o.id)}
                   class="flex w-full items-center gap-3 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3 text-left transition-colors hover:border-primary/40 hover:bg-accent/40"
                 >
                   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground"><Icon name="map" cls="h-4 w-4" /></span>

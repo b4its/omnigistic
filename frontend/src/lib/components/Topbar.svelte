@@ -112,9 +112,9 @@
       a.download = "omnigistic-hubs.csv";
       a.click();
       URL.revokeObjectURL(url);
-      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: "omnigistic-hubs.csv terunduh (23 hub)" }));
+      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: "omnigistic-hubs.csv terunduh (23 hub)", type: "success", title: "Export" } }));
     } catch {
-      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: "Export gagal — backend offline?" }));
+      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: "Export gagal — backend offline?", type: "error", title: "Export" } }));
     } finally {
       exporting = false;
     }
@@ -147,7 +147,7 @@
           {#each RANGES as r (r)}
             <button
               type="button"
-              onclick={() => { range = r; openPop = null; }}
+              onclick={() => { range = r; openPop = null; window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `Rentang waktu: ${r}`, type: "info", title: "Periode" } })); }}
               class={cn("flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs", r === range ? "bg-accent font-semibold text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}
             >
               {r}

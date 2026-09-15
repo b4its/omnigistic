@@ -5,6 +5,7 @@
   import Icon from "$lib/components/Icon.svelte";
   import { getLesson, trackLessons } from "$lib/academy/curriculum";
   import { academy, lessonKey, type AcademyState } from "$lib/stores/academy-progress";
+  import { notify } from "$lib/toast";
 
   const trackSlug = $derived(String(page.params.track ?? ""));
   const lessonSlug = $derived(String(page.params.lesson ?? ""));
@@ -31,6 +32,7 @@
   function choose(qid: string, idx: number) {
     if (submitted) return;
     answers = { ...answers, [qid]: idx };
+    notify({ message: `Jawaban dipilih: ${String.fromCharCode(65 + idx)}`, type: "info", title: "Kuis" });
   }
 
   function submitQuiz() {
@@ -39,25 +41,27 @@
     const score = questions.length ? correctCount / questions.length : 0;
     academy.recordScore(key, score);
     submitted = true;
-    window.dispatchEvent(
-      new CustomEvent("omnigistic-toast", {
-        detail: score === 1 ? "Kuis sempurna! Pelajaran ditandai selesai" : `Skor ${Math.round(score * 100)}% — pelajaran ditandai selesai`
-      })
-    );
+    notify({
+      message: score === 1 ? "Kuis sempurna! Pelajaran ditandai selesai" : `Skor ${Math.round(score * 100)}% — pelajaran ditandai selesai`,
+      type: score >= 0.6 ? "success" : "warn",
+      title: "Kuis"
+    });
   }
 
   function retryQuiz() {
     answers = {};
     submitted = false;
+    notify({ message: "Kuis diulang dari awal", type: "info", title: "Kuis" });
   }
 
   function markComplete() {
     academy.complete(key);
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: "Pelajaran ditandai selesai" }));
+    notify({ message: "Pelajaran ditandai selesai", type: "success", title: "Progres Belajar" });
   }
 
   function unmarkComplete() {
     academy.uncomplete(key);
+    notify({ message: "Tanda selesai dibatalkan", type: "warn", title: "Progres Belajar" });
   }
 
   /** Navigasi next/prev dalam track. */

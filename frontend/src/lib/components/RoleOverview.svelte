@@ -2,6 +2,7 @@
   import { onMount, untrack } from "svelte";
   import { api, type Insights } from "$lib/api";
   import { greetingByTime, cn, priorityCls } from "$lib/utils";
+  import { notify } from "$lib/toast";
   import Icon from "./Icon.svelte";
   import MetricCard from "./MetricCard.svelte";
 
@@ -30,15 +31,18 @@
   let settled = $state(false);
   let failed = $state(false);
 
-  async function load() {
+  async function load(userTriggered = false) {
     failed = false;
     settled = false;
+    if (userTriggered) notify({ message: "Memuat ulang insight Nigi AI…", type: "info", title: "Insight" });
     try {
       const data = await api.insights(role);
       if (Array.isArray(data.insights)) ins = data.insights;
       if (data.greeting) grt = data.greeting;
+      if (userTriggered) notify({ message: "Insight dimuat ulang", type: "success", title: "Insight" });
     } catch {
       failed = true;
+      if (userTriggered) notify({ message: "Gagal memuat insight Nigi AI", type: "error", title: "Insight" });
     }
     settled = true;
   }
@@ -106,7 +110,7 @@
         <p class="text-sm font-semibold text-foreground">Insight Nigi AI tidak tersedia</p>
         <p class="mt-0.5 text-xs text-muted-foreground">Backend tampaknya offline. Kartu KPI &amp; grafik tetap tampil dari data lokal.</p>
       </div>
-      <button type="button" onclick={() => load()} class="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
+      <button type="button" onclick={() => load(true)} class="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
     </div>
   {:else if !settled}
     <div class="grid gap-3 lg:grid-cols-3">

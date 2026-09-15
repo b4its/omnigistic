@@ -5,6 +5,7 @@
   import { PRODUCTS, CATEGORIES, searchProducts, formatRupiah, type Product } from "$lib/shop/catalog";
   import { shop, cartCount, orderCount, buyerReputation } from "$lib/stores/shop";
   import { BUYER_PERSONAS, type Reputation } from "$lib/shop/reputation";
+  import { notify } from "$lib/toast";
 
   let query = $state("");
   let category = $state<string>("Semua");
@@ -34,7 +35,18 @@
   function setPersona(id: string) {
     shop.setBuyer(id);
     const p = BUYER_PERSONAS.find((x) => x.id === id);
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: `Mode demo: ${p?.name} (${id === "BUY-GOOD" ? "reputasi baik" : "reputasi buruk"})` }));
+    notify({ message: `Mode demo: ${p?.name} (${id === "BUY-GOOD" ? "reputasi baik" : "reputasi buruk"})`, type: "info", title: "Persona" });
+  }
+
+  function setCategory(c: string) {
+    category = c;
+    notify({ message: `Kategori: ${c}`, type: "info", title: "Filter" });
+  }
+
+  function setSort(s: typeof sort) {
+    sort = s;
+    const label: Record<string, string> = { populer: "Terpopuler", murah: "Harga terendah", mahal: "Harga tertinggi", rating: "Rating tertinggi" };
+    notify({ message: `Urutkan: ${label[s]}`, type: "info", title: "Filter" });
   }
 
   const results = $derived.by(() => {
@@ -63,7 +75,7 @@
     justAdded = p.id;
     if (addedTimer) clearTimeout(addedTimer);
     addedTimer = setTimeout(() => (justAdded = null), 1400);
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: `${p.name} ditambahkan ke keranjang` }));
+    notify({ message: `${p.name} ditambahkan ke keranjang`, type: "success", title: "Keranjang" });
   }
 </script>
 
@@ -143,12 +155,12 @@
           class="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none"
         />
         {#if query}
-          <button type="button" onclick={() => (query = "")} aria-label="Hapus pencarian" class="text-muted-foreground hover:text-foreground"><Icon name="x" cls="h-4 w-4" /></button>
+          <button type="button" onclick={() => { query = ""; notify({ message: "Pencarian dihapus", type: "info", title: "Belanja" }); }} aria-label="Hapus pencarian" class="text-muted-foreground hover:text-foreground"><Icon name="x" cls="h-4 w-4" /></button>
         {/if}
       </label>
       <label class="flex items-center gap-2 text-sm text-muted-foreground">
         <span class="shrink-0">Urutkan</span>
-        <select bind:value={sort} aria-label="Urutkan produk" class="rounded-full border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50">
+        <select value={sort} onchange={(e) => setSort((e.currentTarget as HTMLSelectElement).value as typeof sort)} aria-label="Urutkan produk" class="rounded-full border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50">
           <option value="populer">Terpopuler</option>
           <option value="murah">Harga terendah</option>
           <option value="mahal">Harga tertinggi</option>
@@ -161,7 +173,7 @@
       {#each CATEGORIES as c (c)}
         <button
           type="button"
-          onclick={() => (category = c)}
+          onclick={() => setCategory(c)}
           aria-pressed={category === c}
           class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {category === c ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
         >

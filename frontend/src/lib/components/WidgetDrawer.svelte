@@ -48,8 +48,14 @@
   const filtered = $derived(WIDGETS.filter((w) => w.title.toLowerCase().includes(q.toLowerCase())));
 
   function toggle(id: string) {
-    if (sel.has(id)) sel.delete(id);
-    else sel.add(id);
+    const w = WIDGETS.find((x) => x.id === id);
+    if (sel.has(id)) {
+      sel.delete(id);
+      if (w) window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `Widget "${w.title}" dilepas`, type: "info", title: "Widget" } }));
+    } else {
+      sel.add(id);
+      if (w) window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `Widget "${w.title}" dipilih`, type: "success", title: "Widget" } }));
+    }
   }
 </script>
 
@@ -116,7 +122,7 @@
       onclick={() => {
         const n = sel.size;
         open = false;
-        window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: n ? `${n} widget ditambahkan` : "Tidak ada widget dipilih" }));
+        window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: n ? { message: `${n} widget ditambahkan ke dashboard`, type: "success", title: "Widget" } : { message: "Tidak ada widget dipilih", type: "warn", title: "Widget" } }));
       }}
     >
       Tambah ke dashboard

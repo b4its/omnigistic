@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { api, type Insights } from "$lib/api";
+  import { notify } from "$lib/toast";
   import RoleOverview from "$lib/components/RoleOverview.svelte";
   import EChart from "$lib/components/EChart.svelte";
   import { barChart } from "$lib/charts/options";
@@ -23,15 +24,18 @@
     return unsub;
   });
 
-  async function load() {
+  async function load(userTriggered = false) {
     failed = false;
+    if (userTriggered) notify({ message: "Memuat ulang ringkasan kurir…", type: "info", title: "Ringkasan Kurir" });
     try {
       [routes, { greeting, insights }] = await Promise.all([
         api.routes().catch(() => []),
         api.insights("KURIR").catch(() => ({ greeting: "", insights: [] }))
       ]);
+      if (userTriggered) notify({ message: "Ringkasan dimuat ulang", type: "success", title: "Ringkasan Kurir" });
     } catch {
       failed = true;
+      if (userTriggered) notify({ message: "Gagal memuat ringkasan kurir", type: "error", title: "Ringkasan Kurir" });
     }
     loaded = true;
   }
@@ -103,7 +107,7 @@
   <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
     <p class="text-sm font-semibold text-foreground">Gagal memuat ringkasan kurir</p>
     <p class="mt-1 text-xs text-muted-foreground">Backend offline. Buat pesanan dari portal Customer atau coba lagi.</p>
-    <button type="button" onclick={() => load()} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
+    <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
   </div>
 {:else}
   <div class="space-y-5">

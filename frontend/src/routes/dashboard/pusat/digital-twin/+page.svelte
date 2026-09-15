@@ -2,19 +2,23 @@
   import { onMount } from "svelte";
   import Icon from "$lib/components/Icon.svelte";
   import { api, type TwinResult } from "$lib/api";
+  import { notify } from "$lib/toast";
 
   let results = $state<Record<string, TwinResult>>({});
   let loaded = $state(false);
   let failed = $state(false);
 
-  async function load() {
+  async function load(userTriggered = false) {
     failed = false;
     loaded = false;
+    if (userTriggered) notify({ message: "Memuat ulang simulasi Digital Twin…", type: "info", title: "Digital Twin" });
     try {
       results = await api.digitalTwin();
+      if (userTriggered) notify({ message: "Simulasi Digital Twin dimuat ulang", type: "success", title: "Digital Twin" });
     } catch {
       results = {};
       failed = true;
+      if (userTriggered) notify({ message: "Gagal memuat simulasi Digital Twin", type: "error", title: "Digital Twin" });
     }
     loaded = true;
   }
@@ -65,7 +69,7 @@
       <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive-foreground"><Icon name="warn" cls="h-6 w-6" /></span>
       <p class="mt-3 text-sm font-semibold text-foreground">Gagal memuat simulasi Digital Twin</p>
       <p class="mt-1 text-xs text-muted-foreground">Backend offline. Coba lagi setelah backend aktif.</p>
-      <button type="button" onclick={() => load()} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
     </div>
   {:else if loaded}
     <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">Skenario tidak tersedia.</div>

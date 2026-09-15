@@ -5,6 +5,7 @@
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, type Order } from "$lib/stores/shop";
   import { COURIER } from "$lib/logistics";
+  import { notify } from "$lib/toast";
 
   const flow = [
     "Kurir serah tunai",
@@ -30,12 +31,9 @@
 
   const digitalOrders = $derived(orders.filter((o) => o.payment === "Transfer"));
 
-  function toast(detail: string) {
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail }));
-  }
   function collect(o: Order) {
     shop.collectCod(o.id, COURIER.actor);
-    toast(`Tunai ${o.id} diterima`);
+    notify({ message: `Tunai ${o.id} (${formatRupiah(o.total)}) diterima`, type: "success", title: "Pembayaran COD" });
   }
 </script>
 
