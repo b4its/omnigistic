@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { api } from "$lib/api";
+  import Icon from "$lib/components/Icon.svelte";
+  import { api, type AuditResult } from "$lib/api";
 
   interface Root { n: string; name: string; theory: string; solution: string; kpi: string }
   // Teori jangkar bersifat editorial (tidak ada di data kasus) — tetap lokal.
@@ -23,6 +24,7 @@
   ];
 
   let roots = $state<Root[]>(rootsFallback);
+  let audit = $state<AuditResult | null>(null);
 
   onMount(async () => {
     try {
@@ -39,7 +41,14 @@
     } catch {
       roots = rootsFallback;
     }
+    try {
+      audit = await api.metricAudit();
+    } catch {
+      audit = null;
+    }
   });
+
+  const fmt = (n: number) => new Intl.NumberFormat("id-ID", { maximumFractionDigits: 2 }).format(n);
 
   const steps = [
     { step: "Collect", problem: "Alamat ambigu · 62% dari merchant · 38% individu", solution: "Address Intelligence · geotag wajib" },
@@ -99,5 +108,64 @@
       <li>Harga EV, harga BBM, tarif listrik, dan proyeksi ROI adalah asumsi tim (tidak ada di kasus) dan selalu berlabel.</li>
       <li>Model forecast, COD risk, dan address intelligence adalah prototipe presentasi, bukan sistem produksi.</li>
     </ul>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-sm font-semibold text-muted-foreground">Audit &amp; Rekonsiliasi Angka</h2>
+    <p class="text-sm text-muted-foreground">
+      Semua angka aplikasi dihitung ulang dari <code>shared/data-kas.json</code> oleh mesin metrik backend, bukan hardcode.
+      Berikut hasil trace otomatis: hijau = cocok dengan dokumen kasus, kuning = temuan ketidaksesuaian pada dokumen.
+    </p>
+    {#if audit}
+      <div class="grid gap-3 md:grid-cols-2">
+        {#each audit.checks as c (c.id)}
+          <div
+            class="flex items-start gap-3 rounded-2xl border bg-card p-4"
+            style="border-color: {c.ok ? 'var(--color-border)' : 'var(--color-warning, var(--color-chart-3))'}"
+          >
+            <span
+              class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+              style="background: {c.ok ? 'color-mix(in srgb, var(--color-primary) 15%, transparent)' : 'color-mix(in srgb, var(--color-chart-3) 20%, transparent)'}"
+            >
+              <Icon name={c.ok ? "check" : "warn"} cls="h-4 w-4" weight="bold" />
+            </span>
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-foreground">{c.label}</p>
+              <p class="mt-0.5 text-xs text-muted-foreground">
+                Nilai: <span class="font-mono">{typeof c.value === "object" ? JSON.stringify(c.value) : fmt(Number(c.value))}</span>
+              </p>
+              {#if c.note}<p class="mt-1 text-xs text-muted-foreground">{c.note}</p>{/if}
+            </div>
+          </div>
+        {/each}
+      </div>
+
+      <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm">
+        <p class="font-medium">Temuan rekonsiliasi (Tabel 4):</p>
+        <p class="mt-1 text-muted-foreground">{audit.demand.reconciliation.note}</p>
+        <p class="mt-2 text-muted-foreground">
+          Total demand: <span class="text-foreground">dokumen {fmt(audit.demand.reconciliation.totalM.document)} jt</span> =
+          <span class="text-foreground">hitung {fmt(audit.demand.reconciliation.totalM.computed)} jt</span> (cocok) ·
+          E-commerce: <span class="text-foreground">dokumen {fmt(audit.demand.reconciliation.ecommerceM.document)} jt</span> vs
+          <span class="text-foreground">hitung {fmt(audit.demand.reconciliation.ecommerceM.computed)} jt</span>
+          (selisih {fmt(audit.demand.reconciliation.ecommerceM.delta)} jt).
+        </p>
+      </div>
+
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {#each audit.regionSummary as r (r.region)}
+          <div class="rounded-2xl border border-border bg-card p-4">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-semibold">{r.region}</p>
+              {#if r.sponsorCandidate}<span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">kandidat sponsor</span>{/if}
+            </div>
+            <p class="mt-2 text-2xl font-bold tabular-nums">{fmt(r.avgUtilizationPct)}%</p>
+            <p class="text-xs text-muted-foreground">{r.hubs} hub · kapasitas {fmt(r.capacityM)}M/hari · {r.outlets} outlet</p>
+          </div>
+        {/each}
+      </div>
+    {:else}
+      <div class="h-24 animate-pulse rounded-2xl border border-border bg-card/60"></div>
+    {/if}
   </section>
 </div>
