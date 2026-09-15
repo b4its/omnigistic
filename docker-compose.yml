@@ -31,6 +31,9 @@ services:
       watch:
         - action: rebuild
           path: ./backend/requirements.txt
+    # Backend supply semua /api & /ml. Tanpa ini, container yg keluar (crash/reboot host)
+    # tak pernah hidup lagi → frontend tampil tanpa data. Samakan dgn frontend.
+    restart: unless-stopped
 
   frontend:
     build:
@@ -51,7 +54,8 @@ services:
       - /app/node_modules
       - /app/.svelte-kit
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     restart: unless-stopped
 
   # ================= PROD: image build, tanpa bind mount =================
@@ -70,6 +74,7 @@ services:
       AI_MODEL: ${AI_MODEL:-}
     ports:
       - "${BACKEND_HOST:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
+    restart: unless-stopped
 
   frontend-prod:
     profiles: ["prod"]
