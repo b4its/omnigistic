@@ -54,7 +54,7 @@
     { n: "02", root: "Kapasitas vs demand", name: "Kapasitas elastis + forecast per hub", impact: "Overload puncak → nol; biaya ikut kurva demand", kpi: "MAPE <10%; eksposur <20%/platform" },
     { n: "03", root: "Last-mile manual & COD", name: "Predictive COD + PUDO", impact: "Rute terpangkas; kapasitas kurir +38%", kpi: "Rute 138 → ≤100 menit; ≥4,8/jam" },
     { n: "04", root: "Data kotor & buta multimoda", name: "Address Intelligence + Control Tower", impact: "Komplain turun; kendali 2 moda tanpa capex", kpi: "Komplain <3/juta; geotag ≥95%" },
-    { n: "05", root: "Kapabilitas tertinggal", name: "GC Academy + Digital Twin", impact: "Keputusan strategis lebih cepat", kpi: "100% manajer tersertifikasi" },
+    { n: "05", root: "Kapabilitas tertinggal", name: "Nigi Academy + Digital Twin", impact: "Keputusan strategis lebih cepat", kpi: "100% manajer tersertifikasi" },
     { n: "06", root: "Keberlanjutan bukan sistem", name: "Carbon per rute + penyusutan 8 tahun", impact: "Emisi turun tanpa lonjakan capex", kpi: "Emisi/paket −20% per 2027" }
   ];
   const arch = [

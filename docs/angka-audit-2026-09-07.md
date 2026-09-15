@@ -6,7 +6,7 @@ Migrasi penuh **Next.js → SvelteKit 2 + FastAPI (Python 3.14)**, sepenuhnya lo
 - Landing editorial
 - Login (pilih portal)
 - Dashboard M3 (compact/medium/expanded) + role store persist
-- **13 halaman** dashboard (4 role × 3-6 sub) + **3 halaman baru** (PUDO, EV, ROI) + 3 shared (methodology, academy, kpi)
+- **13 halaman** dashboard (4 role × 3-6 sub) + **3 halaman baru** (PUDO, EV, ROI) + 3 shared (methodology, nigi academy, kpi)
 - ML Python asli (forecast seasonal + trend + event-flags, cod-risk **sklearn LogisticRegression**, address-parse **rapidfuzz**)
 - Leaflet AddressMap dengan animasi kurir + ETA
 - Nigi AI (greeting/insight/QA/chips)

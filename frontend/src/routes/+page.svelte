@@ -27,7 +27,7 @@
       solution: "Address Intelligence + Control Tower multimoda + Modal Shift Optimizer.", kpi: "<3/juta, geotag ≥95%" },
     { code: "RC5", title: "Capability Lagging Growth", titleId: "Kapabilitas tertinggal", icon: "grad",
       symptoms: "'Lacked deep operational expertise, management experience, technical knowledge'. Model bisnis under review.",
-      solution: "GC Academy + tim data science + Digital Twin sebagai alat uji keputusan.", kpi: "100% manajer tersertifikasi" },
+      solution: "Nigi Academy + tim data science + Digital Twin sebagai alat uji keputusan.", kpi: "100% manajer tersertifikasi" },
     { code: "RC6", title: "Sustainability = Purchase, Not Design", titleId: "Keberlanjutan bukan sistem", icon: "globe",
       symptoms: "Target 200 EV hanya 1,4% dari 14.180 armada. Beli aset ≠ ubah keputusan operasional harian.",
       solution: "Carbon account per rute + modal shift + roadmap 3 fase + replacement 8 tahun.", kpi: "Emisi/paket -20% per 2027" }
@@ -155,7 +155,7 @@
     { n: "02", root: "Kapasitas vs demand", name: "Kapasitas elastis + forecast per hub", impact: "Overload saat puncak turun ke nol", kpi: "MAPE < 10%; eksposur < 20%/platform" },
     { n: "03", root: "Last-mile manual & COD", name: "Predictive COD + PUDO", impact: "Rute COD terpangkas, kapasitas kurir naik tanpa rekrutmen", kpi: "Rute 138 → ≤ 100 menit; +38% kapasitas" },
     { n: "04", root: "Data kotor & buta multimoda", name: "Address Intelligence + Control Tower", impact: "Komplain turun; kendali 2 moda tanpa beli aset", kpi: "Komplain 5,5 → < 3/juta; geotag ≥ 95%" },
-    { n: "05", root: "Kapabilitas tertinggal", name: "GC Academy + Digital Twin", impact: "Keputusan strategis lebih cepat dan andal", kpi: "100% manajer tersertifikasi" },
+    { n: "05", root: "Kapabilitas tertinggal", name: "Nigi Academy + Digital Twin", impact: "Keputusan strategis lebih cepat dan andal", kpi: "100% manajer tersertifikasi" },
     { n: "06", root: "Keberlanjutan bukan sistem", name: "Carbon per rute + penyusutan 8 tahun", impact: "Emisi turun tanpa lonjakan capex", kpi: "Emisi/paket −20% per 2027" }
   ];
 
@@ -560,7 +560,7 @@
         <div class="mt-4 text-[13px] uppercase tracking-[0.08em]">
           <a href={resolveHref("/dashboard/methodology")} class="text-[color:var(--lnd-on-ink)] underline-offset-4 hover:underline hover:text-[color:var(--lnd-accent-ink)]">Methodology</a> ·
           <a href={resolveHref("/dashboard/kpi")} class="text-[color:var(--lnd-on-ink)] underline-offset-4 hover:underline hover:text-[color:var(--lnd-accent-ink)]">KPI Tracker</a> ·
-          <a href={resolveHref("/dashboard/academy")} class="text-[color:var(--lnd-on-ink)] underline-offset-4 hover:underline hover:text-[color:var(--lnd-accent-ink)]">GC Academy</a>
+          <a href={resolveHref("/dashboard/academy")} class="text-[color:var(--lnd-on-ink)] underline-offset-4 hover:underline hover:text-[color:var(--lnd-accent-ink)]">Nigi Academy</a>
         </div>
       </div>
     </section>

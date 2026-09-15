@@ -29,7 +29,7 @@
     slot: "Slot Confirmation", payment: "Digital Payment", pudo: "PUDO Network",
     address: "Address Intelligence", complaint: "Complaint Monitor", multimodal: "Control Tower",
     fleet: "Fleet & Emissions", "ev-sites": "EV Site Selection", methodology: "Methodology",
-    academy: "GC Academy", kpi: "KPI Tracker", assistant: "Nigi AI", "": "Dashboard"
+    academy: "Nigi Academy", kpi: "KPI Tracker", assistant: "Nigi AI", "": "Dashboard"
   };
   const seg3 = (path: string) => {
     const parts = path.split("/").filter(Boolean);
@@ -40,7 +40,7 @@
     { label: "Kerangka & Analisis", href: "/analisis", icon: "book" },
     { label: "Methodology", href: "/dashboard/methodology", icon: "book" },
     { label: "KPI Tracker", href: "/dashboard/kpi", icon: "chart" },
-    { label: "GC Academy", href: "/dashboard/academy", icon: "grad" }
+    { label: "Nigi Academy", href: "/dashboard/academy", icon: "grad" }
   ];
 
   const roleNav: Record<Role, NavItem[]> = {

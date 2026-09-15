@@ -5,7 +5,7 @@
     { n: "2", name: "Kapasitas fixed vs demand fluktuatif", theory: "Aggregate planning + Queueing theory", solution: "Kapasitas elastis 3 tingkat + forecast per hub", kpi: "MAPE <10%; eksposur <20%/platform" },
     { n: "3", name: "Last-mile manual dan cash-based", theory: "Business Process Reengineering + VRPTW", solution: "Predictive COD + clustering rute + PUDO + rekonsiliasi digital", kpi: "Rute COD ≤100 menit; ≥4,8 paket/jam" },
     { n: "4", name: "Data tidak terstandar dan buta multimoda", theory: "Record Linkage / Fuzzy Matching", solution: "Address Intelligence + Control Tower + modal shift", kpi: "Komplain <3/juta; geotag ≥95%" },
-    { n: "5", name: "Kapabilitas tertinggal dari pertumbuhan", theory: "Dynamic Capabilities", solution: "GC Academy + tim data internal + Digital Twin", kpi: "100% manajer tersertifikasi" },
+    { n: "5", name: "Kapabilitas tertinggal dari pertumbuhan", theory: "Dynamic Capabilities", solution: "Nigi Academy + tim data internal + Digital Twin", kpi: "100% manajer tersertifikasi" },
     { n: "6", name: "Keberlanjutan sebagai pembelian, bukan desain sistem", theory: "Triple Bottom Line + TCO", solution: "Carbon per rute + roadmap 3 fase + penyusutan 8 tahun", kpi: "Emisi/paket −20% per 2027" }
   ];
   const steps = [
