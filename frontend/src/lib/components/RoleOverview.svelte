@@ -26,17 +26,26 @@
 
   let ins = $state<Insights["insights"]>(untrack(() => insights));
   let grt = $state(untrack(() => greeting));
+  /** true setelah percobaan fetch selesai (agar bisa bedakan loading vs gagal). */
+  let settled = $state(false);
+  let failed = $state(false);
+
+  async function load() {
+    failed = false;
+    settled = false;
+    try {
+      const data = await api.insights(role);
+      if (Array.isArray(data.insights)) ins = data.insights;
+      if (data.greeting) grt = data.greeting;
+    } catch {
+      failed = true;
+    }
+    settled = true;
+  }
 
   onMount(() => {
-    if (!greeting && !insights.length) {
-      api
-        .insights(role)
-        .then((data) => {
-          if (Array.isArray(data.insights)) ins = data.insights;
-          if (data.greeting) grt = data.greeting;
-        })
-        .catch(() => {});
-    }
+    if (!greeting && !insights.length) void load();
+    else settled = true;
   });
 
   function openChat() {
@@ -90,6 +99,18 @@
           <p class="mt-1.5 text-[15.5px] leading-relaxed text-muted-foreground">{item.message}</p>
         </div>
       {/each}
+    </div>
+  {:else if settled && failed}
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-destructive/5 p-5">
+      <div>
+        <p class="text-sm font-semibold text-foreground">Insight Nigi AI tidak tersedia</p>
+        <p class="mt-0.5 text-xs text-muted-foreground">Backend tampaknya offline. Kartu KPI &amp; grafik tetap tampil dari data lokal.</p>
+      </div>
+      <button type="button" onclick={() => load()} class="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
+    </div>
+  {:else if !settled}
+    <div class="grid gap-3 lg:grid-cols-3">
+      {#each Array(3) as _, i (i)}<div class="h-28 animate-pulse rounded-2xl border border-border bg-card/60"></div>{/each}
     </div>
   {/if}
 

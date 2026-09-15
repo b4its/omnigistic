@@ -26,15 +26,22 @@
   let forecast = $state<ForecastResp | null>(null);
   let actual = $state<{ rows: Array<{ month: string; totalM: number; ecommerceM: number; events: string[] }> } | null>(null);
   let loaded = $state(false);
+  let failed = $state(false);
 
-  onMount(async () => {
+  async function load() {
+    failed = false;
+    loaded = false;
     try {
       [forecast, actual] = await Promise.all([api.forecast(), api.demandActual()]);
     } catch {
-      /* ignore */
+      forecast = null;
+      actual = null;
+      failed = true;
     }
     loaded = true;
-  });
+  }
+
+  onMount(() => void load());
 
   const chart = $derived.by(() => {
     if (!forecast || !actual) return null;
@@ -93,6 +100,14 @@
         <p class="mt-2 text-[15px] leading-relaxed text-muted-foreground">{forecast.mapeInfo}</p>
       </div>
     </div>
+  {:else if loaded && failed}
+    <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
+      <p class="text-sm font-semibold text-foreground">Gagal memuat forecast demand</p>
+      <p class="mt-1 text-xs text-muted-foreground">Backend offline. Coba lagi setelah backend aktif.</p>
+      <button type="button" onclick={() => load()} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
+    </div>
+  {:else if loaded}
+    <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">Data forecast tidak tersedia.</div>
   {:else}
     <div class="h-64 animate-pulse rounded-2xl border border-border bg-card/60"></div>
   {/if}
