@@ -107,6 +107,102 @@ export function remainingEtaMin(city: string, progress: number): number {
   return Math.max(0, Math.round(etaForCity(city) * (1 - frac)));
 }
 
+/* ── PUDO (Pick-Up Drop-Off) — titik ambil/bayar paket mitra ─────────────── */
+
+export interface PudoPoint {
+  /** ID ringkas unik (mis. "PUDO-JKT-01"). */
+  id: string;
+  /** Nama gerai mitra (mis. "Indomaret Sudirman"). */
+  name: string;
+  /** Jenis/operator mitra (mis. "Indomaret", "Agen GC"). */
+  partner: string;
+  /** Kota tempat gerai berada. */
+  city: City;
+  /** Koordinat (lat, lng) untuk peta. */
+  coord: [number, number];
+  /** Jam layanan ringkas (mis. "07.00-22.00"). */
+  hours: string;
+  /** Kapasitas harian (jumlah paket) — prototipe. */
+  capacityPerDay: number;
+}
+
+/**
+ * Titik PUDO mitra per kota (simulasi presentasi). Koordinat perkiraan gerai
+ * nyata di sekitar pusat kota masing-masing agar terlihat realistis di peta.
+ */
+export const PUDO_POINTS: PudoPoint[] = [
+  // Jakarta
+  { id: "PUDO-JKT-01", name: "Indomaret Sudirman", partner: "Indomaret", city: "Jakarta", coord: [-6.2085, 106.8218], hours: "24 jam", capacityPerDay: 120 },
+  { id: "PUDO-JKT-02", name: "Agen GC Kebayoran", partner: "Agen GC", city: "Jakarta", coord: [-6.2415, 106.7991], hours: "08.00-21.00", capacityPerDay: 80 },
+  { id: "PUDO-JKT-03", name: "Indomaret Cempaka Putih", partner: "Indomaret", city: "Jakarta", coord: [-6.1783, 106.8735], hours: "24 jam", capacityPerDay: 100 },
+  // Depok
+  { id: "PUDO-DPK-01", name: "Indomaret Margonda", partner: "Indomaret", city: "Depok", coord: [-6.3720, 106.8317], hours: "24 jam", capacityPerDay: 90 },
+  { id: "PUDO-DPK-02", name: "Agen GC Cinere", partner: "Agen GC", city: "Depok", coord: [-6.3335, 106.8009], hours: "08.00-20.00", capacityPerDay: 60 },
+  // Tangerang
+  { id: "PUDO-TNG-01", name: "Indomaret Alam Sutera", partner: "Indomaret", city: "Tangerang", coord: [-6.2236, 106.6537], hours: "24 jam", capacityPerDay: 85 },
+  { id: "PUDO-TNG-02", name: "Agen GC Ciledug", partner: "Agen GC", city: "Tangerang", coord: [-6.2336, 106.7060], hours: "08.00-21.00", capacityPerDay: 70 },
+  // Bogor
+  { id: "PUDO-BGR-01", name: "Indomaret Pajajaran", partner: "Indomaret", city: "Bogor", coord: [-6.5610, 106.8004], hours: "24 jam", capacityPerDay: 95 },
+  { id: "PUDO-BGR-02", name: "Agen GC Cibinong", partner: "Agen GC", city: "Bogor", coord: [-6.4817, 106.8526], hours: "08.00-21.00", capacityPerDay: 75 },
+  // Bandung
+  { id: "PUDO-BDG-01", name: "Indomaret Asia Afrika", partner: "Indomaret", city: "Bandung", coord: [-6.9215, 107.6099], hours: "24 jam", capacityPerDay: 110 },
+  { id: "PUDO-BDG-02", name: "Agen GC Dago", partner: "Agen GC", city: "Bandung", coord: [-6.8845, 107.6135], hours: "08.00-21.00", capacityPerDay: 70 },
+  // Surabaya
+  { id: "PUDO-SBY-01", name: "Indomaret Tunjungan", partner: "Indomaret", city: "Surabaya", coord: [-7.2576, 112.7378], hours: "24 jam", capacityPerDay: 115 },
+  { id: "PUDO-SBY-02", name: "Agen GC Gubeng", partner: "Agen GC", city: "Surabaya", coord: [-7.2653, 112.7517], hours: "08.00-21.00", capacityPerDay: 80 },
+];
+
+/** Semua titik PUDO di sebuah kota. */
+export function pudosForCity(city: string): PudoPoint[] {
+  return PUDO_POINTS.filter((p) => p.city === city.trim());
+}
+
+/** Jarak garis lurus (km) antara dua koordinat. */
+export function haversineKm(a: [number, number], b: [number, number]): number {
+  const R = 6371.0;
+  const dLat = ((b[0] - a[0]) * Math.PI) / 180;
+  const dLng = ((b[1] - a[1]) * Math.PI) / 180;
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos((a[0] * Math.PI) / 180) * Math.cos((b[0] * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(s)) * 10) / 10;
+}
+
+/**
+ * PUDO terdekat dari sebuah titik (default: tujuan kota). Kembalikan titik +
+ * jarak km. Bila kota tak punya PUDO, fallback ke titik PUDO di seluruh daftar.
+ */
+export function nearestPudo(from: [number, number], city?: string): { pudo: PudoPoint; distanceKm: number } {
+  const pool = city && pudosForCity(city).length ? pudosForCity(city) : PUDO_POINTS;
+  let best = pool[0];
+  let bestD = haversineKm(from, pool[0].coord);
+  for (const p of pool.slice(1)) {
+    const d = haversineKm(from, p.coord);
+    if (d < bestD) {
+      best = p;
+      bestD = d;
+    }
+  }
+  return { pudo: best, distanceKm: bestD };
+}
+
+/**
+ * Titik rekomendasi drop untuk kurir: PUDO terdekat dari tujuan pengantaran,
+ * beserta geometri rute singkat dari tujuan ke PUDO & estimasi menit.
+ */
+export function pudoDropRecommendation(city: string): {
+  pudo: PudoPoint;
+  distanceKm: number;
+  etaMin: number;
+  from: [number, number];
+  route: [number, number][];
+} {
+  const from = routeForCity(city).dest;
+  const { pudo, distanceKm } = nearestPudo(from, city);
+  // Rute sederhana tujuan → PUDO (dua titik, garis lurus) untuk visualisasi.
+  const route: [number, number][] = [from, pudo.coord];
+  const etaMin = Math.max(4, Math.round(distanceKm * 2.4)); // ~25 km/jam → menit
+  return { pudo, distanceKm, etaMin, from, route };
+}
+
 /* ── Slot pengantaran (jam mulai–selesai) ───────────────────────────────── */
 
 /** Rentang slot pengantaran yang sudah diurai ke jam "HH:MM". */
