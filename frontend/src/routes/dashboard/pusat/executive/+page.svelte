@@ -3,7 +3,16 @@
   import { api, type FinRow } from "$lib/api";
   import EChart from "$lib/components/EChart.svelte";
   import MetricCard from "$lib/components/MetricCard.svelte";
+  import Icon from "$lib/components/Icon.svelte";
   import { lineChart, barChart } from "$lib/charts/options";
+  import { resolveHref } from "$lib/utils";
+
+  const engineLinks = [
+    { title: "Network Optimization", desc: "Alihkan overflow hub overload ke hub ber-headroom secara otomatis.", href: "/dashboard/hub/load-balance", icon: "compass" as const },
+    { title: "COD Decision Intelligence", desc: "Dampak keputusan COD pada kapasitas kurir per shift.", href: "/dashboard/kurir/cod-intel", icon: "currency" as const },
+    { title: "Digital Twin", desc: "Simulasi Direct vs Regional Sponsor per region.", href: "/dashboard/pusat/digital-twin", icon: "grid" as const },
+    { title: "Audit Angka", desc: "Telusur & rekonsiliasi setiap angka ke dokumen kasus.", href: "/dashboard/methodology", icon: "shield" as const }
+  ];
 
   let fin = $state<FinRow[]>([]);
   let loaded = $state(false);
@@ -87,6 +96,22 @@
       <p class="mb-2 text-[13px] uppercase tracking-wider text-muted-foreground">Konteks dari Finance Manager</p>
       <p class="text-[16px] leading-relaxed text-foreground">&ldquo;On the surface, the growth looks very strong&hellip; But I&rsquo;m not sure the numbers tell the whole story.&rdquo;</p>
       <p class="mt-3 text-[13px] italic text-muted-foreground">Kutipan kasus ISCEA 2026</p>
+    </section>
+
+    <section class="rounded-2xl border border-border bg-card p-4">
+      <p class="mb-3 text-[13px] uppercase tracking-wider text-muted-foreground">Mesin Analitik Omnigistic</p>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {#each engineLinks as e (e.href)}
+          <a href={resolveHref(e.href)} class="group rounded-xl border border-border bg-background/40 p-4 transition-colors hover:border-primary/40 hover:bg-primary/5">
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Icon name={e.icon} cls="h-4.5 w-4.5" weight="fill" />
+            </span>
+            <p class="mt-3 text-sm font-semibold text-foreground">{e.title}</p>
+            <p class="mt-1 text-[13px] leading-snug text-muted-foreground">{e.desc}</p>
+            <span class="mt-2 inline-flex items-center gap-1 text-[12.5px] font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100">Buka <Icon name="arrow-up-right" cls="h-3 w-3" weight="bold" /></span>
+          </a>
+        {/each}
+      </div>
     </section>
   </div>
 {:else}
