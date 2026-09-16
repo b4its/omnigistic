@@ -46,6 +46,15 @@ SPONSOR_UTIL_THRESHOLD = 50.0
 # Di atas ini, volume padat → skala ekonomi Direct lebih kuat.
 DIRECT_UTIL_THRESHOLD = 65.0
 
+# Bobot skor keputusan (jumlah = 1). Utilisasi diberi bobot dominan karena ini
+# sinyal utama: hub padat (Java) → Direct; hub tipis (Maluku) → Sponsor. Komponen
+# ekonomi jadi penentu di antara hub ber-utilisasi serupa. Dikalibrasi agar tier
+# 'Sponsor penuh' TERJANGKAU (dulu maks ≈0,45 → tier itu mustahil).
+DECISION_WEIGHTS = {"util": 0.55, "capex": 0.25, "profit": 0.20}
+# Ambang tier rekomendasi (skor komposit 0..1).
+SPONSOR_FULL_THRESHOLD = 0.60
+SPONSOR_STAGED_THRESHOLD = 0.35
+
 
 def _num(v: Any, default: float = 0.0) -> float:
     try:
@@ -159,7 +168,8 @@ def compare_models(
         # Biaya tetap wilayah bergeser ke mitra → HQ tak menanggung capex itu.
         sponsor_cost_pp = unit * (1 - fixed_share)
         sponsor_margin_pp = rev_pp - sponsor_cost_pp
-        # Laba wilayah (sebelum bagi hasil) memakai margin lokal (mitra lebih paham pasar).
+        # Margin wilayah sebelum bagi hasil = margin struktur sponsor, di-floor oleh
+        # margin lokal (mitra lebih paham pasar → minimal margin operasional lokal).
         local_profit_pp = max(sponsor_margin_pp, rev_pp * local_margin)
         sponsor_profit = local_profit_pp * vol * 1e6 * hq_equity  # porsi HQ
         sponsor_capex_exposure = sponsor_cost_pp * fixed_share * vol * 1e6
@@ -171,16 +181,26 @@ def compare_models(
         profit_delta = sponsor_profit - direct_profit
 
         # ── Skor komposit keputusan (0..1, makin tinggi = sponsor makin tepat) ──
-        # Normalisasi komponen ke 0..1.
-        capex_score = min(1.0, max(0.0, capex_saving / (direct_capex_exposure or 1)))
+        # Tiap komponen dinormalisasi ke MAKS teoretisnya agar skor benar-benar
+        # menjangkau 0..1 (sebelumnya maks ≈0,57 → tier 'Sponsor penuh' mustahil).
+        # 1) Capex: penghematan maks = fixed_share dari capex Direct (mitra tanggung
+        #    porsi tetap penuh). Normalisasi → 0..1.
+        capex_score = min(1.0, max(0.0, (capex_saving / (direct_capex_exposure or 1)) / (fixed_share or 1)))
+        # 2) Laba: delta ≥0 = skor penuh; negatif → proporsional terhadap rugi.
         profit_score = 1.0 if profit_delta >= 0 else max(0.0, 1 + profit_delta / (abs(direct_profit) or 1))
-        # Util rendah → lebih cocok sponsor.
-        util_score = min(1.0, max(0.0, (DIRECT_UTIL_THRESHOLD - r["avgUtilizationPct"]) / DIRECT_UTIL_THRESHOLD))
-        decision_score = round(0.45 * capex_score + 0.30 * profit_score + 0.25 * util_score, 3)
+        # 3) Util rendah → lebih cocok sponsor (0 di ≥direct threshold, 1 di 0%).
+        util_span = DIRECT_UTIL_THRESHOLD or 1.0
+        util_score = min(1.0, max(0.0, (DIRECT_UTIL_THRESHOLD - r["avgUtilizationPct"]) / util_span))
+        decision_score = round(
+            DECISION_WEIGHTS["util"] * util_score
+            + DECISION_WEIGHTS["capex"] * capex_score
+            + DECISION_WEIGHTS["profit"] * profit_score,
+            3,
+        )
 
-        if decision_score >= 0.6:
+        if decision_score >= SPONSOR_FULL_THRESHOLD:
             recommendation = "Sponsor penuh"
-        elif decision_score >= 0.35:
+        elif decision_score >= SPONSOR_STAGED_THRESHOLD:
             recommendation = "Sponsor bertahap"
         else:
             recommendation = "Direct (pertahankan)"
@@ -233,6 +253,8 @@ def compare_models(
             "sponsorUtilThreshold": SPONSOR_UTIL_THRESHOLD,
             "directUtilThreshold": DIRECT_UTIL_THRESHOLD,
             "controlWeights": CONTROL_WEIGHTS,
+            "decisionWeights": DECISION_WEIGHTS,
+            "tierThresholds": {"sponsorFull": SPONSOR_FULL_THRESHOLD, "sponsorStaged": SPONSOR_STAGED_THRESHOLD},
         },
         "nationalBasis": _national_unit_cost(),
         "summary": {

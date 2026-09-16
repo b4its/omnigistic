@@ -159,6 +159,14 @@ check("Java -> Direct", java["recommendation"].startswith("Direct"), java["recom
 check("Maluku -> Sponsor", maluku["recommendation"].startswith("Sponsor"), maluku["recommendation"])
 check("sponsor capex exposure < direct", maluku["sponsor"]["capexExposurePerDayIdr"] < maluku["direct"]["capexExposurePerDayIdr"])
 check("sponsor kontrol turun", maluku["sponsor"]["controlScore"] < maluku["direct"]["controlScore"])
+# REGRESI I5: tier 'Sponsor penuh' harus TERJANGKAU (dulu maks ≈0,45 → mustahil).
+check("Maluku -> Sponsor penuh", maluku["recommendation"] == "Sponsor penuh", maluku["recommendation"])
+check("skor maks menjangkau >=0,6", max(r["decisionScore"] for r in sp["regions"]) >= 0.6, str(max(r["decisionScore"] for r in sp["regions"])))
+check("tier thresholds diekspos", sp["assumptions"]["tierThresholds"]["sponsorFull"] == 0.6)
+check("bobot keputusan diekspos", set(sp["assumptions"]["decisionWeights"]) == {"util", "capex", "profit"})
+# Utilisasi dominan: hub padat (Java) tetap Direct.
+check("Java tetap Direct", java["recommendation"].startswith("Direct"), java["recommendation"])
+check("skor Java < Maluku", java["decisionScore"] < maluku["decisionScore"], f"{java['decisionScore']} vs {maluku['decisionScore']}")
 check("ada penghematan capex", sp["summary"]["totalCapexSavingPerDayIdr"] > 0, str(sp["summary"]["totalCapexSavingPerDayIdr"]))
 custom = client.post("/ml/sponsor/compare", json={"hq_equity": 0.6}).json()
 check("POST sponsor/compare 200", custom["assumptions"]["hqEquity"] == 0.6, str(custom["assumptions"]["hqEquity"]))
