@@ -128,6 +128,7 @@ omnigistic/
   - `/dashboard/data/multimodal`, `/dashboard/pusat/digital-twin`, `/dashboard/kurir/cod-intel`, `/dashboard/data/complaint`, `/dashboard/data/ev-sites` — sudah interaktif sebelumnya.
 - **Material 3 + sidebar kolaps**: bottom Navigation Bar (compact <600px) / Navigation Rail (medium 600–840px) / Sidebar penuh (expanded ≥840px). Sidebar bisa **dibuka/ditutup** (w-64 ⇄ rail ikon w-22) lewat tombol di header sidebar, hamburger di Topbar, atau pintasan **Ctrl/Cmd+B**; preferensi dipersist ke localStorage. Responsif penuh 320px–ultrawide, 0 overflow horizontal.
 - **Map**: Leaflet + 3 kandidat ambigu, path animasi + ETA menit ("Jl. Raya Jakarta-Bogor No.12") dengan Nigi AI saran. **Legenda peta lengkap & rinci** (collapsible) di 3 peta (DeliveryMap/AddressMap/HubMap): penanda, garis rute, warna jalur (kepadatan), sumber data. **Sebaran 33 titik PUDO mitra ber-koordinat & alamat NYATA di 6 region** dari OpenStreetMap (Indomaret terdekat per kota, data © OSM/ODbL) — di-*warna per region* + ringkasan sebaran di legenda HubMap + Route Intelligence (lihat atas). Popup PUDO menampilkan alamat, region, jam, kapasitas & sumber koordinat.
+- **Alur pesanan lintas-peran (simulasi localStorage)**: Customer checkout → Kurir kelola (status: dikemas→dijemput→transit→**dalam pengantaran**→terkirim), slot, tunai COD, PUDO → Customer lacak. Saat **dalam pengantaran**: **pembeli memberi tahu kurir apakah ia di rumah/tidak** (pemberitahuan sebelum kurir tiba) & **kurir mencatat status kehadiran** saat tiba — saling terlihat (mencegah kurir menunggu tanpa kepastian, akar masalah COD kasus).
 
 ## Sistem Desain — "Bitcoin DeFi"
 
@@ -175,6 +176,9 @@ PLAYWRIGHT_CHROMIUM=/usr/bin/chromium SHOT_PATH=/dashboard/pusat/executive node 
 # Uji accordion pesanan customer (15) + koherensi lintas role (31)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-customer-accordion.mjs
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-orders.mjs
+
+# Uji pemberitahuan kehadiran penerima dua arah saat dalam pengantaran (12)
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-arrival.mjs
 
 # Uji mesin analitik interaktif (18) + widget dashboard (9)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-engines.mjs
