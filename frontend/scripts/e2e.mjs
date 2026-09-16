@@ -54,11 +54,12 @@ try {
   await gotoClean("/dashboard/hub/dashboard");
   R(/68\.9%|Bandung/.test(await page.locator("body").innerText()), "hub: Bandung util");
 
-  // ===== 4. Digital Twin auto-demo (3 preset, no slider) =====
+  // ===== 4. Digital Twin — komparator Direct vs Sponsor interaktif =====
   await gotoClean("/dashboard/pusat/digital-twin");
   const twinTxt = await page.locator("body").innerText();
-  R(/Jawa Direct|Timur-Only|Sponsor Penuh/i.test(twinTxt), "twin: 3 preset scenarios");
-  R(!(await page.locator("input[type=range]").count()), "twin: NO sliders (auto)");
+  R(/Direct vs Regional Sponsor/.test(twinTxt), "twin: judul komparator");
+  R(/Unit Cost Nasional|Rekomendasi Sponsor/.test(twinTxt), "twin: KPI komparator");
+  R((await page.locator("input[type=range]").count()) >= 1, "twin: sliders interaktif ada");
 
   // ===== 5. Forecast page (ECharts canvas) =====
   await gotoClean("/dashboard/hub/forecast");
