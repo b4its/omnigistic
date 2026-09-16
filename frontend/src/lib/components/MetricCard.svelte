@@ -104,21 +104,21 @@
 
 <div
   class={cn(
-    "rounded-2xl border border-border bg-card p-5 shadow-card transition-[border-color] duration-150",
-    accent && "border-primary/30",
-    "hover:border-primary/25"
+    "group relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all duration-300",
+    "hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:shadow-[0_0_30px_-10px_var(--glow)]",
+    accent && "border-[color-mix(in_oklab,var(--bitcoin)_35%,transparent)]"
   )}
 >
-  <div class="flex items-center gap-2 text-muted-foreground">
-    <span class="text-xs font-medium">{label}</span>
+  <div class="relative flex items-center gap-2 text-muted-foreground">
+    <span class="font-mono text-[11px] uppercase tracking-wider">{label}</span>
   </div>
-  <div class="mt-3 flex items-end justify-between gap-3">
+  <div class="relative mt-3 flex items-end justify-between gap-3">
     <div class="flex items-baseline gap-2">
       {#if shown}
-        <p class="metric-value text-[23px] leading-none" style={valueColor ? `color:${valueColor}` : undefined}>{shown}</p>
+        <p class="metric-value font-heading text-[23px] leading-none" style={valueColor ? `color:${valueColor}` : undefined}>{shown}</p>
       {/if}
       {#if delta}
-        <span class={cn("inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[14px] font-bold", toneMap[deltaTone])}>{delta}</span>
+        <span class={cn("inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 font-mono text-[13px] font-bold", toneMap[deltaTone])}>{delta}</span>
       {/if}
     </div>
     {#if spark && spark.length > 1}
@@ -126,6 +126,8 @@
     {/if}
   </div>
   {#if sub}
-    <p class="mt-1.5 text-xs text-muted-foreground">{sub}</p>
+    <p class="relative mt-1.5 text-xs text-muted-foreground">{sub}</p>
   {/if}
+  <!-- sheen dekoratif kiri (glow) saat hover -->
+  <span class="pointer-events-none absolute -left-16 top-0 h-full w-16 -skew-x-12 bg-gradient-to-r from-transparent via-[color-mix(in_oklab,var(--bitcoin)_18%,transparent)] to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
 </div>
