@@ -70,8 +70,20 @@ try {
   await goto("/dashboard/kurir/pudo");
   let text = await page.locator("body").innerText();
   R((await page.locator(".leaflet-container").count()) >= 1, "kurir/pudo: peta tampil");
+  R(/Legenda peta/i.test(text), "kurir/pudo: tombol legenda peta tampil");
   R(/PUDO mitra/i.test(text), "kurir/pudo: legenda 'PUDO mitra' tampil");
-  R(/Titik drop paket rekomendasi/i.test(text), "kurir/pudo: badge rekomendasi drop (kurir) tampil", "");
+  R(/Hub asal/i.test(text) && /Tujuan/i.test(text), "kurir/pudo: legenda penanda hub & tujuan rinci");
+  R(/OpenStreetMap/i.test(text), "kurir/pudo: legenda mencantumkan sumber OpenStreetMap");
+  // Legenda collapsible: klik toggle → konten menyembunyi/muncul.
+  const legendBtn = page.locator('button:has-text("Legenda peta")').first();
+  const openBefore = await legendBtn.getAttribute("aria-expanded");
+  await legendBtn.click();
+  await page.waitForTimeout(300);
+  const openAfter = await legendBtn.getAttribute("aria-expanded");
+  R(openBefore !== openAfter, "kurir/pudo: legenda bisa dibuka/tutup (aria-expanded berubah)", `${openBefore}->${openAfter}`);
+  await legendBtn.click();
+  await page.waitForTimeout(300);
+  R(/Titik drop paket rekomendasi/i.test(await page.locator("body").innerText()), "kurir/pudo: badge rekomendasi drop (kurir) tampil", "");
   R(/Arahkan paket berisiko COD ke titik ini/i.test(text), "kurir/pudo: nada aksi untuk kurir", "");
   const shapesPudo = await leafletShapeCount();
   R(shapesPudo >= 5, "kurir/pudo: marker PUDO + rekomendasi tergambar", `shapes=${shapesPudo}`);
