@@ -30,6 +30,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
+from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN
 
 # ── Parameter default (asumsi tim — dapat di-override via API) ──────────────
 # Porsi biaya tetap (dari total unit cost) yang bergeser ke mitra pada model sponsor.
@@ -41,10 +42,11 @@ DEFAULT_LOCAL_MARGIN = 0.14
 # Bobot kontrol HQ yang hilang pada model sponsor (harga, akuisisi, operasi).
 CONTROL_WEIGHTS = {"pricing": 0.4, "customer_acquisition": 0.35, "operations": 0.25}
 
-# Ambang utilisasi: di bawah ini, biaya tetap per paket mahal → kandidat sponsor.
-SPONSOR_UTIL_THRESHOLD = 50.0
-# Di atas ini, volume padat → skala ekonomi Direct lebih kuat.
-DIRECT_UTIL_THRESHOLD = 65.0
+# Ambang utilisasi dari sumber kanonik (metrics.py).
+# Di bawah SPONSOR: biaya tetap per paket mahal → kandidat sponsor.
+# Di atas DIRECT: volume padat → skala ekonomi Direct lebih kuat.
+SPONSOR_UTIL_THRESHOLD = UTIL_WARN
+DIRECT_UTIL_THRESHOLD = UTIL_CRITICAL
 
 # Bobot skor keputusan (jumlah = 1). Utilisasi diberi bobot dominan karena ini
 # sinyal utama: hub padat (Java) → Direct; hub tipis (Maluku) → Sponsor. Komponen

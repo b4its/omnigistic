@@ -150,24 +150,3 @@ export function donutChart(data: Array<{ name: string; value: number; color: str
   };
 }
 
-/** RadialBar (target vs actual) — ring progress. */
-export function radialGauge(series: Array<{ name: string; value: number; max: number; color: string }>): EChartsOption {
-  return {
-    tooltip: itemTooltip(),
-    series: series.map((s) => ({
-      type: "gauge",
-      progress: { show: true, width: 10, itemStyle: { color: s.color } },
-      axisLine: { lineStyle: { width: 10, color: [[1, "var(--color-border)"]] } },
-      axisTick: { show: false },
-      splitLine: { show: false },
-      axisLabel: { show: false },
-      pointer: { show: false },
-      anchor: { show: false },
-      title: { offsetCenter: [0, "60%"], color: "var(--color-muted-foreground)", fontSize: 12 },
-      detail: { valueAnimation: true, offsetCenter: [0, "20%"], formatter: `{value}%`, color: "var(--color-foreground)", fontSize: 22, fontWeight: "bold" },
-      data: [{ name: s.name, value: s.value }],
-      max: s.max,
-      radius: "90%"
-    }))
-  };
-}

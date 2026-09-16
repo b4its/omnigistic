@@ -25,6 +25,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
+from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN
 
 # Matriks biaya relatif antar region (indeks: 0 = termurah/sama region).
 # Merupakan proxy logistik (jarak+transshipment+risiko). Angka prototipe tim,
@@ -38,10 +39,11 @@ _REGION_COST = {
     "Maluku & Papua": {"Java": 8.0, "Sumatra": 8.5, "Kalimantan": 6.0, "Sulawesi": 4.0, "Bali & Nusa Tenggara": 5.5, "Maluku & Papua": 1.0},
 }
 
-CRITICAL = 65.0   # ambang over-utilisasi (harus dialihkan)
+# Ambang dari sumber kanonik (metrics.py) — jangan definisikan ulang di sini.
+CRITICAL = UTIL_CRITICAL     # ambang over-utilisasi (harus dialihkan)
+WARN_UTIL = UTIL_WARN        # ambang hub ber-headroom (target penerima)
 SAFE_FLOOR = 60.0  # lantai aman: sumber tidak diturunkan di bawah ini
 MAX_DIVERT_FRAC = 0.35  # maksimum 35% kapasitas sumber boleh dialihkan
-WARN_UTIL = 50.0  # ambang hub ber-headroom (target penerima), = metrics warn
 
 
 def _cost(src_region: str, dst_region: str) -> float:

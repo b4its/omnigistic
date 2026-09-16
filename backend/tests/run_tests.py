@@ -53,6 +53,11 @@ check("hubs = 23", len(_get("/api/hubs")) == 23)
 check("root-causes = 6", len(_get("/api/root-causes")) == 6)
 
 print("== 2. Metrik turunan & rekonsiliasi ==")
+# Ambang utilisasi KANONIK (satu sumber) — jangan sampai modul melenceng.
+from app.ml import metrics as _mx, optimize as _ox, sponsor as _sx
+check("ambang util kanonik 50/65", (_mx.UTIL_WARN, _mx.UTIL_CRITICAL) == (50.0, 65.0))
+check("optimize pakai ambang kanonik", (_ox.WARN_UTIL, _ox.CRITICAL) == (_mx.UTIL_WARN, _mx.UTIL_CRITICAL))
+check("sponsor pakai ambang kanonik", (_sx.SPONSOR_UTIL_THRESHOLD, _sx.DIRECT_UTIL_THRESHOLD) == (_mx.UTIL_WARN, _mx.UTIL_CRITICAL))
 dem = _get("/ml/metrics/demand")
 check("total demand 1.110", dem["totalM"] == 1110, str(dem["totalM"]))
 check("e-commerce hitung baris = 651", dem["ecommerceM"] == 651, str(dem["ecommerceM"]))

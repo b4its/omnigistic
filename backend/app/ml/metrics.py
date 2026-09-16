@@ -31,8 +31,11 @@ REGION_ORDER = [
 # jaringan mahal per paket). Ambang mengikuti angka kasus (utilisasi < 50%).
 SPONSOR_CANDIDATE_REGIONS = {"Kalimantan", "Sulawesi", "Maluku & Papua"}
 
-# Ambang utilisasi yang dipakai konsisten di seluruh aplikasi.
-UTIL_THRESHOLD = {"warn": 50.0, "critical": 65.0}
+# Ambang utilisasi KANONIK (satu sumber kebenaran) — dipakai optimize.py &
+# sponsor.py agar tak ada tiga definisi yang bisa melenceng.
+UTIL_WARN = 50.0       # di bawah ini: hub ber-headroom / kandidat sponsor
+UTIL_CRITICAL = 65.0   # di atas ini: hub over-utilisasi (perlu dialihkan)
+UTIL_THRESHOLD = {"warn": UTIL_WARN, "critical": UTIL_CRITICAL}
 
 
 def _roi(a: float, b: float) -> float:
