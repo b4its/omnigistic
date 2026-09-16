@@ -334,6 +334,108 @@ export interface AuditResult {
   checks: AuditCheck[];
 }
 
+/* ── Direct-vs-Sponsor Comparator (Pertanyaan 1) ─────────────────────────── */
+export interface SponsorModelSide {
+  costPerParcelIdr: number;
+  profitPerDayIdr: number;
+  capexExposurePerDayIdr: number;
+  controlScore: number;
+}
+export interface SponsorRegionRow {
+  region: string;
+  avgUtilizationPct: number;
+  volumeM: number;
+  unitCostIdr: number;
+  revenuePerParcelIdr: number;
+  direct: SponsorModelSide;
+  sponsor: SponsorModelSide;
+  delta: { capexSavingPerDayIdr: number; profitDeltaPerDayIdr: number; controlLossPts: number };
+  decisionScore: number;
+  recommendation: string;
+}
+export interface SponsorResult {
+  engine: string;
+  note: string;
+  assumptions: {
+    hqEquity: number;
+    fixedShare: number;
+    localMargin: number;
+    sponsorUtilThreshold: number;
+    directUtilThreshold: number;
+    controlWeights: Record<string, number>;
+  };
+  nationalBasis: { year: number; totalCostT: number; parcelsM: number; unitCostIdr: number };
+  summary: {
+    recommendSponsor: number;
+    recommendDirect: number;
+    totalCapexSavingPerDayIdr: number;
+    totalProfitDeltaPerDayIdr: number;
+    sponsorRegions: string[];
+    directRegions: string[];
+  };
+  regions: SponsorRegionRow[];
+}
+export interface SponsorSensitivity {
+  engine: string;
+  sweep: Array<{ hqEquity: number; recommendSponsor: number; totalCapexSavingPerDayIdr: number; sponsorRegions: string[] }>;
+}
+
+/* ── Modal-Shift & Cost-Lever (Pertanyaan 6) ─────────────────────────────── */
+export interface ModalOption {
+  mode: string;
+  label: string;
+  costPerPkgIdr: number;
+  co2GPerPkg: number;
+  etaHours: number;
+  owned: boolean;
+  distanceKm: number;
+  score?: number;
+  withinSla?: boolean;
+}
+export interface ModalRoute {
+  dest: string;
+  toRegion: string;
+  distanceKm: number;
+  options: ModalOption[];
+  baseline: { mode: string; label: string; costPerPkgIdr: number; co2GPerPkg: number; etaHours: number };
+  chosen: { mode: string; label: string; costPerPkgIdr: number; co2GPerPkg: number; etaHours: number; score: number; withinSla: boolean };
+  saving: { costPerPkgIdr: number; co2GPerPkg: number; costPct: number; co2Pct: number };
+}
+export interface ModalShiftResult {
+  engine: string;
+  note: string;
+  weights: Record<string, number>;
+  slaHours: number;
+  modes: Record<string, { label: string; costIdrPerPkgKm: number; co2GPerPkgKm: number; speedKmh: number; owned: boolean }>;
+  routes: ModalRoute[];
+  summary: {
+    routes: number;
+    costSavingPct: number;
+    co2SavingPct: number;
+    totalCostPerPkgIdr: number;
+    baselineCostPerPkgIdr: number;
+    totalCo2PerPkgG: number;
+    baselineCo2PerPkgG: number;
+    modeMix: Record<string, number>;
+  };
+}
+export interface CostLever {
+  lever: string;
+  mechanism: string;
+  costImpactIdrT: number;
+  costPct: number;
+  co2Pct: number;
+  evidence: string;
+}
+export interface CostLeverResult {
+  engine: string;
+  note: string;
+  basisYear: number;
+  totalCostT: number;
+  levers: CostLever[];
+  summary: { totalSavingIdrT: number; savingPctOfCost: number; avgCo2Pct: number };
+}
+
 export const api = {
   hubs: () => get<Hub[]>("/api/hubs"),
   regions: () => get<string[]>("/api/regions"),
@@ -366,7 +468,13 @@ export const api = {
   metricFinancial: () => get<FinancialSummary>("/ml/metrics/financial"),
   metricDemand: () => get<DemandSummary>("/ml/metrics/demand"),
   metricFleet: () => get<FleetSummary>("/ml/metrics/fleet"),
-  metricAudit: () => get<AuditResult>("/ml/metrics/audit")
+  metricAudit: () => get<AuditResult>("/ml/metrics/audit"),
+  sponsorCompare: (body?: { hq_equity?: number; fixed_share?: number; local_margin?: number }) =>
+    body ? post<SponsorResult>("/ml/sponsor/compare", body) : get<SponsorResult>("/ml/sponsor/compare"),
+  sponsorSensitivity: () => get<SponsorSensitivity>("/ml/sponsor/sensitivity"),
+  modalShift: (body?: { mode_filter?: string[]; weights?: Record<string, number>; sla_hours?: number }) =>
+    body ? post<ModalShiftResult>("/ml/modalshift/optimize", body) : get<ModalShiftResult>("/ml/modalshift/optimize"),
+  costLevers: () => get<CostLeverResult>("/ml/modalshift/levers")
 };
 
 export const online = writable(false);
