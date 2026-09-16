@@ -99,9 +99,9 @@
     for (const loc of locations) {
       const mk = L.circleMarker([loc.lat, loc.lng], {
         radius: loc.key === "Cibinong" ? 11 : 8,
-        color: loc.key === "Cibinong" ? "#c14a21" : "#7f8c8d",
+        color: loc.key === "Cibinong" ? "#f7931a" : "#7f8c8d",
         weight: loc.key === "Cibinong" ? 4 : 2,
-        fillColor: loc.key === "Cibinong" ? "#c14a21" : "#95a5a6",
+        fillColor: loc.key === "Cibinong" ? "#f7931a" : "#95a5a6",
         fillOpacity: 0.85
       }).addTo(map);
       const km = Math.round(haversine(origin, loc) * 10) / 10;

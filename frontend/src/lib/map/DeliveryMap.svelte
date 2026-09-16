@@ -151,7 +151,7 @@
         .bindTooltip(`Awal · ${originLabel}`, { direction: "top" });
 
       // Titik tujuan (pembeli).
-      L.circleMarker(rgeo.dest as unknown as LeafletNS.LatLngExpression, { radius: 10, color: "#c14a21", fillColor: "#fde4d8", fillOpacity: 0.95, weight: 3 })
+      L.circleMarker(rgeo.dest as unknown as LeafletNS.LatLngExpression, { radius: 10, color: "#f7931a", fillColor: "#fde4d8", fillOpacity: 0.95, weight: 3 })
         .addTo(map)
         .bindTooltip(`Tujuan · ${destLabel}`, { direction: "top" });
 
