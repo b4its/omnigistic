@@ -93,6 +93,7 @@ backend/models/*.pkl
 # SvelteKit
 frontend/.svelte-kit/
 frontend/build/
+frontend/build_old_root/
 frontend/node_modules/
 
 # Docker publik env (PUBLIC_*, bukan secret) — sengaja di-track
