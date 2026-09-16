@@ -315,7 +315,7 @@
                 <span class="shrink-0 font-mono text-xs text-muted-foreground">{o.id.split("-").slice(-1)}</span>
                 <span class="min-w-0 flex-1 truncate text-muted-foreground">{ORDER_STATUS_LABEL[o.status]}</span>
                 {#if isFocus && !delivered}
-                  <span class="shrink-0 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]/10 px-2 py-0.5 text-[10.5px] font-semibold text-primary">Dilacak</span>
+                  <span class="shrink-0 rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-2 py-0.5 text-[10.5px] font-semibold text-[var(--bitcoin)]">Dilacak</span>
                 {/if}
                 <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold {o.payment === 'COD' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}">{o.payment}</span>
                 <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(o.total)}</span>

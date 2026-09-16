@@ -203,7 +203,7 @@
             <div class="rounded-2xl border border-border bg-card p-4">
               <div class="flex items-start justify-between gap-2">
                 <p class="text-sm font-semibold text-foreground">{l.lever}</p>
-                <span class="shrink-0 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]/10 px-2 py-0.5 text-xs font-semibold text-primary">−{l.costPct}%</span>
+                <span class="shrink-0 rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-2 py-0.5 text-xs font-semibold text-[var(--bitcoin)]">−{l.costPct}%</span>
               </div>
               <p class="mt-1 text-[13.5px] text-muted-foreground">{l.mechanism}</p>
               <div class="mt-2 flex flex-wrap gap-3 text-[12px] text-muted-foreground">
