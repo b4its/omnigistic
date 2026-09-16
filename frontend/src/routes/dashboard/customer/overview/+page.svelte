@@ -116,7 +116,7 @@
             type="button"
             onclick={() => setPersona(p.id)}
             aria-pressed={buyerId === p.id}
-            class="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors {buyerId === p.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}"
+            class="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors {buyerId === p.id ? 'bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-5px_var(--glow)]' : 'text-muted-foreground hover:text-foreground'}"
           >{p.id === "BUY-GOOD" ? "Demo: baik" : "Demo: buruk"}</button>
         {/each}
       </div>
@@ -175,7 +175,7 @@
           type="button"
           onclick={() => setCategory(c)}
           aria-pressed={category === c}
-          class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {category === c ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
+          class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {category === c ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-5px_var(--glow)]' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
         >
           {c}
         </button>

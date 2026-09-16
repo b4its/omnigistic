@@ -223,7 +223,7 @@
               aria-pressed={payment === "COD"}
               class="flex items-start gap-3 rounded-xl border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 {payment === 'COD' ? 'border-primary bg-accent' : 'border-border hover:border-primary/40'}"
             >
-              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Icon name="currency" cls="h-4 w-4" /></span>
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-white"><Icon name="currency" cls="h-4 w-4" /></span>
               <span class="min-w-0">
                 <span class="block text-sm font-semibold text-foreground">Bayar di Tempat (COD)</span>
                 <span class="block text-xs text-muted-foreground">Bayar tunai saat paket tiba.</span>

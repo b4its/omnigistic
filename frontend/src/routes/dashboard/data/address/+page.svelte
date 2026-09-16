@@ -100,7 +100,7 @@
 
   <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
     <div class="flex items-start gap-3">
-      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-white">
         <Icon name="chat" cls="h-5 w-5" weight="fill" />
       </span>
       <div class="min-w-0">
@@ -170,7 +170,7 @@
   {#if parsed}
     <div class="rounded-2xl border border-border bg-card p-5">
       <div class="flex items-center gap-2.5">
-        <span class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+        <span class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-white">
           {#if analyzing}<span class="absolute inset-0 animate-ping rounded-xl bg-primary/40"></span>{/if}
           <Icon name="chat" cls="h-4 w-4" weight="fill" />
         </span>

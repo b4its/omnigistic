@@ -108,7 +108,7 @@
             <button
               type="button"
               onclick={() => toggle(w.id)}
-              class={cn("rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all", sel.has(w.id) ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:border-primary/50")}
+              class={cn("rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all", sel.has(w.id) ? "border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-5px_var(--glow)]" : "border-border text-foreground hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)]")}
             >
               {sel.has(w.id) ? "Dipilih" : "Pilih"}
             </button>
@@ -124,7 +124,7 @@
     <span class="text-xs text-muted-foreground">{sel.size} dipilih</span>
     <button
       type="button"
-      class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px"
+      class="rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-5 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_-5px_var(--glow)] transition-all duration-300 hover:scale-[1.03] active:scale-100"
       onclick={apply}
     >
       Tambah ke dashboard

@@ -116,7 +116,7 @@
 
     <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
       <div class="flex items-start gap-3">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Icon name="chat" cls="h-5 w-5" weight="fill" /></span>
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-white"><Icon name="chat" cls="h-5 w-5" weight="fill" /></span>
         <div class="min-w-0">
           <p class="text-[13.5px] font-semibold uppercase tracking-wider text-primary">Saran Nigi AI</p>
           <p class="mt-1.5 text-sm font-medium leading-relaxed text-foreground">

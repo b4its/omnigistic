@@ -196,7 +196,7 @@
             <div class="space-y-4">
               <!-- Tugas kurir saat ini -->
               <div class="flex items-start gap-3 rounded-xl border border-primary/30 bg-accent/40 p-4">
-                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-white">
                   <Icon name={task.icon as never} cls="h-5 w-5" />
                 </span>
                 <div class="min-w-0">
