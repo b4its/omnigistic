@@ -18,11 +18,12 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-jakarta), var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-jakarta), var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-space), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-fraunces), Georgia, serif;
   --font-mono: var(--font-jb-mono), ui-monospace, monospace;
-  --font-display: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space), ui-sans-serif, system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -48,6 +49,12 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-primary-deep: var(--primary-deep);
+  /* ── Bitcoin DeFi accents (dipakai lintas tema) ── */
+  --color-bitcoin: var(--bitcoin);
+  --color-bitcoin-deep: var(--bitcoin-deep);
+  --color-gold: var(--gold);
+  --color-glow: var(--glow);
+  --color-glow-gold: var(--glow-gold);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -69,107 +76,129 @@
   --radius-3xl: calc(var(--radius) + 12px);
 }
 
+/* ============================================================
+   THEME: "Bitcoin DeFi" — dua tema lengkap dari satu sistem.
+   LIGHT = permukaan terang, aksen orange/gold tetap, border ultra-tipis.
+   DARK  = Void #030304 + Bitcoin Fire (lihat .dark).
+   Nama token LAMA dipertahankan agar seluruh halaman tetap jalan.
+   ============================================================ */
 :root {
   color-scheme: light;
   --radius: 0.875rem;
 
   /* Overlay di atas Nav Bar compact (tombol FAB/panel/toast), ikut safe-area */
   --gc-overlay-bottom: calc(88px + env(safe-area-inset-bottom));
-  --banner-bg: #a0340f;
+  --banner-bg: #ea580c;
   --banner-fg: #ffffff;
 
   /* Font family literals (fontsource variable names) — fallback-safe */
-  --font-jakarta: "Plus Jakarta Sans Variable";
-  --font-instrument: "Instrument Sans Variable";
+  --font-inter: "Inter Variable";
+  --font-space: "Space Grotesk Variable";
   --font-fraunces: "Fraunces Variable";
   --font-jb-mono: "JetBrains Mono Variable";
 
-  --background: #f1ede4;
-  --foreground: #1a1713;
-  --card: #fbf7ef;
-  --card-foreground: #1a1713;
-  --popover: #fbf7ef;
-  --popover-foreground: #1a1713;
-  --primary: #c14a21;
+  /* Aksen Bitcoin DeFi (identitas lintas tema) */
+  --bitcoin: #f7931a;      /* Bitcoin Orange */
+  --bitcoin-deep: #ea580c; /* Burnt Orange */
+  --gold: #ffd600;         /* Digital Gold */
+  --glow: rgba(247, 147, 26, 0.5);
+  --glow-gold: rgba(255, 214, 0, 0.3);
+
+  /* ── Light: permukaan hampir putih, struktur tipis ── */
+  --background: #faf8f4;
+  --foreground: #0b0d11;
+  --card: #ffffff;
+  --card-foreground: #0b0d11;
+  --popover: #ffffff;
+  --popover-foreground: #0b0d11;
+  --primary: #ea580c;
   --primary-foreground: #ffffff;
-  --secondary: #e7e0d2;
-  --secondary-foreground: #1a1713;
-  --muted: #e9e3d6;
-  --muted-foreground: #6f675a;
-  --accent: #f0e9d9;
-  --accent-foreground: #74280e;
-  --success: #e6f0e6;
-  --success-foreground: #3f5c3f;
-  --warning: #f6ead2;
-  --warning-foreground: #8a5c13;
-  --destructive: #f8e2dd;
-  --destructive-foreground: #a03123;
-  --border: #e2dbc9;
-  --input: #ddd5c2;
-  --ring: #c14a21;
-  --primary-deep: #a0340f;
+  --secondary: #f1ede4;
+  --secondary-foreground: #1c1a16;
+  --muted: #f3efe7;
+  --muted-foreground: #6b6560;
+  --accent: #fef2e6;
+  --accent-foreground: #9a3412;
+  --success: #e9f6ee;
+  --success-foreground: #15803d;
+  --warning: #fdf3dc;
+  --warning-foreground: #92610a;
+  --destructive: #fdeceb;
+  --destructive-foreground: #b42318;
+  --border: rgba(11, 13, 17, 0.1);
+  --input: rgba(11, 13, 17, 0.16);
+  --ring: #f7931a;
+  --primary-deep: #c2410c;
 
-  --chart-1: #c14a21;
-  --chart-2: #8a5c13;
-  --chart-3: #3f5c3f;
-  --chart-4: #6b8e5c;
-  --chart-5: #a03123;
+  --chart-1: #f7931a;
+  --chart-2: #ea580c;
+  --chart-3: #c2410c;
+  --chart-4: #eab308;
+  --chart-5: #15803d;
 
-  --shadow-pop: 0 12px 32px -8px rgba(26, 23, 19, 0.2);
-  --shadow-card: 0 1px 2px rgba(26, 23, 19, 0.05), 0 2px 6px -2px rgba(26, 23, 19, 0.08);
+  --shadow-pop: 0 12px 32px -10px rgba(234, 88, 12, 0.22);
+  --shadow-card: 0 1px 2px rgba(11, 13, 17, 0.04), 0 2px 8px -3px rgba(234, 88, 12, 0.1);
 
-  --sidebar: #f7f3ea;
-  --sidebar-foreground: #1a1713;
-  --sidebar-primary: #c14a21;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0b0d11;
+  --sidebar-primary: #ea580c;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(193, 74, 33, 0.1);
-  --sidebar-accent-foreground: #74280e;
-  --sidebar-border: #e2dbc9;
-  --sidebar-ring: #c14a21;
+  --sidebar-accent: rgba(234, 88, 12, 0.09);
+  --sidebar-accent-foreground: #9a3412;
+  --sidebar-border: rgba(11, 13, 17, 0.09);
+  --sidebar-ring: #f7931a;
 }
 
+/* ── Dark: "Bitcoin DeFi" penuh — True Void + Bitcoin Fire ── */
 .dark {
   color-scheme: dark;
 
-  --background: #17140f;
-  --foreground: #eee6d8;
-  --card: #201c16;
-  --card-foreground: #eee6d8;
-  --popover: #201c16;
-  --popover-foreground: #eee6d8;
-  --primary: #e0754a;
-  --primary-foreground: #17140f;
-  --secondary: #2b261d;
-  --secondary-foreground: #eee6d8;
-  --muted: #2b261d;
-  --muted-foreground: #b3a996;
-  --accent: rgba(224, 117, 74, 0.16);
-  --accent-foreground: #ffd9c4;
-  --success: rgba(63, 92, 63, 0.34);
-  --success-foreground: #9adf9a;
-  --warning: rgba(138, 92, 19, 0.34);
-  --warning-foreground: #e3b26e;
-  --destructive: rgba(160, 49, 35, 0.34);
-  --destructive-foreground: #f2a394;
-  --border: rgba(238, 230, 216, 0.14);
-  --input: rgba(238, 230, 216, 0.2);
-  --ring: #e0754a;
+  --background: #030304;   /* True Void */
+  --foreground: #ffffff;   /* Pure Light */
+  --card: #0f1115;         /* Dark Matter */
+  --card-foreground: #ffffff;
+  --popover: #0f1115;
+  --popover-foreground: #ffffff;
+  --primary: #f7931a;      /* Bitcoin Orange */
+  --primary-foreground: #030304;
+  --secondary: #171a20;
+  --secondary-foreground: #ffffff;
+  --muted: #16181d;
+  --muted-foreground: #94a3b8; /* Stardust */
+  --accent: rgba(247, 147, 26, 0.14);
+  --accent-foreground: #ffd9a8;
+  --success: rgba(34, 197, 94, 0.16);
+  --success-foreground: #4ade80;
+  --warning: rgba(255, 214, 0, 0.16);
+  --warning-foreground: #ffd600; /* Digital Gold */
+  --destructive: rgba(239, 68, 68, 0.16);
+  --destructive-foreground: #f87171;
+  --border: rgba(255, 255, 255, 0.1); /* Dim Boundary */
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: #f7931a;
 
-  --chart-1: #e0754a;
-  --chart-2: #d9a441;
-  --chart-3: #8fc07f;
-  --chart-4: #6aa56a;
-  --chart-5: #e5725f;
+  --bitcoin: #f7931a;
+  --bitcoin-deep: #ea580c;
+  --gold: #ffd600;
+  --glow: rgba(247, 147, 26, 0.6);
+  --glow-gold: rgba(255, 214, 0, 0.35);
 
-  --sidebar: #1c1813;
-  --sidebar-foreground: #e6decf;
-  --sidebar-primary: #e0754a;
-  --sidebar-primary-foreground: #17140f;
-  --sidebar-accent: rgba(224, 117, 74, 0.16);
-  --sidebar-accent-foreground: #ffd9c4;
-  --sidebar-border: rgba(238, 230, 216, 0.12);
-  --sidebar-ring: #e0754a;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 6px -2px rgba(0, 0, 0, 0.3);
+  --chart-1: #f7931a;
+  --chart-2: #ea580c;
+  --chart-3: #ffd600;
+  --chart-4: #4ade80;
+  --chart-5: #f87171;
+
+  --sidebar: #08090b;
+  --sidebar-foreground: #e5e7eb;
+  --sidebar-primary: #f7931a;
+  --sidebar-primary-foreground: #030304;
+  --sidebar-accent: rgba(247, 147, 26, 0.14);
+  --sidebar-accent-foreground: #ffd9a8;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #f7931a;
+  --shadow-pop: 0 16px 40px -12px rgba(0, 0, 0, 0.7), 0 0 24px -8px rgba(247, 147, 26, 0.25);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 20px -12px rgba(247, 147, 26, 0.25);
 
   /* banner & on-ink panels ikut gelap */
   --banner-bg: var(--primary);
@@ -258,6 +287,86 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ============================================================
+   BITCOIN DeFi UTILITIES — glow, grid, glass, gradient, motion.
+   Dipakai lintas komponen agar tak ada one-off style.
+   ============================================================ */
+
+/* Glow berwarna (bukan hitam) — signature estetika. */
+@utility glow-orange {
+  box-shadow: 0 0 24px -6px var(--glow);
+}
+@utility glow-gold {
+  box-shadow: 0 0 24px -6px var(--glow-gold);
+}
+@utility glow-soft {
+  box-shadow: 0 0 50px -12px var(--glow);
+}
+
+/* Teks gradien Bitcoin → Gold. */
+@utility text-gradient {
+  background-image: linear-gradient(to right, var(--bitcoin), var(--gold));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Panel kaca (glass morphism) yang menyatu dengan void. */
+@utility glass {
+  background: color-mix(in oklab, var(--card) 70%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Grid blockchain + vignette radial (membaur ke tepi). */
+@utility bg-grid {
+  background-size: 50px 50px;
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--border) 70%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--border) 70%, transparent) 1px, transparent 1px);
+  mask-image: radial-gradient(circle at center, black 38%, transparent 100%);
+}
+@utility bg-grid-sm {
+  background-size: 28px 28px;
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--border) 60%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--border) 60%, transparent) 1px, transparent 1px);
+}
+
+/* Aksen sudut "selected node" (2 sudut berlawanan). */
+@utility corner-accent {
+  position: relative;
+}
+
+/* Ambient radial blur — dipakai sebagai layer dekoratif. */
+@utility ambient-glow {
+  background: radial-gradient(circle at center, var(--bitcoin) 0%, transparent 70%);
+  opacity: 0.1;
+  filter: blur(120px);
+  pointer-events: none;
+}
+
+@keyframes btc-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+@utility animate-float {
+  animation: btc-float 8s ease-in-out infinite;
+}
+@keyframes btc-pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px -8px var(--glow); }
+  50% { box-shadow: 0 0 36px -6px var(--glow); }
+}
+@utility animate-pulse-glow {
+  animation: btc-pulse-glow 3s ease-in-out infinite;
+}
+@utility spin-slow {
+  animation: lnd-spin 10s linear infinite;
+}
+@utility spin-slow-rev {
+  animation: lnd-spin 15s linear infinite reverse;
+}
+
 @keyframes rise-in {
   to { opacity: 1; transform: translateY(0); }
 }
@@ -294,49 +403,49 @@
 
 /* ============ LANDING EDITORIAL ============ */
 .landing {
-  --lnd-bg: #f1ede4;
-  --lnd-bg-raise: #faf8f3;
-  --lnd-surface: #fbf9f4;
-  --lnd-ink: #1a1713;
-  --lnd-soft: #6f675a;
-  --lnd-line: rgba(26, 23, 19, 0.18);
-  --lnd-line-soft: rgba(26, 23, 19, 0.1);
-  --lnd-accent: #c14a21;
-  --lnd-accent-ink: #74280e;
-  --lnd-positive: #166534;
-  --lnd-late: #a03123;
-  --lnd-on-ink: rgba(241, 237, 228, 0.68);
-  --lnd-line-on-ink: rgba(241, 237, 228, 0.28);
+  --lnd-bg: #faf8f4;
+  --lnd-bg-raise: #ffffff;
+  --lnd-surface: #ffffff;
+  --lnd-ink: #0b0d11;
+  --lnd-soft: #6b6560;
+  --lnd-line: rgba(11, 13, 17, 0.16);
+  --lnd-line-soft: rgba(11, 13, 17, 0.08);
+  --lnd-accent: #ea580c;
+  --lnd-accent-ink: #9a3412;
+  --lnd-positive: #15803d;
+  --lnd-late: #b42318;
+  --lnd-on-ink: rgba(250, 248, 244, 0.75);
+  --lnd-line-on-ink: rgba(250, 248, 244, 0.28);
   --lnd-positive-on-ink: #86efac;
 }
 .dark .landing {
-  --lnd-bg: #17140f;
-  --lnd-bg-raise: #201c16;
-  --lnd-surface: #262119;
-  --lnd-ink: #efe9df;
-  --lnd-soft: #b3a996;
-  --lnd-line: rgba(239, 233, 223, 0.16);
-  --lnd-line-soft: rgba(239, 233, 223, 0.08);
-  --lnd-accent: #e0754a;
-  --lnd-accent-ink: #ffd9c4;
-  --lnd-positive: #86efac;
-  --lnd-late: #f2a394;
-  /* .dark: panel ink jadi cream → on-ink TERBALIK */
-  --lnd-on-ink: rgba(23, 20, 15, 0.78);
-  --lnd-line-on-ink: rgba(26, 23, 19, 0.22);
-  --lnd-positive-on-ink: #166534;
+  --lnd-bg: #030304;       /* True Void */
+  --lnd-bg-raise: #0f1115;
+  --lnd-surface: #0f1115;
+  --lnd-ink: #ffffff;
+  --lnd-soft: #94a3b8;
+  --lnd-line: rgba(255, 255, 255, 0.1);
+  --lnd-line-soft: rgba(255, 255, 255, 0.06);
+  --lnd-accent: #f7931a;   /* Bitcoin Orange */
+  --lnd-accent-ink: #ffd9a8;
+  --lnd-positive: #4ade80;
+  --lnd-late: #f87171;
+  /* dark: panel tetap gelap → on-ink = terang */
+  --lnd-on-ink: rgba(255, 255, 255, 0.72);
+  --lnd-line-on-ink: rgba(255, 255, 255, 0.2);
+  --lnd-positive-on-ink: #86efac;
 }
 
 .landing {
   background: var(--lnd-bg);
   color: var(--lnd-ink);
-  font-family: var(--font-instrument), var(--font-jakarta), sans-serif;
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
 }
 .landing .eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
-  font: 600 0.82rem/1 var(--font-instrument), sans-serif;
+  font: 600 0.82rem/1 var(--font-mono), ui-monospace, monospace;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--lnd-soft);

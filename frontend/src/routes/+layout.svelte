@@ -2,8 +2,9 @@
   import "../app.css";
 
   // Font self-hosted (pengganti next/font versi Lama — tanpa dependensi jaringan)
-  import "@fontsource-variable/plus-jakarta-sans";
-  import "@fontsource-variable/instrument-sans";
+  // Sistem "Bitcoin DeFi": Space Grotesk (heading) · Inter (body) · JetBrains Mono (data)
+  import "@fontsource-variable/space-grotesk";
+  import "@fontsource-variable/inter";
   import "@fontsource-variable/fraunces";
   import "@fontsource-variable/jetbrains-mono";
 
