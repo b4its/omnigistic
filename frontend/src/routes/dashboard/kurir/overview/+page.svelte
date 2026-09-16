@@ -7,6 +7,7 @@
   import { barChart } from "$lib/charts/options";
   import { shop, type Order } from "$lib/stores/shop";
   import { formatRupiah } from "$lib/shop/catalog";
+  import { numId } from "$lib/utils";
 
   let routes = $state<Array<{ type: string; durationMin: number; productivity: number }>>([]);
   let greeting = $state("");
@@ -61,10 +62,11 @@
         ]
       : routes.length
         ? [
-            { label: "Rute Kunjungan COD", value: cod ? `${cod.durationMin} menit` : "138 menit", sub: "8 paket, studi kasus", accent: "var(--color-destructive-foreground)" },
-            { label: "Rute Non-COD", value: nonCod ? `${nonCod.durationMin} menit` : "75 menit", sub: "8 paket, studi kasus", accent: "var(--color-success-foreground)" },
-            { label: "Produktivitas COD", value: "3,48/jam", sub: "vs 6,4 non-COD" },
-            { label: "Hambatan", value: "+84%", sub: "COD lebih lama dari non-COD" }
+            { label: "Rute Kunjungan COD", value: cod ? `${cod.durationMin} menit` : "—", sub: "8 paket, studi kasus", accent: "var(--color-destructive-foreground)" },
+            { label: "Rute Non-COD", value: nonCod ? `${nonCod.durationMin} menit` : "—", sub: "8 paket, studi kasus", accent: "var(--color-success-foreground)" },
+            // Produktivitas & hambatan DITURUNKAN dari data kasus (bukan hardcode).
+            { label: "Produktivitas COD", value: cod ? `${numId(cod.productivity, 2)}/jam` : "—", sub: nonCod ? `vs ${numId(nonCod.productivity, 2)} non-COD` : "—" },
+            { label: "Hambatan", value: cod && nonCod && nonCod.durationMin ? `+${numId((cod.durationMin / nonCod.durationMin - 1) * 100, 0)}%` : "—", sub: "COD lebih lama dari non-COD" }
           ]
         : []
   );

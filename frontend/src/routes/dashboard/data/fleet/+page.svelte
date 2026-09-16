@@ -86,7 +86,7 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <h1 class="font-heading text-xl font-semibold tracking-tight">Fleet &amp; Emissions</h1>
-    <span class="hub-label text-muted-foreground">DATA · motor dominan 93,7%</span>
+    <span class="hub-label text-muted-foreground">DATA · motor dominan {numId(motorSharePct, 1)}%</span>
   </div>
 
   {#if loaded && failed}
