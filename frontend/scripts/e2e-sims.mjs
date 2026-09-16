@@ -100,6 +100,30 @@ try {
     await ctx.close();
   }
 
+  // ── 1d. Forecast event what-if (POST) ──
+  {
+    let posts = 0;
+    const { ctx, page, errs } = await openPage("/dashboard/hub/forecast", (r) => {
+      if (r.method() === "POST" && r.url().includes("/ml/forecast")) posts++;
+    });
+    const txt0 = await page.locator("body").innerText();
+    R(/Demand Forecast/.test(txt0), "forecast: judul");
+    R(/Simulasi event/.test(txt0), "forecast: panel what-if");
+    const sliders = page.locator('input[type="range"]');
+    R((await sliders.count()) === 3, "forecast: 3 slider event", `n=${await sliders.count()}`);
+    // Matikan event TikTok → Terapkan skenario → POST terpanggil.
+    const tik = page.locator('input[aria-label="Skala event TikTok Shop Suspension"]');
+    R((await tik.count()) === 1, "forecast: slider TikTok ada");
+    await tik.fill("0");
+    await tik.dispatchEvent("change");
+    await page.locator('button', { hasText: "Terapkan skenario" }).click();
+    await page.waitForTimeout(1200);
+    R(posts >= 1, "forecast: Terapkan memicu POST /ml/forecast", `posts=${posts}`);
+    R(errs.length === 0, "forecast: tanpa error JS", errs.join(" | "));
+    await page.screenshot({ path: "/tmp/opencode/shots/forecast-sim.png" });
+    await ctx.close();
+  }
+
   // ── 1c. ROI kustom (slider real-time, tanpa backend) ──
   {
     const { ctx, page, errs } = await openPage("/dashboard/pusat/roi");

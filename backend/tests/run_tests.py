@@ -87,6 +87,21 @@ check("berakhir Desember", fc["projection"][-1]["month"] == "Dec", fc["projectio
 check("ada event TikTok di Okt", any("TikTok" in p["events"][0] for p in fc["projection"] if p["events"] and p["month"] == "Oct"))
 check("backtest MAPE < 5%", fc["backtest"]["mapePct"] < 5.0, str(fc["backtest"]["mapePct"]))
 check("peak > trough", fc["peak"]["totalM"] > fc["trough"]["totalM"])
+# Simulasi interaktif: skala event dapat diubah.
+check("forecast punya katalog event", len(fc["eventCatalog"]) == 3, str(len(fc.get("eventCatalog", []))))
+off = client.post("/ml/forecast", json={"event_scale": {e["label"]: 0 for e in fc["eventCatalog"]}}).json()
+check("event dimatikan -> fluktuasi turun", off["fluctuationPct"] < fc["fluctuationPct"], f"{fc['fluctuationPct']}->{off['fluctuationPct']}")
+strong = client.post("/ml/forecast", json={"event_scale": {"TikTok Shop Suspension": 2.0}}).json()
+oct_base = next(p for p in fc["projection"] if p["month"] == "Oct")
+oct_strong = next(p for p in strong["projection"] if p["month"] == "Oct")
+check("shock TikTok diperkuat -> Okt lebih rendah", oct_strong["totalM"] < oct_base["totalM"], f"{oct_base['totalM']}->{oct_strong['totalM']}")
+check("horizon dibatasi 1..24", len(client.post("/ml/forecast", json={"horizon": 99}).json()["projection"]) == 24)
+# demand-actual: label TikTok hanya di Oktober (tidak menyesatkan Sep-Des).
+dact = _get("/ml/demand-actual")["rows"]
+oct_row = next(r for r in dact if r["month"] == "Oct")
+sep_row = next(r for r in dact if r["month"] == "Sep")
+check("demand-actual Okt = TikTok-Suspension", "TikTok-Suspension" in oct_row["events"], str(oct_row["events"]))
+check("demand-actual Sep bukan suspension", "TikTok-Suspension" not in sep_row["events"], str(sep_row["events"]))
 
 print("== 4. Network Optimization Engine ==")
 opt = _get("/ml/optimize/load-balance")

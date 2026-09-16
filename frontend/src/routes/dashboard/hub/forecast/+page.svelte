@@ -13,10 +13,12 @@
     events: string[];
   }
 
+  interface ForecastEvent { label: string; months: string[]; boost: number }
   interface ForecastResp {
     model: string;
     note: string;
     dataPoints: number;
+    eventCatalog?: ForecastEvent[];
     projection: ForecastMonth[];
     peak: { month: string; label: string; totalM: number };
     trough: { month: string; label: string; totalM: number };
@@ -35,6 +37,7 @@
     if (userTriggered) notify({ message: "Memuat ulang forecast…", type: "info", title: "Demand Forecast" });
     try {
       [forecast, actual] = await Promise.all([api.forecast(), api.demandActual()]);
+      initScales();
       if (userTriggered) notify({ message: "Forecast dimuat ulang", type: "success", title: "Demand Forecast" });
     } catch {
       forecast = null;
@@ -46,6 +49,38 @@
   }
 
   onMount(() => void load());
+
+  // Simulasi event interaktif: skala boost per label (1.0 = kasus apa adanya, 0 = off).
+  let scales = $state<Record<string, number>>({});
+  let simulating = $state(false);
+
+  function initScales() {
+    if (!forecast?.eventCatalog) return;
+    const s: Record<string, number> = {};
+    for (const e of forecast.eventCatalog) s[e.label] = scales[e.label] ?? 1.0;
+    scales = s;
+  }
+
+  async function applySim() {
+    if (!forecast?.eventCatalog) return;
+    simulating = true;
+    try {
+      forecast = await api.forecastCustom({ event_scale: { ...scales } });
+      notify({ message: "Proyeksi diperbarui sesuai skenario event", type: "success", title: "Demand Forecast" });
+    } catch {
+      notify({ message: "Gagal menjalankan simulasi event", type: "error", title: "Demand Forecast" });
+    } finally {
+      simulating = false;
+    }
+  }
+
+  function resetSim() {
+    if (!forecast?.eventCatalog) return;
+    const s: Record<string, number> = {};
+    for (const e of forecast.eventCatalog) s[e.label] = 1.0;
+    scales = s;
+    void applySim();
+  }
 
   const chart = $derived.by(() => {
     if (!forecast || !actual) return null;
@@ -81,6 +116,40 @@
         <EChart option={chart} height={300} />
       {/if}
     </div>
+
+    {#if forecast.eventCatalog?.length}
+      <div class="rounded-2xl border border-primary/30 bg-primary/5 p-5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p class="text-sm font-semibold">Simulasi event (what-if)</p>
+            <p class="mt-1 text-xs text-muted-foreground">Atur kekuatan tiap event (1,0 = asumsi kasus, 0 = dimatikan) → proyeksi &amp; fluktuasi dihitung ulang.</p>
+          </div>
+          <button type="button" onclick={resetSim} class="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold hover:border-primary/40">Reset</button>
+        </div>
+        <div class="mt-4 grid gap-5 sm:grid-cols-3">
+          {#each forecast.eventCatalog as e (e.label)}
+            <label class="block">
+              <span class="flex items-center justify-between text-xs font-medium text-muted-foreground">
+                <span>{e.label} <span class="text-muted-foreground">({e.months.join(", ")})</span></span>
+                <span class="kpi-value text-foreground">{((scales[e.label] ?? 1) * 100).toFixed(0)}%</span>
+              </span>
+              <input
+                type="range" min="0" max="200" step="10"
+                bind:value={scales[e.label]}
+                aria-label="Skala event {e.label}"
+                class="mt-2 w-full accent-[var(--color-primary)]"
+              />
+            </label>
+          {/each}
+        </div>
+        <button
+          type="button"
+          onclick={applySim}
+          disabled={simulating}
+          class="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground transition-transform hover:-translate-y-px active:translate-y-0 disabled:opacity-60"
+        >{simulating ? "Menghitung…" : "Terapkan skenario"}</button>
+      </div>
+    {/if}
 
     <div class="grid gap-4 md:grid-cols-2">
       <div class="rounded-2xl border border-border bg-card p-5">

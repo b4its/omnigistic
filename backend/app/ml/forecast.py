@@ -85,24 +85,35 @@ def _selftest(forecast: dict) -> dict:
     return {"mapePct": round(mape, 1), "method": "in-sample seasonal+trend"}
 
 
-def _apply_events(vals: list[float]) -> list[dict]:
+def _apply_events(vals: list[float], event_scale: dict[str, float] | None = None, base_year: int = 2024) -> list[dict]:
+    """Terapkan event flags. ``event_scale`` (opsional) men-SKALA boost per label
+    (simulasi: 1.0 = boost kasus apa adanya, 0 = event dimatikan)."""
+    event_scale = event_scale or {}
     proj = []
     for i, v in enumerate(vals):
         m = _MONTHS[i % 12]
-        y = 2024
+        y = base_year
         flags: list[str] = []
         for e in _EVENTS:
             if m in e["months"]:
-                flags.append(e["label"])
-                v *= e["boost"]
+                scale = float(event_scale.get(e["label"], 1.0))
+                # Skala pada DELTA boost (boost-1), sehingga scale=0 → tanpa efek.
+                v *= 1.0 + (e["boost"] - 1.0) * scale
+                # Label tetap tampil walau efek dinolkan, agar jejak audit jelas.
+                flags.append(e["label"] if scale != 0 else f"{e['label']} (nonaktif)")
         proj.append({"month": m, "label": f"{m} {y}", "totalM": round(v, 1), "events": flags})
     return proj
 
 
-def forecast_next_12(horizon: int = 12) -> dict[str, Any]:
+def forecast_next_12(
+    horizon: int = 12,
+    event_scale: dict[str, float] | None = None,
+    base_year: int = 2024,
+) -> dict[str, Any]:
+    horizon = max(1, min(24, int(horizon)))
     series = _base_series()
     vals = _seasonal_decomp(series, horizon)
-    proj = _apply_events(vals)
+    proj = _apply_events(vals, event_scale, base_year)
     peak = max(proj, key=lambda x: x["totalM"])
     trough = min(proj, key=lambda x: x["totalM"])
     totals = [p["totalM"] for p in proj]
@@ -110,6 +121,9 @@ def forecast_next_12(horizon: int = 12) -> dict[str, Any]:
         "model": "seasonal-index (centered) + linear-trend (OLS) + event-flags",
         "note": "Prototipe presentasi — 12 titik 2023 + kalender promo/regulasi; proyeksi indikatif 2024.",
         "dataPoints": len(series),
+        "horizon": horizon,
+        "eventScale": event_scale or {e["label"]: 1.0 for e in _EVENTS},
+        "eventCatalog": [{"label": e["label"], "months": e["months"], "boost": e["boost"]} for e in _EVENTS],
         "projection": proj,
         "peak": {"month": peak["month"], "label": peak["label"], "totalM": peak["totalM"]},
         "trough": {"month": trough["month"], "label": trough["label"], "totalM": trough["totalM"]},
@@ -124,7 +138,11 @@ def demand_actual_tiktok() -> dict:
     out = []
     for d in rows:
         flags = []
-        if d["month"] in ("Sep", "Oct", "Nov", "Dec"):
-            flags.append("Pasca-TikTok-Suspension")
+        # TikTok Shop suspension terjadi pada OKTOBER (kasus, Figure); bulan
+        # berikutnya diberi label pemulihan yang berbeda agar tak menyesatkan.
+        if d["month"] == "Oct":
+            flags.append("TikTok-Suspension")
+        elif d["month"] in ("Nov", "Dec"):
+            flags.append("Pemulihan pasca-shock")
         out.append({**d, "events": flags})
     return {"year": 2023, "rows": out}

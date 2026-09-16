@@ -24,6 +24,18 @@ def forecast():
     return forecast_next_12(12)
 
 
+class ForecastBody(BaseModel):
+    horizon: int = 12
+    # Skala boost per label event: {label: multiplier}. 1.0 = kasus apa adanya.
+    event_scale: dict[str, float] = {}
+
+
+@router.post("/forecast")
+def forecast_custom(body: ForecastBody):
+    """Forecast interaktif: horizon + skala event (simulasi 'bagaimana jika')."""
+    return forecast_next_12(body.horizon, body.event_scale)
+
+
 @router.get("/demand-actual")
 def demand_actual():
     return demand_actual_tiktok()

@@ -186,10 +186,18 @@ export interface ForecastPoint {
   totalM: number;
   events: string[];
 }
+export interface ForecastEvent {
+  label: string;
+  months: string[];
+  boost: number;
+}
 export interface ForecastResult {
   model: string;
   note: string;
   dataPoints: number;
+  horizon?: number;
+  eventScale?: Record<string, number>;
+  eventCatalog?: ForecastEvent[];
   projection: ForecastPoint[];
   peak: { month: string; label: string; totalM: number };
   trough: { month: string; label: string; totalM: number };
@@ -454,6 +462,8 @@ export const api = {
   suggested: (page: string) => get<SidQuery[]>(`/api/suggested?page=${encodeURIComponent(page)}`),
   chat: (role: string, query: string) => post<ChatResp>("/api/chat", { role, query }),
   forecast: () => get<ForecastResult>("/ml/forecast"),
+  forecastCustom: (body: { horizon?: number; event_scale?: Record<string, number> }) =>
+    post<ForecastResult>("/ml/forecast", body),
   demandActual: () => get<DemandActualResult>("/ml/demand-actual"),
   codRiskDemo: () => get<{ packages: CodRiskPkg[]; sim: CodImpact }>("/ml/cod-risk/demo"),
   codRisk: (pkg: { hub_util?: number; value?: number; hour?: number; ambiguous?: number; zone?: number }) =>
