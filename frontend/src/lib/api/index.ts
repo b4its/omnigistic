@@ -446,6 +446,106 @@ export interface CostLeverResult {
   summary: { totalSavingIdrT: number; savingPctOfCost: number; avgCo2Pct: number };
 }
 
+// ── Peak-Surge Stress-Test (Pertanyaan 2) ──
+export interface SurgeHub {
+  name: string;
+  code: string;
+  region: string;
+  capacityM: number;
+  capacityEffectiveM: number;
+  peakLoadM: number;
+  peakUtilPct: number;
+  overflowM: number;
+  breached: boolean;
+  critical: boolean;
+  residualOverflowM?: number;
+}
+export interface SurgeResult {
+  engine: string;
+  note: string;
+  inputs: { peakMultiplier: number; surgeCapacityFactor: number; allowSpillover: boolean };
+  reference: { docNetworkPeakCapM: number; seasonalPeakMult: number; baseDailyM: number; totalCapacityPerDayM: number; double12Date: string };
+  summary: {
+    totalPeakLoadM: number;
+    hubBreached: number;
+    hubCount: number;
+    totalOverflowM: number;
+    spilloverMovedM: number;
+    residualOverflowM: number;
+    recoveryDays: number;
+    nationalUtilPct: number;
+  };
+  hubs: SurgeHub[];
+  spillover: { from: string; fromCode: string; to: string; toCode: string; quantityM: number }[];
+}
+
+// ── COD Cash-Reconciliation Risk (Pertanyaan 3) ──
+export interface CodCashResult {
+  engine: string;
+  note: string;
+  input: { codSharePct: number; interventions: string[]; errorCutPct: number; timeCutPct: number };
+  basis: { totalDailyM: number; codDailyM: number; avgOrderValueIdr: number; manualErrorRatePct: number; manualReconMinPerPkg: number };
+  cashFloatIdr: number;
+  risk: {
+    discrepanciesPerDayBefore: number;
+    discrepanciesPerDayAfter: number;
+    discrepancyCostIdrBefore: number;
+    discrepancyCostIdrAfter: number;
+    discrepancyCostSavedIdr: number;
+    reconMinutesBefore: number;
+    reconMinutesAfter: number;
+    reconHoursSavedPerDay: number;
+    riskReductionPct: number;
+  };
+  interventionCatalog: { key: string; label: string; errCutPct: number; timeCutPct: number }[];
+}
+
+// ── Market-Expansion ROI (Pertanyaan 5) ──
+export interface ExpansionHub {
+  hub: string;
+  code: string;
+  region: string;
+  capacityM: number;
+  utilizationPct: number;
+  outlets: number;
+  headroomM: number;
+  addAnnualM: number;
+  addMarginIdrPerYear: number;
+  roiX: number;
+  paybackYears: number;
+  demandScore: number;
+  priority: string;
+  note: string;
+}
+export interface ExpansionResult {
+  engine: string;
+  note: string;
+  inputs: { capexPerHubIdr: number; targetUtil: number };
+  unitEconomics: { revenuePerParcelIdr: number; costPerParcelIdr: number; grossMarginPerParcelIdr: number; contributionMarginPerParcelIdr: number };
+  summary: { priorityHubs: number; totalAddAnnualM: number; totalAddMarginIdrPerYear: number; totalCapexIdr: number; portfolioRoiX: number; paybackYears: number };
+  hubs: ExpansionHub[];
+}
+
+// ── Unified Cost-Waterfall & P&L (Pertanyaan 6) ──
+export interface PnlResult {
+  engine: string;
+  note: string;
+  inputs: { includeSustainability: boolean };
+  basis: { year: number; fulfilmentT: number; shippingT: number; costT: number; netSalesT: number; costToSalesPct: number };
+  waterfall: { lever: string; dimension: string; savingPct: number; savingT: number; costAfterT: number }[];
+  summary: {
+    baseCostT: number;
+    optimizedCostT: number;
+    totalSavingT: number;
+    totalSavingPct: number;
+    costToSalesBeforePct: number;
+    costToSalesAfterPct: number;
+    ebitProxyBeforeT: number;
+    ebitProxyAfterT: number;
+    ebitProxyUpliftPct: number;
+  };
+}
+
 export const api = {
   hubs: () => get<Hub[]>("/api/hubs"),
   regions: () => get<string[]>("/api/regions"),
@@ -488,7 +588,16 @@ export const api = {
   sponsorSensitivity: () => get<SponsorSensitivity>("/ml/sponsor/sensitivity"),
   modalShift: (body?: { mode_filter?: string[]; weights?: Record<string, number>; sla_hours?: number }) =>
     body ? post<ModalShiftResult>("/ml/modalshift/optimize", body) : get<ModalShiftResult>("/ml/modalshift/optimize"),
-  costLevers: () => get<CostLeverResult>("/ml/modalshift/levers")
+  costLevers: () => get<CostLeverResult>("/ml/modalshift/levers"),
+  surge: (body?: { peak_multiplier?: number; surge_capacity_factor?: number; allow_spillover?: boolean }) =>
+    body ? post<SurgeResult>("/ml/sim/surge", body) : get<SurgeResult>("/ml/sim/surge"),
+  codCash: (body: { cod_share_pct?: number; interventions?: string[] }) =>
+    post<CodCashResult>("/ml/cod-cash/risk", body),
+  codCashScenarios: () => get<Record<string, CodCashResult>>("/ml/cod-cash/scenarios"),
+  expansion: (body?: { capex_per_hub_idr?: number; target_util?: number }) =>
+    body ? post<ExpansionResult>("/ml/expansion/roi", body) : get<ExpansionResult>("/ml/expansion/roi"),
+  pnlWaterfall: (includeSustainability = true) =>
+    get<PnlResult>("/ml/pnl/waterfall?include_sustainability=" + (includeSustainability ? "true" : "false"))
 };
 
 export const online = writable(false);

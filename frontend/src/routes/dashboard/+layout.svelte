@@ -25,10 +25,10 @@
 
   const titleMap: Record<string, string> = {
     overview: "Portal", executive: "Executive Dashboard", "digital-twin": "Digital Twin",
-    utilization: "Utilization Map", network: "Network Expansion", roi: "ROI & Benefit-Cost",
+    utilization: "Utilization Map", network: "Network Expansion", expansion: "Market-Expansion ROI", roi: "ROI & Benefit-Cost", pnl: "Cost-Waterfall & P&L",
     dashboard: "Hub Dashboard", forecast: "Demand Forecast", "load-balance": "Load Balancing",
-    capacity: "Capacity Alert", routes: "Route Clustering", "cod-risk": "Predictive COD",
-    "cod-intel": "COD Decision Intelligence",
+    capacity: "Capacity Alert", surge: "Peak-Surge Test", routes: "Route Clustering", "cod-risk": "Predictive COD",
+    "cod-intel": "COD Decision Intelligence", "cod-cash": "COD Cash-Reconciliation Risk",
     slot: "Slot Confirmation", payment: "Digital Payment", pudo: "PUDO Network",
     address: "Address Intelligence", complaint: "Complaint Monitor", multimodal: "Control Tower",
     fleet: "Fleet & Emissions", "ev-sites": "EV Site Selection", methodology: "Methodology",
@@ -64,7 +64,9 @@
       { label: "Digital Twin", href: "/dashboard/pusat/digital-twin", icon: "compass" },
       { label: "Utilization Map", href: "/dashboard/pusat/utilization", icon: "chart" },
       { label: "Network Expansion", href: "/dashboard/pusat/network", icon: "stack" },
-      { label: "ROI & BCA", href: "/dashboard/pusat/roi", icon: "currency" }
+      { label: "Market Expansion ROI", href: "/dashboard/pusat/expansion", icon: "target" },
+      { label: "ROI & BCA", href: "/dashboard/pusat/roi", icon: "currency" },
+      { label: "Cost-Waterfall P&L", href: "/dashboard/pusat/pnl", icon: "coins" }
     ],
     HUB: [
       { label: "Nigi AI", href: "/dashboard/hub/assistant", icon: "chat" },
@@ -72,7 +74,8 @@
       { label: "Hub Dashboard", href: "/dashboard/hub/dashboard", icon: "globe" },
       { label: "Demand Forecast", href: "/dashboard/hub/forecast", icon: "chart" },
       { label: "Load Balancing", href: "/dashboard/hub/load-balance", icon: "compass" },
-      { label: "Capacity Alert", href: "/dashboard/hub/capacity", icon: "bell" }
+      { label: "Capacity Alert", href: "/dashboard/hub/capacity", icon: "bell" },
+      { label: "Peak-Surge Test", href: "/dashboard/hub/surge", icon: "activity" }
     ],
     KURIR: [
       { label: "Nigi AI", href: "/dashboard/kurir/assistant", icon: "chat" },
@@ -81,6 +84,7 @@
       { label: "Route Clustering", href: "/dashboard/kurir/routes", icon: "compass" },
       { label: "Predictive COD", href: "/dashboard/kurir/cod-risk", icon: "currency" },
       { label: "COD Intelligence", href: "/dashboard/kurir/cod-intel", icon: "trend" },
+      { label: "COD Cash Risk", href: "/dashboard/kurir/cod-cash", icon: "wallet" },
       { label: "Slot Confirmation", href: "/dashboard/kurir/slot", icon: "bell" },
       { label: "Digital Payment", href: "/dashboard/kurir/payment", icon: "shield" },
       { label: "PUDO Network", href: "/dashboard/kurir/pudo", icon: "map" }
@@ -154,11 +158,11 @@
 
   const questionMap: Record<string, string> = {
     "digital-twin": "1", network: "1", utilization: "1",
-    forecast: "2", "load-balance": "2", capacity: "2",
-    "cod-risk": "3", routes: "3", slot: "3", payment: "3", pudo: "3", tasks: "3",
+    forecast: "2", "load-balance": "2", capacity: "2", surge: "2",
+    "cod-risk": "3", "cod-cash": "3", routes: "3", slot: "3", payment: "3", pudo: "3", tasks: "3",
     address: "6", complaint: "6", multimodal: "6",
     fleet: "4", "ev-sites": "4", roi: "4",
-    executive: "5",
+    executive: "5", expansion: "5", pnl: "6",
     shop: "3", cart: "3", checkout: "3", orders: "3",
     analytics: "5", products: "5", customers: "6", "seller-orders": "3"
   };
