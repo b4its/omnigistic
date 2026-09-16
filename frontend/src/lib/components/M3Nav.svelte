@@ -57,10 +57,10 @@
         aria-current={isActive(item.href) ? "page" : undefined}
         class="relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5"
       >
-        <span class="flex h-8 w-14 items-center justify-center rounded-full transition-colors {isActive(item.href) ? 'bg-accent' : ''}">
+        <span class="flex h-8 w-14 items-center justify-center rounded-full transition-colors {isActive(item.href) ? 'bg-[color-mix(in_oklab,var(--bitcoin)_18%,transparent)] text-[var(--bitcoin)]' : ''}">
           <Icon name={item.icon} cls="h-5 w-5" weight="regular" />
         </span>
-        <span class="w-full truncate text-center text-[13px] font-medium {isActive(item.href) ? "text-accent-foreground" : "text-sidebar-foreground/70"}">
+        <span class="w-full truncate text-center font-mono text-[11px] font-medium tracking-wide {isActive(item.href) ? "text-[var(--bitcoin)]" : "text-sidebar-foreground/70"}">
           {labelOf(item)}
         </span>
       </a>
@@ -106,11 +106,11 @@
   >
     {#if mode === "expanded"}
       <div class={cn("flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border", railCollapsed ? "justify-center px-2" : "px-5")}>
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-[13px] font-bold text-primary-foreground">GC</span>
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] font-heading text-[13px] font-bold text-white shadow-[0_0_14px_-3px_var(--glow)]">GC</span>
         {#if !railCollapsed}
           <div class="min-w-0 flex-1">
-            <p class="truncate font-serif text-sm font-semibold tracking-tight text-foreground">Omnigistic <sup class="text-[13px] text-primary">2.0</sup></p>
-            <p class="text-xs text-muted-foreground">ISCEA 2026</p>
+            <p class="truncate font-heading text-sm font-semibold tracking-tight text-foreground">Omnigistic <sup class="text-[13px] text-[var(--bitcoin)]">2.0</sup></p>
+            <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">ISCEA 2026</p>
           </div>
         {/if}
         <button
@@ -145,7 +145,7 @@
 
     <div class={cn("flex-1 overflow-y-auto overflow-x-hidden", railCollapsed ? "w-full px-1.5 py-2" : "px-3 py-2")}>
       {#if !railCollapsed}
-        <p class="px-2 pb-1.5 pt-3 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70">{userName}</p>
+        <p class="px-2 pb-1.5 pt-3 font-mono text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/60">{userName}</p>
       {/if}
       {#each items as item (item.href)}
         <a
@@ -153,25 +153,30 @@
           title={item.label}
           aria-current={isActive(item.href) ? "page" : undefined}
           class={cn(
-            "group flex items-center rounded-xl text-sm transition-colors",
+            "group relative flex items-center rounded-xl text-sm transition-all duration-200",
             railCollapsed ? "mx-auto min-h-12 w-12 flex-col justify-center gap-0.5 px-1 text-[13px]" : "min-h-11 gap-3 px-3 py-2.5",
-            isActive(item.href) ? "bg-accent font-medium text-accent-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-accent-foreground"
+            isActive(item.href)
+              ? "bg-[color-mix(in_oklab,var(--bitcoin)_14%,transparent)] font-medium text-[var(--bitcoin)]"
+              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-accent-foreground"
           )}
         >
+          {#if isActive(item.href) && !railCollapsed}
+            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[var(--bitcoin)] to-[var(--gold)] shadow-[0_0_10px_-1px_var(--glow)]" aria-hidden="true"></span>
+          {/if}
           <Icon name={item.icon} cls={railCollapsed ? "h-5 w-5 shrink-0" : "h-4.5 w-4.5 shrink-0"} />
           {#if railCollapsed}
             <span class="max-w-full truncate text-center font-medium leading-tight">{labelOf(item)}</span>
           {:else}
             <span class="truncate">{item.label}</span>
             {#if isActive(item.href)}
-              <span class="ml-auto h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true"></span>
+              <span class="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--gold)] shadow-[0_0_8px_var(--glow-gold)]" aria-hidden="true"></span>
             {/if}
           {/if}
         </a>
       {/each}
       {#if sharedItems.length > 0}
         {#if !railCollapsed}
-          <p class="px-2 pb-1.5 pt-5 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70">Shared</p>
+          <p class="px-2 pb-1.5 pt-5 font-mono text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/60">Shared</p>
         {:else}
           <div class="mx-auto my-2 h-px w-8 bg-sidebar-border"></div>
         {/if}
@@ -181,11 +186,16 @@
             title={item.label}
             aria-current={isActive(item.href) ? "page" : undefined}
             class={cn(
-              "group flex items-center rounded-xl text-sm transition-colors",
+              "group relative flex items-center rounded-xl text-sm transition-all duration-200",
               railCollapsed ? "mx-auto min-h-12 w-12 flex-col justify-center gap-0.5 px-1 text-[13px]" : "min-h-11 gap-3 px-3 py-2.5",
-              isActive(item.href) ? "bg-accent font-medium text-accent-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-accent-foreground"
+              isActive(item.href)
+                ? "bg-[color-mix(in_oklab,var(--bitcoin)_14%,transparent)] font-medium text-[var(--bitcoin)]"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-accent-foreground"
             )}
           >
+            {#if isActive(item.href) && !railCollapsed}
+              <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[var(--bitcoin)] to-[var(--gold)] shadow-[0_0_10px_-1px_var(--glow)]" aria-hidden="true"></span>
+            {/if}
             <Icon name={item.icon} cls={railCollapsed ? "h-5 w-5 shrink-0" : "h-4.5 w-4.5 shrink-0"} />
             {#if railCollapsed}
               <span class="max-w-full truncate text-center font-medium leading-tight">{labelOf(item)}</span>

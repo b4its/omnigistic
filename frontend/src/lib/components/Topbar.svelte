@@ -153,9 +153,9 @@
       </button>
     {/if}
     <div class="min-w-0">
-      <p class="truncate font-serif text-lg font-semibold tracking-tight text-foreground sm:text-xl">{meta.name} · <span class="text-muted-foreground">{meta.sub}</span></p>
-      <p class="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <span class={"inline-block h-1.5 w-1.5 rounded-full " + ($online ? "bg-success-foreground" : "bg-warning-foreground")}></span>
+      <p class="truncate font-heading text-lg font-semibold tracking-tight text-foreground sm:text-xl">{meta.name} · <span class="text-muted-foreground">{meta.sub}</span></p>
+      <p class="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+        <span class={"inline-block h-1.5 w-1.5 rounded-full " + ($online ? "bg-success-foreground animate-pulse" : "bg-warning-foreground")}></span>
         <span class="truncate">{$online ? "Data studi kasus ISCEA 2026 · langsung" : "Data lokal (backend offline)"}</span>
       </p>
     </div>
@@ -193,7 +193,7 @@
     <button
       type="button"
       onclick={() => window.dispatchEvent(new CustomEvent("omnigistic-open-widgets"))}
-      class="hidden items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-primary/60 hover:text-accent-foreground sm:flex"
+      class="hidden items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-foreground transition-all duration-300 hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:text-[var(--bitcoin)] sm:flex"
     >
       <Icon name="plus" cls="h-3.5 w-3.5" weight="bold" />
       Tambah widget
@@ -203,7 +203,7 @@
       type="button"
       onclick={exportCsv}
       disabled={exporting}
-      class="relative flex items-center gap-1.5 overflow-hidden rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-transform hover:-translate-y-px active:translate-y-0 disabled:opacity-80"
+      class="relative flex items-center gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_-5px_var(--glow)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_30px_-5px_var(--glow)] active:scale-100 disabled:opacity-80"
     >
       <span class="relative z-10 flex items-center gap-1.5">
         <Icon name="download" cls="h-3.5 w-3.5" weight="bold" />
@@ -251,7 +251,7 @@
         aria-label="Account menu"
         aria-expanded={openPop === "profile"}
         onclick={() => (openPop = openPop === "profile" ? null : "profile")}
-        class="flex h-11 w-11 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground"
+        class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] font-heading text-sm font-bold text-white shadow-[0_0_16px_-4px_var(--glow)]"
       >
         {meta.letter}
       </button>
