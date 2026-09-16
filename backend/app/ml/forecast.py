@@ -23,14 +23,6 @@ def _base_series() -> list[float]:
     return [float(d["totalM"]) for d in data["monthlyDemand"]]
 
 
-def _moving_average(series: list[float], window: int = 12) -> float:
-    """Rata-rata bergerak sederhana untuk memisahkan level/trend dari musiman."""
-    n = len(series)
-    w = min(window, n)
-    tail = series[-w:]
-    return sum(tail) / len(tail)
-
-
 def _seasonal_decomp(series: list[float], horizon: int) -> list[float]:
     """Dekomposisi musiman klasik (rata-rata per bulan) + tren linear.
 

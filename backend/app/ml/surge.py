@@ -30,9 +30,6 @@ DOC_NETWORK_PEAK_CAP_M = 3.0
 _DAYS_PER_YEAR = 365.0
 # Puncak musiman kasus: bulan tertinggi 105jt ÷ 30 hari ÷ basis harian ≈ 1,15×.
 _SEASONAL_PEAK_MULT = 1.15
-# Ambang utilisasi kritis (sinkron metrics.UTIL_CRITICAL).
-_CRITICAL = 65.0
-
 
 def _base_daily_m() -> float:
     """Beban harian rata-rata nasional dari Table 4 (juta paket/hari)."""
