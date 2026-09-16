@@ -5,7 +5,7 @@
   import Icon from "$lib/components/Icon.svelte";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, ARRIVAL_LABEL, progressForStatus, type Order, type OrderStatus, type ArrivalStatus } from "$lib/stores/shop";
+  import { shop, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, ARRIVAL_LABEL, PRESENCE_LABEL, progressForStatus, type Order, type OrderStatus, type ArrivalStatus, type PresenceStatus } from "$lib/stores/shop";
   import { HUB_LABEL, etaForCity, COD_DECISION_LABEL } from "$lib/logistics";
   import { notify } from "$lib/toast";
 
@@ -43,6 +43,20 @@
   function toggleMap(id: string) {
     openMapId = openMapId === id ? null : id;
     notify({ message: openMapId ? `Peta pelacakan ${id} dibuka` : `Peta ${id} ditutup`, type: "info", title: "Pelacakan" });
+  }
+
+  /** Customer beri tahu kurir apakah ia ada di rumah (saat paket dalam pengantaran). */
+  function tellPresence(o: Order, presence: PresenceStatus) {
+    const err = shop.setPresence(o.id, presence);
+    if (err) {
+      notify({ message: err, type: "warn", title: "Kehadiran" });
+      return;
+    }
+    notify({
+      message: `Kurir diberi tahu: ${PRESENCE_LABEL[presence]}`,
+      type: presence === "di-rumah" ? "success" : "info",
+      title: "Kehadiran"
+    });
   }
 </script>
 
@@ -116,6 +130,39 @@
                 </div>
               </div>
             </div>
+
+            <!-- Pemberitahuan kehadiran: customer beri tahu kurir (packet dalam pengantaran) -->
+            {#if o.status === "dikirim"}
+              <div class="rounded-xl border border-primary/30 bg-primary/5 p-4">
+                <p class="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                  <Icon name="users" cls="h-3.5 w-3.5" /> Beri tahu kurir apakah kamu di rumah
+                </p>
+                <p class="mt-1 text-[11px] text-muted-foreground">Paketmu sedang diantar. Kabari kurir sekarang supaya ia bisa langsung mengantar atau menyesuaikan rute.</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onclick={() => tellPresence(o, "di-rumah")}
+                    aria-pressed={o.presenceStatus === "di-rumah"}
+                    class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-colors {o.presenceStatus === 'di-rumah' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_18px_-5px_var(--glow)]' : 'border-success/50 text-success-foreground hover:bg-success/10'}"
+                  >
+                    <Icon name="check" cls="h-3.5 w-3.5" weight="bold" /> Saya ada di rumah
+                  </button>
+                  <button
+                    type="button"
+                    onclick={() => tellPresence(o, "tidak-di-rumah")}
+                    aria-pressed={o.presenceStatus === "tidak-di-rumah"}
+                    class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-colors {o.presenceStatus === 'tidak-di-rumah' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_18px_-5px_var(--glow)]' : 'border-warning/50 text-warning-foreground hover:bg-warning/10'}"
+                  >
+                    <Icon name="warn" cls="h-3.5 w-3.5" /> Saya tidak di rumah
+                  </button>
+                </div>
+                {#if o.presenceStatus}
+                  <p class="mt-2 text-[11px] text-muted-foreground">
+                    Terkirim ke kurir: <span class="font-medium text-foreground">{PRESENCE_LABEL[o.presenceStatus]}</span>{#if o.presenceAt} · {new Date(o.presenceAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}{/if}
+                  </p>
+                {/if}
+              </div>
+            {/if}
 
             <!-- Status kehadiran penerima (dari aksi kurir saat dalam pengantaran) -->
             {#if o.arrivalStatus}

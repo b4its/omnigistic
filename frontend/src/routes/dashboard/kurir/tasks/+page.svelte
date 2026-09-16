@@ -21,6 +21,7 @@
     DEFAULT_COURIER_NOTE,
     COURIER_TASK,
     ARRIVAL_LABEL,
+    PRESENCE_LABEL,
     nextStatus,
     progressForStatus,
     type Order,
@@ -235,6 +236,22 @@
                   {/if}
                 {/each}
               </ol>
+
+              <!-- Pemberitahuan kehadiran dari PEMBELI (sebelum kurir tiba) -->
+              {#if o.status === "dikirim" && o.presenceStatus}
+                <div class="flex items-start gap-3 rounded-xl border {o.presenceStatus === 'di-rumah' ? 'border-success/40 bg-success/5' : 'border-warning/40 bg-warning/5'} p-4">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {o.presenceStatus === 'di-rumah' ? 'bg-success text-success-foreground' : 'bg-warning text-warning-foreground'}">
+                    <Icon name={o.presenceStatus === "di-rumah" ? "check" : "warn"} cls="h-4 w-4" weight={o.presenceStatus === "di-rumah" ? "bold" : "regular"} />
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Pemberitahuan pembeli</p>
+                    <p class="text-sm font-semibold text-foreground">{PRESENCE_LABEL[o.presenceStatus]}</p>
+                    <p class="mt-0.5 text-xs text-muted-foreground">
+                      {o.presenceStatus === "di-rumah" ? "Boleh langsung antar ke alamat." : "Tawarkan PUDO / jadwalkan ulang sebelum menunggu."}
+                    </p>
+                  </div>
+                </div>
+              {/if}
 
               <!-- Kondisi paket terkini -->
               <div class="rounded-xl border border-border bg-muted/30 p-4">

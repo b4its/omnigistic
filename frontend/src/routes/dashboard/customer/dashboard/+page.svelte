@@ -6,7 +6,7 @@
   import type { IconName } from "$lib/icon-names";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, cartDetail, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, ARRIVAL_LABEL, COURIER_TASK, nextStatus, progressForStatus, lastOutForDeliveryOrder, type Order, type ArrivalStatus } from "$lib/stores/shop";
+  import { shop, cartDetail, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, ARRIVAL_LABEL, PRESENCE_LABEL, COURIER_TASK, nextStatus, progressForStatus, lastOutForDeliveryOrder, type Order, type ArrivalStatus, type PresenceStatus } from "$lib/stores/shop";
   import { HUB_LABEL, etaForCity, distanceForCity, remainingKm, remainingEtaMin } from "$lib/logistics";
   import { notify } from "$lib/toast";
 
@@ -98,6 +98,17 @@
     "tunggu-sebentar": { icon: "clock", border: "border-warning/40", bg: "bg-warning/5", chip: "bg-warning text-warning-foreground", tip: "Kurir menunggu di lokasi — segera temui sebelum batas tunggu." },
     "tidak-di-rumah": { icon: "warn", border: "border-destructive/40", bg: "bg-destructive/5", chip: "bg-destructive text-destructive-foreground", tip: "Paket bisa dialihkan ke PUDO terdekat atau dijadwalkan ulang." }
   };
+
+  /** Customer beri tahu kurir apakah ia ada di rumah (saat paket dalam pengantaran). */
+  function tellPresence(presence: PresenceStatus) {
+    if (!tracked) return;
+    const err = shop.setPresence(tracked.id, presence);
+    notify({
+      message: err ?? `Kurir diberi tahu: ${PRESENCE_LABEL[presence]}`,
+      type: err ? "warn" : presence === "di-rumah" ? "success" : "info",
+      title: "Kehadiran"
+    });
+  }
   const currentTask = $derived(tracked ? COURIER_TASK[tracked.status] : null);
   const upcomingStatus = $derived(tracked ? nextStatus(tracked.status) : null);
 
@@ -212,6 +223,36 @@
                 {#if tracked.courier} · {tracked.courier}{/if}
               </p>
             </div>
+
+            <!-- Pemberitahuan kehadiran ke kurir (saat paket dalam pengantaran) -->
+            {#if tracked.status === "dikirim"}
+              <div class="rounded-xl border border-primary/30 bg-primary/5 p-3">
+                <p class="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                  <Icon name="users" cls="h-3.5 w-3.5" /> Beri tahu kurir apakah kamu di rumah
+                </p>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onclick={() => tellPresence("di-rumah")}
+                    aria-pressed={tracked.presenceStatus === "di-rumah"}
+                    class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {tracked.presenceStatus === 'di-rumah' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_18px_-5px_var(--glow)]' : 'border-success/50 text-success-foreground hover:bg-success/10'}"
+                  >
+                    <Icon name="check" cls="h-3.5 w-3.5" weight="bold" /> Ada di rumah
+                  </button>
+                  <button
+                    type="button"
+                    onclick={() => tellPresence("tidak-di-rumah")}
+                    aria-pressed={tracked.presenceStatus === "tidak-di-rumah"}
+                    class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {tracked.presenceStatus === 'tidak-di-rumah' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_18px_-5px_var(--glow)]' : 'border-warning/50 text-warning-foreground hover:bg-warning/10'}"
+                  >
+                    <Icon name="warn" cls="h-3.5 w-3.5" /> Tidak di rumah
+                  </button>
+                </div>
+                {#if tracked.presenceStatus}
+                  <p class="mt-2 text-[11px] text-muted-foreground">Terkirim ke kurir: <span class="font-medium text-foreground">{PRESENCE_LABEL[tracked.presenceStatus]}</span></p>
+                {/if}
+              </div>
+            {/if}
 
             <!-- Status kehadiran penerima (kurir sudah tiba) -->
             {#if tracked.arrivalStatus}
