@@ -94,7 +94,7 @@
       <a href={resolveHref("/dashboard/seller/products")} class="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
         <Icon name="stack" cls="h-4 w-4" /> Produk
       </a>
-      <a href={resolveHref("/dashboard/seller/customers")} class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px">
+      <a href={resolveHref("/dashboard/seller/customers")} class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
         <Icon name="users" cls="h-4 w-4" /> Pelanggan
       </a>
     </div>

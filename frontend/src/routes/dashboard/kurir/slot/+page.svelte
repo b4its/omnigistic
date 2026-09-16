@@ -83,7 +83,7 @@
     {#each stages as s, i (s.step)}
       <div class="rounded-2xl border bg-card p-5">
         <div class="flex items-center gap-2">
-          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{i + 1}</span>
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] text-xs font-semibold text-white">{i + 1}</span>
           <span class="hub-label text-xs text-muted-foreground">{s.en}</span>
         </div>
         <p class="kpi-value mt-3 text-sm">{s.step}</p>

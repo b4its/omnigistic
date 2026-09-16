@@ -108,7 +108,7 @@
         <p class="mt-1.5 text-sm font-medium leading-relaxed text-foreground">
           Paket COD di Cibinong (alamat benar terverifikasi geotag): hubungi penerima dulu untuk slot. Jika belum siap, pindahkan ke PUDO terdekat. Kurir diarahkan mengikuti rute jalan + ETA, agar tidak mencari-cari.
         </p>
-        <button type="button" onclick={openChat} class="mt-3 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground transition-transform hover:-translate-y-px active:translate-y-0">
+        <button type="button" onclick={openChat} class="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-xs font-semibold text-white transition-transform hover:-translate-y-px active:translate-y-0">
           Buka Nigi Chat <Icon name="arrow-up-right" cls="h-3.5 w-3.5" weight="bold" />
         </button>
       </div>

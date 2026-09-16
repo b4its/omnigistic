@@ -52,7 +52,7 @@
     <span class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="grad" cls="h-8 w-8" /></span>
     <h1 class="font-heading text-xl font-semibold">Sertifikat belum tersedia</h1>
     <p class="text-sm text-muted-foreground">Selesaikan seluruh {prog.total} pelajaran <strong class="font-semibold text-foreground">{track.title}</strong> untuk membuka sertifikat. Progres saat ini {prog.done}/{prog.total} ({prog.pct}%).</p>
-    <a href={resolveHref(`/dashboard/academy/${track.slug}`)} class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px">
+    <a href={resolveHref(`/dashboard/academy/${track.slug}`)} class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
       <Icon name="book" cls="h-4 w-4" /> Lanjut belajar
     </a>
   </div>
@@ -88,7 +88,7 @@
 
         <div class="space-y-1">
           <p class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Sertifikat Penyelesaian</p>
-          <p class="font-serif text-3xl font-light tracking-tight">Certificate of Completion</p>
+          <p class="font-heading text-3xl font-light tracking-tight">Certificate of Completion</p>
         </div>
 
         <div class="space-y-2">
@@ -119,7 +119,7 @@
             <p class="font-mono text-sm font-semibold text-foreground">{certId}</p>
           </div>
           <div class="text-right">
-            <p class="font-serif text-lg italic text-foreground">Nigi AI</p>
+            <p class="font-heading text-lg italic text-foreground">Nigi AI</p>
             <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Platform Pembelajaran</p>
           </div>
         </div>

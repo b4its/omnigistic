@@ -163,7 +163,7 @@
                     <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border {isSel ? 'border-primary bg-primary text-primary-foreground' : 'border-border'}">
                       {#if submitted && isCorrect}<Icon name="check" cls="h-3 w-3" weight="bold" />
                       {:else if submitted && isSel && !isCorrect}<Icon name="x" cls="h-3 w-3" weight="bold" />
-                      {:else if isSel}<span class="h-1.5 w-1.5 rounded-full bg-primary-foreground"></span>{/if}
+                      {:else if isSel}<span class="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]-foreground"></span>{/if}
                     </span>
                     <span class="flex-1">{opt.label}</span>
                   </button>
@@ -182,7 +182,7 @@
               type="button"
               onclick={submitQuiz}
               disabled={!allAnswered}
-              class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+              class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Icon name="check" cls="h-4 w-4" weight="bold" /> Periksa jawaban
             </button>
@@ -210,7 +210,7 @@
         <button
           type="button"
           onclick={markComplete}
-          class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px"
+          class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px"
         >
           <Icon name="check" cls="h-4 w-4" weight="bold" /> Tandai selesai
         </button>

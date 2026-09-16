@@ -63,7 +63,7 @@
       <p class="text-xs font-semibold text-muted-foreground">Rekonsiliasi COD</p>
       <p class="mt-1 text-2xl font-bold tabular-nums text-foreground">{progressPct}%</p>
       <div class="mt-2 h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPct} aria-label="Progres rekonsiliasi tunai COD">
-        <div class="h-full rounded-full bg-primary" style="width:{progressPct}%"></div>
+        <div class="h-full rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]" style="width:{progressPct}%"></div>
       </div>
       <p class="mt-1 text-xs text-muted-foreground">{digitalOrders.length} pesanan digital (bukan tunai)</p>
     </div>

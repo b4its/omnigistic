@@ -109,7 +109,7 @@
         <Icon name="stack" cls="h-4 w-4" /> Keranjang
         {#if cartCount > 0}<span class="rounded-full bg-muted px-1.5 text-xs tabular-nums">{cartCount}</span>{/if}
       </a>
-      <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px">
+      <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
         <Icon name="map" cls="h-4 w-4" /> Semua pesanan
       </a>
     </div>
@@ -160,7 +160,7 @@
         <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="map" cls="h-7 w-7" /></span>
         <p class="mt-4 text-base font-semibold text-foreground">Belum ada pesanan untuk dilacak</p>
         <p class="mt-1 text-sm text-muted-foreground">Buat pesanan dulu, lalu pantau kurir bergerak menuju alamatmu di sini.</p>
-        <a href={resolveHref("/dashboard/customer/overview")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px">
+        <a href={resolveHref("/dashboard/customer/overview")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
           <Icon name="search" cls="h-4 w-4" /> Mulai belanja
         </a>
       </div>
@@ -212,7 +212,7 @@
                 <span class="tabular-nums">{Math.round(progress * 100)}%</span>
               </div>
               <div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label="Progres pengantaran">
-                <div class="h-full rounded-full bg-primary transition-all" style="width:{Math.round(progress * 100)}%"></div>
+                <div class="h-full rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] transition-all" style="width:{Math.round(progress * 100)}%"></div>
               </div>
               <p class="text-[11px] text-muted-foreground">
                 {#if reached}Paket sudah tiba di {tracked.address.city}.{:else}± {kmLeft} km · sisa ETA ± {etaLeft} menit menuju {tracked.address.city} (total {tripKm} km).{/if}
@@ -314,7 +314,7 @@
                 <span class="shrink-0 font-mono text-xs text-muted-foreground">{o.id.split("-").slice(-1)}</span>
                 <span class="min-w-0 flex-1 truncate text-muted-foreground">{ORDER_STATUS_LABEL[o.status]}</span>
                 {#if isFocus && !delivered}
-                  <span class="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10.5px] font-semibold text-primary">Dilacak</span>
+                  <span class="shrink-0 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]/10 px-2 py-0.5 text-[10.5px] font-semibold text-primary">Dilacak</span>
                 {/if}
                 <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold {o.payment === 'COD' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}">{o.payment}</span>
                 <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(o.total)}</span>

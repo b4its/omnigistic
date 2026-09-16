@@ -246,7 +246,7 @@
                     <button
                       type="button"
                       onclick={() => advance(o)}
-                      class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px"
+                      class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-px"
                     >
                       <Icon name="arrow-up-right" cls="h-4 w-4" weight="bold" /> {task.title}
                     </button>

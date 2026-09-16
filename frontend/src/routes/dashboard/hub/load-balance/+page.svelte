@@ -119,7 +119,7 @@
       <button
         type="button"
         onclick={() => recompute(true)}
-        class="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground transition-transform hover:-translate-y-px active:translate-y-0"
+        class="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-xs font-semibold text-white transition-transform hover:-translate-y-px active:translate-y-0"
       >
         <Icon name="trend" cls="h-3.5 w-3.5" /> Jalankan optimizer
       </button>
@@ -228,7 +228,7 @@
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
       <p class="text-sm font-semibold text-foreground">Gagal memuat optimizer</p>
       <p class="mt-1 text-xs text-muted-foreground">Backend offline. Muat ulang setelah backend aktif.</p>
-      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-xs font-semibold text-white">Coba lagi</button>
     </div>
   {:else if loaded}
     <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">Data optimizer tidak tersedia.</div>

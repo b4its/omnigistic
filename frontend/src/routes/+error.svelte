@@ -9,10 +9,10 @@
 
 <main class="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
   <p class="hub-label text-muted-foreground">Omnigistic · ISCEA 2026</p>
-  <h1 class="font-serif text-6xl font-light tracking-tight text-foreground">{status ?? 404}</h1>
+  <h1 class="font-heading text-6xl font-light tracking-tight text-foreground">{status ?? 404}</h1>
   <p class="text-sm text-muted-foreground">{message ?? "Rute ini tidak ada di aplikasi."}</p>
   <div class="flex flex-wrap justify-center gap-3 pt-2">
-    <a href={resolve("/login")} class="rounded-full bg-primary px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-primary-foreground transition-colors hover:bg-primary/85">Ke portal peran</a>
+    <a href={resolve("/login")} class="rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary/85">Ke portal peran</a>
     <a href={resolve("/")} class="rounded-full border border-border px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-foreground transition-colors hover:border-primary/60">Halaman utama</a>
     <a href={resolve("/dashboard/methodology")} class="rounded-full border border-border px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground">Methodology</a>
   </div>

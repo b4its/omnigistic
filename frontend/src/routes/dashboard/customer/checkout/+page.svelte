@@ -155,7 +155,7 @@
   {#if items.length === 0 && !placedId}
     <div class="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
       <p class="text-sm font-semibold text-foreground">Keranjang kosong</p>
-      <a href={resolveHref("/dashboard/customer/overview")} class="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
+      <a href={resolveHref("/dashboard/customer/overview")} class="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white">
         <Icon name="search" cls="h-4 w-4" /> Mulai belanja
       </a>
     </div>
@@ -175,7 +175,7 @@
         </div>
       {/if}
       <div class="flex flex-wrap justify-center gap-3">
-        <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px">
+        <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
           <Icon name="map" cls="h-4 w-4" /> Lacak pesanan
         </a>
         <a href={resolveHref("/dashboard/customer/overview")} class="inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-accent">Belanja lagi</a>
@@ -294,7 +294,7 @@
             type="button"
             onclick={() => placeOrder()}
             disabled={!addressValid || scoring}
-            class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+            class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Icon name="check" cls="h-4 w-4" weight="bold" /> Buat pesanan
           </button>

@@ -63,7 +63,7 @@
       Prediksi <strong class="font-semibold text-foreground">Predictive COD</strong> hanya tersedia untuk tim internal
       (Pusat, Hub, Kurir, Data, Penjual). Sebagai pembeli, kamu hanya melihat status COD di akunmu.
     </p>
-    <a href={resolveHref("/dashboard/customer/overview")} class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px">
+    <a href={resolveHref("/dashboard/customer/overview")} class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
       <Icon name="arrow-left" cls="h-4 w-4" /> Kembali ke toko
     </a>
   </div>

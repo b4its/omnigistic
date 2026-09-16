@@ -57,7 +57,7 @@
       <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="map" cls="h-7 w-7" /></span>
       <p class="mt-4 text-base font-semibold text-foreground">Belum ada pesanan</p>
       <p class="mt-1 text-sm text-muted-foreground">Pesanan yang kamu buat akan muncul di sini untuk dilacak.</p>
-      <a href={resolveHref("/dashboard/customer/overview")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px">
+      <a href={resolveHref("/dashboard/customer/overview")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
         <Icon name="search" cls="h-4 w-4" /> Mulai belanja
       </a>
     </div>

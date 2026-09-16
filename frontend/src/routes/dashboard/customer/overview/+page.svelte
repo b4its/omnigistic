@@ -90,9 +90,9 @@
       <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
         <Icon name="map" cls="h-4 w-4" /> Pesanan<span class="rounded-full bg-muted px-1.5 text-xs tabular-nums">{orders}</span>
       </a>
-      <a href={resolveHref("/dashboard/customer/cart")} class="relative inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px">
+      <a href={resolveHref("/dashboard/customer/cart")} class="relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
         <Icon name="stack" cls="h-4 w-4" /> Keranjang
-        {#if cart > 0}<span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-foreground px-1 text-xs font-bold text-primary tabular-nums">{cart}</span>{/if}
+        {#if cart > 0}<span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]-foreground px-1 text-xs font-bold text-primary tabular-nums">{cart}</span>{/if}
       </a>
     </div>
   </header>

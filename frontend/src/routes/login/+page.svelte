@@ -50,10 +50,10 @@
 
 <div class="landing grid min-h-dvh lg:grid-cols-2" style="background: var(--lnd-bg); color: var(--lnd-ink)">
   <div class="hidden flex-col justify-between rounded-l-none bg-[var(--lnd-ink)] p-[clamp(2rem,5vw,4rem)] text-[var(--lnd-bg)] lg:flex">
-    <div class="flex items-baseline gap-1 font-serif text-2xl font-semibold tracking-[0.02em]">
+    <div class="flex items-baseline gap-1 font-heading text-2xl font-semibold tracking-[0.02em]">
       Omnigistic
     </div>
-    <p class="max-w-[12ch] font-serif text-[clamp(2.4rem,4.6vw,4.4rem)] font-light leading-[1.12] tracking-[-0.015em]">
+    <p class="max-w-[12ch] font-heading text-[clamp(2.4rem,4.6vw,4.4rem)] font-light leading-[1.12] tracking-[-0.015em]">
       Angka yang tidak <em class="italic text-[var(--lnd-accent-ink)]">berteriak</em><span class="text-[var(--lnd-accent-ink)]">.</span>
     </p>
     <div class="flex justify-between gap-4 text-[14px] font-semibold uppercase tracking-[0.09em] text-[var(--lnd-on-ink)]">
@@ -64,7 +64,7 @@
   <div class="grid place-items-center px-[clamp(1.5rem,4vw,3rem)] py-12">
     <div class="w-full min-[400px]:max-w-[560px]">
       <p class="eyebrow">Masuk</p>
-      <h1 class="mt-4 font-serif text-[clamp(2.2rem,4vw,3.2rem)] font-light leading-[1.08] tracking-tight">
+      <h1 class="mt-4 font-heading text-[clamp(2.2rem,4vw,3.2rem)] font-light leading-[1.08] tracking-tight">
         Pilih <em class="italic text-[var(--lnd-accent-ink)]">portal</em> Anda
       </h1>
       <p class="mt-3 max-w-lg text-sm leading-relaxed text-[var(--lnd-soft)]">

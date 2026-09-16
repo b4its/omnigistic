@@ -70,7 +70,7 @@
       {#each roots as r (r.n)}
         <article class="rounded-2xl border border-border bg-card p-5">
           <div class="flex items-center gap-2">
-            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{r.n}</span>
+            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] text-xs font-semibold text-white">{r.n}</span>
             <h3 class="text-sm font-semibold text-foreground">{r.name}</h3>
           </div>
           <dl class="mt-3 space-y-1.5 text-[15px]">
@@ -89,7 +89,7 @@
       {#each steps as s, i (s.step)}
         <div class="rounded-2xl border border-border bg-card p-5">
           <div class="flex items-center gap-2">
-            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{i + 1}</span>
+            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] text-xs font-semibold text-white">{i + 1}</span>
             <span class="font-heading text-base font-semibold">{s.step}</span>
           </div>
           <div class="mt-4 space-y-2">
@@ -157,7 +157,7 @@
           <div class="rounded-2xl border border-border bg-card p-4">
             <div class="flex items-center justify-between">
               <p class="text-sm font-semibold">{r.region}</p>
-              {#if r.sponsorCandidate}<span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">kandidat sponsor</span>{/if}
+              {#if r.sponsorCandidate}<span class="rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]/10 px-2 py-0.5 text-[10px] font-semibold text-primary">kandidat sponsor</span>{/if}
             </div>
             <p class="mt-2 text-2xl font-bold tabular-nums">{fmt(r.avgUtilizationPct)}%</p>
             <p class="text-xs text-muted-foreground">{r.hubs} hub · kapasitas {fmt(r.capacityM)}M/hari · {r.outlets} outlet</p>

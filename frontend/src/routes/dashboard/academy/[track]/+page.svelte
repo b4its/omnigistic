@@ -83,7 +83,7 @@
       {#each track.modules as mod, mi (mod.slug)}
         <div class="rounded-2xl border border-border bg-card">
           <div class="flex items-center gap-3 border-b border-border px-5 py-4">
-            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{mi + 1}</span>
+            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] text-xs font-bold text-white">{mi + 1}</span>
             <div class="min-w-0">
               <h3 class="text-sm font-semibold text-foreground">Modul {mi + 1} · {mod.title}</h3>
               <p class="text-xs text-muted-foreground">{mod.summary}</p>
@@ -129,7 +129,7 @@
         </div>
         <a
           href={resolveHref(`/dashboard/academy/${track.slug}/sertifikat`)}
-          class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px"
+          class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px"
         >
           <Icon name="grad" cls="h-4 w-4" /> Lihat sertifikat
         </a>

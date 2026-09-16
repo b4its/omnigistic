@@ -206,7 +206,7 @@
 <div class="landing min-h-screen antialiased" style="background: var(--lnd-bg); color: var(--lnd-ink)">
   <header class="sticky top-0 z-40 border-b border-[var(--lnd-line)] backdrop-blur" style="background: color-mix(in srgb, var(--lnd-bg) 86%, transparent)">
     <div class="mx-auto flex h-16 max-w-[1520px] items-center gap-3 px-[clamp(1rem,4vw,4.5rem)] sm:gap-6">
-      <a href={resolveHref("/")} class="flex shrink-0 items-baseline gap-1 font-serif text-[19px] font-semibold tracking-[0.02em]">
+      <a href={resolveHref("/")} class="flex shrink-0 items-baseline gap-1 font-heading text-[19px] font-semibold tracking-[0.02em]">
         Omnigistic
       </a>
       <nav class="ml-auto hidden items-center gap-5 xl:flex" aria-label="Bagian analisis">
@@ -225,7 +225,7 @@
     <!-- HERO -->
     <section class="pt-[clamp(3.5rem,8vw,6rem)] pb-[clamp(2.5rem,5vw,4rem)]">
       <p class="eyebrow">Kerangka &amp; Analisis</p>
-      <h1 class="mt-6 max-w-4xl font-serif text-[clamp(2.4rem,6vw,5rem)] font-light leading-[1.02] tracking-[-0.02em]">
+      <h1 class="mt-6 max-w-4xl font-heading text-[clamp(2.4rem,6vw,5rem)] font-light leading-[1.02] tracking-[-0.02em]">
         Dari masalah ke solusi, <em class="italic">dengan dasar ilmu</em><span class="text-[var(--lnd-accent)]">.</span>
       </h1>
       <p class="mt-6 max-w-[62ch] text-[1.02rem] leading-relaxed text-[var(--lnd-soft)]">
@@ -237,7 +237,7 @@
     <section use:gsapReveal id="kerangka" class="scroll-mt-20 border-t border-[var(--lnd-line)] py-[clamp(3.5rem,7vw,6rem)]">
       <div class="border-t border-[var(--lnd-ink)] pt-6">
         <p class="eyebrow">Kerangka analisis</p>
-        <h2 class="mt-6 max-w-3xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">WHY, WHAT, HOW</h2>
+        <h2 class="mt-6 max-w-3xl font-heading text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">WHY, WHAT, HOW</h2>
         <p class="mt-4 max-w-[64ch] text-sm leading-relaxed text-[var(--lnd-soft)]">WHY: GC Logistics tumbuh cepat tetapi biaya tumbuh lebih cepat dan rentan guncangan eksternal. HOW: diagnosis MECE dan akar masalah, lalu desain solusi berbasis teori, diuji dengan BCA dan KPI. WHAT: enam akar masalah, masing-masing dengan solusi, dampak, dan KPI.</p>
       </div>
 
@@ -251,7 +251,7 @@
           <tbody>
             {#each layers as r (r.l)}
               <tr class="border-b border-[var(--lnd-line)] last:border-0">
-                <td class="px-4 py-3 font-serif italic text-[var(--lnd-accent-ink)]">{r.l}</td>
+                <td class="px-4 py-3 font-heading italic text-[var(--lnd-accent-ink)]">{r.l}</td>
                 <td class="px-4 py-3 font-semibold text-[var(--lnd-ink)]">{r.n}</td>
                 <td class="px-4 py-3 text-[var(--lnd-soft)]">{r.t}</td>
                 <td class="px-4 py-3 text-[var(--lnd-soft)]">{r.q}</td>
@@ -264,7 +264,7 @@
       <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {#each order as [n, t, d] (n)}
           <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-5">
-            <p class="font-serif text-[15px] italic text-[var(--lnd-accent-ink)]">{n}</p>
+            <p class="font-heading text-[15px] italic text-[var(--lnd-accent-ink)]">{n}</p>
             <p class="mt-2 text-sm font-semibold text-[var(--lnd-ink)]">{t}</p>
             <p class="mt-1 text-[15px] leading-relaxed text-[var(--lnd-soft)]">{d}</p>
           </div>
@@ -276,7 +276,7 @@
     <section use:gsapReveal id="bisnis" class="scroll-mt-20 border-t border-[var(--lnd-line)] py-[clamp(3.5rem,7vw,6rem)]">
       <div class="border-t border-[var(--lnd-ink)] pt-6">
         <p class="eyebrow">Business understanding</p>
-        <h2 class="mt-6 max-w-3xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Konteks, model, dan tegangan</h2>
+        <h2 class="mt-6 max-w-3xl font-heading text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Konteks, model, dan tegangan</h2>
       </div>
       <div class="mt-10 grid gap-4 lg:grid-cols-3">
         {#each biz as b (b.t)}
@@ -313,7 +313,7 @@
     <section use:gsapReveal id="data" class="scroll-mt-20 border-t border-[var(--lnd-line)] py-[clamp(3.5rem,7vw,6rem)]">
       <div class="border-t border-[var(--lnd-ink)] pt-6">
         <p class="eyebrow">Data understanding</p>
-        <h2 class="mt-6 max-w-3xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Bukan asumsi, tapi angka</h2>
+        <h2 class="mt-6 max-w-3xl font-heading text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Bukan asumsi, tapi angka</h2>
       </div>
       <div class="mt-10 overflow-x-auto rounded-2xl border border-[var(--lnd-line)]">
         <table class="w-full min-w-[720px] text-left text-sm">
@@ -355,7 +355,7 @@
     <section use:gsapReveal id="pertanyaan" class="scroll-mt-20 border-t border-[var(--lnd-line)] py-[clamp(3.5rem,7vw,6rem)]">
       <div class="border-t border-[var(--lnd-ink)] pt-6">
         <p class="eyebrow">Enam pertanyaan strategis</p>
-        <h2 class="mt-6 max-w-3xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Jawaban, dengan angka yang bisa diaudit</h2>
+        <h2 class="mt-6 max-w-3xl font-heading text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Jawaban, dengan angka yang bisa diaudit</h2>
         <p class="mt-4 max-w-[68ch] text-sm leading-relaxed text-[var(--lnd-soft)]">
           Setiap pertanyaan kasus dijawab dengan verdict, alasan, bukti kuantitatif dari mesin analitik, dan tautan ke karya interaktifnya.
         </p>
@@ -371,7 +371,7 @@
         {#each questions as q (q.no)}
           <article class="flex flex-col rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6">
             <div class="flex items-start gap-3">
-              <span class="font-serif text-[15px] italic text-[var(--lnd-accent-ink)]">{q.no}</span>
+              <span class="font-heading text-[15px] italic text-[var(--lnd-accent-ink)]">{q.no}</span>
               <h3 class="text-[15px] font-semibold leading-snug text-[var(--lnd-ink)]">{q.q}</h3>
             </div>
             <p class="mt-3 inline-flex w-fit rounded-full bg-[var(--lnd-accent)]/10 px-3 py-1 text-[13px] font-semibold text-[var(--lnd-accent-ink)]">{q.verdict}</p>
@@ -396,7 +396,7 @@
     <section use:gsapReveal id="solusi" class="scroll-mt-20 border-t border-[var(--lnd-line)] py-[clamp(3.5rem,7vw,6rem)]">
       <div class="border-t border-[var(--lnd-ink)] pt-6">
         <p class="eyebrow">Solusi &amp; dampak</p>
-        <h2 class="mt-6 max-w-3xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Enam akar, enam dampak terukur</h2>
+        <h2 class="mt-6 max-w-3xl font-heading text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Enam akar, enam dampak terukur</h2>
       </div>
 
       <div class="mt-10 overflow-x-auto rounded-2xl border border-[var(--lnd-line)]">
@@ -410,7 +410,7 @@
           <tbody>
             {#each sol as s (s.n)}
               <tr class="border-b border-[var(--lnd-line)] last:border-0">
-                <td class="px-4 py-3"><span class="font-serif italic text-[var(--lnd-accent-ink)]">{s.n}</span> <span class="text-[var(--lnd-soft)]">{s.root}</span></td>
+                <td class="px-4 py-3"><span class="font-heading italic text-[var(--lnd-accent-ink)]">{s.n}</span> <span class="text-[var(--lnd-soft)]">{s.root}</span></td>
                 <td class="px-4 py-3 font-semibold text-[var(--lnd-ink)]">{s.name}</td>
                 <td class="px-4 py-3 text-[var(--lnd-soft)]">{s.impact}</td>
                 <td class="px-4 py-3 font-semibold text-[var(--lnd-accent-ink)]">{s.kpi}</td>
@@ -423,7 +423,7 @@
       <div class="mt-8 grid gap-4 sm:grid-cols-3">
         {#each arch as a (a.l)}
           <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-5">
-            <p class="font-serif text-lg font-semibold text-[var(--lnd-ink)]">{a.l}</p>
+            <p class="font-heading text-lg font-semibold text-[var(--lnd-ink)]">{a.l}</p>
             <p class="mt-1 text-sm font-medium text-[var(--lnd-ink)]">{a.t}</p>
             <p class="mt-1 text-[15px] leading-relaxed text-[var(--lnd-soft)]">{a.d}</p>
           </div>
