@@ -111,6 +111,50 @@ post = client.post("/ml/cod-intel", json={"cod_share_pct": 100, "interventions":
 check("POST cod-intel 200", post.status_code == 200)
 check("PUDO cut terbesar (75%)", post.json()["input"]["interventionCutPct"] == 75.0, str(post.json()["input"]["interventionCutPct"]))
 
+print("== 5b. Direct-vs-Sponsor Comparator (Pertanyaan 1) ==")
+sp = _get("/ml/sponsor/compare")
+# Unit cost nasional harus diturunkan dari Tabel 3 & 4: 99,54T / 1.110 jt paket.
+check("basis biaya = 99,54T", sp["nationalBasis"]["totalCostT"] == 99.54, str(sp["nationalBasis"]["totalCostT"]))
+check("unit cost nasional dihitung", sp["nationalBasis"]["unitCostIdr"] > 0, str(sp["nationalBasis"]["unitCostIdr"]))
+check("6 region dibandingkan", len(sp["regions"]) == 6, str(len(sp["regions"])))
+# Java (util 69,4% > 65%) harus Direct; Maluku (30,1% < 50%) harus sponsor.
+java = next(r for r in sp["regions"] if r["region"] == "Java")
+maluku = next(r for r in sp["regions"] if r["region"] == "Maluku & Papua")
+check("Java -> Direct", java["recommendation"].startswith("Direct"), java["recommendation"])
+check("Maluku -> Sponsor", maluku["recommendation"].startswith("Sponsor"), maluku["recommendation"])
+check("sponsor capex exposure < direct", maluku["sponsor"]["capexExposurePerDayIdr"] < maluku["direct"]["capexExposurePerDayIdr"])
+check("sponsor kontrol turun", maluku["sponsor"]["controlScore"] < maluku["direct"]["controlScore"])
+check("ada penghematan capex", sp["summary"]["totalCapexSavingPerDayIdr"] > 0, str(sp["summary"]["totalCapexSavingPerDayIdr"]))
+custom = client.post("/ml/sponsor/compare", json={"hq_equity": 0.6}).json()
+check("POST sponsor/compare 200", custom["assumptions"]["hqEquity"] == 0.6, str(custom["assumptions"]["hqEquity"]))
+sens = _get("/ml/sponsor/sensitivity")
+check("sensitivitas 6 titik", len(sens["sweep"]) == 6, str(len(sens["sweep"])))
+# Ekuitas HQ lebih tinggi -> kontrol HQ lebih tinggi (kontrol sponsor naik).
+lo = next(r for r in sp["regions"] if r["region"] == "Sumatra")
+sp_hi = client.post("/ml/sponsor/compare", json={"hq_equity": 0.8}).json()
+hi = next(r for r in sp_hi["regions"] if r["region"] == "Sumatra")
+check("ekuitas naik -> kontrol naik", hi["sponsor"]["controlScore"] > lo["sponsor"]["controlScore"], f"{lo['sponsor']['controlScore']}->{hi['sponsor']['controlScore']}")
+
+print("== 5c. Modal-Shift & Cost-Lever (Pertanyaan 6) ==")
+ms = _get("/ml/modalshift/optimize")
+check("11 koridor diproses", ms["summary"]["routes"] == 11, str(ms["summary"]["routes"]))
+check("menghemat biaya", ms["summary"]["costSavingPct"] > 0, str(ms["summary"]["costSavingPct"]))
+check("menghemat emisi", ms["summary"]["co2SavingPct"] > 0, str(ms["summary"]["co2SavingPct"]))
+# Rute tanpa opsi darat (mis. Jayapura hanya laut/udara) tak boleh pilih 'darat'.
+jay = next(r for r in ms["routes"] if r["dest"] == "Jayapura")
+check("Jayapura bukan darat", jay["chosen"]["mode"] != "darat", jay["chosen"]["mode"])
+check("saving tanda positif = hemat", all(r["saving"]["costPerPkgIdr"] >= 0 for r in ms["routes"]))
+# mode_filter: paksa hanya udara -> semua pilih udara.
+forced = client.post("/ml/modalshift/optimize", json={"mode_filter": ["udara"]}).json()
+check("filter udara -> semua udara", all(r["chosen"]["mode"] == "udara" for r in forced["routes"]))
+# SLA ketat memaksa udara untuk rute jauh (Medan 1900km darat 42h > 24h SLA).
+tight = client.post("/ml/modalshift/optimize", json={"sla_hours": 24.0}).json()
+medan = next(r for r in tight["routes"] if r["dest"] == "Medan")
+check("SLA 24h -> Medan bukan darat", medan["chosen"]["mode"] != "darat", medan["chosen"]["mode"])
+lv = _get("/ml/modalshift/levers")
+check("6 tuas biaya", len(lv["levers"]) == 6, str(len(lv["levers"])))
+check("total saving > 0", lv["summary"]["totalSavingIdrT"] > 0, str(lv["summary"]["totalSavingIdrT"]))
+
 print("== 6. ML lama tetap jalan ==")
 check("cod-risk demo", client.get("/ml/cod-risk/demo").status_code == 200)
 check("address-demo", client.get("/ml/address-demo").status_code == 200)

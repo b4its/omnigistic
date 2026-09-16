@@ -11,8 +11,10 @@ from app.ml.address_parse import demo_address, parse_address
 from app.ml.cod_intel import analyze_cod_impact, default_scenarios
 from app.ml.cod_risk import demo_packages, score_package
 from app.ml.forecast import demand_actual_tiktok, forecast_next_12
+from app.ml.modalshift import cost_levers, optimize_corridors
 from app.ml.optimize import optimize_load_balance
 from app.ml.simulations import DIGITAL_TWIN_SCENARIOS, calculate_cod_impact, calculate_digital_twin
+from app.ml.sponsor import compare_models, sensitivity
 
 router = APIRouter(prefix="/ml", tags=["ml"])
 
@@ -117,3 +119,52 @@ def metric_fleet():
 def metric_audit():
     """Bukti telusur angka: checklist cocok-dokumen + temuan inkonsistensi."""
     return metrics.data_audit()
+
+
+# ── Direct-vs-Sponsor Comparator (Pertanyaan 1) ───────────────────────────
+class SponsorBody(BaseModel):
+    hq_equity: float = 0.30
+    fixed_share: float = 0.45
+    local_margin: float = 0.14
+
+
+@router.get("/sponsor/compare")
+def sponsor_compare():
+    """Perbandingan Direct vs Regional Sponsor per region (default asumsi)."""
+    return compare_models()
+
+
+@router.post("/sponsor/compare")
+def sponsor_compare_custom(body: SponsorBody):
+    """Perbandingan dengan parameter ekuitas/biaya yang diatur (Digital Twin nyata)."""
+    return compare_models(body.hq_equity, body.fixed_share, body.local_margin)
+
+
+@router.get("/sponsor/sensitivity")
+def sponsor_sensitivity():
+    """Uji sensitivitas jumlah region-sponsor terhadap porsi ekuitas HQ."""
+    return sensitivity()
+
+
+# ── Modal-Shift & Cost-Lever (Pertanyaan 6) ───────────────────────────────
+class ModalShiftBody(BaseModel):
+    mode_filter: list[str] | None = None
+    weights: dict[str, float] | None = None
+    sla_hours: float = 48.0
+
+
+@router.post("/modalshift/optimize")
+def modalshift_optimize(body: ModalShiftBody):
+    """Optimasi pemilihan moda tiap koridor (biaya + emisi + SLA)."""
+    return optimize_corridors(body.mode_filter, body.weights, body.sla_hours)
+
+
+@router.get("/modalshift/optimize")
+def modalshift_optimize_default():
+    return optimize_corridors()
+
+
+@router.get("/modalshift/levers")
+def modalshift_levers():
+    """Portofolio tuas pengurangan biaya + dampak sustainability (Pertanyaan 6)."""
+    return cost_levers()
