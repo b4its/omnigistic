@@ -127,7 +127,7 @@ omnigistic/
   - `/dashboard/data/address` — input alamat bebas → fuzzy-match 3 kandidat + ETA.
   - `/dashboard/data/multimodal`, `/dashboard/pusat/digital-twin`, `/dashboard/kurir/cod-intel`, `/dashboard/data/complaint`, `/dashboard/data/ev-sites` — sudah interaktif sebelumnya.
 - **Material 3 + sidebar kolaps**: bottom Navigation Bar (compact <600px) / Navigation Rail (medium 600–840px) / Sidebar penuh (expanded ≥840px). Sidebar bisa **dibuka/ditutup** (w-64 ⇄ rail ikon w-22) lewat tombol di header sidebar, hamburger di Topbar, atau pintasan **Ctrl/Cmd+B**; preferensi dipersist ke localStorage. Responsif penuh 320px–ultrawide, 0 overflow horizontal.
-- **Map**: Leaflet + 3 kandidat ambigu, path animasi + ETA menit ("Jl. Raya Jakarta-Bogor No.12") dengan Nigi AI saran
+- **Map**: Leaflet + 3 kandidat ambigu, path animasi + ETA menit ("Jl. Raya Jakarta-Bogor No.12") dengan Nigi AI saran. **Legenda peta lengkap & rinci** (collapsible) di 3 peta (DeliveryMap/AddressMap/HubMap): penanda, garis rute, warna jalur (kepadatan), sumber data. **Sebaran 13 titik PUDO mitra ber-koordinat & alamat NYATA** dari OpenStreetMap (Indomaret terdekat per kota, data © OSM/ODbL) + Route Intelligence (lihat atas). Popup PUDO menampilkan alamat, jam, kapasitas & sumber koordinat.
 
 ## Sistem Desain — "Bitcoin DeFi"
 
@@ -188,6 +188,9 @@ PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node script
 
 # Uji Route Intelligence — jalur tercepat kurir (kepadatan + efisiensi) (9)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-route.mjs
+
+# Uji PUDO & legenda peta — saat ini/koordinat/legenda lengkap (20)
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-pudo.mjs
 
 # Uji state error saat backend offline — 8 halaman (8)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-offline.mjs
