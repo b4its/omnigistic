@@ -79,6 +79,7 @@ Thumbs.db
 
 # Local runtime (auto-loop) state
 .opencode/
+.codegraph/
 
 # Design/audit reports (not part of shippable codebase)
 design-audit-report.md

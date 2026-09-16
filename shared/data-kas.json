@@ -1315,6 +1315,42 @@
   ],
   "suggestedQuestions": [
     {
+      "page": "customer/overview",
+      "question": "Kenapa COD lebih lambat dari pengiriman biasa?",
+      "followups": [
+        "Berapa lama tunggu kurir?",
+        "Apa itu PUDO?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "customer/overview",
+      "question": "Bagaimana cara melacak paket saya?",
+      "followups": [
+        "Sampai mana paket saya sekarang?",
+        "Kapan perkiraan tiba?"
+      ],
+      "order": 2
+    },
+    {
+      "page": "seller/overview",
+      "question": "Kenapa COD berisiko untuk penjual?",
+      "followups": [
+        "Bagaimana menekan risiko COD?",
+        "Siapa pembeli yang aman?"
+      ],
+      "order": 1
+    },
+    {
+      "page": "seller/overview",
+      "question": "Bagaimana memilih PUDO untuk pembeli saya?",
+      "followups": [
+        "Apa keuntungan PUDO?",
+        "Kapan pakai PUDO vs antar rumah?"
+      ],
+      "order": 2
+    },
+    {
       "page": "pusat/executive",
       "question": "Kenapa biaya naik lebih cepat dari sales?",
       "followups": [
