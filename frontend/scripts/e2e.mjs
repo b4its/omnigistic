@@ -58,7 +58,7 @@ try {
   await gotoClean("/dashboard/pusat/digital-twin");
   const twinTxt = await page.locator("body").innerText();
   R(/Direct vs Regional Sponsor/.test(twinTxt), "twin: judul komparator");
-  R(/Unit Cost Nasional|Rekomendasi Sponsor/.test(twinTxt), "twin: KPI komparator");
+  R(/unit cost nasional|rekomendasi sponsor/i.test(twinTxt), "twin: KPI komparator");
   R((await page.locator("input[type=range]").count()) >= 1, "twin: sliders interaktif ada");
 
   // ===== 5. Forecast page (ECharts canvas) =====

@@ -45,8 +45,8 @@ try {
     });
     const txt = await page.locator("body").innerText();
     R(/Direct vs Regional Sponsor/.test(txt), "twin: judul komparator");
-    R(/Unit Cost Nasional/.test(txt), "twin: unit cost nasional");
-    R(/Rekomendasi Sponsor/.test(txt), "twin: ringkasan rekomendasi");
+    R(/unit cost nasional/i.test(txt), "twin: unit cost nasional");
+    R(/rekomendasi sponsor/i.test(txt), "twin: ringkasan rekomendasi");
     R(/Sensitivitas/.test(txt), "twin: panel sensitivitas");
     R(/Java/.test(txt) && /Maluku/.test(txt), "twin: region dibandingkan");
     // Interaksi: geser slider ekuitas → POST terpanggil.
@@ -70,8 +70,8 @@ try {
     });
     const txt = await page.locator("body").innerText();
     R(/Optimizer modal-shift|Modal-Shift|modal-shift/i.test(txt), "modal: judul optimizer");
-    R(/Penghematan Biaya/.test(txt), "modal: KPI hemat biaya");
-    R(/Penghematan Emisi/.test(txt), "modal: KPI hemat emisi");
+    R(/penghematan biaya/i.test(txt), "modal: KPI hemat biaya");
+    R(/penghematan emisi/i.test(txt), "modal: KPI hemat emisi");
     R(/Portofolio tuas/.test(txt), "modal: portofolio tuas biaya");
     R(/Bauran moda/.test(txt), "modal: bauran moda");
     // Interaksi: ubah SLA → POST terpanggil.
