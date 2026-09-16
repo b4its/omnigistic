@@ -7,7 +7,9 @@ import svelteConfig from "./svelte.config.js";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  { ignores: [".svelte-kit/**", "build/**", "node_modules/**", "static/**"] },
+  // Abaikan artefak build & dependensi (termasuk build_old_root/ sisa build lama
+  // root-owned yang tak bisa dihapus user biasa, dan dir build-* lain).
+  { ignores: [".svelte-kit/**", "build/**", "build_*/**", "build-*/**", "node_modules/**", "static/**"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...svelte.configs.recommended,

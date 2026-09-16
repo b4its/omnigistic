@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { SvelteSet } from "svelte/reactivity";
   import { api, type CodCashResult } from "$lib/api";
   import { notify } from "$lib/toast";
   import Icon from "$lib/components/Icon.svelte";
@@ -13,7 +14,7 @@
   let failed = $state(false);
 
   let codShare = $state(45);
-  let active = $state<Set<string>>(new Set());
+  let active = new SvelteSet<string>();
   let busy = $state(false);
 
   async function run(userTriggered = false) {
@@ -34,14 +35,11 @@
   onMount(() => void run());
 
   function toggle(key: string) {
-    const next = new Set(active);
-    if (next.has(key)) next.delete(key);
-    else next.add(key);
-    active = next;
+    if (active.has(key)) active.delete(key);
+    else active.add(key);
     void run(true);
   }
 
-  const rp = (n: number) => "Rp" + new Intl.NumberFormat("id-ID").format(n);
   const rpT = (n: number) => "Rp" + numId(n / 1e12, 1) + "T";
   const rpM = (n: number) => "Rp" + numId(n / 1e9, 1) + "M";
 
