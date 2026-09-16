@@ -20,6 +20,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
+from app.ml.metrics import clamp
 
 # Capex ekspansi per hub (asumsi tim, IDR) — perluasan kapasitas/menambah outlet.
 _CAPEX_PER_HUB_IDR = 50_000_000_000       # Rp50 M/hub (asumsi tim, pilot: hub+armada)
@@ -27,15 +28,20 @@ _CAPEX_PER_HUB_IDR = 50_000_000_000       # Rp50 M/hub (asumsi tim, pilot: hub+a
 _VARIABLE_COST_FRAC = 0.70
 # Target utilisasi aman pasca-ekspansi (headroom terserap sampai ini, asumsi tim).
 _TARGET_UTIL = 0.75
+# Laju tangkap headroom per tahun (asumsi tim): headroom tak terisi instan — dibatasi
+# pertumbuhan permintaan (YoY kasus 2023→2024 ≈ +28%, dipakai konservatif 12%/th).
+# Untuk ROI tahun-1 hanya porsi ini yang dianggap terealisasi.
+_CAPTURE_RATE_PER_YEAR = 0.12
 
 
 def _unit_economics() -> dict[str, float]:
     """Revenue & biaya per paket dari Table 3 & 4 (angka kasus).
 
-    Catatan: margin di sini = net sales − (fulfilment + shipping), yaitu margin
-    SEBELUM COGS/barang — dipakai sebagai proxy. Untuk ROI inkremental ekspansi,
-    volume tambahan memakai MARGIN KONTRIBUSI = margin × porsi (1−biaya variabel
-    yang sudah tercakup), agar tak melebih-lebihkan (asumsi tim, dilabel).
+    Catatan: margin bruto = net sales − (fulfilment + shipping), margin SEBELUM
+    COGS/barang — dipakai sebagai proxy. Untuk ROI inkremental ekspansi, volume
+    tambahan menambah BIAYA VARIABEL namun TIDAK menambah biaya tetap (sudah
+    tercakup). Maka MARGIN KONTRIBUSI = revenue − (total_cost × porsi variabel),
+    bukan (revenue − total_cost) × porsi (asumsi tim, dilabel).
     """
     data = load()
     fin = {f["year"]: f for f in data["financial"]}
@@ -44,11 +50,13 @@ def _unit_economics() -> dict[str, float]:
     sales_per = (float(f2023["netSalesT"]) * 1e12 / parcels) if parcels else 0.0
     cost_per = ((float(f2023["fulfilmentT"]) + float(f2023["shippingT"])) * 1e12 / parcels) if parcels else 0.0
     gross_margin = sales_per - cost_per
-    # Kontribusi: sebagian margin tertutup biaya variabel inkremental.
-    contrib_margin = gross_margin * (1 - _VARIABLE_COST_FRAC)
+    variable_cost_per = cost_per * _VARIABLE_COST_FRAC
+    # Kontribusi: revenue − biaya VARIABEL inkremental (fixed cost tak berubah).
+    contrib_margin = sales_per - variable_cost_per
     return {
         "revenuePerParcelIdr": sales_per,
         "costPerParcelIdr": cost_per,
+        "variableCostPerParcelIdr": variable_cost_per,
         "grossMarginPerParcelIdr": gross_margin,
         "marginPerParcelIdr": contrib_margin,
     }
@@ -61,8 +69,8 @@ def expansion_roi(capex_per_hub_idr: float | None = None, target_util: float | N
         capex_per_hub_idr: capex ekspansi per hub (IDR; default asumsi tim).
         target_util: target utilisasi pasca-ekspansi (0..1).
     """
-    capex = max(0.0, float(capex_per_hub_idr if capex_per_hub_idr is not None else _CAPEX_PER_HUB_IDR))
-    tgt = min(1.0, max(0.0, float(target_util if target_util is not None else _TARGET_UTIL)))
+    capex = clamp(capex_per_hub_idr, 1e9, 1e13, _CAPEX_PER_HUB_IDR)
+    tgt = clamp(target_util if target_util is not None else _TARGET_UTIL, 0.0, 1.0, _TARGET_UTIL)
 
     data = load()
     econ = _unit_economics()
@@ -74,10 +82,12 @@ def expansion_roi(capex_per_hub_idr: float | None = None, target_util: float | N
         util = h["utilizationPct"] / 100.0
         load_m = cap * util
         headroom_m = max(0.0, cap * tgt - load_m)   # ruang tumbuh s/d target util
-        # Volume inkremental tahunan yang bisa ditampung headroom (juta paket/tahun).
+        # Volume inkremental POTENSIAL tahunan (bila headroom penuh; juta paket/th).
         add_annual_m = headroom_m * 365.0
-        add_margin_idr = add_annual_m * 1e6 * margin
-        # ROI = laba inkremental tahunan ÷ capex (kali); payback = capex ÷ laba.
+        # Realisasi tahun-1 dibatasi laju tangkap (pertumbuhan permintaan) → realistis.
+        realized_annual_m = add_annual_m * _CAPTURE_RATE_PER_YEAR
+        add_margin_idr = realized_annual_m * 1e6 * margin
+        # ROI = laba inkremental tahun-1 ÷ capex (kali); payback = capex ÷ laba.
         roi = (add_margin_idr / capex) if capex else 0.0
         payback_yr = (capex / add_margin_idr) if add_margin_idr > 0 else 0.0
         # Skor tarikan pasar = outlets (densitas) × utilisasi (permintaan terpakai).
@@ -101,6 +111,7 @@ def expansion_roi(capex_per_hub_idr: float | None = None, target_util: float | N
             "outlets": h["outlets"],
             "headroomM": round(headroom_m, 4),
             "addAnnualM": round(add_annual_m, 2),
+            "realizedAnnualM": round(realized_annual_m, 2),
             "addMarginIdrPerYear": round(add_margin_idr),
             "roiX": round(roi, 2),
             "paybackYears": round(payback_yr, 2),
@@ -114,26 +125,30 @@ def expansion_roi(capex_per_hub_idr: float | None = None, target_util: float | N
 
     top = [r for r in rows if r["priority"] == "Ekspansi prioritas"]
     total_add_m = round(sum(r["addAnnualM"] for r in top), 2)
+    total_realized_m = round(sum(r["realizedAnnualM"] for r in top), 2)
     total_add_margin = round(sum(r["addMarginIdrPerYear"] for r in top))
     total_capex = round(capex * len(top))
 
     return {
         "engine": "Market-Expansion ROI (Table 1 headroom × unit-economics Table 3)",
         "note": (
-            "Unit economics (margin/paket) dari Table 3 & 4. Capex/hub, porsi biaya, "
-            "dan target utilisasi = ASUMSI TIM (dilabel). Headroom dihitung s/d target "
-            "utilisasi aman, bukan 100%."
+            "Unit economics (margin kontribusi/paket) dari Table 3 & 4. Capex/hub, porsi "
+            "biaya variabel, target utilisasi, dan laju tangkap tahun-1 = ASUMSI TIM "
+            "(dilabel). Headroom dihitung s/d target utilisasi aman (bukan 100%), dan "
+            "realisasi tahun-1 dibatasi laju tangkap pertumbuhan permintaan."
         ),
-        "inputs": {"capexPerHubIdr": round(capex), "targetUtil": tgt},
+        "inputs": {"capexPerHubIdr": round(capex), "targetUtil": tgt, "captureRatePerYear": _CAPTURE_RATE_PER_YEAR},
         "unitEconomics": {
             "revenuePerParcelIdr": round(econ["revenuePerParcelIdr"]),
             "costPerParcelIdr": round(econ["costPerParcelIdr"]),
+            "variableCostPerParcelIdr": round(econ["variableCostPerParcelIdr"]),
             "grossMarginPerParcelIdr": round(econ["grossMarginPerParcelIdr"]),
             "contributionMarginPerParcelIdr": round(margin),
         },
         "summary": {
             "priorityHubs": len(top),
             "totalAddAnnualM": total_add_m,
+            "totalRealizedAnnualM": total_realized_m,
             "totalAddMarginIdrPerYear": total_add_margin,
             "totalCapexIdr": total_capex,
             "portfolioRoiX": round(total_add_margin / total_capex, 2) if total_capex else 0.0,

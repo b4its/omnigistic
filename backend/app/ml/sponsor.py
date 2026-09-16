@@ -30,7 +30,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
-from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN
+from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN, clamp
 
 # ── Parameter default (asumsi tim — dapat di-override via API) ──────────────
 # Porsi biaya tetap (dari total unit cost) yang bergeser ke mitra pada model sponsor.
@@ -49,13 +49,13 @@ SPONSOR_UTIL_THRESHOLD = UTIL_WARN
 DIRECT_UTIL_THRESHOLD = UTIL_CRITICAL
 
 # Bobot skor keputusan (jumlah = 1). Utilisasi diberi bobot dominan karena ini
-# sinyal utama: hub padat (Java) → Direct; hub tipis (Maluku) → Sponsor. Komponen
-# ekonomi jadi penentu di antara hub ber-utilisasi serupa. Dikalibrasi agar tier
-# 'Sponsor penuh' TERJANGKAU (dulu maks ≈0,45 → tier itu mustahil).
+# sinyal utama: hub padat (Java) → Direct; hub tipis (Maluku) → Sponsor. Capex
+# (konstan = 1−ekuitas HQ) & laba jadi penentu di antara hub ber-utilisasi serupa.
 DECISION_WEIGHTS = {"util": 0.55, "capex": 0.25, "profit": 0.20}
-# Ambang tier rekomendasi (skor komposit 0..1).
-SPONSOR_FULL_THRESHOLD = 0.60
-SPONSOR_STAGED_THRESHOLD = 0.35
+# Ambang tier rekomendasi (skor komposit 0..1), dikalibrasi ke rentang yang benar-
+# benar tercapai setelah koreksi capex (≈0,25 Java .. ≈0,55 Maluku).
+SPONSOR_FULL_THRESHOLD = 0.50
+SPONSOR_STAGED_THRESHOLD = 0.30
 
 
 def _num(v: Any, default: float = 0.0) -> float:
@@ -148,9 +148,9 @@ def compare_models(
         fixed_share: porsi biaya tetap yang bergeser ke mitra saat sponsor.
         local_margin: margin operasional lokal sebagai fraksi revenue.
     """
-    hq_equity = min(1.0, max(0.0, hq_equity))
-    fixed_share = min(1.0, max(0.0, fixed_share))
-    local_margin = min(1.0, max(0.0, local_margin))
+    hq_equity = clamp(hq_equity, 0.0, 1.0, DEFAULT_HQ_EQUITY)
+    fixed_share = clamp(fixed_share, 0.0, 1.0, DEFAULT_FIXED_SHARE)
+    local_margin = clamp(local_margin, 0.0, 1.0, DEFAULT_LOCAL_MARGIN)
 
     regions = _region_metrics()
     rows: list[dict[str, Any]] = []
@@ -159,22 +159,26 @@ def compare_models(
         vol = r["volumeM"]  # juta paket/hari (kapasitas efektif)
         rev_pp = r["revenuePerParcelIdr"]
 
+        # Porsi biaya tetap per paket (exposure yang HQ tanggung atas aset wilayah).
+        fixed_pp = unit * fixed_share
+
         # ── DIRECT: HQ tanggung semua biaya tetap & variabel, dapat semua margin ──
         direct_cost_pp = unit
         direct_margin_pp = rev_pp - direct_cost_pp
         direct_profit = direct_margin_pp * vol * 1e6  # IDR/hari
-        direct_capex_exposure = direct_cost_pp * fixed_share * vol * 1e6  # porsi tetap yang HQ tanggung
+        direct_capex_exposure = fixed_pp * vol * 1e6  # HQ tanggung SELURUH biaya tetap
         direct_control = 100.0
 
         # ── SPONSOR: mitra tanggung biaya tetap, HQ dapat porsi laba sesuai ekuitas ──
-        # Biaya tetap wilayah bergeser ke mitra → HQ tak menanggung capex itu.
         sponsor_cost_pp = unit * (1 - fixed_share)
         sponsor_margin_pp = rev_pp - sponsor_cost_pp
-        # Margin wilayah sebelum bagi hasil = margin struktur sponsor, di-floor oleh
-        # margin lokal (mitra lebih paham pasar → minimal margin operasional lokal).
-        local_profit_pp = max(sponsor_margin_pp, rev_pp * local_margin)
-        sponsor_profit = local_profit_pp * vol * 1e6 * hq_equity  # porsi HQ
-        sponsor_capex_exposure = sponsor_cost_pp * fixed_share * vol * 1e6
+        # Margin wilayah sebelum bagi hasil: dipakai margin struktur sponsor, di-floor
+        # oleh margin operasional lokal HANYA bila struktur tetap positif (mitra paham
+        # pasar). Bila struktur sponsor merugi, jangan fabrikasi laba positif.
+        local_profit_pp = max(sponsor_margin_pp, rev_pp * local_margin) if sponsor_margin_pp > 0 else sponsor_margin_pp
+        sponsor_profit = local_profit_pp * vol * 1e6 * hq_equity  # porsi HQ sesuai ekuitas
+        # HQ hanya menanggung biaya tetap sebesar porsi ekuitasnya (sisanya ke mitra).
+        sponsor_capex_exposure = fixed_pp * vol * 1e6 * hq_equity
         # Kontrol HQ turun sebesar (1 − ekuitas) dikali bobot kontrol total.
         control_loss = (1 - hq_equity) * sum(CONTROL_WEIGHTS.values()) * 100
         sponsor_control = round(max(0.0, 100 - control_loss), 1)
@@ -183,11 +187,11 @@ def compare_models(
         profit_delta = sponsor_profit - direct_profit
 
         # ── Skor komposit keputusan (0..1, makin tinggi = sponsor makin tepat) ──
-        # Tiap komponen dinormalisasi ke MAKS teoretisnya agar skor benar-benar
-        # menjangkau 0..1 (sebelumnya maks ≈0,57 → tier 'Sponsor penuh' mustahil).
-        # 1) Capex: penghematan maks = fixed_share dari capex Direct (mitra tanggung
-        #    porsi tetap penuh). Normalisasi → 0..1.
-        capex_score = min(1.0, max(0.0, (capex_saving / (direct_capex_exposure or 1)) / (fixed_share or 1)))
+        # Tiap komponen dinormalisasi ke MAKS teoretisnya (0..1) agar skor menjangkau
+        # rentang penuh dan tier tetap bermakna.
+        # 1) Capex: penghematan eksposur tetap. Maks = saat ekuitas HQ → 0 (HQ tak
+        #    tanggung capex) → rasio = 1. Normalisasi sudah 0..1 (TANPA bagi ganda).
+        capex_score = min(1.0, max(0.0, capex_saving / (direct_capex_exposure or 1)))
         # 2) Laba: delta ≥0 = skor penuh; negatif → proporsional terhadap rugi.
         profit_score = 1.0 if profit_delta >= 0 else max(0.0, 1 + profit_delta / (abs(direct_profit) or 1))
         # 3) Util rendah → lebih cocok sponsor (0 di ≥direct threshold, 1 di 0%).

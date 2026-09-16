@@ -82,7 +82,11 @@ check("EV share 1,41%", abs(fleet["evSharePct"] - 1.41) < 0.02, str(fleet["evSha
 
 audit = _get("/ml/metrics/audit")
 check("audit punya checks", len(audit["checks"]) >= 5)
-check("audit menandai temuan e-commerce", any(not c["ok"] for c in audit["checks"]))
+# REGRESI H4: temuan e-commerce ditandai 'finding', bukan 'ok=false' (yang selalu gagal).
+ec = next(c for c in audit["checks"] if c["id"] == "ecommerce-total")
+check("audit temuan e-commerce ditandai finding", ec.get("finding") is True, str(ec.get("finding")))
+check("audit kanonik e-commerce ok=true", ec["ok"] is True, str(ec["ok"]))
+check("audit semua check ok (tanpa false-fail)", all(c["ok"] for c in audit["checks"]), str([c["id"] for c in audit["checks"] if not c["ok"]]))
 
 print("== 3. Forecast (perbaikan musiman+tren) ==")
 fc = _get("/ml/forecast")
@@ -164,10 +168,13 @@ check("Java -> Direct", java["recommendation"].startswith("Direct"), java["recom
 check("Maluku -> Sponsor", maluku["recommendation"].startswith("Sponsor"), maluku["recommendation"])
 check("sponsor capex exposure < direct", maluku["sponsor"]["capexExposurePerDayIdr"] < maluku["direct"]["capexExposurePerDayIdr"])
 check("sponsor kontrol turun", maluku["sponsor"]["controlScore"] < maluku["direct"]["controlScore"])
-# REGRESI I5: tier 'Sponsor penuh' harus TERJANGKAU (dulu maks ≈0,45 → mustahil).
+# REGRESI I5: tier 'Sponsor penuh' harus TERJANGKAU (tidak mustahil).
 check("Maluku -> Sponsor penuh", maluku["recommendation"] == "Sponsor penuh", maluku["recommendation"])
-check("skor maks menjangkau >=0,6", max(r["decisionScore"] for r in sp["regions"]) >= 0.6, str(max(r["decisionScore"] for r in sp["regions"])))
-check("tier thresholds diekspos", sp["assumptions"]["tierThresholds"]["sponsorFull"] == 0.6)
+check("skor maks >= ambang 'penuh'", max(r["decisionScore"] for r in sp["regions"]) >= sp["assumptions"]["tierThresholds"]["sponsorFull"], str(max(r["decisionScore"] for r in sp["regions"])))
+check("tier thresholds diekspos", sp["assumptions"]["tierThresholds"]["sponsorFull"] > 0)
+# REGRESI H3: capex_score tidak boleh konstan-1,0 (bagi ganda) → harus bervariasi/konsisten.
+# capex_score eksplisit tidak diekspos; uji bahwa eksposur sponsor = ekuitas × eksposur direct.
+check("sponsor capex = ekuitas × direct capex", abs(maluku["sponsor"]["capexExposurePerDayIdr"] - maluku["direct"]["capexExposurePerDayIdr"] * sp["assumptions"]["hqEquity"]) < 1.0, f"{maluku['sponsor']['capexExposurePerDayIdr']} vs {maluku['direct']['capexExposurePerDayIdr']*sp['assumptions']['hqEquity']}")
 check("bobot keputusan diekspos", set(sp["assumptions"]["decisionWeights"]) == {"util", "capex", "profit"})
 # Utilisasi dominan: hub padat (Java) tetap Direct.
 check("Java tetap Direct", java["recommendation"].startswith("Direct"), java["recommendation"])
@@ -277,9 +284,17 @@ check("cod-cash scenarios 4", len(_get("/ml/cod-cash/scenarios")) == 4, str(len(
 print("== 5g. Market-Expansion ROI (Pertanyaan 5) ==")
 ex = _get("/ml/expansion/roi")
 check("expansion 23 hub", len(ex["hubs"]) == 23, str(len(ex["hubs"])))
-check("expansion margin kontribusi > 0", ex["unitEconomics"]["contributionMarginPerParcelIdr"] > 0, str(ex["unitEconomics"]["contributionMarginPerParcelIdr"]))
+# REGRESI H2: margin kontribusi = revenue − biaya VARIABEL (bukan margin×porsi).
+ue = ex["unitEconomics"]
+check("expansion margin kontribusi > 0", ue["contributionMarginPerParcelIdr"] > 0, str(ue["contributionMarginPerParcelIdr"]))
+check("expansion kontribusi = rev − varCost", abs(ue["contributionMarginPerParcelIdr"] - (ue["revenuePerParcelIdr"] - ue["variableCostPerParcelIdr"])) < 2, f"{ue['contributionMarginPerParcelIdr']} vs {ue['revenuePerParcelIdr']-ue['variableCostPerParcelIdr']}")
+check("expansion kontribusi > margin bruto", ue["contributionMarginPerParcelIdr"] > ue["grossMarginPerParcelIdr"], f"{ue['contributionMarginPerParcelIdr']} vs {ue['grossMarginPerParcelIdr']}")
 check("expansion ada hub prioritas", ex["summary"]["priorityHubs"] > 0, str(ex["summary"]["priorityHubs"]))
 check("expansion ROI portofolio > 0", ex["summary"]["portfolioRoiX"] > 0, str(ex["summary"]["portfolioRoiX"]))
+# REGRESI H2: realisasi thn-1 < potensi headroom (dibatasi laju tangkap), payback wajar (<3 th).
+check("expansion realisasi < potensi", ex["summary"]["totalRealizedAnnualM"] < ex["summary"]["totalAddAnnualM"], f"{ex['summary']['totalRealizedAnnualM']} vs {ex['summary']['totalAddAnnualM']}")
+check("expansion payback wajar (<3th)", 0 < ex["summary"]["paybackYears"] < 3, str(ex["summary"]["paybackYears"]))
+check("expansion capture rate diekspos", ex["inputs"]["captureRatePerYear"] > 0)
 # Hub padat (Jakarta 90,4%) → bukan 'Ekspansi prioritas' (perlu kapasitas).
 jak = next(h for h in ex["hubs"] if h["hub"] == "Jakarta")
 check("expansion Jakarta perlu kapasitas", jak["priority"] == "Perluas kapasitas", jak["priority"])
@@ -369,6 +384,28 @@ check("address kosong ok", client.post("/ml/address-parse", json={"address": ""}
 check("address kosong -> best null (jujur)", client.post("/ml/address-parse", json={"address": ""}).json()["best"] is None)
 check("address cocok -> matched true", addr.get("matched") is True and addr["etaMin"] is not None, str(addr.get("matched")))
 check("cod-intel share ekstrem", client.post("/ml/cod-intel", json={"cod_share_pct": 150}).status_code == 200)
+
+print("== 8b. Hardening input (NaN/None/inf) ==")
+# Helper clamp bersama: NaN/inf/None → default (bukan NaN lolos ke JSON).
+from app.ml.metrics import clamp as _clamp
+check("clamp NaN -> default", _clamp(float("nan"), 0, 100, 42) == 42)
+check("clamp inf -> default", _clamp(float("inf"), 0, 100, 42) == 42)
+check("clamp None -> default", _clamp(None, 0, 100, 42) == 42)
+check("clamp 'abc' -> default", _clamp("abc", 0, 100, 42) == 42)
+check("clamp normal dijepit", _clamp(150, 0, 100, 42) == 100)
+# Mesin tak menghasilkan NaN walau input NaN.
+from app.ml.cod_cash import cod_cash_risk as _cc
+from app.ml.surge import stress_test as _st
+from app.ml.expansion import expansion_roi as _er
+import math as _m
+_ccr = _cc(float("nan"))
+check("cod-cash NaN -> share default (bukan NaN)", _ccr["input"]["codSharePct"] == 45.0, str(_ccr["input"]["codSharePct"]))
+check("cod-cash NaN -> angka terhingga", _m.isfinite(_ccr["risk"]["discrepancyCostIdrBefore"]))
+_str = _st(float("nan"), float("nan"))
+check("surge NaN -> peak default", _str["inputs"]["peakMultiplier"] == 1.15, str(_str["inputs"]))
+check("surge NaN -> kalkulasi terhingga", _m.isfinite(_str["summary"]["totalPeakLoadM"]))
+_erh = _er(target_util=float("nan"))
+check("expansion NaN -> target default", _erh["inputs"]["targetUtil"] == 0.75, str(_erh["inputs"]["targetUtil"]))
 
 print(f"\n===== BACKEND {_passed}/{_passed + _failed} PASS =====")
 if _failed:
