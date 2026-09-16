@@ -79,7 +79,7 @@ omnigistic/
 │   │   │                          optimize.py (Network Optimization Engine), cod_intel.py (COD per-shift), metrics.py (turunan+rekonsiliasi)
 │   │   ├── security/            ← OWASP-aligned guard/port, port formatter.ts (scrub AI), port quota.ts, prompts (anonim)
 │   │   └── db/                  ← loader.py + seed.py + SQLModel (opsional — fallback JSON)
-│   ├── tests/run_tests.py       ← harness uji backend tanpa pytest (57 assert, TestClient)
+│   ├── tests/run_tests.py       ← harness uji backend tanpa pytest (105 assert, TestClient)
 │   └── requirements.txt
 ├── frontend/                    ← SvelteKit 2 (Svelte 5 runes), adapter-node
 │   ├── src/
@@ -100,14 +100,22 @@ omnigistic/
 - **Data flow**: `shared/data-kas.json` → FastAPI `/api/*` + `/ml/*` (read-only JSON fallback, if Neon up, seed) → SvelteKit `onMount` `fetch(API_BASE)/data-kas.json`
 - **Nigi AI (AI)**: LLM via env `AI_API_{BASE_URL,KEY,MODEL}`; tanpa key → fallback (54 QA/insights) → non-crash
 - **ML (3 model dasar)**: forecast (seasonal-index sentris + tren OLS + event-flags, backtest MAPE ~1,3%), COD-risk (sklearn LogisticRegression + data sintetik), address-parse (rapidfuzz fuzzy); label "prototipe presentasi". `/ml/sim/digital-twin` + `cod-impact` ported from TS.
-- **Mesin analitik baru**:
-  - `GET /ml/optimize/load-balance` — Network Optimization Engine (transportation heuristic greedy cheapest-link-first): alihkan overflow hub >65% ke hub <50% dengan kendala headroom, lantai aman 60%, maks 35%. Output: moves, util sebelum/sesudah per hub, agregat timur.
-  - `POST /ml/cod-intel` + `GET /ml/cod-intel/scenarios` — COD Decision Intelligence: dampak per-shift kurir dari Figure 2 (138 vs 75 mnt), 4 intervensi digital, hemat menit/paket/rupiah/CO₂.
+- **Mesin analitik baru** (semua punya **kontrol interaktif** — bukan preset statis):
+  - `GET|POST /ml/optimize/load-balance` — Network Optimization Engine (transportation heuristic greedy cheapest-link-first): alihkan overflow hub >65% ke hub <50% dengan kendala headroom, lantai aman 60%, maks 35%. **POST** menerima `critical`/`safe_floor`/`max_divert_frac` → pengguna menggeser ambang & rencana dihitung ulang. Output: moves, util sebelum/sesudah per hub, agregat timur.
+  - `POST /ml/cod-intel` + `GET /ml/cod-intel/scenarios` — COD Decision Intelligence: dampak per-shift kurir dari Figure 2 (138 vs 75 mnt), 4 intervensi digital, hemat menit/paket/rupiah/CO₂. Slider porsi COD & paket + checkbox intervensi.
+  - `GET|POST /ml/forecast` — Demand forecast (seasonal-index sentris + tren OLS + event-flags). **POST** menerima `horizon` + `event_scale` → simulasi "bagaimana jika" (matikan/perkuat Harbolnas atau shock TikTok).
   - `GET /ml/metrics/{regions,financial,demand,fleet,audit}` — metrik turunan + rekonsiliasi (temuan dokumen: e-commerce Tabel 4 tertulis 641 vs hasil jumlah baris 651).
   - `GET|POST /ml/sponsor/compare` + `GET /ml/sponsor/sensitivity` — **Direct-vs-Sponsor Comparator** (Pertanyaan 1): unit cost nasional dari Tabel 3 & 4 (Rp89.676/paket), model Direct vs Sponsor per region (capex exposure, laba HQ, skor kontrol), parameter ekuitas/biaya interaktif + uji sensitivitas.
   - `GET|POST /ml/modalshift/optimize` + `GET /ml/modalshift/levers` — **Modal-Shift & Cost-Lever Optimizer** (Pertanyaan 6): pilih moda (darat/laut/udara) per 11 koridor dengan objektif berbobot (biaya/emisi/SLA), hemat ~16,7% biaya & ~18,4% emisi; portofolio 6 tuas pengurangan biaya + dampak sustainability.
+- **Halaman simulasi interaktif** (menggerakkan angka nyata, bukan label kosong):
+  - `/dashboard/hub/capacity` — level permintaan (Lembah/Normal/Puncak) men-skala volume → jumlah hub menembus ambang & overflow dihitung ulang.
+  - `/dashboard/hub/load-balance` — 3 slider ambang (kritis/lantai/maks porsi) → POST & rencana ulang.
+  - `/dashboard/hub/forecast` — 3 slider kekuatan event → proyeksi & fluktuasi ulang.
+  - `/dashboard/pusat/roi` — 4 slider tuas (COD/EV/BBM/komplain) → ROI, capex, payback real-time.
+  - `/dashboard/data/fleet` — slider adopsi EV → bauran armada & penurunan emisi (faktor = asumsi tim, dilabel).
+  - `/dashboard/data/address` — input alamat bebas → fuzzy-match 3 kandidat + ETA.
+  - `/dashboard/data/multimodal`, `/dashboard/pusat/digital-twin`, `/dashboard/kurir/cod-intel`, `/dashboard/data/complaint`, `/dashboard/data/ev-sites` — sudah interaktif sebelumnya.
 - **Material 3 + sidebar kolaps**: bottom Navigation Bar (compact <600px) / Navigation Rail (medium 600–840px) / Sidebar penuh (expanded ≥840px). Sidebar bisa **dibuka/ditutup** (w-64 ⇄ rail ikon w-22) lewat tombol di header sidebar, hamburger di Topbar, atau pintasan **Ctrl/Cmd+B**; preferensi dipersist ke localStorage. Responsif penuh 320px–ultrawide, 0 overflow horizontal.
-- **Auto-demo** (non-interaktif) di semua simulasi (Digital Twin preset, COD skenario, Load-Balance)
 - **Map**: Leaflet + 3 kandidat ambigu, path animasi + ETA menit ("Jl. Raya Jakarta-Bogor No.12") dengan Nigi AI saran
 
 ## Env (backend/.env or .env.local di repo root, di-ignore)
@@ -129,7 +137,7 @@ AI_MODEL=omnigistic-model
 ## Testing
 
 ```bash
-# Backend (77 assert, tanpa pytest)
+# Backend (105 assert, tanpa pytest)
 cd backend && SKIP_DB=1 .venv/bin/python tests/run_tests.py
 
 # Frontend E2E (52 assert; butuh backend :8000 + frontend dev :3000)
@@ -148,8 +156,11 @@ PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node script
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-engines.mjs
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-widgets.mjs
 
+# Uji halaman simulasi interaktif — capacity/load-balance/forecast/roi/fleet/address (36)
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-sims.mjs
+
 # Uji state error saat backend offline — 8 halaman (8)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-offline.mjs
 ```
 
-Laporan audit detail: `docs/angka-audit-2026-09-07.md`.
+Laporan audit detail: `docs/angka-audit-2026-09-07.md`, `docs/audit-penutupan-celah-2026-09-08.md`.
