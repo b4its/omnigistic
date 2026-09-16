@@ -78,7 +78,7 @@
           <span class="max-w-full truncate text-center text-[13.5px] font-medium">Lainnya</span>
         </button>
         {#if overflowOpen}
-          <div class="absolute bottom-[calc(100%+8px)] left-1/2 z-50 w-[min(14rem,calc(100vw-2rem))] -translate-x-1/2 rounded-xl border border-border bg-card p-1.5 shadow-pop">
+          <div class="absolute bottom-[calc(100%+8px)] left-1/2 z-[9999] w-[min(14rem,calc(100vw-2rem))] -translate-x-1/2 rounded-xl border border-border bg-card p-1.5 shadow-pop">
             {#each overflowItems as item (item.href)}
               <a
                 href={resolveHref(item.href)}

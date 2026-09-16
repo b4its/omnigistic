@@ -140,7 +140,9 @@
   }
 </script>
 
-<header bind:this={headerEl} class="flex shrink-0 items-center justify-between gap-2 border-b border-sidebar-border bg-background/80 px-3 py-3 backdrop-blur sm:gap-4 sm:px-6">
+<!-- Header naik ke stacking context tinggi (z-[9999]) agar popover di dalamnya
+     selalu di atas konten halaman (kartu/grafik/sticky) yang bisa menutupinya. -->
+<header bind:this={headerEl} class="relative z-[9999] flex shrink-0 items-center justify-between gap-2 border-b border-sidebar-border bg-background/80 px-3 py-3 backdrop-blur sm:gap-4 sm:px-6">
   <div class="flex min-w-0 items-center gap-2 sm:gap-3">
     {#if sidenavVisible && onmenutoggle}
       <button
@@ -207,7 +209,7 @@
         {/if}
       </button>
       {#if openPop === "notif"}
-        <div class="absolute right-0 top-[calc(100%+8px)] z-30 w-72 rounded-xl border border-border bg-card shadow-pop">
+        <div class="absolute right-0 top-[calc(100%+8px)] z-[9999] w-72 rounded-xl border border-border bg-card shadow-pop">
           <div class="flex items-center justify-between border-b border-border px-4 py-2.5">
             <span class="text-sm font-semibold">Notifikasi</span>
             <span class="text-xs text-muted-foreground">{notifs} baru</span>
@@ -238,7 +240,7 @@
         {meta.letter}
       </button>
       {#if openPop === "profile"}
-        <div class="absolute right-0 top-[calc(100%+8px)] z-30 w-56 rounded-xl border border-border bg-card shadow-pop">
+        <div class="absolute right-0 top-[calc(100%+8px)] z-[9999] w-56 rounded-xl border border-border bg-card shadow-pop">
           <div class="flex items-center gap-2.5 border-b border-border px-4 py-3">
             <span class="flex h-11 w-11 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground">{meta.letter}</span>
             <div>
