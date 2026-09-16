@@ -3,24 +3,32 @@
   import { resolveHref, numId } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, cartDetail, shippingCost, type ResolvedCartItem } from "$lib/stores/shop";
+  import { shop, cartDetail, shippingCost, type ResolvedCartItem, type Address } from "$lib/stores/shop";
   import { notify } from "$lib/toast";
 
   let items = $state<ResolvedCartItem[]>([]);
   let subtotal = $state(0);
+  // Alamat tersimpan (dipakai checkout) → ongkir est. konsisten dgn total checkout.
+  let savedAddress = $state<Address | null>(null);
 
   onMount(() => {
     shop.init();
-    const unsub = cartDetail.subscribe((d) => {
+    const unsubCart = cartDetail.subscribe((d) => {
       items = d.items;
       subtotal = d.subtotal;
     });
-    return unsub;
+    const unsubShop = shop.subscribe((s) => (savedAddress = s.address));
+    return () => {
+      unsubCart();
+      unsubShop();
+    };
   });
 
   const totalItems = $derived(items.reduce((n, i) => n + i.qty, 0));
   const totalWeight = $derived(items.reduce((w, i) => w + i.product.weightKg * i.qty, 0));
-  const estShipping = $derived(items.length ? shippingCost(items, "Jakarta") : 0);
+  // Kota acuan ongkir = kota alamat tersimpan (sama dgn checkout), fallback Jakarta.
+  const shipCity = $derived(savedAddress?.city || "Jakarta");
+  const estShipping = $derived(items.length ? shippingCost(items, shipCity) : 0);
 
   function more(productId: string, qty: number, name: string) {
     shop.setQty(productId, qty + 1);
@@ -100,9 +108,12 @@
           <h2 class="text-sm font-semibold text-foreground">Ringkasan pesanan</h2>
           <dl class="space-y-2 text-sm">
             <div class="flex justify-between"><dt class="text-muted-foreground">Subtotal ({totalItems} item)</dt><dd class="font-medium tabular-nums text-foreground">{formatRupiah(subtotal)}</dd></div>
-            <div class="flex justify-between"><dt class="text-muted-foreground">Ongkir (est. Jakarta)</dt><dd class="font-medium tabular-nums text-foreground">{formatRupiah(estShipping)}</dd></div>
+            <div class="flex justify-between"><dt class="text-muted-foreground">Ongkir (est. {shipCity})</dt><dd class="font-medium tabular-nums text-foreground">{formatRupiah(estShipping)}</dd></div>
             <div class="mt-2 flex justify-between border-t border-border pt-3 text-base"><dt class="font-semibold text-foreground">Total</dt><dd class="font-bold tabular-nums text-foreground">{formatRupiah(subtotal + estShipping)}</dd></div>
           </dl>
+          {#if !savedAddress}
+            <p class="text-xs text-muted-foreground">Ongkir memakai acuan default Jakarta — kota final ditetapkan saat checkout.</p>
+          {/if}
           <a href={resolveHref("/dashboard/customer/checkout")} class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
             <Icon name="currency" cls="h-4 w-4" /> Lanjut ke checkout
           </a>

@@ -7,7 +7,7 @@
   import { api } from "$lib/api";
   import { ROUTE_COORDS } from "$lib/map/route";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
-  import { pudosForCity } from "$lib/logistics";
+  import { CITY_ROUTES, pudosForCity } from "$lib/logistics";
 
   let { demo = true }: { demo?: boolean } = $props();
 
@@ -21,7 +21,9 @@
     { key: "Tangsel", lat: -6.2934, lng: 106.7551, label: "Rempoa", city: "Tangerang Selatan", score: 1 }
   ];
   const target = locations[0];
-  const etaMin = 75; // ETA motor (bukan tol) menuju Cibinong
+  // ETA dari SATU sumber kebenaran (logistics.ts) — hilangkan hardcode 75 yang
+  // bertentangan dgn 96 (logistics) & 36 (route.ts).
+  const etaMin = CITY_ROUTES.Bogor.durationMin;
 
   type LL = [number, number];
 

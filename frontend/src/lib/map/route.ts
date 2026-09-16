@@ -60,5 +60,5 @@ export const ROUTE_COORDS: [number, number][] = [
   [-6.48177,106.85273]
 ];
 
-export const ROUTE_DISTANCE_KM = 38.4;
-export const ROUTE_DURATION_MIN = 36;
+// Catatan: jarak/ETA rute Jakarta→Bogor ada di logistics.ts (CITY_ROUTES.Bogor)
+// sebagai SATU sumber kebenaran — konstanta duplikat dihapus agar tak drift.
