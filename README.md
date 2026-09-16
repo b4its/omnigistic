@@ -129,23 +129,27 @@ AI_MODEL=omnigistic-model
 ## Testing
 
 ```bash
-# Backend (57 assert, tanpa pytest)
+# Backend (77 assert, tanpa pytest)
 cd backend && SKIP_DB=1 .venv/bin/python tests/run_tests.py
 
-# Frontend E2E (51 assert; butuh backend :8000 + frontend dev :3000)
+# Frontend E2E (52 assert; butuh backend :8000 + frontend dev :3000)
 cd frontend
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 E2E_API=http://127.0.0.1:8000 node scripts/e2e.mjs
 
-# Uji sidebar (15 assert) + audit overflow responsif (8 viewport)
+# Uji sidebar (15) + audit overflow responsif (8 viewport)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium node scripts/e2e-sidebar.mjs
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium SHOT_PATH=/dashboard/pusat/executive node scripts/responsive-shot.mjs
 
-# Uji accordion pesanan dashboard customer (15 assert) + koherensi lintas role (31 assert)
+# Uji accordion pesanan customer (15) + koherensi lintas role (31)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-customer-accordion.mjs
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-orders.mjs
 
-# Uji mesin analitik interaktif — komparator sponsor & modal-shift (18 assert)
+# Uji mesin analitik interaktif (18) + widget dashboard (9)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-engines.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-widgets.mjs
+
+# Uji state error saat backend offline — 8 halaman (8)
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-offline.mjs
 ```
 
 Laporan audit detail: `docs/angka-audit-2026-09-07.md`.
