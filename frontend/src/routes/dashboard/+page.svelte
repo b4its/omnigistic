@@ -15,18 +15,18 @@
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
-    <h1 class="font-heading text-xl font-semibold tracking-tight">Pilih portal peran</h1>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">Pilih <span class="text-gradient">portal peran</span></h1>
     <a href={resolveHref("/")} class="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">&larr; Halaman utama</a>
   </div>
   <p class="text-sm text-muted-foreground">Enam sudut pandang atas satu sumber kebenaran kasus GC Logistics.</p>
   <div class="grid gap-4 sm:grid-cols-2">
     {#each roles as r (r.slug)}
-      <a href={resolveHref(`/dashboard/${r.slug}/overview`)} class="group flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/40">
+      <a href={resolveHref(`/dashboard/${r.slug}/overview`)} class="group flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:shadow-[0_0_30px_-10px_var(--glow)]">
         <div class="flex items-center gap-2">
-          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-sm font-bold text-accent-foreground">{r.initials}</span>
-          <span class="text-[14px] font-semibold uppercase tracking-wider text-muted-foreground">{r.slug}</span>
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] font-heading text-sm font-bold text-white shadow-[0_0_14px_-3px_var(--glow)]">{r.initials}</span>
+          <span class="font-mono text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{r.slug}</span>
         </div>
-        <p class="text-sm font-semibold text-foreground">{r.name} · <span class="font-normal text-muted-foreground">{r.role}</span></p>
+        <p class="font-heading text-sm font-semibold text-foreground">{r.name} · <span class="font-normal text-muted-foreground">{r.role}</span></p>
         <p class="text-[15px] leading-relaxed text-muted-foreground">{r.desc}</p>
       </a>
     {/each}

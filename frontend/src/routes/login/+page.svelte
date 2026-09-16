@@ -49,14 +49,16 @@
 <svelte:head><title>Masuk Portal · Omnigistic</title></svelte:head>
 
 <div class="landing grid min-h-dvh lg:grid-cols-2" style="background: var(--lnd-bg); color: var(--lnd-ink)">
-  <div class="hidden flex-col justify-between rounded-l-none bg-[var(--lnd-ink)] p-[clamp(2rem,5vw,4rem)] text-[var(--lnd-bg)] lg:flex">
-    <div class="flex items-baseline gap-1 font-heading text-2xl font-semibold tracking-[0.02em]">
-      Omnigistic
+  <div class="relative hidden flex-col justify-between overflow-hidden rounded-l-none bg-[var(--lnd-ink)] p-[clamp(2rem,5vw,4rem)] text-[var(--lnd-bg)] lg:flex">
+    <div class="landing-grid" aria-hidden="true"></div>
+    <div class="pointer-events-none absolute -bottom-32 -right-24 h-[32rem] w-[32rem] rounded-full opacity-[0.16] blur-[130px]" style="background: radial-gradient(circle, var(--lnd-accent), transparent 70%)" aria-hidden="true"></div>
+    <div class="relative flex items-baseline gap-1 font-heading text-2xl font-semibold tracking-[0.02em]">
+      Omnigistic<span class="text-[var(--lnd-accent)]">.</span>
     </div>
-    <p class="max-w-[12ch] font-heading text-[clamp(2.4rem,4.6vw,4.4rem)] font-light leading-[1.12] tracking-[-0.015em]">
-      Angka yang tidak <em class="italic text-[var(--lnd-accent-ink)]">berteriak</em><span class="text-[var(--lnd-accent-ink)]">.</span>
+    <p class="relative max-w-[12ch] font-heading text-[clamp(2.4rem,4.6vw,4.4rem)] font-light leading-[1.12] tracking-[-0.015em]">
+      Angka yang tidak <em class="accent-gradient font-semibold italic">berteriak</em><span class="text-[var(--lnd-accent)]">.</span>
     </p>
-    <div class="flex justify-between gap-4 text-[14px] font-semibold uppercase tracking-[0.09em] text-[var(--lnd-on-ink)]">
+    <div class="relative flex justify-between gap-4 font-mono text-[13px] font-semibold uppercase tracking-[0.09em] text-[var(--lnd-on-ink)]">
       <span>Enam portal</span><span>ISCEA 2026</span>
     </div>
   </div>
@@ -73,9 +75,9 @@
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2">
         {#each roles as r (r.slug)}
-          <a href={resolveHref(routes[r.slug])} class="group flex h-full flex-col gap-3 rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6 transition-colors hover:border-[var(--lnd-accent-ink)] hover:bg-[var(--lnd-bg-raise)]">
+          <a href={resolveHref(routes[r.slug])} class="group flex h-full flex-col gap-3 rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--lnd-accent)] hover:shadow-[0_0_30px_-10px_rgba(247,147,26,0.35)]">
             <div class="flex items-center justify-between">
-              <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--lnd-accent-ink)] text-[var(--lnd-bg)]">
+              <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-4px_rgba(247,147,26,0.5)]">
                 <Icon name={r.icon} cls="h-5 w-5" />
               </span>
               <span class="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--lnd-line)] transition-colors group-hover:border-[var(--lnd-accent-ink)]">

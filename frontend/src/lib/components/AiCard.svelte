@@ -63,18 +63,18 @@
 
 <article class="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-card">
   <header class="flex items-center gap-2.5">
-    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-      <Icon name="chat" cls="h-4 w-4" />
+    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-4px_var(--glow)]">
+      <Icon name="sparkles" cls="h-4 w-4" weight="bold" />
     </span>
     <div class="min-w-0 leading-tight">
-      <p class="text-sm font-semibold tracking-tight">Nigi AI</p>
-      <p class="text-xs text-muted-foreground">Asisten data studi kasus</p>
+      <p class="font-heading text-sm font-semibold tracking-tight">Nigi AI</p>
+      <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Asisten data studi kasus</p>
     </div>
     <button
       type="button"
       onclick={expand}
       aria-label="Perluas ke panel penuh"
-      class="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+      class="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:text-[var(--bitcoin)]"
     >
       <Icon name="arrow-up-right" cls="h-4 w-4" weight="bold" />
     </button>
@@ -106,7 +106,7 @@
       <button
         type="button"
         onclick={() => ask(c)}
-        class="min-h-9 rounded-full border border-border bg-background px-3 py-1.5 text-[13.5px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent hover:text-foreground active:scale-[0.98]"
+        class="min-h-9 rounded-full border border-border bg-background px-3 py-1.5 text-[13.5px] font-medium text-muted-foreground transition-colors hover:border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] hover:bg-accent hover:text-foreground active:scale-[0.98]"
       >
         {c}
       </button>
@@ -114,7 +114,7 @@
   </div>
 
   <form
-    class="flex items-center gap-2 rounded-full border border-border bg-muted/50 py-1 pl-4 pr-1 transition-colors focus-within:border-primary/50 focus-within:bg-card focus-within:ring-2 focus-within:ring-primary/15"
+    class="flex items-center gap-2 rounded-full border border-border bg-muted/50 py-1 pl-4 pr-1 transition-colors focus-within:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] focus-within:bg-card focus-within:ring-2 focus-within:ring-[color-mix(in_oklab,var(--bitcoin)_20%,transparent)]"
     onsubmit={(e) => { e.preventDefault(); ask(input); }}
   >
     <input
@@ -131,7 +131,7 @@
       type="submit"
       disabled={busy || !input.trim()}
       aria-label="Kirim"
-      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform hover:scale-105 disabled:scale-100 disabled:opacity-40"
+      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-4px_var(--glow)] transition-transform hover:scale-105 disabled:scale-100 disabled:opacity-40"
     >
       <Icon name="send" cls="h-4 w-4" weight="fill" />
     </button>
