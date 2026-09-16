@@ -41,8 +41,13 @@ SOFT_INJECTION = [
 ]
 
 
+_STRIP_RE = re.compile(r"[\U000E0000-\U000E007F\u0000]")
+
+
 def sanitize_input(raw: str) -> dict:
-    q = (raw or "").replace("\U000E0000-\U000E007F", "").replace("\u0000", "").strip()
+    # Buang Unicode Tags (U+E0000–U+E007F) + NUL. Versi lama memakai str.replace
+    # atas literal "U+E0000-U+E007F" (bukan rentang) → no-op, tag lolos.
+    q = _STRIP_RE.sub("", raw or "").strip()
     reasons: list[str] = []
     if not q:
         return {"query": "", "decision": "ok", "reasons": [], "blocked": False}
