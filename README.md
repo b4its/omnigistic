@@ -79,7 +79,7 @@ omnigistic/
 │   │   │                          optimize.py (Network Optimization Engine), cod_intel.py (COD per-shift), metrics.py (turunan+rekonsiliasi)
 │   │   ├── security/            ← OWASP-aligned guard/port, port formatter.ts (scrub AI), port quota.ts, prompts (anonim)
 │   │   └── db/                  ← loader.py + seed.py + SQLModel (opsional — fallback JSON)
-│   ├── tests/run_tests.py       ← harness uji backend tanpa pytest (138 assert, TestClient)
+│   ├── tests/run_tests.py       ← harness uji backend tanpa pytest (166 assert, TestClient)
 │   └── requirements.txt
 ├── frontend/                    ← SvelteKit 2 (Svelte 5 runes), adapter-node
 │   ├── src/
@@ -107,7 +107,16 @@ omnigistic/
   - `GET /ml/metrics/{regions,financial,demand,fleet,audit}` — metrik turunan + rekonsiliasi (temuan dokumen: e-commerce Tabel 4 tertulis 641 vs hasil jumlah baris 651).
   - `GET|POST /ml/sponsor/compare` + `GET /ml/sponsor/sensitivity` — **Direct-vs-Sponsor Comparator** (Pertanyaan 1): unit cost nasional dari Tabel 3 & 4 (Rp89.676/paket), model Direct vs Sponsor per region (capex exposure, laba HQ, skor kontrol), parameter ekuitas/biaya interaktif + uji sensitivitas.
   - `GET|POST /ml/modalshift/optimize` + `GET /ml/modalshift/levers` — **Modal-Shift & Cost-Lever Optimizer** (Pertanyaan 6): pilih moda (darat/laut/udara) per 11 koridor dengan objektif berbobot (biaya/emisi/SLA), hemat ~16,7% biaya & ~18,4% emisi; portofolio 6 tuas pengurangan biaya + dampak sustainability.
+- **Mesin solusi tantangan kasus (baru)** — semua berbasis data kasus Table 1–4/Figure 1–2:
+  - `GET|POST /ml/sim/surge` — **Peak-Surge Stress-Test** (Pertanyaan 2): beban puncak (amplifikasi ×basis harian 3,04jt) didistribusi per pangsa beban hub → breach, spillover ke hub headroom, backlog & waktu pemulihan. Puncak musiman 1,15× → 1 hub breach (persis "Jakarta 1 overload"); Double 12 3× → 21 hub.
+  - `POST /ml/cod-cash/risk` + `GET /ml/cod-cash/scenarios` — **COD Cash-Reconciliation Risk** (Pertanyaan 3): uang kas beredar, laju human-error, biaya selisih, waktu rekonsiliasi; 4 intervensi digital → risiko turun ~80%.
+  - `GET|POST /ml/expansion/roi` — **Market-Expansion ROI** (Pertanyaan 5): kelayakan ekspansi per 23 hub (headroom × tarikan permintaan × unit-economics Table 3); ROI & payback portofolio.
+  - `GET /ml/pnl/waterfall` — **Unified Cost-Waterfall & P&L** (Pertanyaan 6): 7 tuas biaya disatukan → waterfall 99,54T → 90,9T (hemat 8,7%), cost-to-sales 31,3%→28,6%, EBIT proxy +4%.
 - **Halaman simulasi interaktif** (menggerakkan angka nyata, bukan label kosong):
+  - `/dashboard/hub/surge` — **Peak-Surge Stress-Test** (Q2): slider amplifikasi puncak & kapasitas elastis + preset (Musiman/Festival/Double 12) → breach, spillover, pemulihan.
+  - `/dashboard/kurir/cod-cash` — **COD Cash-Reconciliation Risk** (Q3): slider porsi COD + 4 intervensi digital → risiko & penghematan kas.
+  - `/dashboard/pusat/expansion` — **Market-Expansion ROI** (Q5): slider capex & target util → prioritas, ROI, payback 23 hub.
+  - `/dashboard/pusat/pnl` — **Cost-Waterfall & P&L** (Q6): toggle sustainability → waterfall 7 tuas & dampak margin.
   - `/dashboard/hub/capacity` — level permintaan (Lembah/Normal/Puncak) men-skala volume → jumlah hub menembus ambang & overflow dihitung ulang.
   - `/dashboard/hub/load-balance` — 3 slider ambang (kritis/lantai/maks porsi) → POST & rencana ulang.
   - `/dashboard/hub/forecast` — 3 slider kekuatan event → proyeksi & fluktuasi ulang.
@@ -150,7 +159,7 @@ AI_MODEL=omnigistic-model
 ## Testing
 
 ```bash
-# Backend (138 assert, tanpa pytest)
+# Backend (166 assert, tanpa pytest)
 cd backend && SKIP_DB=1 .venv/bin/python tests/run_tests.py
 
 # Frontend E2E (52 assert; butuh backend :8000 + frontend dev :3000)
@@ -171,6 +180,9 @@ PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node script
 
 # Uji halaman simulasi interaktif — capacity/load-balance/forecast/roi/fleet/address (36)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-sims.mjs
+
+# Uji solusi tantangan kasus — surge/cod-cash/expansion/pnl (25)
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-case.mjs
 
 # Uji state error saat backend offline — 8 halaman (8)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-offline.mjs
