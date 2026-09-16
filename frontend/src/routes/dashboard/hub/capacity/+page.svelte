@@ -25,30 +25,45 @@
 
   onMount(() => void load());
 
-  const atRisk = $derived(hubs.filter((h) => h.utilizationPct > 65));
+  const THRESHOLD = 65; // ambang early-warning (skenario Double 12 2022)
   const bdg = $derived(hubs.find((h) => h.name === "Bandung"));
 
-  // Kontrol buffer 3 tingkat (simulasi): pengguna bisa mengaktifkan tingkat buffer.
-  // Tingkat mengikuti Tabel 4: lembah 78M, normal 92,5M, puncak 105M+.
+  // Simulasi kapasitas elastis 3 tingkat. Level = permintaan bulanan (Tabel 4):
+  // lembah 78M (Jan) · normal 92,5M · puncak 105M (Apr/Agu). Level men-SKALA
+  // volume tiap hub dari baseline hari ini, lalu util dihitung ulang → jumlah
+  // hub yang menembus ambang + overflow jadi angka nyata, bukan label kosong.
   type Tier = "lembah" | "normal" | "puncak";
-  let tier = $state<Tier>("normal");
-  const TIERS: Array<{ key: Tier; label: string; value: string; note: string }> = [
-    { key: "lembah", label: "Lembah", value: "78M", note: "kontrak kurir inti" },
-    { key: "normal", label: "Normal", value: "92,5M", note: "+ kurir musiman" },
-    { key: "puncak", label: "Puncak", value: "105M+", note: "+15% buffer armada sewa" }
+  const TIERS: Array<{ key: Tier; label: string; demandM: number; note: string }> = [
+    { key: "lembah", label: "Lembah", demandM: 78, note: "kontrak kurir inti" },
+    { key: "normal", label: "Normal", demandM: 92.5, note: "+ kurir musiman" },
+    { key: "puncak", label: "Puncak", demandM: 105, note: "+15% buffer armada sewa" }
   ];
-  // Buffer aktif otomatis bila ada hub >65% DAN tier minimal normal.
-  const bufferActive = $derived(atRisk.length > 0 && tier !== "lembah");
-  const coveredHubs = $derived(bufferActive ? atRisk.length : 0);
+  let tier = $state<Tier>("normal");
 
-  function setTier(t: Tier) {
-    tier = t;
-    notify({
-      message: `Buffer tingkat ${TIERS.find((x) => x.key === t)?.label} diaktifkan`,
-      type: "info",
-      title: "Capacity Alert"
-    });
-  }
+  // Baseline = permintaan bulanan rata-rata 2023 = 1.110M / 12 ≈ 92,5M (level
+  // "Normal" = titik nol skala). Utilisasi hub kasus dibaca pada level ini.
+  const BASE_DEMAND_M = 92.5;
+
+  // Faktor skala = level / baseline (lembah 0,843× · puncak 1,135×).
+  const scale = $derived.by(() => {
+    const target = TIERS.find((x) => x.key === tier)?.demandM ?? BASE_DEMAND_M;
+    return target / BASE_DEMAND_M;
+  });
+
+  // Util simulasi per hub (kapasitas tetap, volume diskala) + daftar breach.
+  const sim = $derived.by(() =>
+    hubs.map((h) => {
+      const util = h.utilizationPct * scale;
+      const cap = h.capacityM;
+      // Overflow = volume di atas kapasitas (M paket/hari) pada utilisasi simulasi.
+      const overflowM = Math.max(0, (util - 100) / 100) * cap;
+      return { name: h.name, code: h.code, util, overflowM, breach: util > THRESHOLD };
+    })
+  );
+  const breaches = $derived(sim.filter((h) => h.breach).sort((a, b) => b.util - a.util));
+  const overflowTotalM = $derived(sim.reduce((s, h) => s + h.overflowM, 0));
+  const peak = $derived(breaches[0] ?? null);
+
 </script>
 
 <div class="space-y-6">
@@ -73,33 +88,13 @@
       <p class="mt-1 text-xs text-muted-foreground">{bdg.utilizationPct > 65 ? "Di atas ambang 65%, butuh perhatian" : "Dalam zona aman"}</p>
     </div>
 
-    <div class="rounded-2xl border border-border bg-card p-5">
-      <div class="mb-3 flex items-center justify-between">
-        <p class="text-sm font-medium">Hub di atas ambang (&gt;65%)</p>
-        <span class={cn("rounded-md px-3 py-1.5 text-xs font-semibold", bufferActive ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground")}>
-          {bufferActive ? `Buffer kurir aktif · ${coveredHubs} hub tertutup` : "Buffer off"}
-        </span>
-      </div>
-      <ul class="space-y-2">
-        {#if atRisk.length === 0}
-          <li class="text-sm text-muted-foreground">Tidak ada hub di atas ambang.</li>
-        {/if}
-        {#each atRisk as h (h.name)}
-          <li class="flex items-center justify-between rounded-md bg-muted/50 px-4 py-2 text-sm">
-            <span>{h.name} <span class="hub-label text-muted-foreground">· {h.code}</span></span>
-            <span class="kpi-value text-destructive-foreground">{h.utilizationPct}%</span>
-          </li>
-        {/each}
-      </ul>
-    </div>
-
     <div>
-      <p class="mb-2 text-sm font-medium">Kapasitas elastis 3 tingkat (simulasi)</p>
+      <p class="mb-2 text-sm font-medium">Simulasi kapasitas elastis — pilih level permintaan</p>
       <div class="grid gap-4 sm:grid-cols-3">
         {#each TIERS as t (t.key)}
           <button
             type="button"
-            onclick={() => setTier(t.key)}
+            onclick={() => (tier = t.key)}
             aria-pressed={tier === t.key}
             class={cn(
               "rounded-2xl border bg-card p-4 text-left transition-colors",
@@ -107,14 +102,55 @@
             )}
           >
             <p class="hub-label text-xs text-muted-foreground">{t.label}</p>
-            <p class="kpi-value text-lg">{t.value}</p>
+            <p class="kpi-value text-lg">{t.demandM.toLocaleString("id-ID")}M</p>
             <p class="text-xs text-muted-foreground">{t.note}</p>
             {#if tier === t.key}<p class="mt-1 text-[11px] font-semibold text-primary">● Aktif</p>{/if}
           </button>
         {/each}
       </div>
-      <p class="mt-2 text-xs text-muted-foreground">
-        Tingkat buffer menentukan kapasitas cadangan saat puncak. Buffer menutup {atRisk.length} hub yang melebihi ambang 65%.
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div class="rounded-2xl border border-border bg-card p-4">
+        <p class="text-xs text-muted-foreground">Hub menembus ambang &gt;65%</p>
+        <p class="kpi-value text-2xl {breaches.length ? 'text-destructive-foreground' : 'text-chart-3'}">{breaches.length}<span class="text-sm text-muted-foreground"> / {hubs.length}</span></p>
+      </div>
+      <div class="rounded-2xl border border-border bg-card p-4">
+        <p class="text-xs text-muted-foreground">Util tertinggi (simulasi)</p>
+        <p class="kpi-value text-2xl">{peak ? peak.util.toFixed(1) + "%" : "—"}</p>
+        <p class="text-xs text-muted-foreground">{peak?.name ?? "—"}</p>
+      </div>
+      <div class="rounded-2xl border border-border bg-card p-4">
+        <p class="text-xs text-muted-foreground">Overflow butuh buffer</p>
+        <p class="kpi-value text-2xl">{overflowTotalM > 0 ? overflowTotalM.toFixed(3) + "M" : "0"}</p>
+        <p class="text-xs text-muted-foreground">paket/hari di atas kapasitas</p>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-border bg-card p-5">
+      <div class="mb-3 flex items-center justify-between">
+        <p class="text-sm font-medium">Hub di atas ambang (&gt;{THRESHOLD}%) pada level {TIERS.find((x) => x.key === tier)?.label}</p>
+        <span class={cn("rounded-md px-3 py-1.5 text-xs font-semibold", breaches.length ? "bg-destructive text-destructive-foreground" : "bg-success text-success-foreground")}>
+          {breaches.length ? `${breaches.length} hub perlu buffer` : "Semua aman"}
+        </span>
+      </div>
+      <ul class="space-y-2">
+        {#if breaches.length === 0}
+          <li class="text-sm text-muted-foreground">Tidak ada hub di atas ambang pada level ini.</li>
+        {/if}
+        {#each breaches as h (h.code)}
+          <li class="flex items-center justify-between rounded-md bg-muted/50 px-4 py-2 text-sm">
+            <span>{h.name} <span class="hub-label text-muted-foreground">· {h.code}</span></span>
+            <span class="kpi-value {h.util > 100 ? 'text-destructive-foreground' : 'text-warning-foreground'}">
+              {h.util.toFixed(1)}%{#if h.overflowM > 0}<span class="ml-2 text-[11px] text-muted-foreground">+{h.overflowM.toFixed(3)}M</span>{/if}
+            </span>
+          </li>
+        {/each}
+      </ul>
+      <p class="mt-3 text-xs text-muted-foreground">
+        Volume hub diskala ×{scale.toFixed(3)} dari baseline {BASE_DEMAND_M.toLocaleString("id-ID")}M/bulan
+        (rata-rata 2023 = 1.110M ÷ 12). Buffer armada menyusutkan overflow ke hub dengan headroom.
+        {#if bdg}Hub Bandung acuan: {bdg.utilizationPct}% → {(bdg.utilizationPct * scale).toFixed(1)}%.{/if}
       </p>
     </div>
   {:else if loaded}
