@@ -11,6 +11,7 @@
   import Topbar from "$lib/components/Topbar.svelte";
   import NigiAI from "$lib/components/NigiAI.svelte";
   import WidgetDrawer from "$lib/components/WidgetDrawer.svelte";
+  import WidgetStrip from "$lib/components/WidgetStrip.svelte";
   import ToastStack from "$lib/components/ToastStack.svelte";
   import ThemeToggle from "$lib/components/ThemeToggle.svelte";
   import { probeBackend } from "$lib/api";
@@ -214,6 +215,7 @@
         {#if questionLabel}
           <p class="mb-4 inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-[13.5px] font-semibold uppercase tracking-wider text-accent-foreground">{questionLabel}</p>
         {/if}
+        <WidgetStrip />
         {@render children()}
       </div>
       {/key}

@@ -3,23 +3,9 @@
   import { SvelteSet } from "svelte/reactivity";
   import Icon from "./Icon.svelte";
   import { cn } from "$lib/utils";
+  import { widgetsStore, WIDGET_CATALOG } from "$lib/stores/widgets";
 
-  interface Widget {
-    id: string;
-    title: string;
-    desc: string;
-    tag: string;
-    hue: string;
-  }
-
-  const WIDGETS: Widget[] = [
-    { id: "util-map", title: "Utilization Map", desc: "23 hub utilisasi dgn threshold overload.", tag: "Network", hue: "var(--color-chart-1)" },
-    { id: "forecast", title: "Demand Forecast", desc: "Pola demand 2023 termasuk dampak TikTok.", tag: "Operations", hue: "var(--color-chart-2)" },
-    { id: "cod-risk", title: "Predictive COD", desc: "Simulasi probabilitas sukses COD per paket.", tag: "Strategy", hue: "var(--color-chart-4)" },
-    { id: "fleet", title: "Fleet & Emissions", desc: "Komposisi armada & roadmap EV 3 fase.", tag: "Sustainability", hue: "var(--color-chart-3)" },
-    { id: "complain", title: "Complaint Monitor", desc: "5,5 komplain per juta paket dgn penurunan target.", tag: "Quality", hue: "var(--color-chart-5)" },
-    { id: "address", title: "Address Intelligence", desc: "3 alamat ambigu yang sama di kota beda.", tag: "Quality", hue: "var(--color-chart-1)" }
-  ];
+  const WIDGETS = WIDGET_CATALOG;
 
   let open = $state(false);
   let q = $state("");
@@ -27,6 +13,12 @@
   let lastTrigger: HTMLElement | null = null;
 
   onMount(() => {
+    widgetsStore.restore();
+    // Sinkronkan pilihan awal dengan widget yang sudah aktif.
+    const unsub = widgetsStore.subscribe((ids) => {
+      sel.clear();
+      ids.forEach((id) => sel.add(id));
+    });
     const openW = () => {
       lastTrigger = document.activeElement as HTMLElement;
       open = true;
@@ -40,6 +32,7 @@
     window.addEventListener("omnigistic-open-widgets", openW);
     window.addEventListener("keydown", closeByKey);
     return () => {
+      unsub();
       window.removeEventListener("omnigistic-open-widgets", openW);
       window.removeEventListener("keydown", closeByKey);
     };
@@ -56,6 +49,19 @@
       sel.add(id);
       if (w) window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `Widget "${w.title}" dipilih`, type: "success", title: "Widget" } }));
     }
+  }
+
+  function apply() {
+    const ids = [...sel];
+    widgetsStore.setActive(ids);
+    open = false;
+    window.dispatchEvent(
+      new CustomEvent("omnigistic-toast", {
+        detail: ids.length
+          ? { message: `${ids.length} widget ditambahkan ke dashboard`, type: "success", title: "Widget" }
+          : { message: "Tidak ada widget dipilih", type: "warn", title: "Widget" }
+      })
+    );
   }
 </script>
 
@@ -119,11 +125,7 @@
     <button
       type="button"
       class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px"
-      onclick={() => {
-        const n = sel.size;
-        open = false;
-        window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: n ? { message: `${n} widget ditambahkan ke dashboard`, type: "success", title: "Widget" } : { message: "Tidak ada widget dipilih", type: "warn", title: "Widget" } }));
-      }}
+      onclick={apply}
     >
       Tambah ke dashboard
     </button>
