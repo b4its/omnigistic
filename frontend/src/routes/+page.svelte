@@ -175,7 +175,7 @@
   <!-- Header -->
   <header class="fixed inset-x-0 top-0 z-50 border-b transition-all duration-300" style="background: {scrolled ? 'color-mix(in srgb, var(--lnd-bg) 86%, transparent)' : 'transparent'}; backdrop-filter: {scrolled ? 'blur(12px)' : 'none'}; border-color: {scrolled ? 'var(--lnd-line)' : 'transparent'}">
     <div class="mx-auto relative z-[51] flex h-[76px] max-w-[1520px] items-center gap-10 px-[clamp(1.25rem,4vw,4.5rem)]">
-      <a href="#lnd-main" aria-label="Omnigistic, beranda" class="flex items-baseline gap-1 font-serif text-[21px] font-semibold tracking-[0.02em]">
+      <a href="#lnd-main" aria-label="Omnigistic, beranda" class="flex items-baseline gap-1 font-heading text-[21px] font-semibold tracking-[0.02em]">
         Omnigistic
       </a>
       <nav class="mx-auto hidden items-center gap-8 md:flex" aria-label="Navigasi utama">
@@ -196,7 +196,7 @@
       <div class="fixed inset-0 z-40 flex flex-col justify-center bg-[var(--lnd-ink)] px-[clamp(1.5rem,6vw,3rem)] text-[var(--lnd-bg)] md:hidden" role="dialog" aria-modal="true" aria-label="Menu seluler">
         <nav aria-label="Menu seluler" class="flex flex-col gap-1">
           {#each navLinks as n, i (n.href)}
-            <a href={resolveHref(n.href)} onclick={() => (menuOpen = false)} class="flex items-baseline gap-3 py-1 font-serif text-[clamp(2rem,8vw,3.2rem)] font-light leading-[1.15]">
+            <a href={resolveHref(n.href)} onclick={() => (menuOpen = false)} class="flex items-baseline gap-3 py-1 font-heading text-[clamp(2rem,8vw,3.2rem)] font-light leading-[1.15]">
               <span class="text-[14px] font-semibold tracking-[0.07em] text-[var(--lnd-accent)]">0{i + 1}</span>
               {n.label}
             </a>
@@ -208,12 +208,14 @@
 
   <main id="lnd-main" class="pt-[76px] scroll-mt-[76px]">
     <!-- HERO -->
-    <section class="px-[clamp(1.25rem,4vw,4.5rem)] pt-[clamp(5rem,11vh,8rem)] pb-[clamp(3rem,7vw,6rem)]">
-      <div class="mx-auto max-w-[1720px]">
+    <section class="relative overflow-hidden px-[clamp(1.25rem,4vw,4.5rem)] pt-[clamp(5rem,11vh,8rem)] pb-[clamp(3rem,7vw,6rem)]">
+      <div class="landing-grid" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute -left-40 -top-20 h-[36rem] w-[36rem] rounded-full opacity-[0.12] blur-[130px]" style="background: radial-gradient(circle, var(--lnd-accent), transparent 70%)" aria-hidden="true"></div>
+      <div class="relative mx-auto max-w-[1720px]">
         <p class="eyebrow">Sistem Terusik · ISCEA 2026</p>
-        <h1 class="mt-10 font-serif text-[clamp(3rem,10vw,8.5rem)] font-normal leading-[1.0] tracking-[-0.015em]">
+        <h1 class="mt-10 font-heading text-[clamp(3rem,10vw,8.5rem)] font-normal leading-[1.0] tracking-[-0.015em]">
           <span class="block overflow-hidden pb-[0.34em] -mb-[0.34em]"><span class="line-inner block">Sistem saraf <em class="font-medium italic">last-mile</em></span></span>
-          <span class="block overflow-hidden"><span class="line-inner block pb-[0.06em]" style="animation-delay: 140ms">di atas <em class="font-medium italic">17.000 pulau</em><span class="text-[var(--lnd-accent)]">.</span></span></span>
+          <span class="block overflow-hidden"><span class="line-inner block pb-[0.06em]" style="animation-delay: 140ms">di atas <em class="accent-gradient font-semibold italic">17.000 pulau</em><span class="text-[var(--lnd-accent)]">.</span></span></span>
         </h1>
 
         <div class="mt-12 grid items-end gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] lg:gap-16">
@@ -223,7 +225,7 @@
               dalam satu sumber kebenaran. Nigi AI menyapa tiap manajer dengan insight dari data studi kasus.
             </p>
             <div class="mt-8 flex flex-wrap gap-4">
-              <a href="#jawaban" class="rounded-full bg-[var(--lnd-ink)] px-8 py-4 text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-bg)] transition-all hover:bg-[var(--lnd-accent)] active:scale-[0.98]">
+              <a href="#jawaban" class="rounded-full bg-gradient-to-r from-[var(--lnd-accent)] to-[#ffd600] px-8 py-4 font-mono text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[#030304] shadow-[0_0_28px_-6px_rgba(247,147,26,0.6)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_40px_-6px_rgba(247,147,26,0.75)] active:scale-[0.98]">
                 Enam Jawaban <Icon name="arrow-up-right" cls="ml-2 inline h-4 w-4" weight="bold" />
               </a>
               <a href="#arsitektur" class="rounded-full border border-[var(--lnd-ink)] px-8 py-4 text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-ink)] transition-all hover:border-[var(--lnd-accent-ink)] hover:text-[color:var(--lnd-accent-ink)] active:scale-[0.98]">Tentang Sistem</a>
@@ -232,22 +234,22 @@
 
           <div class="animate-rise grid grid-cols-2 gap-3" style="animation-delay: 240ms">
             <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-5">
-              <p class="font-serif text-[clamp(1.8rem,3.4vw,3rem)] font-light tabular-nums leading-none">23</p>
+              <p class="font-heading text-[clamp(1.8rem,3.4vw,3rem)] font-light tabular-nums leading-none">23</p>
               <p class="mt-2 text-[14px] font-medium text-[var(--lnd-ink)]">hub aktif</p>
               <p class="mt-0.5 text-[14px] text-[color:var(--lnd-soft)]">1987→2024</p>
             </div>
             <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-5">
-              <p class="font-serif text-[clamp(1.8rem,3.4vw,3rem)] font-light tabular-nums leading-none">1,46</p>
+              <p class="font-heading text-[clamp(1.8rem,3.4vw,3rem)] font-light tabular-nums leading-none">1,46</p>
               <p class="mt-2 text-[14px] font-medium text-[var(--lnd-ink)]">miliar paket 2024</p>
               <p class="mt-0.5 text-[14px] text-[color:var(--lnd-soft)]">+28% YoY</p>
             </div>
             <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-5">
-              <p class="font-serif text-[clamp(1.8rem,3.4vw,3rem)] font-light tabular-nums leading-none">20,6</p>
+              <p class="font-heading text-[clamp(1.8rem,3.4vw,3rem)] font-light tabular-nums leading-none">20,6</p>
               <p class="mt-2 text-[14px] font-medium text-[var(--lnd-ink)]">market share</p>
               <p class="mt-0.5 text-[14px] text-[color:var(--lnd-soft)]">5 tahun beruntun</p>
             </div>
             <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-5">
-              <p class="font-serif text-[clamp(1.8rem,3.4vw,3rem)] font-light tabular-nums leading-none">90,4%</p>
+              <p class="font-heading text-[clamp(1.8rem,3.4vw,3rem)] font-light tabular-nums leading-none">90,4%</p>
               <p class="mt-2 text-[14px] font-medium text-[var(--lnd-ink)]">utilisasi Jakarta</p>
               <p class="mt-0.5 text-[14px] text-[color:var(--lnd-soft)]">vs Jayapura 28,1%</p>
             </div>
@@ -261,14 +263,14 @@
       <div class="mx-auto max-w-[1720px]">
         <div class="border-t border-[var(--lnd-ink)] pt-6">
           <p class="eyebrow">Jawaban</p>
-          <h2 class="mt-6 font-serif text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Enam pertanyaan kasus, <em class="italic">enam jawaban</em></h2>
+          <h2 class="mt-6 font-heading text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Enam pertanyaan kasus, <em class="italic">enam jawaban</em></h2>
           <p class="mt-4 max-w-[52ch] text-sm leading-relaxed text-[var(--lnd-soft)]">Tiap kartu menautkan pertanyaan studi kasus ke layar yang menjawabnya. Angka dari Table 1-4 dan Figure 1-2; asumsi tim berlabel.</p>
         </div>
         <ol class="mt-12 grid gap-px overflow-hidden rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-line)] sm:grid-cols-2 lg:grid-cols-3">
           {#each answers as a (a.n)}
             <li class="flex flex-col gap-3 bg-[var(--lnd-surface)] p-6 transition-colors hover:bg-[var(--lnd-bg-raise)]">
               <div class="flex items-center justify-between">
-                <span class="font-serif text-[15px] italic tabular-nums text-[var(--lnd-accent-ink)]">{a.n}</span>
+                <span class="font-heading text-[15px] italic tabular-nums text-[var(--lnd-accent-ink)]">{a.n}</span>
                 <span class="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--lnd-line)] text-[var(--lnd-accent)]">
                   <Icon name="arrow-up-right" cls="h-3.5 w-3.5" weight="bold" />
                 </span>
@@ -299,7 +301,7 @@
     <section class="px-[clamp(1.25rem,4vw,4.5rem)]">
       <div class="mx-auto max-w-[1720px]">
         <div class="border-t border-[var(--lnd-ink)] pt-6">
-          <h2 class="mt-6 max-w-3xl font-serif text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">
+          <h2 class="mt-6 max-w-3xl font-heading text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">
             Angka headline bagus, <em class="italic">tapi tidak jujur</em>
           </h2>
         </div>
@@ -340,7 +342,7 @@
         <div class="border-t border-[var(--lnd-ink)] pt-6 flex flex-wrap items-end justify-between gap-6">
           <div>
             <p class="eyebrow">Diagnosis</p>
-            <h2 class="mt-6 font-serif text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">13 gejala → <em class="text-[var(--lnd-accent-ink)] italic">6 akar masalah</em></h2>
+            <h2 class="mt-6 font-heading text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">13 gejala → <em class="text-[var(--lnd-accent-ink)] italic">6 akar masalah</em></h2>
           </div>
           <p class="max-w-sm text-sm leading-relaxed text-[var(--lnd-soft)]">Setiap akar punya solusi Omnigistic yang jelas + KPI baseline→target dari dokumen studi kasus.</p>
         </div>
@@ -351,11 +353,11 @@
                 <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--lnd-ink)] text-[var(--lnd-bg)] transition-colors group-hover:bg-[var(--lnd-accent)]">
                   <Icon name={rc.icon} cls="h-5 w-5" weight="duotone" />
                 </span>
-                <span class="font-serif text-[15px] italic tabular-nums text-[var(--lnd-accent-ink)]">{rc.code}</span>
+                <span class="font-heading text-[15px] italic tabular-nums text-[var(--lnd-accent-ink)]">{rc.code}</span>
               </div>
               <div>
                 <p class="text-[16px] font-semibold leading-tight tracking-tight text-[var(--lnd-ink)]">{rc.title}</p>
-                <p class="mt-1 font-serif text-[15px] italic text-[var(--lnd-soft)]">{rc.titleId}</p>
+                <p class="mt-1 font-heading text-[15px] italic text-[var(--lnd-soft)]">{rc.titleId}</p>
               </div>
               <p class="text-[15px] leading-relaxed text-[var(--lnd-soft)]"><span class="font-medium text-[var(--lnd-ink)]">Gejala:</span> {rc.symptoms.slice(0, 130)}&hellip;</p>
               <div class="mt-auto rounded-xl border border-[var(--lnd-line)] bg-[var(--lnd-bg-raise)] p-3">
@@ -375,7 +377,7 @@
         <div class="border-t border-[var(--lnd-ink)] pt-6 flex flex-wrap items-end justify-between gap-6">
           <div>
             <p class="eyebrow">Solusi</p>
-            <h2 class="mt-6 font-serif text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Enam solusi, <em class="italic">satu sistem</em></h2>
+            <h2 class="mt-6 font-heading text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Enam solusi, <em class="italic">satu sistem</em></h2>
           </div>
           <p class="max-w-sm text-sm leading-relaxed text-[var(--lnd-soft)]">Setiap solusi menunjuk akar yang diserang, dampak bisnisnya, dan KPI dari studi kasus.</p>
         </div>
@@ -384,7 +386,7 @@
           {#each solutions as s (s.n)}
             <li class="flex flex-col gap-3 bg-[var(--lnd-surface)] p-6 transition-colors hover:bg-[var(--lnd-bg-raise)]">
               <div class="flex items-center justify-between">
-                <span class="font-serif text-[15px] italic tabular-nums text-[var(--lnd-accent-ink)]">{s.n}</span>
+                <span class="font-heading text-[15px] italic tabular-nums text-[var(--lnd-accent-ink)]">{s.n}</span>
                 <span class="hub-label text-[13px] text-[var(--lnd-soft)]">{s.root}</span>
               </div>
               <p class="text-[16px] font-semibold leading-snug tracking-tight text-[var(--lnd-ink)]">{s.name}</p>
@@ -398,7 +400,7 @@
           {#each impactRows as [m, b, t] (m)}
             <div>
               <p class="text-[13.5px] uppercase tracking-wider text-[var(--lnd-on-ink)]">{m}</p>
-              <p class="mt-2 font-serif text-[clamp(1.4rem,2.4vw,2rem)] font-light leading-none tabular-nums">{t}</p>
+              <p class="mt-2 font-heading text-[clamp(1.4rem,2.4vw,2rem)] font-light leading-none tabular-nums">{t}</p>
               <p class="mt-1 text-[14px] text-[var(--lnd-on-ink)] line-through">{b}</p>
             </div>
           {/each}
@@ -417,14 +419,14 @@
     <section id="proyek" class="scroll-mt-[84px] px-[clamp(1.25rem,4vw,4.5rem)] pt-2 pb-[clamp(4.5rem,9vw,8rem)]">
       <div class="mx-auto max-w-[1720px]">
         <div class="border-t border-[var(--lnd-ink)] pt-6">
-          <h2 class="font-serif text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Satu sumber <em class="italic">kebenaran</em></h2>
+          <h2 class="font-heading text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Satu sumber <em class="italic">kebenaran</em></h2>
         </div>
         <ol class="mt-10">
           {#each heroProjects as p (p.num)}
             <li>
               <a href={resolveHref(`/dashboard/${p.id}/overview`)} class="group grid w-full cursor-pointer grid-cols-[3rem_1fr] items-center gap-3 border-t border-[var(--lnd-line)] px-2 py-6 text-left transition-[background,padding] duration-300 hover:bg-[var(--lnd-ink)] hover:pl-6 hover:text-[var(--lnd-bg)] sm:grid-cols-[3rem_1fr_11rem] md:grid-cols-[3rem_1fr_auto_11rem_2rem]">
-                <span class="font-serif text-[16px] italic tabular-nums text-[var(--lnd-accent-ink)]">{p.num}</span>
-                <h3 class="font-serif text-[clamp(1.4rem,3vw,2.4rem)] font-light leading-tight tracking-tight transition-transform duration-300 group-hover:translate-x-2">{p.name}</h3>
+                <span class="font-heading text-[16px] italic tabular-nums text-[var(--lnd-accent-ink)]">{p.num}</span>
+                <h3 class="font-heading text-[clamp(1.4rem,3vw,2.4rem)] font-light leading-tight tracking-tight transition-transform duration-300 group-hover:translate-x-2">{p.name}</h3>
                 <span class="hidden text-[14px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-soft)] transition-colors md:block">{p.meta}</span>
                 <span class="hidden text-right text-[14px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-soft)] transition-colors sm:block group-hover:text-[var(--lnd-on-ink)]">{p.desc.slice(0, 44)}</span>
                 <span class="hidden justify-end text-[var(--lnd-accent)] opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 md:flex">
@@ -441,13 +443,13 @@
     <section use:gsapReveal  id="pendekatan" class="scroll-mt-[84px] px-[clamp(1.25rem,4vw,4.5rem)] py-[clamp(4.5rem,9vw,8rem)]">
       <div class="mx-auto max-w-[1720px]">
         <div class="border-t border-[var(--lnd-ink)] pt-6">
-          <h2 class="font-serif text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Cara sistem <em class="italic">bekerja</em></h2>
+          <h2 class="font-heading text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Cara sistem <em class="italic">bekerja</em></h2>
         </div>
         <ol class="mt-12 space-y-10">
           {#each approach as ap, i (ap.n)}
             <li class="border-t border-[var(--lnd-ink)] pt-5" style="margin-left: {i * 22}%">
-              <span class="font-serif text-[16px] italic text-[var(--lnd-accent-ink)]">{ap.n}</span>
-              <h3 class="mt-2 font-serif text-[clamp(1.5rem,2.8vw,2.1rem)] font-light leading-tight tracking-tight">{ap.t}</h3>
+              <span class="font-heading text-[16px] italic text-[var(--lnd-accent-ink)]">{ap.n}</span>
+              <h3 class="mt-2 font-heading text-[clamp(1.5rem,2.8vw,2.1rem)] font-light leading-tight tracking-tight">{ap.t}</h3>
               <p class="mt-3 max-w-[46ch] leading-relaxed text-[var(--lnd-soft)]">{ap.d}</p>
             </li>
           {/each}
@@ -460,14 +462,14 @@
       <div class="mx-auto max-w-[1720px]">
         <div class="border-t border-[var(--lnd-ink)] pt-6">
           <p class="eyebrow">Arsitektur</p>
-          <h2 class="mt-6 font-serif text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Tiga lapis + <em class="italic">Nigi AI</em></h2>
+          <h2 class="mt-6 font-heading text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Tiga lapis + <em class="italic">Nigi AI</em></h2>
         </div>
         <ol class="mt-12 grid gap-px overflow-hidden rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-line)] sm:grid-cols-2 lg:grid-cols-3">
           {#each arch as a, i (a.layer)}
             <li class="group relative flex flex-col gap-3 bg-[var(--lnd-surface)] p-7 transition-colors hover:bg-[var(--lnd-bg-raise)]">
               <div class="flex items-center gap-3">
                 <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--lnd-ink)] text-sm font-bold text-[var(--lnd-bg)] transition-colors group-hover:bg-[var(--lnd-accent)]">{i + 1}</span>
-                <p class="font-serif text-lg font-semibold tracking-tight">{a.layer}</p>
+                <p class="font-heading text-lg font-semibold tracking-tight">{a.layer}</p>
               </div>
               <p class="text-[16px] font-medium text-[var(--lnd-ink)]">{a.title}</p>
               <p class="text-[15px] leading-relaxed text-[var(--lnd-soft)]">{a.desc}</p>
@@ -479,7 +481,7 @@
             <Icon name="chat" cls="h-6 w-6" weight="duotone" />
           </span>
           <div class="min-w-0">
-            <h3 class="font-serif text-2xl font-light tracking-tight">Nigi AI, lapisan AI lintas tiga lapis</h3>
+            <h3 class="font-heading text-2xl font-light tracking-tight">Nigi AI, lapisan AI lintas tiga lapis</h3>
             <p class="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--lnd-on-ink)]">Asisten per role (Pusat, Hub, Kurir, Data, Customer, Seller) dengan greeting proaktif, auto-insight, dan chat interaktif yang terkunci pada data studi kasus.</p>
           </div>
           <a href={resolveHref("/login")} class="ml-auto shrink-0 rounded-full border border-[var(--lnd-bg)] px-6 py-3 text-[14.5px] font-semibold uppercase tracking-[0.08em] transition-colors hover:border-[var(--lnd-accent-ink)] hover:bg-[var(--lnd-accent)]">
@@ -493,7 +495,7 @@
     <section use:gsapReveal  id="roles" class="scroll-mt-[84px] px-[clamp(1.25rem,4vw,4.5rem)] py-[clamp(4.5rem,9vw,8rem)]">
       <div class="mx-auto max-w-[1720px]">
         <div class="border-t border-[var(--lnd-ink)] pt-6">
-          <h2 class="font-serif text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Portal per <em class="italic">peran</em></h2>
+          <h2 class="font-heading text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Portal per <em class="italic">peran</em></h2>
         </div>
         <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {#each roles as r (r.slug)}
@@ -517,7 +519,7 @@
       <div class="mx-auto max-w-[1720px]">
         <div class="border-t border-[var(--lnd-ink)] pt-6">
           <p class="eyebrow">Roadmap</p>
-          <h2 class="mt-6 font-serif text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Tiga fase <em class="italic">self-funding</em></h2>
+          <h2 class="mt-6 font-heading text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Tiga fase <em class="italic">self-funding</em></h2>
         </div>
         <ol class="mt-12 grid gap-6 md:grid-cols-3">
           {#each phases as p (p.f)}
@@ -534,7 +536,7 @@
     <!-- TARGET -->
     <section class="border-t border-[var(--lnd-line)] px-[clamp(1.25rem,4vw,4.5rem)] py-[clamp(4.5rem,9vw,8rem)]">
       <div class="mx-auto max-w-[1720px] rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-ink)] p-10 text-center">
-        <h2 class="mt-3 font-serif text-[clamp(1.8rem,3.5vw,2.8rem)] font-light tracking-tight text-[var(--lnd-bg)]">Data bukan slogan, angka dari 6 akar</h2>
+        <h2 class="mt-3 font-heading text-[clamp(1.8rem,3.5vw,2.8rem)] font-light tracking-tight text-[var(--lnd-bg)]">Data bukan slogan, angka dari 6 akar</h2>
         <div class="mt-8 overflow-x-auto">
           <table class="mx-auto w-full max-w-3xl text-sm text-[var(--lnd-bg)]">
             <caption class="sr-only">Metrik Omnigistic hari ini dibanding target studi kasus</caption>
@@ -572,7 +574,7 @@
       <div class="mx-auto max-w-[1720px]">
         <div class="border-t border-[var(--lnd-ink)] pt-6">
           <p class="eyebrow">Sumber &amp; Batasan</p>
-          <h2 class="mt-6 max-w-3xl font-serif text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Setiap angka bisa <em class="italic">ditelusuri</em></h2>
+          <h2 class="mt-6 max-w-3xl font-heading text-[clamp(2rem,4.5vw,3.6rem)] font-light leading-[1.05] tracking-[-0.015em]">Setiap angka bisa <em class="italic">ditelusuri</em></h2>
         </div>
         <div class="mt-12 grid gap-6 lg:grid-cols-3">
           <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6">
@@ -597,9 +599,9 @@
         <div class="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p class="text-[14px] font-semibold uppercase tracking-wide text-[var(--lnd-on-ink)]">Kontak</p>
-            <h2 class="mt-4 font-serif text-[clamp(2rem,6vw,4.5rem)] font-light leading-[1.05] tracking-[-0.02em]">Punya ruang dalam <em class="italic">pikiran</em><span class="text-[var(--lnd-accent)]">?</span></h2>
+            <h2 class="mt-4 font-heading text-[clamp(2rem,6vw,4.5rem)] font-light leading-[1.05] tracking-[-0.02em]">Punya ruang dalam <em class="italic">pikiran</em><span class="text-[var(--lnd-accent)]">?</span></h2>
           </div>
-          <a href={resolveHref("/login")} class="inline-flex items-center gap-3 border-b border-[color:var(--lnd-line-on-ink)] pb-1 font-serif text-[clamp(1.2rem,2.6vw,1.8rem)] transition-colors hover:border-[var(--lnd-accent-ink)]">
+          <a href={resolveHref("/login")} class="inline-flex items-center gap-3 border-b border-[color:var(--lnd-line-on-ink)] pb-1 font-heading text-[clamp(1.2rem,2.6vw,1.8rem)] transition-colors hover:border-[var(--lnd-accent-ink)]">
             Masuk dashboard <Icon name="arrow-up-right" cls="h-5 w-5 text-[var(--lnd-accent)]" weight="bold" />
           </a>
         </div>
