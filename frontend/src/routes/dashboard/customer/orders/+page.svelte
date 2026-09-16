@@ -5,7 +5,7 @@
   import Icon from "$lib/components/Icon.svelte";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, progressForStatus, type Order, type OrderStatus } from "$lib/stores/shop";
+  import { shop, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, ARRIVAL_LABEL, progressForStatus, type Order, type OrderStatus, type ArrivalStatus } from "$lib/stores/shop";
   import { HUB_LABEL, etaForCity, COD_DECISION_LABEL } from "$lib/logistics";
   import { notify } from "$lib/toast";
 
@@ -17,8 +17,14 @@
     const unsub = shop.subscribe((s) => (orders = s.orders));
     return unsub;
   });
-
   const statusIndex = (s: OrderStatus) => ORDER_STATUS_FLOW.indexOf(s);
+
+  /** Presentasi (ikon/warna/tip) per status kehadiran penerima. */
+  const ARRIVAL_META: Record<ArrivalStatus, { icon: string; border: string; bg: string; chip: string; tip: string }> = {
+    "di-rumah": { icon: "check", border: "border-success/40", bg: "bg-success/5", chip: "bg-success text-success-foreground", tip: "Kurir bertemu kamu langsung. Tak perlu tindakan." },
+    "tunggu-sebentar": { icon: "clock", border: "border-warning/40", bg: "bg-warning/5", chip: "bg-warning text-warning-foreground", tip: "Kurir menunggu di lokasi — segera temui sebelum batas tunggu." },
+    "tidak-di-rumah": { icon: "warn", border: "border-destructive/40", bg: "bg-destructive/5", chip: "bg-destructive text-destructive-foreground", tip: "Paket bisa dialihkan ke PUDO terdekat atau dijadwalkan ulang." }
+  };
 
   /** Fraksi perjalanan kurir (0..1) diturunkan dari status pengantaran nyata. */
   const progressFor = progressForStatus;
@@ -110,6 +116,22 @@
                 </div>
               </div>
             </div>
+
+            <!-- Status kehadiran penerima (dari aksi kurir saat dalam pengantaran) -->
+            {#if o.arrivalStatus}
+              {@const arrival = ARRIVAL_META[o.arrivalStatus]}
+              <div class="flex items-start gap-3 rounded-xl border {arrival.border} {arrival.bg} px-4 py-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {arrival.chip}">
+                  <Icon name={arrival.icon as IconName} cls="h-4 w-4" weight={arrival.icon === "check" ? "bold" : "regular"} />
+                </span>
+                <div class="min-w-0">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Kurir sudah tiba di lokasi</p>
+                  <p class="text-sm font-semibold text-foreground">{ARRIVAL_LABEL[o.arrivalStatus]}</p>
+                  <p class="mt-0.5 text-xs text-muted-foreground">{arrival.tip}</p>
+                  {#if o.arrivalAt}<p class="mt-0.5 text-[11px] text-muted-foreground">Dicatat {new Date(o.arrivalAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</p>{/if}
+                </div>
+              </div>
+            {/if}
 
             <!-- Pelacakan lokasi terkini (peta) -->
             <div>

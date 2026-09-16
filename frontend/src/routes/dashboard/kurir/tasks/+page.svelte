@@ -20,9 +20,11 @@
     ORDER_STATUS_LABEL,
     DEFAULT_COURIER_NOTE,
     COURIER_TASK,
+    ARRIVAL_LABEL,
     nextStatus,
     progressForStatus,
-    type Order
+    type Order,
+    type ArrivalStatus
   } from "$lib/stores/shop";
   import { COURIER, HUB_LABEL, etaForCity, buildSlot, COD_DECISION_LABEL } from "$lib/logistics";
   import { notify, type ToastType as TxType } from "$lib/toast";
@@ -119,6 +121,17 @@
   function collect(o: Order) {
     shop.collectCod(o.id, actor());
     toast(`Tunai ${o.id} diterima`);
+  }
+
+  /** Kurir catat apakah penerima ada di rumah (hanya saat status "dikirim"). */
+  function markArrival(o: Order, arrival: ArrivalStatus) {
+    const err = shop.setArrival(o.id, actor(), arrival);
+    if (err) {
+      toast(err, "warn");
+      return;
+    }
+    const tone: TxType = arrival === "di-rumah" ? "success" : "warn";
+    toast(`${o.id} · ${ARRIVAL_LABEL[arrival]}`, tone);
   }
 
   /** Kurir alihkan paket ke PUDO. */
@@ -234,6 +247,44 @@
 
               <!-- Aksi kurir -->
               {#if !done}
+                {#if o.status === "dikirim"}
+                  <!-- Status kehadiran penerima: memberi tahu customer ada/tidak di rumah -->
+                  <div class="rounded-xl border border-border bg-card p-4">
+                    <p class="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                      <Icon name="users" cls="h-3.5 w-3.5" /> Status kehadiran penerima (dilihat pembeli)
+                    </p>
+                    <p class="mt-1 text-[11px] text-muted-foreground">Pilih apakah penerima ada di rumah saat kamu tiba. Ini muncul langsung di pelacakan pembeli — mencegah kurir menunggu tanpa kepastian (akar masalah COD).</p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onclick={() => markArrival(o, "di-rumah")}
+                        aria-pressed={o.arrivalStatus === "di-rumah"}
+                        class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors {o.arrivalStatus === 'di-rumah' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_18px_-5px_var(--glow)]' : 'border-success/50 text-success-foreground hover:bg-success/10'}"
+                      >
+                        <Icon name="check" cls="h-3.5 w-3.5" weight="bold" /> Ada di rumah
+                      </button>
+                      <button
+                        type="button"
+                        onclick={() => markArrival(o, "tunggu-sebentar")}
+                        aria-pressed={o.arrivalStatus === "tunggu-sebentar"}
+                        class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors {o.arrivalStatus === 'tunggu-sebentar' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_18px_-5px_var(--glow)]' : 'border-warning/50 text-warning-foreground hover:bg-warning/10'}"
+                      >
+                        <Icon name="clock" cls="h-3.5 w-3.5" /> Minta tunggu
+                      </button>
+                      <button
+                        type="button"
+                        onclick={() => markArrival(o, "tidak-di-rumah")}
+                        aria-pressed={o.arrivalStatus === "tidak-di-rumah"}
+                        class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors {o.arrivalStatus === 'tidak-di-rumah' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_18px_-5px_var(--glow)]' : 'border-destructive/50 text-destructive-foreground hover:bg-destructive/10'}"
+                      >
+                        <Icon name="warn" cls="h-3.5 w-3.5" /> Tidak di rumah
+                      </button>
+                    </div>
+                    {#if o.arrivalStatus}
+                      <p class="mt-2 text-[11px] text-muted-foreground">Tercatat: <span class="font-medium text-foreground">{ARRIVAL_LABEL[o.arrivalStatus]}</span>{#if o.arrivalAt} · {new Date(o.arrivalAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}{/if}</p>
+                    {/if}
+                  </div>
+                {/if}
                 <div class="space-y-2">
                   <textarea
                     rows="2"
