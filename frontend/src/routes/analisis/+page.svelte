@@ -81,12 +81,17 @@
   let optimize = $state<OptimizeResult | null>(null);
   let codIntel = $state<CodIntelResult | null>(null);
   let audit = $state<AuditResult | null>(null);
+  /** true bila minimal satu sumber angka live berhasil dimuat dari backend. */
+  let live = $state(false);
+  let checked = $state(false);
 
   onMount(async () => {
     const [o, c, a] = await Promise.allSettled([api.optimizeLoadBalance(), api.codIntelScenarios(), api.metricAudit()]);
     if (o.status === "fulfilled") optimize = o.value;
     if (c.status === "fulfilled") codIntel = c.value["Semua intervensi aktif"] ?? null;
     if (a.status === "fulfilled") audit = a.value;
+    live = audit !== null || optimize !== null || codIntel !== null;
+    checked = true;
   });
 
   const fmt = (n: number) => new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(n);
@@ -352,8 +357,14 @@
         <p class="eyebrow">Enam pertanyaan strategis</p>
         <h2 class="mt-6 max-w-3xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Jawaban, dengan angka yang bisa diaudit</h2>
         <p class="mt-4 max-w-[68ch] text-sm leading-relaxed text-[var(--lnd-soft)]">
-          Setiap pertanyaan kasus dijawab dengan verdict, alasan, bukti kuantitatif dari mesin analitik, dan tautan ke karya interaktifnya. Angka live ditarik dari backend saat halaman dibuka.
+          Setiap pertanyaan kasus dijawab dengan verdict, alasan, bukti kuantitatif dari mesin analitik, dan tautan ke karya interaktifnya.
         </p>
+        {#if checked}
+          <p class="mt-3 inline-flex items-center gap-2 rounded-full border border-[var(--lnd-line)] px-3 py-1 text-[13px] font-medium text-[var(--lnd-soft)]">
+            <span class="h-1.5 w-1.5 rounded-full {live ? 'bg-[var(--lnd-accent)]' : 'bg-[var(--lnd-late)]'}"></span>
+            {live ? "Angka live dari mesin backend" : "Backend offline — memakai angka dasar studi kasus"}
+          </p>
+        {/if}
       </div>
 
       <div class="mt-10 grid gap-4 lg:grid-cols-2">

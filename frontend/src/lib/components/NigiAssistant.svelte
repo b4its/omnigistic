@@ -31,6 +31,15 @@
     "Bagaimana solusi Omnigistic?",
     "Berapa utilisasi Jakarta?"
   ];
+  /** Halaman kurasi pertanyaan per role (kunci sama dgn backend suggestedQuestions). */
+  const ROLE_PAGE: Record<string, string> = {
+    PUSAT: "pusat/executive",
+    HUB: "hub/dashboard",
+    KURIR: "kurir/cod-risk",
+    DATA: "data/address",
+    CUSTOMER: "customer/overview",
+    SELLER: "seller/overview"
+  };
   const STORE_KEY_PREFIX = "omnigistic-nigi-conversations-";
   let storeKey = $derived(`${STORE_KEY_PREFIX}${role}`);
 
@@ -40,6 +49,8 @@
   let intro = $state<{ greeting: string; insights: InsightEntry[] }>({ greeting: "", insights: [] });
   let introError = $state(false);
   let introLoading = $state(true);
+  /** Pertanyaan kurasi per halaman (dari /api/suggested). */
+  let curated = $state<string[]>([]);
 
   let logEl = $state<HTMLElement | undefined>();
 
@@ -51,7 +62,7 @@
   let sidebarOpen = $state(false);
   let loaded = $state(false);
 
-  const chips = $derived(intro.greeting ? EMPTY_CHIPS : []);
+  const chips = $derived(intro.greeting ? (curated.length ? curated : EMPTY_CHIPS) : []);
 
   const filtered = $derived(
     conversations
@@ -224,6 +235,12 @@
       })
       .catch(() => (introError = true))
       .finally(() => (introLoading = false));
+
+    // Pertanyaan kurasi per halaman (memanfaatkan /api/suggested yang sebelumnya idle).
+    api
+      .suggested(ROLE_PAGE[role] ?? "")
+      .then((rows) => (curated = rows.map((r) => r.question).slice(0, 4)))
+      .catch(() => (curated = []));
   });
 
   $effect(() => {
