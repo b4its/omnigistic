@@ -159,6 +159,8 @@ export interface AddressParseResult {
   best: AddressCandidate | null;
   distanceKm: number | null;
   etaMin: number | null;
+  /** true bila ada kandidat dengan skor > 0 (hindari false-confidence). */
+  matched?: boolean;
 }
 
 export interface TwinResult {

@@ -1,11 +1,32 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { api } from "$lib/api";
+  import { notify } from "$lib/toast";
   import AddressMap from "$lib/map/AddressMap.svelte";
   import Icon from "$lib/components/Icon.svelte";
   interface Cand { city: string; district: string; coordinate: string; score: number }
+  type Parsed = { best: Cand | null; candidates: Cand[]; etaMin: number | null; distanceKm?: number | null; matched?: boolean };
   let addrs = $state<Array<{ street: string; city: string; district: string; coordinate: string }>>([]);
-  let parsed = $state<{ best: Cand | null; candidates: Cand[]; etaMin: number | null } | null>(null);
+  let parsed = $state<Parsed | null>(null);
+  let query = $state("Jl. Raya Jakarta-Bogor No.12, Cibinong, Kabupaten Bogor");
+  let loading = $state(false);
+
+  async function analyze(text: string) {
+    const q = text.trim();
+    if (!q) {
+      notify("Isi alamat dulu untuk dianalisis.", "warn", "Address Intelligence");
+      return;
+    }
+    loading = true;
+    try {
+      parsed = await api.addressParse(q);
+    } catch {
+      notify("Backend offline — tak bisa menganalisis alamat.", "error", "Address Intelligence");
+      parsed = null;
+    } finally {
+      loading = false;
+    }
+  }
 
   onMount(async () => {
     try {
@@ -13,11 +34,7 @@
     } catch {
       addrs = [];
     }
-    try {
-      parsed = await api.addressParse("Jl. Raya Jakarta-Bogor No.12, Cibinong, Kabupaten Bogor");
-    } catch {
-      parsed = null;
-    }
+    await analyze(query);
   });
 
   function openChat() {
@@ -42,7 +59,7 @@
     analyzing = true;
     decided = false;
     shown = targets.map(() => 0);
-    const delay = 3000; // fase "menghitung"
+    const delay = loading ? 0 : 1200; // fase "menghitung" (lebih pendek saat user memicu)
     const dur = 3600;
     const stagger = 1700;
     const t0 = performance.now();
@@ -67,6 +84,12 @@
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
   });
+
+  const EXAMPLES = [
+    "Jl. Raya Jakarta-Bogor No.12, Cibinong",
+    "Jl. Raya Jakarta-Bogor No.12, Rempoa, Tangsel",
+    "Jl. Raya Jakarta-Bogor No.12, Sukamaju, Depok",
+  ];
 </script>
 
 <div class="space-y-6">
@@ -95,6 +118,41 @@
   <div class="rounded-2xl border-l-4 border-chart-4 bg-muted/30 p-4 text-sm">
     Nama jalan yang sama muncul di <span class="font-medium">3 lokasi berbeda</span>, berjarak puluhan kilometer. Inilah akar komplain alamat.
   </div>
+
+  <form
+    class="rounded-2xl border border-border bg-card p-5"
+    onsubmit={(e) => { e.preventDefault(); analyze(query); }}
+  >
+    <label for="addr-input" class="text-sm font-medium text-foreground">Coba alamat bebas</label>
+    <p class="mt-1 text-xs text-muted-foreground">Ketik alamat (jalan/distrik/kota) → engine mencocokkan fuzzy ke 3 kandidat kasus &amp; menghitung ETA.</p>
+    <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+      <input
+        id="addr-input"
+        type="text"
+        bind:value={query}
+        placeholder="mis. Jl. Raya Jakarta-Bogor No.12, Cibinong"
+        class="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
+        autocomplete="off"
+      />
+      <button
+        type="submit"
+        disabled={loading}
+        class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px active:translate-y-0 disabled:opacity-60"
+      >
+        {#if loading}<Icon name="dots" cls="h-4 w-4 animate-pulse" weight="bold" />{:else}<Icon name="search" cls="h-4 w-4" weight="bold" />{/if}
+        Analisis
+      </button>
+    </div>
+    <div class="mt-3 flex flex-wrap gap-2">
+      {#each EXAMPLES as ex (ex)}
+        <button
+          type="button"
+          onclick={() => { query = ex; analyze(ex); }}
+          class="rounded-full border border-border bg-muted/40 px-3 py-1 text-[12.5px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+        >{ex}</button>
+      {/each}
+    </div>
+  </form>
 
   <AddressMap />
 
@@ -148,7 +206,12 @@
       {#if decided && parsed.best}
         <p class="mt-4 flex items-center gap-2 text-[15px]">
           <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-chart-3 text-white"><Icon name="check" cls="h-3.5 w-3.5" weight="bold" /></span>
-          <span><strong>Keputusan:</strong> target = {parsed.best.city} · {parsed.best.district} · ETA {parsed.etaMin ?? "—"} menit.</span>
+          <span><strong>Keputusan:</strong> target = {parsed.best.city} · {parsed.best.district} · ETA {parsed.etaMin ?? "—"} menit{parsed.distanceKm != null ? ` · ${parsed.distanceKm} km` : ""}.</span>
+        </p>
+      {:else if decided && !parsed.best}
+        <p class="mt-4 flex items-center gap-2 text-[15px]">
+          <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warning text-warning-foreground"><Icon name="warn" cls="h-3.5 w-3.5" weight="bold" /></span>
+          <span><strong>Belum ada kecocokan.</strong> Coba sebut distrik/kota (Cibinong, Depok, atau Tangsel).</span>
         </p>
       {/if}
     </div>

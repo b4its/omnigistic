@@ -12,15 +12,9 @@ except Exception:
 
 
 
-_COORDS = {
-    "Cibinong": (-6.4817, 106.8526),
-    "Depok": (-6.4035, 106.8174),
-    "Tangerang Selatan": (-6.2934, 106.7551),
-    "Rempoa": (-6.2934, 106.7551),
-    "Sukamaju": (-6.4035, 106.8174),
-    "Jakarta": (-6.2088, 106.8456),
-    "Bandung": (-6.9175, 107.6191),
-}
+# Origin pengantaran = hub Jakarta (kasus: 3 alamat ambigu berada di Jabodetabek).
+_ORIGIN_LATLON = (-6.2088, 106.8456)
+_LAST_MILE_KMH = 22.0  # asumsi kecepatan last-mile (dilabel)
 
 _CITY_TABLE = [
     {"city": "Kabupaten Bogor", "district": "Cibinong", "coordinate": "-6.4817, 106.8526"},
@@ -50,18 +44,29 @@ def parse_address(address: str) -> dict[str, Any]:
 
     cands.sort(key=lambda x: -x["score"])
     best = cands[0] if cands else None
+    # Jika tak ada kandidat yang cocok (skor 0), jangan klaim "best" — hindari
+    # false-confidence; FE menampilkan pesan "belum ada kecocokan".
+    if best and best["score"] <= 0:
+        return {
+            "query": address,
+            "candidates": cands,
+            "best": None,
+            "distanceKm": None,
+            "etaMin": None,
+            "matched": False,
+        }
     eta_min = None
     distance_km = None
     if best and best["score"] > 0:
         try:
-            lat1, lon1 = -6.2088, 106.8456  # hub Jakarta (origin)
+            lat1, lon1 = _ORIGIN_LATLON
             lat2, lon2 = map(float, best["coordinate"].split(","))
             from math import radians, sin, cos, asin, sqrt
             R = 6371.0
             dlat, dlon = radians(lat2 - lat1), radians(lon2 - lon1)
             a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
             distance_km = round(2 * R * asin(sqrt(a)), 1)
-            eta_min = round(distance_km / 22.0 * 60)  # 22 km/jam asumsi last-mile
+            eta_min = round(distance_km / _LAST_MILE_KMH * 60)
         except Exception:
             eta_min = None
     return {
@@ -70,6 +75,7 @@ def parse_address(address: str) -> dict[str, Any]:
         "best": best,
         "distanceKm": distance_km,
         "etaMin": eta_min,
+        "matched": True,
     }
 
 
