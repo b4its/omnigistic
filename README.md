@@ -137,6 +137,10 @@ PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 E2E_API=htt
 # Uji sidebar (15 assert) + audit overflow responsif (8 viewport)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium node scripts/e2e-sidebar.mjs
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium SHOT_PATH=/dashboard/pusat/executive node scripts/responsive-shot.mjs
+
+# Uji accordion pesanan dashboard customer (15 assert) + koherensi lintas role (31 assert)
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-customer-accordion.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-orders.mjs
 ```
 
 Laporan audit detail: `docs/angka-audit-2026-09-07.md`.
