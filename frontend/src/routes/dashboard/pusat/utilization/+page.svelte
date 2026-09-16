@@ -3,19 +3,26 @@
   import { api, type Hub } from "$lib/api";
   import EChart from "$lib/components/EChart.svelte";
   import HubMap from "$lib/map/HubMap.svelte";
+  import PageState from "$lib/components/PageState.svelte";
   import { horizontalBar } from "$lib/charts/options";
 
   let hubs = $state<Hub[]>([]);
   let loaded = $state(false);
+  let failed = $state(false);
 
-  onMount(async () => {
+  async function load() {
+    failed = false;
+    loaded = false;
     try {
       hubs = await api.hubs();
     } catch {
       hubs = [];
+      failed = true;
     }
     loaded = true;
-  });
+  }
+
+  onMount(() => void load());
 
   const sorted = $derived([...hubs].sort((a, b) => b.utilizationPct - a.utilizationPct));
   const top = $derived(sorted[0]);
@@ -68,6 +75,6 @@
       />
     </div>
   {:else}
-    <div class="h-64 animate-pulse rounded-2xl border bg-card/60"></div>
+    <PageState loading={!loaded && !failed} error={failed} errorTitle="Gagal memuat peta utilisasi" onretry={load} skeletonCards={0} skeletonHeight={320} />
   {/if}
 </div>

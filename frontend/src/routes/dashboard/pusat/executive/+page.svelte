@@ -4,8 +4,9 @@
   import EChart from "$lib/components/EChart.svelte";
   import MetricCard from "$lib/components/MetricCard.svelte";
   import Icon from "$lib/components/Icon.svelte";
+  import PageState from "$lib/components/PageState.svelte";
   import { lineChart, barChart } from "$lib/charts/options";
-  import { resolveHref } from "$lib/utils";
+  import { resolveHref, numId } from "$lib/utils";
 
   const engineLinks = [
     { title: "Network Optimization", desc: "Alihkan overflow hub overload ke hub ber-headroom secara otomatis.", href: "/dashboard/hub/load-balance", icon: "compass" as const },
@@ -18,22 +19,28 @@
   let regions = $state<RegionSummary[]>([]);
   let hubs = $state<Hub[]>([]);
   let loaded = $state(false);
+  let failed = $state(false);
 
-  onMount(async () => {
+  async function load() {
+    failed = false;
+    loaded = false;
     try {
       [fin, regions, hubs] = await Promise.all([api.financial(), api.metricRegions(), api.hubs()]);
     } catch {
       fin = [];
       regions = [];
       hubs = [];
+      failed = true;
     }
     loaded = true;
-  });
+  }
+
+  onMount(() => void load());
 
   const latest = $derived(fin[fin.length - 1]);
   const first = $derived(fin[0]);
-  const salesG = $derived(latest && first ? ((latest.netSalesT / first.netSalesT - 1) * 100).toFixed(1) : "0");
-  const fulfilG = $derived(latest && first ? ((latest.fulfilmentT / first.fulfilmentT - 1) * 100).toFixed(1) : "0");
+  const salesG = $derived(latest && first ? numId((latest.netSalesT / first.netSalesT - 1) * 100, 1) : "0");
+  const fulfilG = $derived(latest && first ? numId((latest.fulfilmentT / first.fulfilmentT - 1) * 100, 1) : "0");
   const costSales = $derived(latest ? ((latest.fulfilmentT + latest.shippingT) / latest.netSalesT) * 100 : 0);
 
   // Utilisasi per region dari SATU sumber kebenaran (/ml/metrics/regions), bukan hardcode.
@@ -60,7 +67,7 @@
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <MetricCard label="Net Sales 2023" value={latest ? `Rp${latest.netSalesT}T` : "-"} delta={`+${salesG}%`} deltaTone="up" sub="vs Rp213,64T (2020)" />
       <MetricCard label="Fulfilment Expense" value={latest ? `Rp${latest.fulfilmentT}T` : "-"} delta={`+${fulfilG}%`} deltaTone="warn" sub="naik lebih cepat dari sales" />
-      <MetricCard label="Cost-to-Sales Ratio" value={`${costSales.toFixed(1)}%`} delta="+0,4pt" deltaTone="warn" sub="dari 30,9% di 2020" />
+      <MetricCard label="Cost-to-Sales Ratio" value={`${numId(costSales, 1)}%`} delta="+0,4pt" deltaTone="warn" sub="dari 30,9% di 2020" />
       <MetricCard label="Utilisasi tertinggi" value={busiestHub ? `${busiestHub.code} ${busiestHub.utilizationPct}%` : "-"} delta={busiestHub ? `${busiestHub.utilizationPct}%` : ""} deltaTone="warn" sub={quietestHub ? `vs ${quietestHub.name} ${quietestHub.utilizationPct}%` : ""} />
     </div>
 
@@ -127,9 +134,7 @@
   </div>
 {:else}
   <div class="space-y-6">
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {#each Array(4) as _, i (i)}<div class="h-28 animate-pulse rounded-2xl border border-border bg-card/60"></div>{/each}
-    </div>
-    <div class="h-64 animate-pulse rounded-2xl border border-border bg-card/60"></div>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">Executive Dashboard</h1>
+    <PageState loading={!loaded && !failed} error={failed} errorTitle="Gagal memuat dashboard eksekutif" onretry={load} />
   </div>
 {/if}

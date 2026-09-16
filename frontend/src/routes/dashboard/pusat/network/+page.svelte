@@ -2,19 +2,27 @@
   import { onMount } from "svelte";
   import { api, type NetworkRow } from "$lib/api";
   import EChart from "$lib/components/EChart.svelte";
+  import PageState from "$lib/components/PageState.svelte";
   import { barChart } from "$lib/charts/options";
+  import { numId } from "$lib/utils";
 
   let growth = $state<NetworkRow[]>([]);
   let loaded = $state(false);
+  let failed = $state(false);
 
-  onMount(async () => {
+  async function load() {
+    failed = false;
+    loaded = false;
     try {
       growth = await api.network();
     } catch {
       growth = [];
+      failed = true;
     }
     loaded = true;
-  });
+  }
+
+  onMount(() => void load());
 
   const rows = $derived(
     growth.map((g) => ({
@@ -39,7 +47,7 @@
             <span class="mx-2 text-muted-foreground">→</span>
             <span class="kpi-value text-lg text-primary">{g.v2}</span>
           </p>
-          <p class="mt-0.5 text-xs text-muted-foreground">{g.v1 > 0 ? `${(g.v2 / g.v1).toFixed(1)}x lipat` : `${g.v2} units added`}</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">{g.v1 > 0 ? `${numId(g.v2 / g.v1, 1)}x lipat` : `${g.v2} units added`}</p>
         </div>
       {/each}
     </div>
@@ -62,8 +70,6 @@
       <span class="font-medium text-foreground">Warning:</span> network partner grew 23,9x (20→478) but &ldquo;operational expenses grew faster than sales&rdquo;, the exact trap Omnigistic addresses via data-driven capacity.
     </div>
   {:else}
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {#each Array(6) as _, i (i)}<div class="h-24 animate-pulse rounded-2xl border bg-card/60"></div>{/each}
-    </div>
+    <PageState loading={!loaded && !failed} error={failed} errorTitle="Gagal memuat data jaringan" onretry={load} skeletonCards={0} skeletonHeight={240} />
   {/if}
 </div>

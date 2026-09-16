@@ -2,19 +2,27 @@
   import { onMount } from "svelte";
   import { api, type Hub } from "$lib/api";
   import EChart from "$lib/components/EChart.svelte";
+  import PageState from "$lib/components/PageState.svelte";
   import { barChart } from "$lib/charts/options";
+  import { numId } from "$lib/utils";
 
   let hubs = $state<Hub[]>([]);
   let loaded = $state(false);
+  let failed = $state(false);
 
-  onMount(async () => {
+  async function load() {
+    failed = false;
+    loaded = false;
     try {
       hubs = await api.hubs();
     } catch {
       hubs = [];
+      failed = true;
     }
     loaded = true;
-  });
+  }
+
+  onMount(() => void load());
 
   const bdg = $derived(hubs.find((h) => h.name === "Bandung") ?? hubs[0]);
   const javaAvg = $derived(
@@ -64,7 +72,7 @@
         <p class="kpi-value text-xl text-primary">{javaAvg}%</p><p class="text-xs text-muted-foreground">Rata-rata Jawa</p>
       </div>
       <div class="rounded-2xl border bg-card p-4 text-center">
-        <p class="kpi-value text-xl text-chart-3">{(bdg.utilizationPct - javaAvg > 0 ? "+" : "")}{(bdg.utilizationPct - javaAvg).toFixed(1)} pts</p><p class="text-xs text-muted-foreground">vs rata-rata Jawa</p>
+        <p class="kpi-value text-xl text-chart-3">{(bdg.utilizationPct - javaAvg > 0 ? "+" : "")}{numId(bdg.utilizationPct - javaAvg, 1)} pts</p><p class="text-xs text-muted-foreground">vs rata-rata Jawa</p>
       </div>
       <div class="rounded-2xl border bg-card p-4 text-center">
         <p class="kpi-value text-xl text-destructive-foreground">&ge;65%</p><p class="text-xs text-muted-foreground">Ambang alert</p>
@@ -72,5 +80,5 @@
     </div>
   </div>
 {:else}
-  <div class="h-64 animate-pulse rounded-2xl border border-border bg-card/60"></div>
+  <PageState loading={!loaded && !failed} error={failed} errorTitle="Gagal memuat dashboard hub" onretry={load} skeletonCards={0} skeletonHeight={256} />
 {/if}

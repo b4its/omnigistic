@@ -3,28 +3,35 @@
   import { api, type Hub, type Insights } from "$lib/api";
   import RoleOverview from "$lib/components/RoleOverview.svelte";
   import EChart from "$lib/components/EChart.svelte";
+  import PageState from "$lib/components/PageState.svelte";
   import { barChart } from "$lib/charts/options";
 
   let hubs = $state<Hub[]>([]);
   let greeting = $state("");
   let insights = $state<Insights["insights"]>([]);
   let loaded = $state(false);
+  let failed = $state(false);
 
-  onMount(async () => {
+  async function load() {
+    loaded = false;
+    failed = false;
     try {
       hubs = await api.hubs();
     } catch {
       hubs = [];
+      failed = true;
     }
     try {
       const ins = await api.insights("HUB");
       greeting = ins.greeting;
       insights = ins.insights;
     } catch {
-      /* ignore */
+      /* insights opsional */
     }
     loaded = true;
-  });
+  }
+
+  onMount(() => void load());
 
   const bdg = $derived(hubs.find((h) => h.name === "Bandung") ?? hubs[0]);
   const javaAvg = $derived(
@@ -65,10 +72,5 @@
     {/snippet}
   </RoleOverview>
 {:else}
-  <div class="space-y-5">
-    <div class="h-24 animate-pulse rounded-2xl border border-border bg-card/60"></div>
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {#each Array(4) as _, i (i)}<div class="h-28 animate-pulse rounded-2xl border border-border bg-card/60"></div>{/each}
-    </div>
-  </div>
+  <PageState loading={!loaded && !failed} error={failed} errorTitle="Gagal memuat ringkasan hub" onretry={load} />
 {/if}
