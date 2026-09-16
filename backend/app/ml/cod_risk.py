@@ -9,6 +9,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from app.ml.metrics import clamp
+
 try:
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import train_test_split
@@ -106,14 +108,20 @@ FEATURE_META = [
 
 def score_package(pkg: dict[str, Any]) -> dict:
     """Input: {hub_util, value, hour, ambiguous, zone}. Output skor 0-1 + kebijakan
-    + rincian kontribusi tiap fitur (untuk menjelaskan why/how keputusan)."""
+    + rincian kontribusi tiap fitur (untuk menjelaskan why/how keputusan).
+
+    Semua input dijepit ke rentang sah (clamp bersama) agar nilai ekstrem/NaN/None
+    tak menghasilkan skor nonsense (mis. value=1e9 → skor tepat 1,0)."""
     m = _get_model()
+    # Rentang per fitur = rentang data latih (jaga agar skor tak jenuh nonsense):
+    # hub_util 0..100%, nilai 10..500 (rb, sama dgn _synthetic), jam 0..23,
+    # ambiguous 0/1, zona 0..2.
     feats = [
-        float(pkg.get("hub_util", 68.9)),
-        float(pkg.get("value", 100)),
-        float(pkg.get("hour", 10)),
-        float(pkg.get("ambiguous", 0)),
-        float(pkg.get("zone", 0)),
+        clamp(pkg.get("hub_util", 68.9), 0.0, 100.0, 68.9),
+        clamp(pkg.get("value", 100), 10.0, 500.0, 100.0),
+        clamp(pkg.get("hour", 10), 0.0, 23.0, 10.0),
+        clamp(pkg.get("ambiguous", 0), 0.0, 1.0, 0.0),
+        clamp(pkg.get("zone", 0), 0.0, 2.0, 0.0),
     ]
     factors: list[dict] = []
     intercept = 0.0
