@@ -193,12 +193,28 @@ res8 = ci8["result"]
 check("COD-impact mandiri = 138 mnt", res8["currentTime"] == 138, str(res8["currentTime"]))
 check("COD-impact mandiri 3,48/jam", abs(res8["currentPerHour"] - 3.48) < 0.02, str(res8["currentPerHour"]))
 # REGRESI: input paket harus mengubah durasi (bug lama: diabaikan).
-from app.ml.simulations import calculate_cod_impact as _cci
+from app.ml.simulations import calculate_cod_impact as _cci, calculate_digital_twin as _dt
 big = _cci(80, 60)
 small = _cci(8, 60)
 check("paket lebih banyak -> durasi lebih lama", big["currentTime"] > small["currentTime"], f"{small['currentTime']}->{big['currentTime']}")
 check("digital 0% tak hemat", _cci(8, 0)["timeSaved"] == 0)
 check("digital 100% -> non-COD 6,4/jam", abs(_cci(8, 100)["newPerHour"] - 6.4) < 0.02, str(_cci(8, 100)["newPerHour"]))
+# REGRESI B1: monotonicitas lintas boundary 8 (sebelumnya n=8→138, n=9→127 lebih cepat).
+seq = [_cci(n, 60)["currentTime"] for n in range(1, 25)]
+check("COD-impact monotonic 1..24", all(seq[i] <= seq[i + 1] for i in range(len(seq) - 1)), str(seq[:12]))
+check("clamp: share >100 dijepit", _cci(8, 60, 500)["codSharePct"] == 100.0)
+check("clamp: share <0 dijepit", _cci(8, 60, -500)["codSharePct"] == 0.0)
+# REGRESI B3: digital-twin harus menjepit shares 0..100 (tanpa capex/percent negatif/absurd).
+allneg = {k: -50 for k in ("javaShare", "sumatraShare", "kalimantanShare", "sulawesiShare", "baliShare", "malukuShare")}
+allbig = {k: 500 for k in ("javaShare", "sumatraShare", "kalimantanShare", "sulawesiShare", "baliShare", "malukuShare")}
+dn, db = _dt(allneg), _dt(allbig)
+check("digital-twin: capex tak negatif", dn["totalCapexSavingT"] >= 0, str(dn["totalCapexSavingT"]))
+check("digital-twin: sponsorPct tak negatif", dn["regionalSponsorPct"] >= 0, str(dn["regionalSponsorPct"]))
+check("digital-twin: sponsorPct <=100", db["regionalSponsorPct"] <= 100.0, str(db["regionalSponsorPct"]))
+check("digital-twin: util gain wajar (<40pt)", db["eastUtilisationGain"] - dn["eastUtilisationGain"] < 120, str(db["eastUtilisationGain"]))
+# C1: dua mesin COD harus sepakat pada skenario murni-COD 8 paket.
+from app.ml.cod_intel import analyze_cod_impact as _aci
+check("COD sepakat simulations vs cod_intel", _cci(8, 0, 100)["currentTime"] == round(_aci(100.0, [], 8)["baseline"]["shiftDurationMin"]))
 
 print("== 6. ML lama tetap jalan ==")
 check("cod-risk demo", client.get("/ml/cod-risk/demo").status_code == 200)
