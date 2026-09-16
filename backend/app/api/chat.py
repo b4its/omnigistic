@@ -3,6 +3,7 @@
 """
 from __future__ import annotations
 import logging
+import os
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
@@ -39,7 +40,17 @@ class ChatBody(BaseModel):
 
 
 def _client_key(req: Request, role: str) -> str:
-    ip = req.headers.get("x-forwarded-for", "").split(",")[0] or req.headers.get("x-real-ip") or "anon"
+    """Kunci rate-limit berbasis IP peer TCP (bukan header yang bisa dipalsukan).
+
+    Header X-Forwarded-For diabaikan kecuali TRUST_PROXY=1 (di belakang proxy
+    tepercaya), supaya penyerang tak bisa memutar kunci dgn header palsu →
+    melewati rate-limit (OWASP LLM10).
+    """
+    ip = "anon"
+    if os.environ.get("TRUST_PROXY") == "1":
+        ip = req.headers.get("x-forwarded-for", "").split(",")[0].strip() or req.headers.get("x-real-ip", "").strip() or "anon"
+    if not ip or ip == "anon":
+        ip = req.client.host if req.client else "anon"
     return f"ai:{ip}:{role}"
 
 
@@ -55,7 +66,6 @@ def _system_for(role: str, qa: dict | None = None) -> str:
 def _call_llm(role: str, user_msg: str, session: str, qa: dict | None = None) -> str | None:
     """Panggil LLM (OpenAI-compatible). Return None bila gagal, tidak pernah raise,
     supaya pemanggil bisa jatuh ke bank QA kasus. Header x-opencode-session wajib untuk OpenCode Go."""
-    import os
     import openai
     base = os.environ.get("AI_API_BASE_URL")
     key = os.environ.get("AI_API_KEY")

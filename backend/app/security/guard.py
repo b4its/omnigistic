@@ -115,11 +115,32 @@ def filter_output(text: str) -> str:
 # ── Layer 4: rate limit (token bucket, 8 tokens, refill 8/60 per sec) ──
 _CAP = 8
 _RATE = 8 / 60
+_FULL_REFILL_SEC = _CAP / _RATE  # waktu bucket terisi penuh → boleh dibuang
+_MAX_BUCKETS = 10_000           # batas memori (anti-DoS via banjir key)
 _bucket: dict[str, tuple[float, float]] = {}  # key -> (tokens, ts_sec)
+
+
+def _evict_stale(now: float) -> None:
+    """Buang bucket yang sudah terisi penuh (tak lagi membatasi) & jaga batas ukuran.
+
+    Mencegah pertumbuhan memori tanpa batas bila penyerang membanjiri key
+    (mis. X-Forwarded-For palsu). Bucket penuh = setara tak ada entri.
+    """
+    if len(_bucket) < _MAX_BUCKETS:
+        return
+    stale = [k for k, (tokens, ts) in _bucket.items() if tokens >= _CAP or (now - ts) > _FULL_REFILL_SEC]
+    for k in stale:
+        _bucket.pop(k, None)
+    # Masih penuh (semua bucket aktif) → buang entri tertua (LRU-by-ts).
+    if len(_bucket) >= _MAX_BUCKETS:
+        oldest = sorted(_bucket.items(), key=lambda kv: kv[1][1])[: len(_bucket) - _MAX_BUCKETS + 1]
+        for k, _ in oldest:
+            _bucket.pop(k, None)
 
 
 def check_rate(key: str) -> bool:
     now = time.time()
+    _evict_stale(now)
     b = _bucket.get(key)
     if not b:
         _bucket[key] = (_CAP, now)
