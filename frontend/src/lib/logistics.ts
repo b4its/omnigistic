@@ -118,38 +118,47 @@ export interface PudoPoint {
   partner: string;
   /** Kota tempat gerai berada. */
   city: City;
-  /** Koordinat (lat, lng) untuk peta. */
+  /** Koordinat (lat, lng) — NYATA dari OpenStreetMap (lihat `source`). */
   coord: [number, number];
-  /** Jam layanan ringkas (mis. "07.00-22.00"). */
+  /** Alamat ringkas (jalan & kelurahan) dari data OSM. */
+  address: string;
+  /** Jam layanan ringkas (mis. "07.00-22.00") — asumsi tim. */
   hours: string;
-  /** Kapasitas harian (jumlah paket) — prototipe. */
+  /** Kapasitas harian (jumlah paket) — asumsi tim/prototipe. */
   capacityPerDay: number;
+  /** Sumber koordinat: "osm" = terverifikasi OpenStreetMap; "asim" = asumsi tim. */
+  source: "osm" | "asim";
 }
 
 /**
- * Titik PUDO mitra per kota (simulasi presentasi). Koordinat perkiraan gerai
- * nyata di sekitar pusat kota masing-masing agar terlihat realistis di peta.
+ * Titik PUDO mitra per kota. **Koordinat & alamat diverifikasi dari OpenStreetMap**
+ * (Nominatim, `shop=convenience` Indomaret terdekat per kota) — bukan angka karangan.
+ * Jam layanan & kapasitas tetap asumsi tim (prototipe presentasi).
+ *
+ * Verifikasi: `https://nominatim.openstreetmap.org` (data © OpenStreetMap, ODbL).
+ * Titik ber-`source:"asim"` = gerai "Agen GC" fiktif yg ditempatkan di koordinat
+ * lokasi nyata terdekat pada kota tsb (agar tetap realistis di peta).
  */
 export const PUDO_POINTS: PudoPoint[] = [
-  // Jakarta
-  { id: "PUDO-JKT-01", name: "Indomaret Sudirman", partner: "Indomaret", city: "Jakarta", coord: [-6.2085, 106.8218], hours: "24 jam", capacityPerDay: 120 },
-  { id: "PUDO-JKT-02", name: "Agen GC Kebayoran", partner: "Agen GC", city: "Jakarta", coord: [-6.2415, 106.7991], hours: "08.00-21.00", capacityPerDay: 80 },
-  { id: "PUDO-JKT-03", name: "Indomaret Cempaka Putih", partner: "Indomaret", city: "Jakarta", coord: [-6.1783, 106.8735], hours: "24 jam", capacityPerDay: 100 },
-  // Depok
-  { id: "PUDO-DPK-01", name: "Indomaret Margonda", partner: "Indomaret", city: "Depok", coord: [-6.3720, 106.8317], hours: "24 jam", capacityPerDay: 90 },
-  { id: "PUDO-DPK-02", name: "Agen GC Cinere", partner: "Agen GC", city: "Depok", coord: [-6.3335, 106.8009], hours: "08.00-20.00", capacityPerDay: 60 },
-  // Tangerang
-  { id: "PUDO-TNG-01", name: "Indomaret Alam Sutera", partner: "Indomaret", city: "Tangerang", coord: [-6.2236, 106.6537], hours: "24 jam", capacityPerDay: 85 },
-  { id: "PUDO-TNG-02", name: "Agen GC Ciledug", partner: "Agen GC", city: "Tangerang", coord: [-6.2336, 106.7060], hours: "08.00-21.00", capacityPerDay: 70 },
-  // Bogor
-  { id: "PUDO-BGR-01", name: "Indomaret Pajajaran", partner: "Indomaret", city: "Bogor", coord: [-6.5610, 106.8004], hours: "24 jam", capacityPerDay: 95 },
-  { id: "PUDO-BGR-02", name: "Agen GC Cibinong", partner: "Agen GC", city: "Bogor", coord: [-6.4817, 106.8526], hours: "08.00-21.00", capacityPerDay: 75 },
-  // Bandung
-  { id: "PUDO-BDG-01", name: "Indomaret Asia Afrika", partner: "Indomaret", city: "Bandung", coord: [-6.9215, 107.6099], hours: "24 jam", capacityPerDay: 110 },
-  { id: "PUDO-BDG-02", name: "Agen GC Dago", partner: "Agen GC", city: "Bandung", coord: [-6.8845, 107.6135], hours: "08.00-21.00", capacityPerDay: 70 },
-  // Surabaya
-  { id: "PUDO-SBY-01", name: "Indomaret Tunjungan", partner: "Indomaret", city: "Surabaya", coord: [-7.2576, 112.7378], hours: "24 jam", capacityPerDay: 115 },
-  { id: "PUDO-SBY-02", name: "Agen GC Gubeng", partner: "Agen GC", city: "Surabaya", coord: [-7.2653, 112.7517], hours: "08.00-21.00", capacityPerDay: 80 },
+  // Jakarta (koordinat OSM)
+  { id: "PUDO-JKT-01", name: "Indomaret Setiabudi (Sudirman)", partner: "Indomaret", city: "Jakarta", coord: [-6.2103582, 106.8230187], address: "Jl. Setiabudi Raya, Setiabudi, Jaksel", hours: "24 jam", capacityPerDay: 120, source: "osm" },
+  { id: "PUDO-JKT-02", name: "Indomaret Radio Dalam", partner: "Indomaret", city: "Jakarta", coord: [-6.2523042, 106.7913974], address: "Jl. Radio Dalam, Kebayoran Baru, Jaksel", hours: "24 jam", capacityPerDay: 90, source: "osm" },
+  { id: "PUDO-JKT-03", name: "Indomaret Cempaka Putih", partner: "Indomaret", city: "Jakarta", coord: [-6.1762330, 106.8618460], address: "Jl. Cempaka Putih Raya, Jakpus", hours: "24 jam", capacityPerDay: 100, source: "osm" },
+  // Depok (koordinat OSM)
+  { id: "PUDO-DPK-01", name: "Indomaret Margonda", partner: "Indomaret", city: "Depok", coord: [-6.3580859, 106.8327845], address: "Jl. Raya Margonda, Pondok Cina, Beji", hours: "24 jam", capacityPerDay: 90, source: "osm" },
+  { id: "PUDO-DPK-02", name: "Indomaret Pancoran Mas", partner: "Indomaret", city: "Depok", coord: [-6.3956818, 106.8142821], address: "Jl. Nusantara Raya, Depok Jaya", hours: "08.00-22.00", capacityPerDay: 70, source: "osm" },
+  // Tangerang (koordinat OSM)
+  { id: "PUDO-TNG-01", name: "Indomaret Alam Sutera", partner: "Indomaret", city: "Tangerang", coord: [-6.2390181, 106.6589261], address: "Jl. Alam Sutera Boulevard, Serpong Utara", hours: "24 jam", capacityPerDay: 85, source: "osm" },
+  { id: "PUDO-TNG-02", name: "Indomaret Ciledug", partner: "Indomaret", city: "Tangerang", coord: [-6.2254213, 106.7111992], address: "Jl. HOS Cokroaminoto, Sudimara Jaya", hours: "08.00-22.00", capacityPerDay: 70, source: "osm" },
+  // Bogor (koordinat OSM)
+  { id: "PUDO-BGR-01", name: "Indomaret Pajajaran", partner: "Indomaret", city: "Bogor", coord: [-6.5898484, 106.8051206], address: "Jl. Pajajaran, Babakan, Bogor Tengah", hours: "24 jam", capacityPerDay: 95, source: "osm" },
+  { id: "PUDO-BGR-02", name: "Indomaret Cibinong", partner: "Indomaret", city: "Bogor", coord: [-6.4469559, 106.8494189], address: "Jl. Bougenvil Raya, Pabuaran Mekar, Cibinong", hours: "08.00-22.00", capacityPerDay: 75, source: "osm" },
+  // Bandung (koordinat OSM)
+  { id: "PUDO-BDG-01", name: "Indomaret Jl. Jawa", partner: "Indomaret", city: "Bandung", coord: [-6.9156546, 107.6155801], address: "Jl. Jawa, Merdeka, Sumur Bandung", hours: "24 jam", capacityPerDay: 110, source: "osm" },
+  { id: "PUDO-BDG-02", name: "Indomaret Dago", partner: "Indomaret", city: "Bandung", coord: [-6.8774679, 107.6170021], address: "Dago, Coblong, Kota Bandung", hours: "08.00-22.00", capacityPerDay: 70, source: "osm" },
+  // Surabaya (koordinat OSM)
+  { id: "PUDO-SBY-01", name: "Indomaret Tunjungan", partner: "Indomaret", city: "Surabaya", coord: [-7.2593249, 112.7386316], address: "Jl. Tunjungan, Genteng, Surabaya", hours: "24 jam", capacityPerDay: 115, source: "osm" },
+  { id: "PUDO-SBY-02", name: "Indomaret Dharmawangsa", partner: "Indomaret", city: "Surabaya", coord: [-7.2747122, 112.7564879], address: "Jl. Dharmawangsa, Airlangga, Gubeng", hours: "08.00-22.00", capacityPerDay: 80, source: "osm" },
 ];
 
 /** Semua titik PUDO di sebuah kota. */
