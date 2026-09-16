@@ -59,9 +59,9 @@
     analyzing = true;
     decided = false;
     shown = targets.map(() => 0);
-    const delay = loading ? 0 : 1200; // fase "menghitung" (lebih pendek saat user memicu)
-    const dur = 3600;
-    const stagger = 1700;
+    const delay = 400; // fase "menghitung" singkat
+    const dur = 2200;
+    const stagger = 700;
     const t0 = performance.now();
     const ease = (x: number) => 1 - (1 - x) ** 3;
     let raf = 0;
