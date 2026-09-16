@@ -33,7 +33,7 @@ try {
     await page.goto(BASE + path, { waitUntil: "load", timeout: 40000 });
     await page.waitForTimeout(2500);
     const txt = await page.locator("body").innerText();
-    const hasError = /Coba lagi/.test(txt);
+    const hasError = /coba lagi/i.test(txt);
     const hasSkeleton = (await page.locator(".animate-pulse").count()) > 0;
     R(hasError, `${path.split("/").pop()}: tampil error + Coba lagi`, hasError ? "" : hasSkeleton ? "masih skeleton" : "tak ada pesan");
     await ctx.close();
