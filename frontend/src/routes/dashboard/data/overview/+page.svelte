@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { api, type Hub, type Insights } from "$lib/api";
+  import { numId } from "$lib/utils";
   import RoleOverview from "$lib/components/RoleOverview.svelte";
 
   let greeting = $state("");
@@ -10,22 +11,27 @@
   // Angka armada & status hub DITARIK dari satu sumber kebenaran (API), bukan hardcode.
   let fleetData = $state<Record<string, number>>({});
   let hubs = $state<Hub[]>([]);
+  let failed = $state(false);
 
-  onMount(async () => {
+  async function load() {
+    failed = false;
+    loaded = false;
     try {
       const ins = await api.insights("DATA");
       greeting = ins.greeting;
       insights = ins.insights;
     } catch {
-      /* */
+      /* insights ditangani RoleOverview */
     }
     try {
       [fleetData, hubs] = await Promise.all([api.fleet(), api.hubs()]);
     } catch {
-      /* fallback: batas bawah kosong, dihitung jadi 0 */
+      failed = true;
     }
     loaded = true;
-  });
+  }
+
+  onMount(() => void load());
 
   const overloaded = $derived(hubs.filter((h) => h.utilizationPct > 65).length);
   const underutilized = $derived(hubs.filter((h) => h.utilizationPct < 50).length);
@@ -46,6 +52,7 @@
   const totalAll = $derived(fleetData.totalArmada ?? 0);
   const evTarget = $derived(fleetData.evTarget ?? 0);
   const evSharePct = $derived(fleetData.evSharePct ?? 0);
+  const motorSharePct = $derived(fleetData.motorcycleSharePct ?? (totalMotor ? ((fleetData.motorcycles ?? 0) / totalMotor) * 100 : 0));
 </script>
 
 <RoleOverview
@@ -55,7 +62,13 @@
   insights={loaded ? insights : []}
 >
   {#snippet chart()}
-    <p class="mb-2 text-sm font-semibold text-muted-foreground">Armada: motor dominan 93,7%</p>
+    {#if loaded && failed}
+      <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/5 p-4">
+        <p class="text-sm text-foreground">Gagal memuat data armada &amp; hub. Angka di bawah bisa kosong/nol.</p>
+        <button type="button" onclick={load} class="rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-4 py-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_18px_-5px_var(--glow)]">Coba lagi</button>
+      </div>
+    {/if}
+    <p class="mb-2 text-sm font-semibold text-muted-foreground">Armada: motor dominan {numId(motorSharePct, 1)}%</p>
     <div class="flex h-[220px] flex-col justify-center gap-4">
       {#each fleet as f (f.label)}
         <div class="flex items-center gap-3">

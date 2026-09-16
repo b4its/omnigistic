@@ -42,6 +42,9 @@
   const salesG = $derived(latest && first ? numId((latest.netSalesT / first.netSalesT - 1) * 100, 1) : "0");
   const fulfilG = $derived(latest && first ? numId((latest.fulfilmentT / first.fulfilmentT - 1) * 100, 1) : "0");
   const costSales = $derived(latest ? ((latest.fulfilmentT + latest.shippingT) / latest.netSalesT) * 100 : 0);
+  // Rasio biaya-thd-sales tahun pertama (2020) → delta dihitung, bukan hardcode.
+  const costSalesFirst = $derived(first ? ((first.fulfilmentT + first.shippingT) / first.netSalesT) * 100 : 0);
+  const costSalesDeltaPt = $derived(costSales - costSalesFirst);
 
   // Utilisasi per region dari SATU sumber kebenaran (/ml/metrics/regions), bukan hardcode.
   const regUtil = $derived(
@@ -67,7 +70,7 @@
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <MetricCard label="Net Sales 2023" value={latest ? `Rp${latest.netSalesT}T` : "-"} delta={`+${salesG}%`} deltaTone="up" sub="vs Rp213,64T (2020)" />
       <MetricCard label="Fulfilment Expense" value={latest ? `Rp${latest.fulfilmentT}T` : "-"} delta={`+${fulfilG}%`} deltaTone="warn" sub="naik lebih cepat dari sales" />
-      <MetricCard label="Cost-to-Sales Ratio" value={`${numId(costSales, 1)}%`} delta="+0,4pt" deltaTone="warn" sub="dari 30,9% di 2020" />
+      <MetricCard label="Cost-to-Sales Ratio" value={`${numId(costSales, 1)}%`} delta={`${costSalesDeltaPt >= 0 ? "+" : ""}${numId(costSalesDeltaPt, 1)}pt`} deltaTone={costSalesDeltaPt >= 0 ? "warn" : "up"} sub={`dari ${numId(costSalesFirst, 1)}% di 2020`} />
       <MetricCard label="Utilisasi tertinggi" value={busiestHub ? `${busiestHub.code} ${busiestHub.utilizationPct}%` : "-"} delta={busiestHub ? `${busiestHub.utilizationPct}%` : ""} deltaTone="warn" sub={quietestHub ? `vs ${quietestHub.name} ${quietestHub.utilizationPct}%` : ""} />
     </div>
 

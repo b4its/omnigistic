@@ -5,12 +5,15 @@
   import Icon from "$lib/components/Icon.svelte";
 
   let fin = $state<FinRow[]>([]);
+  // true bila angka kasus dipakai dari fallback (backend offline) → ditandai di UI.
+  let offline = $state(false);
 
   onMount(async () => {
     try {
       fin = await api.financial();
     } catch {
       fin = [];
+      offline = true;
     }
   });
 
@@ -78,6 +81,11 @@
 <div class="space-y-6">
   <h1 class="font-heading text-xl font-semibold tracking-tight">ROI & Benefit-Cost Analysis</h1>
   <p class="text-sm text-muted-foreground">Tiga skenario (konservatif / dasar / optimis) · <span class="font-medium text-foreground">semua angka kuantitatif di luar studi kasus adalah asumsi tim</span>, diberi label jujur.</p>
+  {#if offline}
+    <p class="inline-flex items-center gap-2 rounded-full border border-warning/40 bg-warning/10 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-warning-foreground">
+      <Icon name="warn" cls="h-3.5 w-3.5" /> Backend offline — memakai angka kasus (Table 3)
+    </p>
+  {/if}
 
   <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm">
     <span class="font-medium">Basis angka:</span> Fulfilment expense 2023 Rp{numId(fulfilment2023, 1)}T · Shipping expense 2023 Rp{numId(shipping2023, 1)}T (Table 3). Estimasi komponen (COD handling ~30% shipping, BBM ~15% shipping, komplain alamat ~2% fulfilment) dan capex EV (Rp350 jt/unit + infra Rp5T) adalah asumsi tim.

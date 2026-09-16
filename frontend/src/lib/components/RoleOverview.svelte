@@ -121,6 +121,6 @@
 
 
   <div class="rounded-2xl border border-border bg-card p-4 text-[15.5px] leading-relaxed text-muted-foreground">
-    <span class="font-medium text-foreground">Tip:</span> Nigi AI (tombol bulat kanan bawah) menjawab hanya dengan angka studi kasus. Coba <span class="font-serif italic">"Apa itu Digital Twin?"</span>
+    <span class="font-medium text-foreground">Tip:</span> Nigi AI (tombol bulat kanan bawah) menjawab hanya dengan angka studi kasus. Coba <span class="font-heading italic">"Apa itu Digital Twin?"</span>
   </div>
 </div>

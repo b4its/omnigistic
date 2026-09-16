@@ -46,7 +46,8 @@
             { label: "Net Sales", value: `Rp${latest.netSalesT}T`, sub: `+${salesG}% vs 2020`, spark: fin.map((f) => f.netSalesT) },
             { label: "Fulfilment Expense", value: `Rp${latest.fulfilmentT}T`, sub: `+${fulfilG}% vs 2020`, accent: "var(--color-destructive-foreground)", spark: fin.map((f) => f.fulfilmentT) },
             { label: "Cost-to-Sales", value: `${numId(ratio, 1)}%`, sub: "fulfilment+shipping / sales" },
-            { label: "Market Share", value: "20,6%", sub: "pemimpin 5 tahun" }
+            // Angka kasus (bukan turunan JSON) → label sumber agar tak tampak "live".
+            { label: "Market Share", value: "20,6%", sub: "pemimpin 5 tahun (angka kasus)" }
           ];
         })()
       : []

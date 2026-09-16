@@ -1,56 +1,58 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { api } from "$lib/api";
+  import { api, type KpiRow } from "$lib/api";
+  import PageState from "$lib/components/PageState.svelte";
 
-  let rows = $state<Array<{ kpi: string; baseline: string; target: string }>>([]);
+  let rows = $state<KpiRow[]>([]);
+  let loaded = $state(false);
+  let failed = $state(false);
 
-  const fallback = [
-    { kpi: "Utilisasi hub timur", baseline: "41,5%", target: "≥55% (24 bulan)" },
-    { kpi: "Complaint rate", baseline: "5,5/juta", target: "<3/juta" },
-    { kpi: "Rute COD (8 paket)", baseline: "138 menit", target: "≤100 menit" },
-    { kpi: "Produktivitas COD", baseline: "3,48/jam", target: "≥4,8/jam" },
-    { kpi: "Forecast accuracy", baseline: "-", target: "MAPE <10%" },
-    { kpi: "Eksposur per platform", baseline: "57,7%", target: "<20%" },
-    { kpi: "Armada bersih", baseline: "0%", target: "Roadmap 3 fase" }
-  ];
-
-  onMount(async () => {
+  async function load() {
+    failed = false;
+    loaded = false;
     try {
       rows = await api.kpiTargets();
     } catch {
-      rows = fallback;
+      rows = [];
+      failed = true;
     }
-  });
+    loaded = true;
+  }
+
+  onMount(() => void load());
 </script>
 
 <div class="space-y-6">
   <h1 class="font-heading text-xl font-semibold tracking-tight">KPI Tracker</h1>
-  <p class="text-sm text-muted-foreground">Baseline → target, sistem yang diusulkan</p>
+  <p class="text-sm text-muted-foreground">Baseline → target, sistem yang diusulkan · sumber: <code class="font-mono text-xs">/api/kpi-targets</code></p>
 
-  <div class="overflow-x-auto rounded-2xl border bg-card">
-    <table class="w-full text-sm">
-      <caption class="sr-only">KPI Omnigistic baseline dan target studi kasus</caption>
-      <thead>
-        <tr class="border-b bg-muted/50 text-left text-xs text-muted-foreground">
-          <th scope="col" class="px-4 py-3">KPI</th>
-          <th scope="col" class="px-4 py-3 text-right">Baseline</th>
-          <th scope="col" class="px-4 py-3 text-right">Target</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each rows as r (r.kpi)}
-          <tr class="border-b last:border-0">
-            <td class="px-4 py-3 text-foreground">{r.kpi}</td>
-            <td class="kpi-value px-4 py-3 text-right text-muted-foreground line-through">{r.baseline}</td>
-            <td class="kpi-value px-4 py-3 text-right text-primary">{r.target}</td>
+  {#if loaded && failed}
+    <PageState loading={false} error={true} errorTitle="Gagal memuat target KPI" errorHint="Backend offline — angka KPI diturunkan dari data studi kasus." onretry={load} />
+  {:else if loaded && rows.length > 0}
+    <div class="overflow-x-auto rounded-2xl border bg-card">
+      <table class="w-full text-sm">
+        <caption class="sr-only">KPI Omnigistic baseline dan target studi kasus</caption>
+        <thead>
+          <tr class="border-b bg-muted/50 text-left font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+            <th scope="col" class="px-4 py-3">KPI</th>
+            <th scope="col" class="px-4 py-3 text-right">Baseline</th>
+            <th scope="col" class="px-4 py-3 text-right">Target</th>
           </tr>
-        {/each}
-        {#if rows.length === 0}
-          <tr>
-            <td colspan="3" class="px-4 py-8 text-center text-muted-foreground">Loading…</td>
-          </tr>
-        {/if}
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          {#each rows as r (r.kpi)}
+            <tr class="border-b last:border-0 transition-colors hover:bg-[color-mix(in_oklab,var(--bitcoin)_5%,transparent)]">
+              <td class="px-4 py-3 text-foreground">{r.kpi}</td>
+              <td class="kpi-value px-4 py-3 text-right text-muted-foreground line-through">{r.baseline}</td>
+              <td class="kpi-value px-4 py-3 text-right text-[var(--bitcoin)]">{r.target}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+  {:else if loaded}
+    <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">Data KPI tidak tersedia.</div>
+  {:else}
+    <PageState loading={true} skeletonCards={0} skeletonHeight={280} />
+  {/if}
 </div>
