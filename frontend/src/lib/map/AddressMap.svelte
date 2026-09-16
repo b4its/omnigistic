@@ -187,7 +187,7 @@
 </script>
 
 <div class="relative isolate z-0 h-[340px] w-full overflow-hidden rounded-2xl border border-border">
-  <div bind:this={mapEl} aria-label="Peta Leaflet: 3 alamat ambigu, ML memetakan target, animasi kurir mengikuti rute jalan, ETA 75 menit" role="application" class="absolute inset-0"></div>
+  <div bind:this={mapEl} aria-label="Peta Leaflet: 3 alamat ambigu, ML memetakan target, animasi kurir mengikuti rute jalan, ETA {etaMin} menit" role="application" class="absolute inset-0"></div>
   <div class="pointer-events-none absolute right-2 top-2 z-[1000] rounded-lg border border-border bg-background/90 px-3 py-2 text-[13px] font-semibold shadow-pop">
     <span class="text-success-foreground">●</span> alamat benar · <span class="text-muted-foreground">○</span> kandidat salah · <span style="color:#8b5cf6">●</span> PUDO
   </div>

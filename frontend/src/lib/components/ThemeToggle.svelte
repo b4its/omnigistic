@@ -1,14 +1,23 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { themeStore } from "$lib/stores/theme";
   import { notify } from "$lib/toast";
   import Icon from "$lib/components/Icon.svelte";
 
   let cur = $state<"light" | "dark">("light");
-  themeStore.subscribe((t) => (cur = t));
+
+  // Subscribe di onMount + unsubscribe saat unmount (cegah kebocoran langganan;
+  // komponen ini di-render di Topbar & header fallback → remount tiap navigasi).
+  onMount(() => {
+    const unsub = themeStore.subscribe((t) => (cur = t));
+    return unsub;
+  });
 
   function toggleTheme() {
+    // Baca nilai SEBELUM toggle (toggle memicu subscribe sinkron yg mengubah `cur`).
+    const wasDark = cur === "dark";
     themeStore.toggle();
-    notify({ message: cur === "dark" ? "Mode terang diaktifkan" : "Mode gelap diaktifkan", type: "info", title: "Tema" });
+    notify({ message: wasDark ? "Mode terang diaktifkan" : "Mode gelap diaktifkan", type: "info", title: "Tema" });
   }
 </script>
 

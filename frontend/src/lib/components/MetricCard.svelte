@@ -75,9 +75,11 @@
       shown = fmt(pre, num, suf, dec);
       return;
     }
-    // count-up sekali (700ms cubic-out), tidak re-run ulang pada re-render identik
+    // count-up sekali (700ms cubic-out), tidak re-run ulang pada re-render identik.
+    // Baca `shown` via untrack agar penulisan `shown` di dalam frame TIDAK memicu
+    // ulang effect ini tiap frame (dulu animasi restart terus → jitter/lambat).
     const target = fmt(pre, num, suf, dec);
-    if (shown === target || num === 0) {
+    if (untrack(() => shown) === target || num === 0) {
       shown = target;
       return;
     }
@@ -85,7 +87,7 @@
     const dur = 700;
     let raf = 0;
     let stopped = false;
-    const startNum = parse(shown ?? "").num ?? 0;
+    const startNum = parse(untrack(() => shown ?? "")).num ?? 0;
     const ease = (x: number) => 1 - (1 - x) ** 3;
     const frame = (now: number) => {
       if (stopped) return;

@@ -113,17 +113,21 @@
     }
   }
 
-  onMount(() => {
-    if (!mapEl) return;
-    const el = mapEl;
-    let disposed = false;
-    let map: LeafletNS.Map | null = null;
-    let cleanupTheme: (() => void) | null = null;
+  let map: LeafletNS.Map | null = null;
+  let cleanupTheme: (() => void) | null = null;
+  let disposed = false;
 
+  /**
+   * Bangun ulang peta dari identitas rute saat ini. Dipanggil dari $effect yang
+   * melacak `city`/`showPudo`/`role` → peta selalu sinkron (dulu hanya onMount
+   * sekali, sehingga kota baru tetap memakai geometri/marker/viewport kota lama).
+   */
+  function buildMap(el: HTMLElement) {
+    const myDisposed = () => disposed || !el.isConnected;
     void (async () => {
       const L = (await import("leaflet")).default;
       await import("leaflet/dist/leaflet.css");
-      if (disposed || !el) return;
+      if (myDisposed()) return;
 
       map = L.map(el, { worldCopyJump: true, zoomControl: true }).setView(rgeo.dest as unknown as LeafletNS.LatLngExpression, 11);
 
@@ -188,22 +192,41 @@
 
       paint(progress);
 
-      // Cleanup tema ketika komponen dibongkar.
+      // Simpan pembersih tema; dibuang saat peta dibangun ulang / komponen dibongkar.
       cleanupTheme = unsubTheme;
     })();
+  }
 
+  function teardownMap() {
+    cleanupTheme?.();
+    cleanupTheme = null;
+    traveled = null;
+    courierMk = null;
+    try {
+      if (map) map.remove();
+    } catch {
+      /* noop */
+    }
+    map = null;
+  }
+
+  onMount(() => {
+    // disposed dikelola di luar agar $effect rebuild tak dianggap unmount.
     return () => {
       disposed = true;
-      cleanupTheme?.();
-      traveled = null;
-      courierMk = null;
-      try {
-        if (map) map.remove();
-      } catch {
-        /* noop */
-      }
-      map = null;
+      teardownMap();
     };
+  });
+
+  // Bangun ulang peta saat identitas rute berubah (city/showPudo/role) & saat el siap.
+  $effect(() => {
+    const ident = `${city}|${showPudo}|${role}`;
+    const el = mapEl;
+    if (!el) return;
+    void ident; // jadikan dependensi eksplisit
+    teardownMap();
+    buildMap(el);
+    return () => teardownMap();
   });
 
   // Kurir bergerak ketika progress berubah.

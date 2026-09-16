@@ -131,7 +131,7 @@
       a.download = "omnigistic-hubs.csv";
       a.click();
       URL.revokeObjectURL(url);
-      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: "omnigistic-hubs.csv terunduh (23 hub)", type: "success", title: "Export" } }));
+      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `omnigistic-hubs.csv terunduh (${hubs.length} hub)`, type: "success", title: "Export" } }));
     } catch {
       window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: "Export gagal — backend offline?", type: "error", title: "Export" } }));
     } finally {
