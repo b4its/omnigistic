@@ -104,6 +104,8 @@ omnigistic/
   - `GET /ml/optimize/load-balance` — Network Optimization Engine (transportation heuristic greedy cheapest-link-first): alihkan overflow hub >65% ke hub <50% dengan kendala headroom, lantai aman 60%, maks 35%. Output: moves, util sebelum/sesudah per hub, agregat timur.
   - `POST /ml/cod-intel` + `GET /ml/cod-intel/scenarios` — COD Decision Intelligence: dampak per-shift kurir dari Figure 2 (138 vs 75 mnt), 4 intervensi digital, hemat menit/paket/rupiah/CO₂.
   - `GET /ml/metrics/{regions,financial,demand,fleet,audit}` — metrik turunan + rekonsiliasi (temuan dokumen: e-commerce Tabel 4 tertulis 641 vs hasil jumlah baris 651).
+  - `GET|POST /ml/sponsor/compare` + `GET /ml/sponsor/sensitivity` — **Direct-vs-Sponsor Comparator** (Pertanyaan 1): unit cost nasional dari Tabel 3 & 4 (Rp89.676/paket), model Direct vs Sponsor per region (capex exposure, laba HQ, skor kontrol), parameter ekuitas/biaya interaktif + uji sensitivitas.
+  - `GET|POST /ml/modalshift/optimize` + `GET /ml/modalshift/levers` — **Modal-Shift & Cost-Lever Optimizer** (Pertanyaan 6): pilih moda (darat/laut/udara) per 11 koridor dengan objektif berbobot (biaya/emisi/SLA), hemat ~16,7% biaya & ~18,4% emisi; portofolio 6 tuas pengurangan biaya + dampak sustainability.
 - **Material 3 + sidebar kolaps**: bottom Navigation Bar (compact <600px) / Navigation Rail (medium 600–840px) / Sidebar penuh (expanded ≥840px). Sidebar bisa **dibuka/ditutup** (w-64 ⇄ rail ikon w-22) lewat tombol di header sidebar, hamburger di Topbar, atau pintasan **Ctrl/Cmd+B**; preferensi dipersist ke localStorage. Responsif penuh 320px–ultrawide, 0 overflow horizontal.
 - **Auto-demo** (non-interaktif) di semua simulasi (Digital Twin preset, COD skenario, Load-Balance)
 - **Map**: Leaflet + 3 kandidat ambigu, path animasi + ETA menit ("Jl. Raya Jakarta-Bogor No.12") dengan Nigi AI saran
@@ -141,6 +143,9 @@ PLAYWRIGHT_CHROMIUM=/usr/bin/chromium SHOT_PATH=/dashboard/pusat/executive node 
 # Uji accordion pesanan dashboard customer (15 assert) + koherensi lintas role (31 assert)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-customer-accordion.mjs
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-orders.mjs
+
+# Uji mesin analitik interaktif — komparator sponsor & modal-shift (18 assert)
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-engines.mjs
 ```
 
 Laporan audit detail: `docs/angka-audit-2026-09-07.md`.
