@@ -104,7 +104,7 @@ omnigistic/
   - `GET /ml/optimize/load-balance` — Network Optimization Engine (transportation heuristic greedy cheapest-link-first): alihkan overflow hub >65% ke hub <50% dengan kendala headroom, lantai aman 60%, maks 35%. Output: moves, util sebelum/sesudah per hub, agregat timur.
   - `POST /ml/cod-intel` + `GET /ml/cod-intel/scenarios` — COD Decision Intelligence: dampak per-shift kurir dari Figure 2 (138 vs 75 mnt), 4 intervensi digital, hemat menit/paket/rupiah/CO₂.
   - `GET /ml/metrics/{regions,financial,demand,fleet,audit}` — metrik turunan + rekonsiliasi (temuan dokumen: e-commerce Tabel 4 tertulis 641 vs hasil jumlah baris 651).
-- **Material 3**: NavigationRail (medium) / bottom Navigation Bar (compact) / Drawer (full) 600/840
+- **Material 3 + sidebar kolaps**: bottom Navigation Bar (compact <600px) / Navigation Rail (medium 600–840px) / Sidebar penuh (expanded ≥840px). Sidebar bisa **dibuka/ditutup** (w-64 ⇄ rail ikon w-22) lewat tombol di header sidebar, hamburger di Topbar, atau pintasan **Ctrl/Cmd+B**; preferensi dipersist ke localStorage. Responsif penuh 320px–ultrawide, 0 overflow horizontal.
 - **Auto-demo** (non-interaktif) di semua simulasi (Digital Twin preset, COD skenario, Load-Balance)
 - **Map**: Leaflet + 3 kandidat ambigu, path animasi + ETA menit ("Jl. Raya Jakarta-Bogor No.12") dengan Nigi AI saran
 
@@ -133,6 +133,10 @@ cd backend && SKIP_DB=1 .venv/bin/python tests/run_tests.py
 # Frontend E2E (51 assert; butuh backend :8000 + frontend dev :3000)
 cd frontend
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 E2E_API=http://127.0.0.1:8000 node scripts/e2e.mjs
+
+# Uji sidebar (15 assert) + audit overflow responsif (8 viewport)
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium node scripts/e2e-sidebar.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium SHOT_PATH=/dashboard/pusat/executive node scripts/responsive-shot.mjs
 ```
 
 Laporan audit detail: `docs/angka-audit-2026-09-07.md`.
