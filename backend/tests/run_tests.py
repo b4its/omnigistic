@@ -186,6 +186,19 @@ check("filter udara -> semua udara", all(r["chosen"]["mode"] == "udara" for r in
 tight = client.post("/ml/modalshift/optimize", json={"sla_hours": 24.0}).json()
 medan = next(r for r in tight["routes"] if r["dest"] == "Medan")
 check("SLA 24h -> Medan bukan darat", medan["chosen"]["mode"] != "darat", medan["chosen"]["mode"])
+# REGRESI I4: SLA dijeppit >0 (bukan diabaikan), filter tak sah ditolak eksplisit.
+neg_sla = client.post("/ml/modalshift/optimize", json={"sla_hours": -5}).json()
+check("SLA negatif diklamp > 0", neg_sla["slaHours"] > 0, str(neg_sla["slaHours"]))
+check("SLA ekstrem dilaporkan (slaInfeasibleRoutes)", "slaInfeasibleRoutes" in neg_sla["summary"])
+badfilter = client.post("/ml/modalshift/optimize", json={"mode_filter": ["xxx"]}).json()
+check("filter tak sah -> 0 rute + flag", badfilter["summary"]["routes"] == 0 and badfilter["summary"]["filterRejected"] is True, str(badfilter["summary"]))
+zw = client.post("/ml/modalshift/optimize", json={"weights": {"cost": 0, "emission": 0, "speed": 0}}).json()
+check("bobot semua 0 -> fallback default", abs(sum(zw["weights"].values()) - 1.0) < 0.01, str(zw["weights"]))
+# REGRESI I3: cod-intel menjepit share & paket (tak ada paket negatif).
+from app.ml.cod_intel import analyze_cod_impact as _aci
+check("cod-intel share negatif dijepit", _aci(-10, [], 40)["split"]["codPackages"] == 0.0)
+check("cod-intel share >100 dijepit", _aci(150, [], 40)["split"]["nonCodPackages"] == 0.0)
+check("cod-intel paket negatif -> 0", _aci(60, [], -5)["split"]["codPackages"] == 0.0)
 lv = _get("/ml/modalshift/levers")
 check("6 tuas biaya", len(lv["levers"]) == 6, str(len(lv["levers"])))
 check("total saving > 0", lv["summary"]["totalSavingIdrT"] > 0, str(lv["summary"]["totalSavingIdrT"]))

@@ -86,19 +86,36 @@ def optimize_corridors(
         weights: bobot objektif {cost, emission, speed}; dinormalisasi otomatis.
         sla_hours: batas ETA (jam) — opsi melebihi ini tidak dipilih.
     """
+    # Validasi input: SLA harus > 0 (dijepit ke rentang wajar), bobot ≥ 0 & dikenal,
+    # mode_filter hanya nama moda yang ada (kalau tak ada yang sah → semua moda).
+    sla_hours = min(240.0, max(1.0, float(sla_hours)))
     w = dict(DEFAULT_WEIGHTS)
     if weights:
-        w.update({k: float(v) for k, v in weights.items() if k in w})
-    total_w = sum(w.values()) or 1.0
+        w.update({k: max(0.0, float(v)) for k, v in weights.items() if k in w})
+    total_w = sum(w.values())
+    # Semua bobot 0 → objektif tak terdefinisi; fallback ke bobot default (transparan).
+    if total_w <= 0:
+        w = dict(DEFAULT_WEIGHTS)
+        total_w = sum(w.values()) or 1.0
     w = {k: v / total_w for k, v in w.items()}
+    valid_modes = set(MODES.keys())
+    filter_requested = bool(mode_filter)
+    if mode_filter:
+        mode_filter = [m for m in mode_filter if m in valid_modes]
+    # Filter diminta tapi tak ada moda sah → kembalikan tanpa rute (eksplisit),
+    # bukan diam-diam memakai semua moda.
+    filter_rejected = filter_requested and not mode_filter
 
     rows: list[dict[str, Any]] = []
     total_cost_base = 0.0
     total_cost_opt = 0.0
     total_co2_base = 0.0
     total_co2_opt = 0.0
+    sla_infeasible = 0  # jumlah koridor yang tak punya opsi memenuhi SLA
 
     for c in _CORRIDORS:
+        if filter_rejected:
+            break
         opts = [m for m in c["options"] if not mode_filter or m in mode_filter]
         if not opts:
             continue
@@ -124,8 +141,15 @@ def optimize_corridors(
             )
             x["withinSla"] = x["etaHours"] <= sla_hours
 
-        feasible = [x for x in metrics if x["withinSla"]] or metrics
-        chosen = max(feasible, key=lambda x: x["score"])
+        # Kendala SLA KERAS: pilih hanya opsi yang memenuhi SLA. Bila tak ada opsi
+        # yang memenuhi, pilih yang ETA-nya paling dekat lalu tandai pelanggaran
+        # (transparan) — alih-alih diam-diam mengabaikan SLA.
+        feasible = [x for x in metrics if x["withinSla"]]
+        if feasible:
+            chosen = max(feasible, key=lambda x: x["score"])
+        else:
+            chosen = min(metrics, key=lambda x: x["etaHours"])
+            sla_infeasible += 1
 
         # Baseline = moda default (darat bila ada; jika tidak, opsi termahal-tercepat?).
         # Kita pakai profil "express": opsi tercepat (biasanya udara) sebagai pembanding,
@@ -176,6 +200,8 @@ def optimize_corridors(
             "totalCo2PerPkgG": round(total_co2_opt),
             "baselineCo2PerPkgG": round(total_co2_base),
             "modeMix": _mode_mix(rows),
+            "slaInfeasibleRoutes": sla_infeasible,
+            "filterRejected": filter_rejected,
         },
     }
 
@@ -254,7 +280,7 @@ def cost_levers() -> dict[str, Any]:
             "evidence": "Kemasan sekali-pakai salah satu driver biaya fulfilment & emisi material.",
         },
     ]
-    total_saving = round(sum(l["costImpactIdrT"] for l in levers), 2)
+    total_saving = round(sum(lv["costImpactIdrT"] for lv in levers), 2)
     return {
         "engine": "Cost-Lever Portfolio (Pertanyaan 6)",
         "note": "Potensi per tuas = ASUMSI TIM sebagai fraksi biaya kasus; dipakai untuk prioritisasi relatif, bukan proyeksi pasti.",
@@ -264,6 +290,6 @@ def cost_levers() -> dict[str, Any]:
         "summary": {
             "totalSavingIdrT": total_saving,
             "savingPctOfCost": round(total_saving / total_cost_t * 100, 1) if total_cost_t else 0.0,
-            "avgCo2Pct": round(sum(l["co2Pct"] for l in levers) / len(levers), 1),
+            "avgCo2Pct": round(sum(lv["co2Pct"] for lv in levers) / len(levers), 1),
         },
     }

@@ -33,13 +33,6 @@ INTERVENTIONS = {
 }
 
 
-def _shift_math(extra_wait_min: float) -> dict[str, float]:
-    """Untuk satu 'siklus' 8 paket, hitung durasi & produktivitas."""
-    dur = NON_COD["durationMin"] + extra_wait_min
-    per_hour = NON_COD["packages"] / (dur / 60)
-    return {"durationMin": round(dur, 1), "perHour": round(per_hour, 2)}
-
-
 def analyze_cod_impact(
     cod_share_pct: float = 60.0,
     interventions: list[str] | None = None,
@@ -48,11 +41,14 @@ def analyze_cod_impact(
     """Analisis dampak COD pada satu shift kurir (default 40 paket/shift).
 
     Args:
-        cod_share_pct: porsi paket COD dari total shift (0..100).
-        interventions: daftar kunci intervensi digital yang diaktifkan.
-        packages_per_shift: total paket dalam satu shift.
+        cod_share_pct: porsi paket COD dari total shift (dijepit 0..100).
+        interventions: daftar kunci intervensi digital yang diaktifkan (tak dikenal diabaikan).
+        packages_per_shift: total paket dalam satu shift (dijepit ≥ 0).
     """
-    interventions = interventions or []
+    # Jepit input ke rentang sah agar tak ada paket negatif / porsi tak wajar.
+    cod_share_pct = min(100.0, max(0.0, float(cod_share_pct)))
+    packages_per_shift = max(0, int(packages_per_shift))
+    interventions = [k for k in (interventions or []) if k in INTERVENTIONS]
     # Komponen waktu tunggu COD murni = durasi COD - durasi non-COD (per 8 paket).
     base_wait = COD["durationMin"] - NON_COD["durationMin"]  # 63 menit / 8 paket
     wait_per_pkg = base_wait / COD["packages"]               # ~7,875 menit/paket COD
