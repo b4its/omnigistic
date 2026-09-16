@@ -248,6 +248,60 @@ check("digital-twin: util gain wajar (<40pt)", db["eastUtilisationGain"] - dn["e
 from app.ml.cod_intel import analyze_cod_impact as _aci
 check("COD sepakat simulations vs cod_intel", _cci(8, 0, 100)["currentTime"] == round(_aci(100.0, [], 8)["baseline"]["shiftDurationMin"]))
 
+print("== 5e. Peak-Surge Stress-Test (Pertanyaan 2) ==")
+sg = _get("/ml/sim/surge")
+check("surge 200", sg is not None)
+check("surge basis harian ~3,04jt", abs(sg["reference"]["baseDailyM"] - 3.04) < 0.01, str(sg["reference"]["baseDailyM"]))
+check("surge 23 hub", len(sg["hubs"]) == 23, str(len(sg["hubs"])))
+# Puncak musiman (1,15×) → hanya sedikit hub melampaui (mis. Jakarta).
+check("surge musiman: 1 hub breach", sg["summary"]["hubBreached"] == 1, str(sg["summary"]["hubBreached"]))
+# Double 12 (3×) → banyak hub breach & butuh pemulihan.
+sg3 = client.post("/ml/sim/surge", json={"peak_multiplier": 3.0}).json()
+check("surge 3x: banyak hub breach", sg3["summary"]["hubBreached"] > sg["summary"]["hubBreached"], f"{sg['summary']['hubBreached']}->{sg3['summary']['hubBreached']}")
+check("surge 3x: recovery > 0", sg3["summary"]["recoveryDays"] > 0, str(sg3["summary"]["recoveryDays"]))
+check("surge spillover ke hub headroom", all(m["fromCode"] != m["toCode"] for m in sg3["spillover"]))
+# Klamp multiplier.
+check("surge multiplier dijepit", client.post("/ml/sim/surge", json={"peak_multiplier": 99}).json()["inputs"]["peakMultiplier"] == 10.0)
+
+print("== 5f. COD Cash-Reconciliation Risk (Pertanyaan 3) ==")
+cc = client.post("/ml/cod-cash/risk", json={"cod_share_pct": 45, "interventions": []}).json()
+check("cod-cash selisih/hari > 0", cc["risk"]["discrepanciesPerDayBefore"] > 0, str(cc["risk"]["discrepanciesPerDayBefore"]))
+check("cod-cash uang beredar > 0", cc["cashFloatIdr"] > 0, str(cc["cashFloatIdr"]))
+check("cod-cash AOV dari Table 3", cc["basis"]["avgOrderValueIdr"] > 0, str(cc["basis"]["avgOrderValueIdr"]))
+cc_full = client.post("/ml/cod-cash/risk", json={"cod_share_pct": 45, "interventions": ["auto_reconciliation", "ewallet_settlement", "escrow_prepay", "courier_cash_limit"]}).json()
+check("cod-cash intervensi turunkan risiko", cc_full["risk"]["riskReductionPct"] > 0, str(cc_full["risk"]["riskReductionPct"]))
+check("cod-cash baseline tak berubah", client.post("/ml/cod-cash/risk", json={"cod_share_pct": 45, "interventions": []}).json()["risk"]["riskReductionPct"] == 0.0)
+check("cod-cash clamp share >100", client.post("/ml/cod-cash/risk", json={"cod_share_pct": 500}).json()["input"]["codSharePct"] == 100.0)
+check("cod-cash scenarios 4", len(_get("/ml/cod-cash/scenarios")) == 4, str(len(_get("/ml/cod-cash/scenarios"))))
+
+print("== 5g. Market-Expansion ROI (Pertanyaan 5) ==")
+ex = _get("/ml/expansion/roi")
+check("expansion 23 hub", len(ex["hubs"]) == 23, str(len(ex["hubs"])))
+check("expansion margin kontribusi > 0", ex["unitEconomics"]["contributionMarginPerParcelIdr"] > 0, str(ex["unitEconomics"]["contributionMarginPerParcelIdr"]))
+check("expansion ada hub prioritas", ex["summary"]["priorityHubs"] > 0, str(ex["summary"]["priorityHubs"]))
+check("expansion ROI portofolio > 0", ex["summary"]["portfolioRoiX"] > 0, str(ex["summary"]["portfolioRoiX"]))
+# Hub padat (Jakarta 90,4%) → bukan 'Ekspansi prioritas' (perlu kapasitas).
+jak = next(h for h in ex["hubs"] if h["hub"] == "Jakarta")
+check("expansion Jakarta perlu kapasitas", jak["priority"] == "Perluas kapasitas", jak["priority"])
+# Target utilisasi lebih tinggi → headroom lebih besar → laba inkremental naik.
+lo = client.post("/ml/expansion/roi", json={"target_util": 0.6}).json()
+hi = client.post("/ml/expansion/roi", json={"target_util": 0.9}).json()
+check("expansion target util naik -> tambah volume", hi["summary"]["totalAddAnnualM"] > lo["summary"]["totalAddAnnualM"], f"{lo['summary']['totalAddAnnualM']}->{hi['summary']['totalAddAnnualM']}")
+
+print("== 5h. Unified Cost-Waterfall & P&L (Pertanyaan 6) ==")
+pn = _get("/ml/pnl/waterfall")
+check("pnl basis = 99,54T", pn["basis"]["costT"] == 99.54, str(pn["basis"]["costT"]))
+check("pnl cost-to-sales 31,3%", pn["basis"]["costToSalesPct"] == 31.3, str(pn["basis"]["costToSalesPct"]))
+check("pnl 7 tuas", len(pn["waterfall"]) == 7, str(len(pn["waterfall"])))
+check("pnl hemat > 0", pn["summary"]["totalSavingT"] > 0, str(pn["summary"]["totalSavingT"]))
+check("pnl cost-to-sales turun", pn["summary"]["costToSalesAfterPct"] < pn["summary"]["costToSalesBeforePct"])
+# Waterfall menurun monoton (costAfter makin kecil).
+costs = [s["costAfterT"] for s in pn["waterfall"]]
+check("pnl waterfall monotonic turun", all(costs[i] >= costs[i + 1] for i in range(len(costs) - 1)))
+# Tanpa sustainability → lebih sedikit tuas.
+pn_ns = client.get("/ml/pnl/waterfall", params={"include_sustainability": "false"}).json()
+check("pnl tanpa sustainability lebih sedikit tuas", len(pn_ns["waterfall"]) < len(pn["waterfall"]), f"{len(pn_ns['waterfall'])} vs {len(pn['waterfall'])}")
+
 print("== 6. ML lama tetap jalan ==")
 check("cod-risk demo", client.get("/ml/cod-risk/demo").status_code == 200)
 check("address-demo", client.get("/ml/address-demo").status_code == 200)

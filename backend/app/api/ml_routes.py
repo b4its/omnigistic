@@ -8,13 +8,17 @@ from pydantic import BaseModel
 
 from app.ml import metrics
 from app.ml.address_parse import demo_address, parse_address
+from app.ml.cod_cash import cod_cash_risk, default_scenarios as cod_cash_scenarios
 from app.ml.cod_intel import analyze_cod_impact, default_scenarios
 from app.ml.cod_risk import demo_packages, score_package
+from app.ml.expansion import expansion_roi
 from app.ml.forecast import demand_actual_tiktok, forecast_next_12
 from app.ml.modalshift import cost_levers, optimize_corridors
 from app.ml.optimize import optimize_load_balance
+from app.ml.pnl import cost_waterfall
 from app.ml.simulations import DIGITAL_TWIN_SCENARIOS, calculate_cod_impact, calculate_digital_twin
 from app.ml.sponsor import compare_models, sensitivity
+from app.ml.surge import stress_test
 
 router = APIRouter(prefix="/ml", tags=["ml"])
 
@@ -102,6 +106,25 @@ def optimize_balance_custom(body: LoadBalanceBody):
     return optimize_load_balance(body.critical, body.safe_floor, body.max_divert_frac, body.warn_util)
 
 
+# ── Peak-Surge Stress-Test (Pertanyaan 2: fluktuasi demand) ───────────────
+@router.get("/sim/surge")
+def surge_default():
+    """Uji beban puncak default (Double 12 ~3× basis harian)."""
+    return stress_test()
+
+
+class SurgeBody(BaseModel):
+    peak_multiplier: float = 3.0
+    surge_capacity_factor: float = 1.0
+    allow_spillover: bool = True
+
+
+@router.post("/sim/surge")
+def surge_custom(body: SurgeBody):
+    """Versi interaktif: atur amplifikasi puncak & faktor kapasitas elastis."""
+    return stress_test(body.peak_multiplier, body.surge_capacity_factor, body.allow_spillover)
+
+
 # ── COD Decision Intelligence (dampak per shift kurir) ────────────────────
 class CodIntelBody(BaseModel):
     cod_share_pct: float = 60.0
@@ -117,6 +140,48 @@ def cod_intel(body: CodIntelBody):
 @router.get("/cod-intel/scenarios")
 def cod_intel_scenarios():
     return default_scenarios()
+
+
+# ── COD Cash-Reconciliation Risk (Pertanyaan 3: sistem COD) ───────────────
+class CodCashBody(BaseModel):
+    cod_share_pct: float = 45.0
+    interventions: list[str] = []
+
+
+@router.post("/cod-cash/risk")
+def cod_cash(body: CodCashBody):
+    """Risiko rekonsiliasi kas COD + dampak intervensi digital."""
+    return cod_cash_risk(body.cod_share_pct, body.interventions)
+
+
+@router.get("/cod-cash/scenarios")
+def cod_cash_default_scenarios():
+    return cod_cash_scenarios()
+
+
+# ── Market-Expansion ROI (Pertanyaan 5: strategi ekspansi) ────────────────
+class ExpansionBody(BaseModel):
+    capex_per_hub_idr: float | None = None
+    target_util: float | None = None
+
+
+@router.get("/expansion/roi")
+def expansion_default():
+    """Skor kelayakan ekspansi per hub + ROI portofolio (default asumsi tim)."""
+    return expansion_roi()
+
+
+@router.post("/expansion/roi")
+def expansion_custom(body: ExpansionBody):
+    """Versi interaktif: atur capex/hub & target utilisasi pasca-ekspansi."""
+    return expansion_roi(body.capex_per_hub_idr, body.target_util)
+
+
+# ── Unified Cost-Waterfall & P&L (Pertanyaan 6) ───────────────────────────
+@router.get("/pnl/waterfall")
+def pnl_waterfall(include_sustainability: bool = True):
+    """Waterfall biaya sekarang → teroptimasi + dampak P&L dari Table 3."""
+    return cost_waterfall(include_sustainability)
 
 
 # ── Metrik turunan & rekonsiliasi angka ───────────────────────────────────
