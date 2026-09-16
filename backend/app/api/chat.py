@@ -116,10 +116,14 @@ async def chat(body: ChatBody, req: Request):
 
     session = _client_key(req, role)
 
-    # 1) Ambil fakta terkunci (bank QA) sebagai grounding LLM
-    qa = match_chat_qa(role, clean["query"]) if clean["decision"] == "ok" else None
+    # 'harden' = penanda hati-hati (bukan blokir keras) → tetap boleh dijawab dari
+    # bank QA. Hanya 'hard' (blocked) yang benar-benar dilewati menjawab.
+    # (Dulu: 'harden' melewati bank QA → pertanyaan wajar dijawab "offline".)
+    # 1) Ambil fakta terkunci (bank QA) sebagai grounding LLM.
+    qa = match_chat_qa(role, clean["query"])
 
-    # 2) LLM dulu supaya jawaban hidup, tapi tetap berpijak pada fakta kasus
+    # 2) LLM hanya untuk input 'ok' — input 'harden' tidak dikirim ke LLM (aman),
+    #    cukup dijawab dari bank QA pada langkah 3.
     reply = None
     if clean["decision"] == "ok":
         reply = _call_llm(role, wrap_untrusted(clean["query"]), session, qa)

@@ -34,7 +34,10 @@ OBFUSCATION_PATTERNS = [
 # ── Layer 3: soft-injection ──
 SOFT_INJECTION = [
     re.compile(r"(?:pertama|first|second|next|lalu|akhirnya|then)(?:.{0,50})(?:kamu|you|jangan|don't|sebut|reveal|tampilkan|print)(?:.{0,80})(?:(?:kode|rahasia|secret|password|system|prompt|aturan|instruction))", re.I),
-    re.compile(r"(?:terjemah|translate|maksute|maksudnya|artinya).{0,25}(?:sebelum|after|lalu|then)?", re.I),
+    # Terjemah/parafrase yang JUGA meminta objek terlarang (prompt/aturan/rahasia/…).
+    # Dulu grup objek opsional → kata 'artinya'/'maksudnya' sendirian sudah memicu
+    # false-positive → pertanyaan wajar dijawab "offline". Kini objek WAJIB.
+    re.compile(r"(?:terjemah|translate|maksute|maksudnya|artinya)\b.{0,40}(?:sebelum|sebelumnya|lalu|then|aturan|instruksi|prompt|rahasia|secret|kode|password|system)", re.I),
     re.compile(r"(role\s*[- ]?(?:play|swit|ganti|baru)|persona\s*(?:baru|switch|ganti)|sisi\s+(?:gelap|kri|kua)l|\w*kamu\s+adalah\s+\w+(?:tanpa|unlimited)\w*)", re.I),
     re.compile(r"(pesan|email|dokumen|halaman|wiki|web|chat|note|file|config|env|hidden).{0,20}(?:kode|rahasia|perintah|instruction|prompt|hidden|secret|system|base URL|DB url)", re.I),
     re.compile(r"(reset|mulai|starting|ulang|reboot|forget|clear).{0,40}(all|conversation|state|past|history|previous|semua|riwayat|percakap|state|all instructions)", re.I),
@@ -143,7 +146,8 @@ def check_rate(key: str) -> bool:
     _evict_stale(now)
     b = _bucket.get(key)
     if not b:
-        _bucket[key] = (_CAP, now)
+        # Konsumsi 1 token pada panggilan pertama agar burst = _CAP (dulu _CAP+1).
+        _bucket[key] = (_CAP - 1, now)
         return True
     tokens, ts = b
     elapsed = now - ts
