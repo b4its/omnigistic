@@ -363,6 +363,7 @@
                   etaMin={etaForCity(o.address.city)}
                   height={220}
                   role="KURIR"
+                  routeIntel
                 />
               {/if}
             </aside>

@@ -547,6 +547,38 @@ export interface PnlResult {
   };
 }
 
+// ── Route Intelligence (jalur tercepat: kepadatan + efisiensi) ──
+export interface RouteCandidate {
+  key: string;
+  label: string;
+  distanceKm: number;
+  density: number;
+  freeSpeedKmh: number;
+  effectiveSpeedKmh: number;
+  timeMin: number;
+  costIdr: number;
+  co2G: number;
+  reliability: number;
+  toll: boolean;
+  efficiencyScore: number;
+}
+export interface RoutePlanResult {
+  engine: string;
+  note: string;
+  inputs: { distanceKm: number; baseSpeedKmh: number; densityOverride: number | null };
+  recommended: string;
+  fastestKey: string;
+  mostEfficientKey: string;
+  summary: {
+    fastestTimeMin: number;
+    fastestLabel: string;
+    baselineTimeMin: number;
+    timeSavedMin: number;
+    efficientLabel: string;
+  };
+  candidates: RouteCandidate[];
+}
+
 export const api = {
   hubs: () => get<Hub[]>("/api/hubs"),
   regions: () => get<string[]>("/api/regions"),
@@ -600,7 +632,9 @@ export const api = {
   expansion: (body?: { capex_per_hub_idr?: number; target_util?: number }) =>
     body ? post<ExpansionResult>("/ml/expansion/roi", body) : get<ExpansionResult>("/ml/expansion/roi"),
   pnlWaterfall: (includeSustainability = true) =>
-    get<PnlResult>("/ml/pnl/waterfall?include_sustainability=" + (includeSustainability ? "true" : "false"))
+    get<PnlResult>("/ml/pnl/waterfall?include_sustainability=" + (includeSustainability ? "true" : "false")),
+  routePlan: (body: { distance_km: number; density_override?: number | null; base_speed_kmh?: number }) =>
+    post<RoutePlanResult>("/ml/route/plan", body)
 };
 
 export const online = writable(false);

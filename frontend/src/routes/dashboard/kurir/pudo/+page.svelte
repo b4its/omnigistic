@@ -65,7 +65,7 @@
       </div>
       <span class="rounded-full bg-muted px-3 py-1 text-[13px] font-semibold text-muted-foreground">{PUDO_POINTS.length} titik mitra</span>
     </div>
-    <DeliveryMap progress={0.75} city={mapCity} originLabel="Hub Jakarta" destLabel={`Alamat penerima · ${mapCity}`} height={380} role="KURIR" />
+    <DeliveryMap progress={0.75} city={mapCity} originLabel="Hub Jakarta" destLabel={`Alamat penerima · ${mapCity}`} height={380} role="KURIR" routeIntel />
     <p class="text-[11px] text-muted-foreground">Contoh kota: {mapCity} ({pudosForCity(mapCity).length} PUDO). Angka &amp; koordinat bersifat simulasi presentasi.</p>
   </section>
 

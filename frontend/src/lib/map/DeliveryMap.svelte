@@ -12,7 +12,9 @@
   import type * as LeafletNS from "leaflet";
   import { get } from "svelte/store";
   import { themeStore } from "$lib/stores/theme";
+  import Icon from "$lib/components/Icon.svelte";
   import { coordsForCity, HUB_LABEL, etaForCity, distanceForCity, pudosForCity, pudoDropRecommendation } from "$lib/logistics";
+  import { api, type RoutePlanResult } from "$lib/api";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
 
   interface Props {
@@ -29,9 +31,11 @@
     role?: string;
     /** Tampilkan titik PUDO + rekomendasi drop (default true). */
     showPudo?: boolean;
+    /** Aktifkan Route Intelligence (jalur tercepat: kepadatan + efisiensi). */
+    routeIntel?: boolean;
   }
 
-  let { progress = 0, city = "Bogor", originLabel = HUB_LABEL, destLabel = "Alamat penerima", etaMin, height = 360, role = "", showPudo = true }: Props = $props();
+  let { progress = 0, city = "Bogor", originLabel = HUB_LABEL, destLabel = "Alamat penerima", etaMin, height = 360, role = "", showPudo = true, routeIntel = false }: Props = $props();
 
   /** true bila pengguna adalah kurir (PUDO = titik aksi, bukan sekadar info). */
   const isCourier = $derived(role.toUpperCase() === "KURIR");
@@ -55,6 +59,63 @@
   /** Titik PUDO di kota ini + rekomendasi drop terdekat dari tujuan. */
   const pudos = $derived(showPudo ? pudosForCity(city) : []);
   const dropRec = $derived(showPudo ? pudoDropRecommendation(city) : null);
+
+  // ── Route Intelligence: jalur tercepat berbasis kepadatan & efisiensi ──
+  let plan = $state<RoutePlanResult | null>(null);
+  let planFailed = $state(false);
+  /** Jalur yang sedang ditampilkan/diikuti (key kandidat). Default: direkomendasikan. */
+  let selectedKey = $state<string | null>(null);
+  /** Override kepadatan (jam sibuk / lengang); null = pakai profil kasus. */
+  let density = $state<number | null>(null);
+
+  const candidates = $derived(plan?.candidates ?? []);
+  const selected = $derived(candidates.find((c) => c.key === selectedKey) ?? null);
+
+  /** Warna oleh tingkat kepadatan (hijau lengang → merah padat). */
+  function densityColor(d: number): string {
+    if (d < 0.4) return "#16a34a"; // lengang
+    if (d < 0.65) return "#eab308"; // sedang
+    return "#dc2626"; // padat
+  }
+
+  async function loadPlan() {
+    planFailed = false;
+    try {
+      plan = await api.routePlan({ distance_km: tripKm, density_override: density });
+      // Pertahankan pilihan pengguna bila masih valid; default ke rekomendasi.
+      if (!selectedKey || !plan.candidates.some((c) => c.key === selectedKey)) {
+        selectedKey = plan.recommended;
+      }
+    } catch {
+      plan = null;
+      planFailed = true;
+    }
+  }
+
+  /**
+   * Offset geometri rute ke samping proporsional (perpendicular) agar tiap
+   * kandidat jalur terlihat sebagai garis terpisah, bukan saling menumpuk.
+   */
+  function offsetRoute(route: LL[], offKm: number): LL[] {
+    if (offKm === 0) return route;
+    return route.map((p, i) => {
+      const a = route[Math.max(0, i - 1)];
+      const b = route[Math.min(route.length - 1, i + 1)];
+      const dLat = b[0] - a[0];
+      const dLng = b[1] - a[1];
+      const len = Math.hypot(dLat, dLng) || 1;
+      // perpendicular unit → geser. Skala derajat ≈ 111 km/derajat (lat).
+      const perLat = -dLng / len;
+      const perLng = dLat / len;
+      const dOff = offKm / 111.0;
+      return [p[0] + perLat * dOff, p[1] + perLng * dOff] as LL;
+    });
+  }
+
+  /** Offset (km) per kandidat agar garis terpisah: -0.6, 0, +0.6 km relatif. */
+  function offsetForIndex(i: number): number {
+    return (i - 1) * 0.6;
+  }
 
   function haversine(a: LL, b: LL): number {
     const R = 6371.0;
@@ -116,6 +177,7 @@
   let map: LeafletNS.Map | null = null;
   let cleanupTheme: (() => void) | null = null;
   let disposed = false;
+  let buildSeq = 0;
 
   /**
    * Bangun ulang peta dari identitas rute saat ini. Dipanggil dari $effect yang
@@ -123,11 +185,14 @@
    * sekali, sehingga kota baru tetap memakai geometri/marker/viewport kota lama).
    */
   function buildMap(el: HTMLElement) {
-    const myDisposed = () => disposed || !el.isConnected;
+    // Token urut: bila build lain dimulai sebelum async ini selesai, build ini
+    // membatalkan diri (mencegah L.map(el) dipanggil 2× → 'already initialized').
+    const seq = ++buildSeq;
+    const stale = () => disposed || seq !== buildSeq || !el.isConnected;
     void (async () => {
       const L = (await import("leaflet")).default;
       await import("leaflet/dist/leaflet.css");
-      if (myDisposed()) return;
+      if (stale()) return;
 
       map = L.map(el, { worldCopyJump: true, zoomControl: true }).setView(rgeo.dest as unknown as LeafletNS.LatLngExpression, 11);
 
@@ -145,6 +210,24 @@
 
       // Garis rute penuh — putus-putus, samar.
       L.polyline(rgeo.route as unknown as LeafletNS.LatLngExpression[], { color: "#94a3b8", weight: 3, opacity: 0.55, dashArray: "6 8" }).addTo(map);
+
+      // ── Route Intelligence: gambar KANDIDAT jalur oleh tingkat kepadatan ──
+      // Jalur terpilih digambar tebal & terang; lainnya tipis/samar.
+      if (routeIntel && candidates.length && map) {
+        const m = map;
+        candidates.forEach((c, i) => {
+          const geo = offsetRoute(rgeo.route, offsetForIndex(i));
+          const isSel = c.key === selectedKey;
+          L.polyline(geo as unknown as LeafletNS.LatLngExpression[], {
+            color: densityColor(c.density),
+            weight: isSel ? 6 : 3,
+            opacity: isSel ? 0.95 : 0.45,
+            dashArray: isSel ? undefined : "4 6",
+          })
+            .addTo(m)
+            .bindTooltip(`${c.label} · ${c.timeMin} mnt · kepadatan ${Math.round(c.density * 100)}%${c.toll ? " · tol" : ""}`, { direction: "top" });
+        });
+      }
 
       // Garis jalur yang sudah ditempuh — solid.
       traveled = L.polyline([rgeo.origin] as unknown as LeafletNS.LatLngExpression[], { color: "#16a34a", weight: 5, opacity: 0.95 }).addTo(map);
@@ -198,6 +281,7 @@
   }
 
   function teardownMap() {
+    buildSeq++; // batalkan build async yang masih berjalan
     cleanupTheme?.();
     cleanupTheme = null;
     traveled = null;
@@ -218,15 +302,24 @@
     };
   });
 
-  // Bangun ulang peta saat identitas rute berubah (city/showPudo/role) & saat el siap.
+  // Bangun ulang peta saat identitas rute berubah (city/showPudo/role), saat
+  // Route Intelligence berubah (kandidat/jalur terpilih/kepadatan), & saat el siap.
   $effect(() => {
-    const ident = `${city}|${showPudo}|${role}`;
+    const ident = `${city}|${showPudo}|${role}|${routeIntel ? selectedKey ?? "" : ""}|${candidates.length}`;
     const el = mapEl;
     if (!el) return;
     void ident; // jadikan dependensi eksplisit
     teardownMap();
     buildMap(el);
     return () => teardownMap();
+  });
+
+  // Muat/refetch rencana rute ketika kota atau kepadatan berubah.
+  $effect(() => {
+    if (!routeIntel) return;
+    void city;
+    void density;
+    void loadPlan();
   });
 
   // Kurir bergerak ketika progress berubah.
@@ -251,6 +344,80 @@
       <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full ring-2 ring-[#7c3aed]" style="background:#ede9fe"></span> {isCourier ? "Drop rekomendasi" : "PUDO terdekat"}</span>
     {/if}
   </div>
+
+  {#if routeIntel}
+    <!-- Panel Route Intelligence: jalur tercepat (kepadatan + efisiensi) -->
+    <div class="absolute right-2 top-2 z-[1000] w-[min(20rem,calc(100%-1rem))] rounded-xl border border-border bg-background/95 p-3 text-[12px] shadow-pop">
+      <div class="mb-2 flex items-center justify-between gap-2">
+        <p class="flex items-center gap-1.5 font-semibold text-foreground">
+          <Icon name="route" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Jalur tercepat
+        </p>
+        {#if plan}
+          <span class="rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--bitcoin)]">−{plan.summary.timeSavedMin} mnt</span>
+        {/if}
+      </div>
+
+      {#if planFailed}
+        <p class="text-muted-foreground">Gagal memuat analisis jalur (backend offline). Rute dasar tetap ditampilkan.</p>
+      {:else if !plan}
+        <div class="h-16 animate-pulse rounded-lg bg-muted/50"></div>
+      {:else}
+        <!-- Kontrol kepadatan (jam sibuk) -->
+        <label class="block">
+          <span class="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span>Kepadatan</span><span>{density == null ? "profil kasus" : `${Math.round(density * 100)}%`}</span>
+          </span>
+          <input
+            type="range" min="0" max="1" step="0.1"
+            value={density ?? 0.5}
+            oninput={(e) => (density = Number((e.currentTarget as HTMLInputElement).value))}
+            aria-label="Tingkat kepadatan jalur"
+            class="mt-1 w-full accent-[var(--bitcoin)]"
+          />
+        </label>
+        <button type="button" onclick={() => (density = null)} class="mt-1 text-[10px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">Reset ke profil kasus</button>
+
+        <!-- Daftar kandidat jalur -->
+        <ul class="mt-2 space-y-1.5">
+          {#each candidates as c (c.key)}
+            <li>
+              <button
+                type="button"
+                onclick={() => (selectedKey = c.key)}
+                aria-pressed={selectedKey === c.key}
+                class="flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-colors {selectedKey === c.key ? 'border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)]' : 'border-border hover:bg-muted/50'}"
+              >
+                <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background:{densityColor(c.density)}"></span>
+                <span class="min-w-0 flex-1">
+                  <span class="flex items-center gap-1.5">
+                    <span class="truncate font-medium text-foreground">{c.label}</span>
+                    {#if c.key === plan.fastestKey}<span class="rounded bg-success px-1 text-[9px] font-bold text-success-foreground">tercepat</span>{/if}
+                    {#if c.key === plan.mostEfficientKey}<span class="rounded bg-[var(--gold)] px-1 text-[9px] font-bold text-[#030304]">efisien</span>{/if}
+                  </span>
+                  <span class="mt-0.5 block font-mono text-[10px] text-muted-foreground">
+                    {c.timeMin} mnt · {c.distanceKm} km · {c.effectiveSpeedKmh} km/j · padat {Math.round(c.density * 100)}%{#if c.toll} · tol{/if}
+                  </span>
+                </span>
+                <span class="shrink-0 text-right">
+                  <span class="block font-mono text-[11px] font-semibold tabular-nums text-foreground">{(c.efficiencyScore * 100).toFixed(0)}</span>
+                  <span class="block font-mono text-[8px] uppercase tracking-wider text-muted-foreground">skor</span>
+                </span>
+              </button>
+            </li>
+          {/each}
+        </ul>
+
+        {#if selected}
+          <p class="mt-2 rounded-lg bg-muted/50 px-2 py-1.5 text-[11px] text-muted-foreground">
+            <span class="font-medium text-foreground">Dipilih: {selected.label}.</span>
+            ETA {selected.timeMin} mnt · Rp{new Intl.NumberFormat("id-ID").format(selected.costIdr)} · {selected.co2G} g CO₂. Keandalan {(selected.reliability * 100).toFixed(0)}%.
+          </p>
+        {/if}
+        <p class="mt-1.5 text-[10px] italic text-muted-foreground">Kepadatan/kecepatan/biaya = asumsi tim; bukan data lalu lintas live.</p>
+      {/if}
+    </div>
+  {/if}
+
   {#if showPudo && dropRec}
     <div class="pointer-events-none absolute bottom-2 left-2 z-[1000] max-w-[calc(100%-1rem)] rounded-lg border border-[#7c3aed]/40 bg-background/95 px-3 py-2 text-[12px] shadow-pop">
       <p class="font-semibold text-foreground">
