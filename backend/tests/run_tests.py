@@ -234,6 +234,16 @@ check("cod-risk skor 0..1", 0 <= pkg["score"] <= 1)
 check("cod-risk punya rincian faktor", len(pkg.get("factors", [])) == 5, str(len(pkg.get("factors", []))))
 addr = client.post("/ml/address-parse", json={"address": "Jl. Raya Jakarta-Bogor No.12 Cibinong"}).json()
 check("address best terisi", addr["best"] is not None)
+# REGRESI I1: kandidat dari sumber kebenaran (JSON), bukan tabel hardcode.
+from app.ml.address_parse import parse_address as _paddr, demo_address as _demo
+_cjson = _get("/api/addresses")
+check("address kandidat = /api/addresses", len(addr["candidates"]) == len(_cjson), f"{len(addr['candidates'])} vs {len(_cjson)}")
+check("address demo dari sumber sama", len(_demo()["locations"]) == len(_cjson))
+# REGRESI I2: teks ngawur → matched False (tak ada false-positive).
+check("address ngawur → matched False", _paddr("xyz zzz tidak dikenal")["matched"] is False)
+check("address ngawur → best None", _paddr("Jalan antah berantah 999")["best"] is None)
+check("address distrik sah → matched True", _paddr("Cibinong")["matched"] is True)
+check("address punya ambang kecocokan", addr.get("matchThreshold", 0) > 0)
 
 print("== 7. Chat & hardening (OWASP) ==")
 ok = client.post("/api/chat", json={"role": "KURIR", "query": "kenapa COD lebih lambat"})
