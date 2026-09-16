@@ -570,8 +570,10 @@ export const api = {
     post<CodRiskResult>("/ml/cod-risk", pkg),
   addressDemo: () => get<AddressDemoResult>("/ml/address-demo"),
   addressParse: (address: string) => post<AddressParseResult>("/ml/address-parse", { address }),
-  digitalTwin: () => get<Record<string, TwinResult>>("/ml/sim/digital-twin"),
-  codImpact: () => get<{ prob: number; result: CodImpact }>("/ml/sim/cod-impact"),
+  // Catatan: /ml/sim/digital-twin & /ml/sim/cod-impact sengaja TIDAK dipakai UI —
+  // halaman Digital Twin memakai komparator sponsor.py (model data-driven). Kedua
+  // endpoint tetap dilayani backend untuk uji & analisis, tetapi tak diekspos di
+  // klien agar tak ada dua implementasi 'digital twin' yang membingungkan.
   optimizeLoadBalance: () => get<OptimizeResult>("/ml/optimize/load-balance"),
   optimizeLoadBalanceCustom: (body: { critical?: number; safe_floor?: number; max_divert_frac?: number }) =>
     post<OptimizeResult>("/ml/optimize/load-balance", body),
