@@ -133,7 +133,8 @@ def demand_summary() -> dict[str, Any]:
     trough = min(rows, key=lambda r: r["totalM"])
     sep = next((r for r in rows if r["month"] == "Sep"), None)
     oct_ = next((r for r in rows if r["month"] == "Oct"), None)
-    shock = round((oct_["ecommerceM"] / sep["ecommerceM"] - 1) * 100, 1) if sep and oct_ else None
+    # Jaga pembagian nol (bila data berubah / nilai 0) — konsisten dgn forecast.
+    shock = round((oct_["ecommerceM"] / sep["ecommerceM"] - 1) * 100, 1) if sep and oct_ and sep["ecommerceM"] else None
 
     # Rekonsiliasi terhadap angka yang tertulis di dokumen.
     doc_total = 1110
@@ -145,7 +146,7 @@ def demand_summary() -> dict[str, Any]:
         "ecommerceSharePct": round(ec_sum / total_sum * 100, 1) if total_sum else 0.0,
         "peak": {"month": peak["month"], "totalM": peak["totalM"]},
         "trough": {"month": trough["month"], "totalM": trough["totalM"]},
-        "fluctuationPct": round((max(totals) - min(totals)) / min(totals) * 100, 1),
+        "fluctuationPct": round((max(totals) - min(totals)) / min(totals) * 100, 1) if min(totals) else 0.0,
         "tiktokEcommerceShockPct": shock,
         "reconciliation": {
             "totalM": {"computed": total_sum, "document": doc_total, "delta": total_sum - doc_total},

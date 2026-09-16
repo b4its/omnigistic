@@ -70,7 +70,6 @@ def stress_test(
     total_peak_load = base_daily * pm
 
     rows: list[dict[str, Any]] = []
-    total_breach_load = 0.0
     total_overflow_m = 0.0
 
     for h in hubs:
@@ -80,7 +79,6 @@ def stress_test(
         util_pct = round(load_m / cap_eff * 100, 1) if cap_eff else 0.0
         breach = max(0.0, load_m - cap_eff)               # overflow (juta/hari)
         if breach > 0:
-            total_breach_load += load_m
             total_overflow_m += breach
         rows.append({
             "name": h["name"],

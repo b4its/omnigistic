@@ -53,14 +53,6 @@ def _avg_order_value() -> float:
     return (sales / parcels) if parcels else _FALLBACK_AOV_IDR
 
 
-def _daily_cod_parcels() -> float:
-    """Perkiraan paket COD nasional per hari (juta) dari Table 4."""
-    data = load()
-    total_m = sum(float(d["totalM"]) for d in data["monthlyDemand"])
-    daily = total_m / 365.0  # juta paket/hari
-    return daily * _COD_SHARE
-
-
 def cod_cash_risk(
     cod_share_pct: float = _COD_SHARE * 100,
     interventions: list[str] | None = None,

@@ -28,13 +28,19 @@ async def lifespan(app: FastAPI):
         log.info("SKIP_DB aktif → semua /api & /ml dilayani dari shared/data-kas.json")
         yield
         return
+    import concurrent.futures as _cf
+    ex = _cf.ThreadPoolExecutor(max_workers=1)
     try:
-        import concurrent.futures as _cf
-        with _cf.ThreadPoolExecutor(max_workers=1) as ex:
-            ex.submit(init_db).result(timeout=3.0)
+        # Submit lalu tunggu MAKS 3 s. JANGAN pakai 'with' (its __exit__ memanggil
+        # shutdown(wait=True) → tetap memblok sampai worker selesai, timeout jadi
+        # palsu). shutdown(wait=False) agar startup tak menggantung bila host DB
+        # tak terjangkau (TCP timeout bisa puluhan detik).
+        ex.submit(init_db).result(timeout=3.0)
         log.info("Neon terjangkau → init DB ok")
     except Exception as e:
         log.warning("DB tidak terjangkau (%s) → JSON fallback, /api tetap 200", str(e)[:80])
+    finally:
+        ex.shutdown(wait=False)
     yield
 
 

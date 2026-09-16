@@ -85,7 +85,9 @@ def _apply_events(vals: list[float], event_scale: dict[str, float] | None = None
     proj = []
     for i, v in enumerate(vals):
         m = _MONTHS[i % 12]
-        y = base_year
+        # Tahun NAIK tiap 12 bulan agar horizon >12 (mis. 24) tak salah label
+        # (dulu semua titik = base_year → 12 titik ke-2 mislabeled tahun sama).
+        y = base_year + i // 12
         flags: list[str] = []
         for e in _EVENTS:
             if m in e["months"]:

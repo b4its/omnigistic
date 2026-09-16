@@ -41,6 +41,11 @@ def _url() -> str:
         if not internal:
             sep = "&" if "?" in raw else "?"
             raw = f"{raw}{sep}sslmode=require"
+    # Batasi waktu connect (detik) agar host DB yang tak terjangkau tak menggantung
+    # startup/permintaan (default OS TCP timeout bisa puluhan detik).
+    if raw and "connect_timeout" not in raw:
+        sep = "&" if "?" in raw else "?"
+        raw = f"{raw}{sep}connect_timeout=3"
     return raw
 
 
@@ -52,6 +57,10 @@ def engine():
 
 
 def db_available() -> bool:
+    # Hormati SKIP_DB agar konsisten dgn keputusan startup (main.lifespan):
+    # bila SKIP_DB=1, jangan coba DB walau DATABASE_URL terisi.
+    if os.environ.get("SKIP_DB") == "1":
+        return False
     return bool(os.environ.get("DATABASE_URL"))
 
 
