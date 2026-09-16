@@ -1,11 +1,13 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { SvelteSet } from "svelte/reactivity";
   import { resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, cartDetail, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, COURIER_TASK, nextStatus, progressForStatus, type Order } from "$lib/stores/shop";
+  import { shop, cartDetail, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, COURIER_TASK, nextStatus, progressForStatus, lastOutForDeliveryOrder, type Order } from "$lib/stores/shop";
   import { HUB_LABEL, etaForCity, distanceForCity, remainingKm, remainingEtaMin } from "$lib/logistics";
+  import { notify } from "$lib/toast";
 
   interface CartLine {
     name: string;
@@ -18,6 +20,11 @@
   let cartSubtotal = $state(0);
   let cartCount = $state(0);
   let orders = $state<Order[]>([]);
+
+  /** Id pesanan yang panelnya sedang terbuka (accordion). SvelteSet → sudah reaktif. */
+  let openIds = new SvelteSet<string>();
+  /** Id pesanan yang AUTO dibuka sekali (pesanan terakhir dalam pengantaran). */
+  let autoOpenedId = $state<string | null>(null);
 
   onMount(() => {
     shop.init();
@@ -45,6 +52,31 @@
   // Pesanan yang dilacak (bukan terkirim lebih dulu; fallback ke terbaru).
   const tracked = $derived(orders.find((o) => o.status !== "terkirim") ?? orders[0] ?? null);
 
+  // Pesanan terbaru yang sedang dalam pengantaran → dibuka otomatis (default accordion).
+  const focusOrder = $derived(lastOutForDeliveryOrder(orders));
+
+  // Tetapkan default accordion: semua tertutup, hanya focusOrder terbuka.
+  // Dilakukan sekali per perubahan target agar klik manual pengguna tidak tertimpa.
+  $effect(() => {
+    const target = focusOrder?.id ?? null;
+    if (target !== autoOpenedId) {
+      autoOpenedId = target;
+      openIds.clear();
+      if (target) openIds.add(target);
+    }
+  });
+
+  function isOpen(id: string): boolean {
+    return openIds.has(id);
+  }
+
+  function toggleOrder(id: string, label?: string) {
+    const nowOpen = !openIds.has(id);
+    if (nowOpen) openIds.add(id);
+    else openIds.delete(id);
+    if (label) notify({ message: `${nowOpen ? "Buka" : "Tutup"} detail pesanan ${label}`, type: "info", title: "Pesanan Saya" });
+  }
+
   // ── Pelacakan realtime dari status NYATA (hasil aksi kurir) ──
   // Progres peta diturunkan langsung dari status pesanan; pembeli hanya
   // memantau, bukan menggerakkan. Satu sumber dengan portal kurir.
@@ -60,6 +92,10 @@
   const stepIndex = $derived(tracked ? steps.indexOf(tracked.status) : -1);
   const currentTask = $derived(tracked ? COURIER_TASK[tracked.status] : null);
   const upcomingStatus = $derived(tracked ? nextStatus(tracked.status) : null);
+
+  // Pesanan ditampilkan pada daftar accordion (5 terbaru).
+  const recentOrders = $derived(orders.slice(0, 5));
+  const statusIdx = (s: Order["status"]) => ORDER_STATUS_FLOW.indexOf(s);
 </script>
 
 <div class="space-y-6">
@@ -260,15 +296,97 @@
         <p class="py-6 text-center text-sm text-muted-foreground">Belum ada pesanan.</p>
       {:else}
         <ul class="space-y-2">
-          {#each orders.slice(0, 4) as o (o.id)}
-            <li class="flex items-center gap-3 text-sm">
-              <span class="font-mono text-xs text-muted-foreground">{o.id.split("-").slice(-1)}</span>
-              <span class="min-w-0 flex-1 truncate text-muted-foreground">{ORDER_STATUS_LABEL[o.status]}</span>
-              <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold {o.payment === 'COD' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}">{o.payment}</span>
-              <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(o.total)}</span>
+          {#each recentOrders as o (o.id)}
+            {@const open = isOpen(o.id)}
+            {@const delivered = o.status === "terkirim"}
+            {@const isFocus = focusOrder?.id === o.id}
+            {@const idx = statusIdx(o.status)}
+            <li class="overflow-hidden rounded-xl border bg-background/40 transition-colors {isFocus || open ? 'border-primary/40' : 'border-border'}">
+              <!-- Baris ringkas: klik untuk buka/tutup detail pesanan -->
+              <button
+                type="button"
+                onclick={() => toggleOrder(o.id, o.id.split("-").slice(-1)[0])}
+                aria-expanded={open}
+                aria-controls={`pesanan-detail-${o.id}`}
+                class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-colors hover:bg-accent/40"
+              >
+                <Icon name={open ? "caret-down" : "arrow-right"} cls="h-3.5 w-3.5 shrink-0 text-muted-foreground" weight="bold" />
+                <span class="shrink-0 font-mono text-xs text-muted-foreground">{o.id.split("-").slice(-1)}</span>
+                <span class="min-w-0 flex-1 truncate text-muted-foreground">{ORDER_STATUS_LABEL[o.status]}</span>
+                {#if isFocus && !delivered}
+                  <span class="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10.5px] font-semibold text-primary">Dilacak</span>
+                {/if}
+                <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold {o.payment === 'COD' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}">{o.payment}</span>
+                <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(o.total)}</span>
+              </button>
+
+              <!-- Detail pesanan (dibuka/tutup) -->
+              {#if open}
+                <div id={`pesanan-detail-${o.id}`} class="space-y-3 border-t border-border px-3 py-3">
+                  <!-- Ringkasan status + kondisi terkini -->
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {delivered ? 'bg-success/15 text-success-foreground' : 'bg-primary/10 text-primary'}">{ORDER_STATUS_LABEL[o.status]}</span>
+                    <span class="text-[11px] text-muted-foreground">{new Date(o.updatedAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                  </div>
+
+                  <!-- Mini linimasa status -->
+                  <ol class="flex items-center gap-0.5" aria-label={`Status pesanan ${o.id}`}>
+                    {#each ORDER_STATUS_FLOW as step, i (step)}
+                      {@const done = i <= idx}
+                      <li class="flex flex-1 flex-col items-center gap-1 text-center">
+                        <span class="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold {done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}">
+                          {#if i < idx}<Icon name="check" cls="h-3 w-3" weight="bold" />{:else}{i + 1}{/if}
+                        </span>
+                        <span class="text-[9.5px] leading-tight {done ? 'font-semibold text-foreground' : 'text-muted-foreground'}">{ORDER_STATUS_LABEL[step]}</span>
+                      </li>
+                      {#if i < ORDER_STATUS_FLOW.length - 1}
+                        <span class="mb-3 h-0.5 flex-1 rounded-full {i < idx ? 'bg-primary' : 'bg-muted'}" aria-hidden="true"></span>
+                      {/if}
+                    {/each}
+                  </ol>
+
+                  <!-- Kondisi paket terkini (ditulis kurir) -->
+                  <div class="rounded-lg border {delivered ? 'border-success/40 bg-success/5' : 'border-primary/30 bg-accent/40'} px-3 py-2">
+                    <p class="text-[10.5px] font-semibold uppercase tracking-wide text-muted-foreground">Kondisi paket terkini</p>
+                    <p class="text-sm text-foreground">{o.statusNote}</p>
+                    {#if o.courier}<p class="mt-0.5 text-[11px] text-muted-foreground">{o.courier}</p>{/if}
+                  </div>
+
+                  <!-- Item pesanan -->
+                  <ul class="space-y-1.5">
+                    {#each o.items as it (it.productId)}
+                      <li class="flex items-center gap-2 text-sm">
+                        <span aria-hidden="true">{it.emoji}</span>
+                        <span class="min-w-0 flex-1 truncate text-muted-foreground">{it.name} × {it.qty}</span>
+                        <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(it.price * it.qty)}</span>
+                      </li>
+                    {/each}
+                  </ul>
+
+                  <!-- Tujuan + pembayaran -->
+                  <div class="space-y-0.5 text-xs text-muted-foreground">
+                    <p><span class="font-medium text-foreground">{o.address.recipient}</span> · {o.address.city}</p>
+                    <p>{o.address.street}</p>
+                    {#if o.slot}<p>Slot pengantaran: <span class="font-medium text-foreground">{o.slot}</span></p>{/if}
+                    {#if o.routedToPudo}<p class="font-medium text-warning-foreground">Dialihkan ke PUDO — ambil di gerai mitra.</p>{/if}
+                  </div>
+
+                  <div class="flex justify-between border-t border-border pt-2 text-sm">
+                    <span class="text-muted-foreground">Total</span>
+                    <span class="font-bold tabular-nums text-foreground">{formatRupiah(o.total)}</span>
+                  </div>
+
+                  <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">
+                    Lacak &amp; lihat detail lengkap <Icon name="arrow-up-right" cls="h-3 w-3" weight="bold" />
+                  </a>
+                </div>
+              {/if}
             </li>
           {/each}
         </ul>
+        <p class="mt-3 text-[11px] text-muted-foreground">
+          Hanya pesanan terakhir yang sedang dalam pengantaran dibuka otomatis; klik pesanan lain untuk melihat detail.
+        </p>
       {/if}
     </div>
   </section>
