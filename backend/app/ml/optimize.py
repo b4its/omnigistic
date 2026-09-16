@@ -41,6 +41,7 @@ _REGION_COST = {
 CRITICAL = 65.0   # ambang over-utilisasi (harus dialihkan)
 SAFE_FLOOR = 60.0  # lantai aman: sumber tidak diturunkan di bawah ini
 MAX_DIVERT_FRAC = 0.35  # maksimum 35% kapasitas sumber boleh dialihkan
+WARN_UTIL = 50.0  # ambang hub ber-headroom (target penerima), = metrics warn
 
 
 def _cost(src_region: str, dst_region: str) -> float:
@@ -51,17 +52,23 @@ def optimize_load_balance(
     critical: float | None = None,
     safe_floor: float | None = None,
     max_divert_frac: float | None = None,
+    warn_util: float | None = None,
 ) -> dict[str, Any]:
     """Hitung rencana pengalihan + sebelum/sesudah per hub & dampak biaya proxy.
 
     Ambang dapat di-override (simulasi interaktif): ``critical`` (default 65),
-    ``safe_floor`` (60), ``max_divert_frac`` (0,35). Nilai diklem ke rentang aman.
+    ``safe_floor`` (60), ``max_divert_frac`` (0,35), ``warn_util`` (50, batas hub
+    penerima). Semua dijepit ke rentang aman & konsisten satu sama lain.
     """
     crit = CRITICAL if critical is None else min(99.0, max(10.0, float(critical)))
     floor = SAFE_FLOOR if safe_floor is None else min(99.0, max(0.0, float(safe_floor)))
     # Lantai aman tak boleh melebihi ambang kritis (kalau tidak, tak ada kebutuhan).
     floor = min(floor, crit)
     max_frac = MAX_DIVERT_FRAC if max_divert_frac is None else min(1.0, max(0.0, float(max_divert_frac)))
+    # Ambang penerima harus < kritis agar ada gradien sumber→tujuan (cegah hasil
+    # kontradiktif 'overloadedAfter tak turun' saat critical diturunkan jauh).
+    warn = WARN_UTIL if warn_util is None else min(99.0, max(0.0, float(warn_util)))
+    warn = min(warn, crit - 1.0) if crit > 1.0 else warn
 
     hubs = [dict(h) for h in load()["hubs"]]
 
@@ -73,8 +80,9 @@ def optimize_load_balance(
         h["divertCapM"] = round(h["capacityM"] * max_frac, 4)
 
     sources = [h for h in hubs if h["utilizationPct"] > crit]
-    # Tujuan: hub dengan utilisasi < warn 50% (headroom nyata & sehat untuk menerima).
-    targets = [h for h in hubs if h["utilizationPct"] < 50.0 and h["headroomM"] > 0]
+    # Tujuan: hub ber-headroom dengan utilisasi < ambang warn (kini IKUT parameter,
+    # bukan hardcode 50) → gradien sumber/tujuan selalu ada.
+    targets = [h for h in hubs if h["utilizationPct"] < warn and h["headroomM"] > 0]
 
     # Kebutuhan pengalihan tiap sumber: turunkan ke lantai aman (SAFE_FLOOR),
     # dibatasi porsi maksimum.
@@ -152,7 +160,7 @@ def optimize_load_balance(
     return {
         "engine": "transportation-heuristic (greedy cheapest-link-first)",
         "note": "Biaya = indeks relatif antar-region (proxy prototipe), bukan tarif nyata. Kendala: headroom tujuan, lantai aman 60%, maks 35% dialihkan.",
-        "thresholds": {"critical": crit, "safeFloor": floor, "maxDivertFrac": max_frac},
+        "thresholds": {"critical": crit, "safeFloor": floor, "maxDivertFrac": max_frac, "warnUtil": warn},
         "summary": {
             "totalMovedM": total_moved,
             "moves": len(moves),

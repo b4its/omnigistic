@@ -127,6 +127,12 @@ check("maxDivert 0,1 -> lebih sedikit dialihkan", small_div["summary"]["totalMov
 # Klamp: safe_floor tak boleh melebihi critical.
 clamped = client.post("/ml/optimize/load-balance", json={"critical": 60, "safe_floor": 90}).json()
 check("floor diklamp <= critical", clamped["thresholds"]["safeFloor"] <= clamped["thresholds"]["critical"], str(clamped["thresholds"]))
+# REGRESI B2: ambang tujuan (warn) ikut `critical` (dulu hardcode 50 → hasil kontradiktif).
+low = client.post("/ml/optimize/load-balance", json={"critical": 30, "safe_floor": 0}).json()
+check("warn ikut critical (warn<critical)", low["thresholds"]["warnUtil"] < low["thresholds"]["critical"], str(low["thresholds"]))
+check("default warnUtil = 50", opt["thresholds"]["warnUtil"] == 50.0, str(opt["thresholds"].get("warnUtil")))
+# Konsistensi: sumber selalu util>crit, tujuan selalu util<warn (tidak tumpang tindih).
+check("sumber/tujuan tak tumpang tindih", opt["thresholds"]["warnUtil"] < opt["thresholds"]["critical"])
 
 print("== 5. COD Decision Intelligence ==")
 sc = _get("/ml/cod-intel/scenarios")

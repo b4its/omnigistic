@@ -93,12 +93,13 @@ class LoadBalanceBody(BaseModel):
     critical: float | None = None
     safe_floor: float | None = None
     max_divert_frac: float | None = None
+    warn_util: float | None = None
 
 
 @router.post("/optimize/load-balance")
 def optimize_balance_custom(body: LoadBalanceBody):
-    """Versi interaktif: ambang kritis / lantai aman / porsi maks dapat diubah."""
-    return optimize_load_balance(body.critical, body.safe_floor, body.max_divert_frac)
+    """Versi interaktif: ambang kritis/lantai/porsi/tujuan dapat diubah."""
+    return optimize_load_balance(body.critical, body.safe_floor, body.max_divert_frac, body.warn_util)
 
 
 # ── COD Decision Intelligence (dampak per shift kurir) ────────────────────
