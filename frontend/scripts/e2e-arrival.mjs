@@ -1,17 +1,19 @@
 /**
- * E2E: status kehadiran penerima saat paket DALAM PENGANTARAN (Customer ⇄ Kurir).
+ * E2E: pemberitahuan kehadiran penerima saat paket DALAM PENGANTARAN.
  *
- * Menguji fitur: kurir mencatat apakah penerima ADA DI RUMAH saat paket sedang
- * diantar ("dikirim"); customer langsung melihat status itu di pelacakan.
+ * Dua arah:
+ *  A. CUSTOMER → KURIR: pembeli memberi tahu apakah ia ADA DI RUMAH saat paket
+ *     sedang diantar; kurir melihat pemberitahuan itu di tugasnya.
+ *  B. KURIR → CUSTOMER: kurir mencatat status kehadiran saat tiba; pembeli melihat.
  *
  * Alur (deterministik, seed store lewat localStorage):
- *  1. Seed 1 pesanan berstatus "dikirim" (dalam pengantaran).
- *  2. KURIR buka /dashboard/kurir/tasks → tombol "Ada di rumah / Minta tunggu /
- *     Tidak di rumah" muncul (hanya saat status dikirim).
- *  3. KURIR klik "Tidak di rumah" → status tercatat.
- *  4. CUSTOMER buka /dashboard/customer/orders → melihat "Penerima tidak di rumah".
- *  5. CUSTOMER buka /dashboard/customer/dashboard → status kehadiran tampil.
- *  6. Guard: tombol kehadiran TIDAK muncul saat status bukan "dikirim".
+ *  1. Seed 2 pesanan: satu "dikirim" (dalam pengantaran), satu "transit".
+ *  2. CUSTOMER/orders → tombol "Saya ada di rumah / tidak di rumah" (hanya saat dikirim).
+ *  3. CUSTOMER klik "Saya tidak di rumah".
+ *  4. KURIR/tasks → melihat "Pemberitahuan pembeli: Tidak di rumah".
+ *  5. KURIR klik "Tidak di rumah" (status kehadiran saat tiba).
+ *  6. CUSTOMER/orders & dashboard → melihat status kehadiran dari kurir.
+ *  7. Guard: kontrol kehadiran TIDAK muncul saat status bukan "dikirim".
  *
  * Prasyarat: frontend dev jalan di E2E_BASE (default http://127.0.0.1:3000).
  */
@@ -89,29 +91,41 @@ try {
     [STORAGE_KEY, JSON.stringify(seededState)]
   );
 
-  // ── 1. KURIR: tombol kehadiran muncul hanya untuk paket "dikirim" ──
-  await goto(page, "/dashboard/kurir/tasks");
+  // ── 1. CUSTOMER: beri tahu kurir (hanya saat paket "dikirim") ──
+  await goto(page, "/dashboard/customer/orders");
   let txt = await page.locator("body").innerText();
+  R(/Beri tahu kurir apakah kamu di rumah/i.test(txt), "customer: panel pemberitahuan kehadiran tampil");
+  R(/Saya ada di rumah/i.test(txt) && /Saya tidak di rumah/i.test(txt), "customer: 2 tombol kehadiran ada");
+  // Guard: panel pemberitahuan hanya untuk 1 pesanan ("dikirim"), bukan yg "transit".
+  const custPanels = await page.locator('text=Beri tahu kurir apakah kamu di rumah').count();
+  R(custPanels === 1, "customer: panel hanya utk paket 'dalam pengantaran' (guard)", `panels=${custPanels}`);
+
+  // Klik "Saya tidak di rumah" utk order DELIVERY_ID
+  const custRow = page.locator("li", { hasText: DELIVERY_ID }).first();
+  await custRow.getByRole("button", { name: /Saya tidak di rumah/i }).click();
+  await page.waitForTimeout(900);
+  txt = await page.locator("body").innerText();
+  R(/Terkirim ke kurir/i.test(txt) && /Tidak di rumah/i.test(txt), "customer: pemberitahuan 'tidak di rumah' terkirim");
+
+  // ── 2. KURIR: melihat pemberitahuan pembeli + mencatat status kehadiran ──
+  await goto(page, "/dashboard/kurir/tasks");
+  txt = await page.locator("body").innerText();
+  R(/Pemberitahuan pembeli/i.test(txt) && /Tidak di rumah/i.test(txt), "kurir: melihat pemberitahuan pembeli 'tidak di rumah'");
   R(/Status kehadiran penerima/i.test(txt), "kurir: panel status kehadiran tampil");
-  R(/Ada di rumah/i.test(txt) && /Tidak di rumah/i.test(txt), "kurir: 3 tombol kehadiran ada");
+  const kurirPanels = await page.locator('text=Status kehadiran penerima').count();
+  R(kurirPanels === 1, "kurir: panel kehadiran hanya utk paket 'dalam pengantaran' (guard)", `panels=${kurirPanels}`);
 
-  // Guard: hitung panel kehadiran == jumlah pesanan berstatus "dikirim" (1), bukan 2.
-  const panels = await page.locator('text=Status kehadiran penerima').count();
-  R(panels === 1, "kurir: panel hanya utk pesanan 'dalam pengantaran' (guard)", `panels=${panels}`);
-
-  // ── 2. KURIR klik "Tidak di rumah" utk order DELIVERY_ID ──
   const row = page.locator("li", { hasText: DELIVERY_ID }).first();
   await row.getByRole("button", { name: /Tidak di rumah/i }).click();
   await page.waitForTimeout(900);
   txt = await page.locator("body").innerText();
-  R(/Penerima tidak di rumah/i.test(txt), "kurir: status 'tidak di rumah' tercatat");
+  R(/Penerima tidak di rumah/i.test(txt), "kurir: status kehadiran 'tidak di rumah' tercatat");
 
-  // ── 3. CUSTOMER/orders: melihat status kehadiran ──
+  // ── 3. CUSTOMER/orders: melihat status kehadiran dari kurir ──
   await goto(page, "/dashboard/customer/orders");
   txt = await page.locator("body").innerText();
-  R(/Kurir sudah tiba di lokasi/i.test(txt), "customer/orders: blok kehadiran tampil");
-  R(/Penerima tidak di rumah/i.test(txt), "customer/orders: status 'tidak di rumah' terlihat");
-  R(/PUDO terdekat|dijadwalkan ulang/i.test(txt), "customer/orders: tip tindak lanjut tampil");
+  R(/Kurir sudah tiba di lokasi/i.test(txt), "customer/orders: blok kehadiran (kurir) tampil");
+  R(/Penerima tidak di rumah/i.test(txt), "customer/orders: status kehadiran kurir terlihat");
 
   // ── 4. CUSTOMER/dashboard: status kehadiran tampil ──
   await goto(page, "/dashboard/customer/dashboard");
