@@ -41,6 +41,8 @@
   const isCourier = $derived(role.toUpperCase() === "KURIR");
 
   let mapEl = $state<HTMLElement | undefined>();
+  /** Legenda peta: terbuka default (collapsible). */
+  let legendOpen = $state(true);
 
   type LL = [number, number];
 
@@ -260,8 +262,13 @@
         }).addTo(map);
         const tag = isRec ? (isCourier ? "Titik drop rekomendasi (kurir)" : "PUDO terdekat (rekomendasi)") : "PUDO mitra";
         mk.bindTooltip(`${tag} · ${p.name} (${p.partner})`, { direction: "top" });
+        const srcNote = p.source === "osm" ? "Koordinat & alamat: OpenStreetMap" : "Koordinat: asumsi tim";
         mk.bindPopup(
-          `<strong>${p.name}</strong> · ${p.partner}<br/>${isCourier ? "Titik drop paket rekomendasi" : "Titik ambil/bayar paket"}<br/>Jam layanan ${p.hours} · kapasitas ${p.capacityPerDay} paket/hari` +
+          `<strong>${p.name}</strong> · ${p.partner}<br/>` +
+            `${isCourier ? "Titik drop paket rekomendasi" : "Titik ambil/bayar paket"}<br/>` +
+            `<span style="opacity:.8">${p.address}</span><br/>` +
+            `Jam layanan ${p.hours} · kapasitas ${p.capacityPerDay} paket/hari<br/>` +
+            `<span style="opacity:.7;font-size:11px">${srcNote}</span>` +
             (isRec && dropRec ? `<br/>Jarak dari tujuan ± ${dropRec.distanceKm} km · ETA ± ${dropRec.etaMin} menit` : "")
         );
       }
@@ -335,13 +342,58 @@
     role="application"
     class="absolute inset-0"
   ></div>
-  <div class="pointer-events-none absolute left-2 top-2 z-[1000] flex flex-col gap-1 rounded-lg border border-border bg-background/90 px-3 py-2 text-[12px] font-medium shadow-pop">
-    <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-[#16a34a]"></span> Titik awal (hub)</span>
-    <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-[#2563eb]"></span> Posisi kurir</span>
-    <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-[#c14a21]"></span> Titik tujuan</span>
-    {#if showPudo && pudos.length > 0}
-      <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:#8b5cf6"></span> PUDO mitra</span>
-      <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full ring-2 ring-[#7c3aed]" style="background:#ede9fe"></span> {isCourier ? "Drop rekomendasi" : "PUDO terdekat"}</span>
+  <!-- Legenda peta lengkap & rinci (collapsible) -->
+  <div class="absolute left-2 top-2 z-[1000] max-w-[min(17rem,calc(100%-1rem))] rounded-lg border border-border bg-background/92 text-[12px] shadow-pop backdrop-blur">
+    <button
+      type="button"
+      onclick={() => (legendOpen = !legendOpen)}
+      aria-expanded={legendOpen}
+      aria-controls="map-legend"
+      class="flex w-full items-center justify-between gap-2 px-3 py-2 font-semibold text-foreground"
+    >
+      <span class="flex items-center gap-1.5"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</span>
+      <Icon name={legendOpen ? "caret-down" : "arrow-right"} cls="h-3 w-3 shrink-0 text-muted-foreground" weight="bold" />
+    </button>
+    {#if legendOpen}
+      <div id="map-legend" class="max-h-[60%] space-y-2 overflow-y-auto border-t border-border px-3 py-2.5">
+        <!-- Penanda titik -->
+        <p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Penanda titik</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span> <span><b class="text-foreground">Hub asal</b> — {originLabel}</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#2563eb] bg-[#dbeafe]"></span> <span><b class="text-foreground">Kurir</b> — posisi saat ini</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#fde4d8]"></span> <span><b class="text-foreground">Tujuan</b> — {destLabel}</span></li>
+          {#if showPudo && pudos.length > 0}
+            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span> <span><b class="text-foreground">PUDO mitra</b> — titik ambil/bayar</span></li>
+            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#7c3aed] bg-[#ede9fe]"></span> <span><b class="text-foreground">{isCourier ? "Drop rekomendasi" : "PUDO terdekat"}</b> — tujuan alternatif</span></li>
+          {/if}
+        </ul>
+
+        <!-- Garis rute -->
+        <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis rute</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2"><span class="h-0.5 w-6 shrink-0 rounded bg-[#94a3b8]"></span> <span>Rencana rute (penuh)</span></li>
+          <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>Sudah ditempuh</span></li>
+          {#if routeIntel}
+            <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[var(--bitcoin)]"></span> <span>Jalur terpilih (tebal)</span></li>
+          {/if}
+        </ul>
+
+        <!-- Kepadatan (hanya saat Route Intelligence aktif) -->
+        {#if routeIntel}
+          <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Warna jalur = kepadatan</p>
+          <ul class="space-y-1.5">
+            <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>Lengang (&lt;40%)</span></li>
+            <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#eab308]"></span> <span>Sedang (40–65%)</span></li>
+            <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#dc2626]"></span> <span>Padat (&gt;65%)</span></li>
+          </ul>
+        {/if}
+
+        <!-- Sumber & catatan -->
+        <p class="border-t border-border pt-2 text-[10px] italic leading-snug text-muted-foreground">
+          Ubin peta © OpenStreetMap. Titik PUDO & koordinat diverifikasi dari OpenStreetMap (ODbL);
+          jam/kapasitas & kepadatan = asumsi tim (prototipe).
+        </p>
+      </div>
     {/if}
   </div>
 

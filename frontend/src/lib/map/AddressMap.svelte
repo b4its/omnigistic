@@ -8,10 +8,13 @@
   import { ROUTE_COORDS } from "$lib/map/route";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
   import { CITY_ROUTES, pudosForCity } from "$lib/logistics";
+  import Icon from "$lib/components/Icon.svelte";
 
   let { demo = true }: { demo?: boolean } = $props();
 
   let mapEl = $state<HTMLElement | undefined>();
+  /** Legenda peta: terbuka default (collapsible). */
+  let legendOpen = $state(true);
   let map: L.Map | null = null;
 
   const origin = { lat: -6.2088, lng: 106.8456 }; // Jakarta (hub)
@@ -188,8 +191,36 @@
 
 <div class="relative isolate z-0 h-[340px] w-full overflow-hidden rounded-2xl border border-border">
   <div bind:this={mapEl} aria-label="Peta Leaflet: 3 alamat ambigu, ML memetakan target, animasi kurir mengikuti rute jalan, ETA {etaMin} menit" role="application" class="absolute inset-0"></div>
-  <div class="pointer-events-none absolute right-2 top-2 z-[1000] rounded-lg border border-border bg-background/90 px-3 py-2 text-[13px] font-semibold shadow-pop">
-    <span class="text-success-foreground">●</span> alamat benar · <span class="text-muted-foreground">○</span> kandidat salah · <span style="color:#8b5cf6">●</span> PUDO
+  <!-- Legenda peta lengkap & rinci (collapsible) -->
+  <div class="absolute right-2 top-2 z-[1000] max-w-[min(16rem,calc(100%-1rem))] rounded-lg border border-border bg-background/92 text-[12px] shadow-pop backdrop-blur">
+    <button
+      type="button"
+      onclick={() => (legendOpen = !legendOpen)}
+      aria-expanded={legendOpen}
+      aria-controls="addr-legend"
+      class="flex w-full items-center justify-between gap-2 px-3 py-2 font-semibold text-foreground"
+    >
+      <span class="flex items-center gap-1.5"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</span>
+      <Icon name={legendOpen ? "caret-down" : "arrow-right"} cls="h-3 w-3 shrink-0 text-muted-foreground" weight="bold" />
+    </button>
+    {#if legendOpen}
+      <div id="addr-legend" class="max-h-[58%] space-y-2 overflow-y-auto border-t border-border px-3 py-2.5">
+        <p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Penanda</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span> <span><b class="text-foreground">Hub Jakarta</b> — titik asal rute</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#f7931a]"></span> <span><b class="text-foreground">Alamat terverifikasi</b> (target benar)</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#7f8c8d] bg-[#95a5a6]"></span> <span>Kandidat ambigu lain (skor rendah)</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span> <span>PUDO mitra (drop/ambil alternatif)</span></li>
+        </ul>
+        <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>Rute kurir (mengikuti jalan)</span></li>
+        </ul>
+        <p class="border-t border-border pt-2 text-[10px] italic leading-snug text-muted-foreground">
+          Ubin © OpenStreetMap. Rute ~{Math.round(routeTotal)} km · ETA ~{etaMin} mnt. Kandidat alamat: Cibinong/Depok/Tangsel (data kasus).
+        </p>
+      </div>
+    {/if}
   </div>
 </div>
 <p class="mt-2 text-[14px] text-muted-foreground">

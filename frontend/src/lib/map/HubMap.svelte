@@ -4,6 +4,7 @@
   import type { Hub } from "$lib/api";
   import { OSM_TILE } from "$lib/map/tiles";
   import { PUDO_POINTS } from "$lib/logistics";
+  import Icon from "$lib/components/Icon.svelte";
 
   interface Props {
     hubs?: Hub[];
@@ -14,6 +15,8 @@
   let { hubs = [] as Hub[], height = 520, showPudo = true }: Props = $props();
 
   let mapEl = $state<HTMLElement | undefined>();
+  /** Legenda peta: terbuka default (collapsible). */
+  let legendOpen = $state(true);
 
   // Koordinat kota hub (data publik). Kode mengikuti `code` di data-kas.json.
   const COORDS: Record<string, [number, number]> = {
@@ -106,13 +109,37 @@
 
 <div class="relative isolate z-0 w-full overflow-hidden rounded-2xl border border-border" style="height:{height}px">
   <div bind:this={mapEl} class="absolute inset-0" role="application" aria-label="Peta 23 hub GC Logistics dengan utilisasi berwarna (hijau, kuning, merah)"></div>
-  <div class="pointer-events-none absolute right-2 top-2 z-[1000] space-y-1 rounded-lg border border-border bg-background/90 px-3 py-2 text-[12.5px] font-semibold shadow-pop">
-    <p class="flex items-center gap-2"><span class="inline-block h-2.5 w-2.5 rounded-full" style="background:#3f5c3f"></span> Sehat, &lt; 50%</p>
-    <p class="flex items-center gap-2"><span class="inline-block h-2.5 w-2.5 rounded-full" style="background:#d9a441"></span> Perhatian, 50-65%</p>
-    <p class="flex items-center gap-2"><span class="inline-block h-2.5 w-2.5 rounded-full" style="background:#a03123"></span> Overload, &gt; 65%</p>
-    <p class="pt-1 text-[11.5px] font-normal text-muted-foreground">Ukuran bulatan = kapasitas hub</p>
-    {#if showPudo}
-      <p class="flex items-center gap-2 border-t border-border pt-1 text-[11.5px] font-normal text-muted-foreground"><span class="inline-block h-2.5 w-2.5 rounded-full" style="background:#8b5cf6"></span> Titik PUDO mitra (informasi)</p>
+  <!-- Legenda peta lengkap & rinci (collapsible) -->
+  <div class="absolute right-2 top-2 z-[1000] max-w-[min(17rem,calc(100%-1rem))] rounded-lg border border-border bg-background/92 text-[12px] shadow-pop backdrop-blur">
+    <button
+      type="button"
+      onclick={() => (legendOpen = !legendOpen)}
+      aria-expanded={legendOpen}
+      aria-controls="hub-legend"
+      class="flex w-full items-center justify-between gap-2 px-3 py-2 font-semibold text-foreground"
+    >
+      <span class="flex items-center gap-1.5"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</span>
+      <Icon name={legendOpen ? "caret-down" : "arrow-right"} cls="h-3 w-3 shrink-0 text-muted-foreground" weight="bold" />
+    </button>
+    {#if legendOpen}
+      <div id="hub-legend" class="max-h-[60%] space-y-2 overflow-y-auto border-t border-border px-3 py-2.5">
+        <p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Utilisasi hub (warna)</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:#3f5c3f"></span> <span><b class="text-foreground">Sehat</b> — utilisasi &lt; 50%</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:#d9a441"></span> <span><b class="text-foreground">Perhatian</b> — 50–65%</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:#a03123"></span> <span><b class="text-foreground">Overload</b> — &gt; 65%</span></li>
+        </ul>
+        <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Ukuran &amp; simbol</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2"><span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-foreground/40 bg-foreground/10"></span> <span>Bulatan besar = kapasitas hub lebih besar</span></li>
+          {#if showPudo}
+            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span> <span>Titik PUDO mitra (koordinat OSM)</span></li>
+          {/if}
+        </ul>
+        <p class="border-t border-border pt-2 text-[10px] italic leading-snug text-muted-foreground">
+          Ubin peta © OpenStreetMap. Warna = utilisasi Table 1 (kasus); ukuran = kapasitas harian. Titik PUDO diverifikasi dari OpenStreetMap (ODbL).
+        </p>
+      </div>
     {/if}
   </div>
 </div>
