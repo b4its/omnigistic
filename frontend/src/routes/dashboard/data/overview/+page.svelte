@@ -68,7 +68,7 @@
         <button type="button" onclick={load} class="rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-4 py-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_18px_-5px_var(--glow)]">Coba lagi</button>
       </div>
     {/if}
-    <p class="mb-2 text-sm font-semibold text-muted-foreground">Armada: motor dominan {numId(motorSharePct, 1)}%</p>
+    <p class="mb-2 text-sm font-semibold text-muted-foreground">Armada last-mile: motor dominan {numId(motorSharePct, 1)}%</p>
     <div class="flex h-[220px] flex-col justify-center gap-4">
       {#each fleet as f (f.label)}
         <div class="flex items-center gap-3">
@@ -79,7 +79,8 @@
           <span class="w-16 shrink-0 text-right text-[13px] tabular-nums text-muted-foreground">{new Intl.NumberFormat("id-ID").format(f.value)}</span>
         </div>
       {/each}
-      <p class="mt-1 text-[14px] text-muted-foreground">
+      <p class="mt-1 text-[13px] text-muted-foreground">Batang di atas = komposisi armada <span class="font-medium">last-mile</span> ({new Intl.NumberFormat("id-ID").format(totalMotor)} unit).</p>
+      <p class="text-[14px] text-muted-foreground">
         Target EV 2026: {new Intl.NumberFormat("id-ID").format(evTarget)} unit, hanya
         {new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(evSharePct)}% dari total armada
         {new Intl.NumberFormat("id-ID").format(totalAll)} (motor {new Intl.NumberFormat("id-ID").format(fleetData.motorcycles ?? 0)}

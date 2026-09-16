@@ -94,9 +94,9 @@
         <p class="mt-1 text-xs text-muted-foreground">layak diperluas</p>
       </div>
       <div class="rounded-2xl border border-border bg-card p-4">
-        <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Volume inkremental</p>
-        <p class="kpi-value mt-2 font-heading text-2xl">{numId(res.summary.totalAddAnnualM, 1)}<span class="text-sm text-muted-foreground"> jt/th</span></p>
-        <p class="mt-1 text-xs text-muted-foreground">dari headroom</p>
+        <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Volume terealisasi thn-1</p>
+        <p class="kpi-value mt-2 font-heading text-2xl">{numId(res.summary.totalRealizedAnnualM, 1)}<span class="text-sm text-muted-foreground"> jt/th</span></p>
+        <p class="mt-1 text-xs text-muted-foreground">potensi {numId(res.summary.totalAddAnnualM, 1)}jt · tangkap {numId((res.inputs.captureRatePerYear ?? 0) * 100, 0)}%/th</p>
       </div>
       <div class="rounded-2xl border border-border bg-card p-4">
         <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">ROI portofolio</p>
@@ -112,10 +112,11 @@
 
     <div class="rounded-2xl border border-border bg-card p-5">
       <p class="mb-1 text-sm font-medium">Unit economics per paket (Table 3 &amp; 4)</p>
-      <p class="mb-4 text-xs text-muted-foreground">Margin dihitung sebelum COGS; kontribusi dikurangi porsi biaya variabel (asumsi tim).</p>
-      <div class="grid gap-3 sm:grid-cols-4">
+      <p class="mb-4 text-xs text-muted-foreground">Margin bruto = revenue − biaya logistik (sebelum COGS). Margin kontribusi = revenue − biaya variabel (fixed cost tak berubah saat volume naik).</p>
+      <div class="grid gap-3 sm:grid-cols-5">
         <div class="rounded-xl bg-muted/40 p-3"><p class="text-xs text-muted-foreground">Revenue</p><p class="kpi-value text-lg">{rpM(res.unitEconomics.revenuePerParcelIdr)}</p></div>
         <div class="rounded-xl bg-muted/40 p-3"><p class="text-xs text-muted-foreground">Biaya logistik</p><p class="kpi-value text-lg">{rpM(res.unitEconomics.costPerParcelIdr)}</p></div>
+        <div class="rounded-xl bg-muted/40 p-3"><p class="text-xs text-muted-foreground">Biaya variabel</p><p class="kpi-value text-lg">{rpM(res.unitEconomics.variableCostPerParcelIdr)}</p></div>
         <div class="rounded-xl bg-muted/40 p-3"><p class="text-xs text-muted-foreground">Margin bruto</p><p class="kpi-value text-lg">{rpM(res.unitEconomics.grossMarginPerParcelIdr)}</p></div>
         <div class="rounded-xl bg-muted/40 p-3"><p class="text-xs text-muted-foreground">Margin kontribusi</p><p class="kpi-value text-lg text-[var(--bitcoin)]">{rpM(res.unitEconomics.contributionMarginPerParcelIdr)}</p></div>
       </div>
@@ -136,7 +137,7 @@
             <th class="px-4 py-2.5">Hub</th>
             <th class="px-4 py-2.5 text-right">Util</th>
             <th class="px-4 py-2.5 text-right">Headroom</th>
-            <th class="px-4 py-2.5 text-right">+Volume/th</th>
+            <th class="px-4 py-2.5 text-right">+Volume thn-1</th>
             <th class="px-4 py-2.5 text-right">ROI</th>
             <th class="px-4 py-2.5">Prioritas</th>
           </tr>
@@ -147,7 +148,7 @@
               <td class="px-4 py-2">{h.hub} <span class="font-mono text-[11px] text-muted-foreground">{h.code}</span></td>
               <td class="px-4 py-2 text-right tabular-nums">{numId(h.utilizationPct, 1)}%</td>
               <td class="px-4 py-2 text-right tabular-nums text-muted-foreground">{numId(h.headroomM, 3)}M</td>
-              <td class="px-4 py-2 text-right tabular-nums">{numId(h.addAnnualM, 1)}jt</td>
+              <td class="px-4 py-2 text-right tabular-nums">{numId(h.realizedAnnualM, 1)}jt</td>
               <td class="px-4 py-2 text-right tabular-nums font-medium">{h.roiX > 0 ? numId(h.roiX, 1) + "×" : "—"}</td>
               <td class="px-4 py-2"><span class="rounded-full px-2.5 py-0.5 text-[11px] font-semibold {prioCls[h.priority] ?? 'bg-muted text-muted-foreground'}">{h.priority}</span></td>
             </tr>

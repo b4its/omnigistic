@@ -136,8 +136,8 @@
         label="Hub Overload"
         value={`${opt.summary.overloadedBefore} → ${opt.summary.overloadedAfter}`}
         sub="sebelum → sesudah (util > 65%)"
-        deltaTone={opt.summary.overloadedAfter < opt.summary.overloadedBefore ? "up" : "warn"}
-        delta={`-${opt.summary.overloadedBefore - opt.summary.overloadedAfter}`}
+        deltaTone={opt.summary.overloadedBefore - opt.summary.overloadedAfter >= 0 ? "up" : "warn"}
+        delta={`${opt.summary.overloadedBefore - opt.summary.overloadedAfter >= 0 ? "-" : "+"}${Math.abs(opt.summary.overloadedBefore - opt.summary.overloadedAfter)}`}
       />
       <MetricCard
         label="Utilisasi Timur (rata²)"

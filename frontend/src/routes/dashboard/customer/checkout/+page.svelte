@@ -171,7 +171,7 @@
         {@const d = decisionLabel[codResult.decision] ?? { text: codResult.decision, tone: "bg-muted text-foreground", icon: "bell" }}
         <div class="mx-auto max-w-md rounded-xl border {d.tone} p-4 text-sm">
           <span class="inline-flex items-center gap-2 font-semibold"><Icon name={d.icon as never} cls="h-4 w-4" weight="bold" /> {d.text}</span>
-          <p class="mt-1 text-xs opacity-90">Skor risiko COD {(codResult.score * 100).toFixed(0)}% · perkiraan tunggu {codResult.pickupWaitMin} menit.</p>
+          <p class="mt-1 text-xs opacity-90">Skor risiko COD {(codResult.score * 100).toFixed(0)}%{#if codResult.pickupWaitMin != null} · perkiraan tunggu {codResult.pickupWaitMin} menit{/if}.</p>
         </div>
       {/if}
       <div class="flex flex-wrap justify-center gap-3">
@@ -260,7 +260,7 @@
                 {@const d = decisionLabel[codResult.decision] ?? { text: codResult.decision, tone: "bg-muted text-foreground", icon: "bell" }}
                 <div class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold {d.tone}">
                   <Icon name={d.icon as never} cls="h-3.5 w-3.5" weight="bold" /> {d.text}
-                  <span class="font-normal opacity-80">· perkiraan tunggu {codResult.pickupWaitMin} menit</span>
+                  {#if codResult.pickupWaitMin != null}<span class="font-normal opacity-80">· perkiraan tunggu {codResult.pickupWaitMin} menit</span>{/if}
                 </div>
               {:else}
                 <button type="button" onclick={() => scoreCod()} class="inline-flex items-center gap-2 rounded-full border border-primary/40 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-accent">

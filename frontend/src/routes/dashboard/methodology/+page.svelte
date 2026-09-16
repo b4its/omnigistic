@@ -25,6 +25,20 @@
 
   let roots = $state<Root[]>(rootsFallback);
   let audit = $state<AuditResult | null>(null);
+  let auditLoading = $state(true);
+  let auditFailed = $state(false);
+
+  async function loadAudit() {
+    auditLoading = true;
+    auditFailed = false;
+    try {
+      audit = await api.metricAudit();
+    } catch {
+      audit = null;
+      auditFailed = true;
+    }
+    auditLoading = false;
+  }
 
   onMount(async () => {
     try {
@@ -41,11 +55,7 @@
     } catch {
       roots = rootsFallback;
     }
-    try {
-      audit = await api.metricAudit();
-    } catch {
-      audit = null;
-    }
+    await loadAudit();
   });
 
   const fmt = (n: number) => new Intl.NumberFormat("id-ID", { maximumFractionDigits: 2 }).format(n);
@@ -164,8 +174,16 @@
           </div>
         {/each}
       </div>
-    {:else}
+    {:else if auditLoading}
       <div class="h-24 animate-pulse rounded-2xl border border-border bg-card/60"></div>
+    {:else if auditFailed}
+      <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-destructive/5 p-5">
+        <div>
+          <p class="text-sm font-semibold text-foreground">Gagal memuat audit angka</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">Backend offline. Audit &amp; rekonsiliasi diturunkan dari data kasus.</p>
+        </div>
+        <button type="button" onclick={loadAudit} class="rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_18px_-5px_var(--glow)]">Coba lagi</button>
+      </div>
     {/if}
   </section>
 </div>

@@ -157,7 +157,7 @@
   <AddressMap />
 
   <div class="grid gap-4 sm:grid-cols-3">
-    {#each addrs as a (a.district)}
+    {#each addrs as a, i (`${a.city}-${a.district}-${i}`)}
       <div class="rounded-2xl border bg-card p-5">
         <p class="font-mono text-sm text-primary">{a.street}</p>
         <p class="mt-3 text-sm font-medium">{a.city}</p>
@@ -188,7 +188,7 @@
       </div>
 
       <ol class="mt-4 space-y-2.5">
-        {#each parsed.candidates as c, i (c.district)}
+        {#each parsed.candidates as c, i (`${c.city}-${c.district}-${i}`)}
           {@const val = shown[i] ?? 0}
           {@const isBest = c.city === parsed.best?.city}
           <li class="rounded-xl bg-muted/50 px-3 py-2.5">

@@ -151,7 +151,7 @@
       <div class="rounded-2xl border border-border bg-card p-5">
         <p class="mb-3 text-sm font-medium">Pilihan moda per koridor (vs baseline ekspres)</p>
         <div class="max-h-[380px] space-y-2 overflow-y-auto pr-1">
-          {#each res.routes as r (r.dest)}
+          {#each res.routes as r, i (`${r.dest}-${i}`)}
             <div class="rounded-xl border border-border bg-background/40 p-3">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <span class="flex items-center gap-2 text-sm font-medium">

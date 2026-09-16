@@ -169,14 +169,16 @@ function last14Days(): string[] {
   return out;
 }
 
-const DAY_WEIGHT = [0.82, 0.91, 1.0, 1.08, 1.02, 1.24, 1.31]; // pola mingguan (Senin..Minggu)
+// Pola mingguan indeks 0=Senin..6=Minggu. getDay() JS = 0=Minggu..6=Sabtu,
+// jadi indeks harus dikonversi dgn (dow + 6) % 7 agar hari tak bergeser.
+const DAY_WEIGHT = [0.82, 0.91, 1.0, 1.08, 1.02, 1.24, 1.31]; // Senin..Minggu
 
 /** Riwayat penjualan harian demo (14 hari, deterministik dari jumlah terjual). */
 export const DAILY_SALES: DailySales[] = (() => {
   const days = last14Days();
   return days.map((date, i) => {
     const dow = new Date(date + "T00:00:00").getDay(); // 0=Min..6=Sab
-    const weight = DAY_WEIGHT[dow];
+    const weight = DAY_WEIGHT[(dow + 6) % 7]; // → indeks 0=Senin..6=Minggu
     const orders = Math.round(58 * weight + (i % 3));
     const revenue = Math.round(orders * 168000);
     const profit = Math.round(revenue * 0.31);

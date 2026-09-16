@@ -105,7 +105,7 @@ try {
     // Geser target utilisasi → volume inkremental naik.
     const getAdd = async () => {
       const t = await page.locator("body").innerText();
-      const m = t.match(/Volume inkremental\s*\n\s*([\d.,]+)/i);
+      const m = t.match(/Volume terealisasi thn-1\s*\n\s*([\d.,]+)/i);
       return m ? m[1] : null;
     };
     const vBefore = await getAdd();

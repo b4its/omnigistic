@@ -112,11 +112,12 @@ function normalizeOrder(o: Partial<Order>): Order {
   return {
     id: o.id ?? `ORD-${now.toString(36).toUpperCase()}`,
     createdAt: o.createdAt ?? now,
-    // Migrasi lama: order tersimpan dgn field `emoji` → peta ke `icon` (default "box").
+    // Order lama (sebelum migrasi emoji→ikon) tak punya field `icon` → default "box".
+    // (Nilai `emoji` lama sengaja TIDAK dipetakan: emoji bukan nama `IconName` yang sah.)
     items: Array.isArray(o.items)
       ? o.items.map((it) => {
-          const legacy = it as unknown as { icon?: string; emoji?: string };
-          return { ...it, icon: legacy.icon ?? "box" };
+          const legacy = it as unknown as { icon?: string };
+          return { ...it, icon: typeof legacy.icon === "string" && legacy.icon ? legacy.icon : "box" };
         })
       : [],
     subtotal: o.subtotal ?? 0,

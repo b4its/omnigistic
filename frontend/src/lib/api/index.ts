@@ -510,6 +510,7 @@ export interface ExpansionHub {
   outlets: number;
   headroomM: number;
   addAnnualM: number;
+  realizedAnnualM: number;
   addMarginIdrPerYear: number;
   roiX: number;
   paybackYears: number;
@@ -520,9 +521,9 @@ export interface ExpansionHub {
 export interface ExpansionResult {
   engine: string;
   note: string;
-  inputs: { capexPerHubIdr: number; targetUtil: number };
-  unitEconomics: { revenuePerParcelIdr: number; costPerParcelIdr: number; grossMarginPerParcelIdr: number; contributionMarginPerParcelIdr: number };
-  summary: { priorityHubs: number; totalAddAnnualM: number; totalAddMarginIdrPerYear: number; totalCapexIdr: number; portfolioRoiX: number; paybackYears: number };
+  inputs: { capexPerHubIdr: number; targetUtil: number; captureRatePerYear: number };
+  unitEconomics: { revenuePerParcelIdr: number; costPerParcelIdr: number; variableCostPerParcelIdr: number; grossMarginPerParcelIdr: number; contributionMarginPerParcelIdr: number };
+  summary: { priorityHubs: number; totalAddAnnualM: number; totalRealizedAnnualM: number; totalAddMarginIdrPerYear: number; totalCapexIdr: number; portfolioRoiX: number; paybackYears: number };
   hubs: ExpansionHub[];
 }
 

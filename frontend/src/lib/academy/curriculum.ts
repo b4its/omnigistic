@@ -434,7 +434,7 @@ export const TRACKS: Track[] = [
             summary: "Basis 14.180 unit dan target EV.",
             points: [
               "Armada: 12.500 motor, 280 van, 560 truk, 840 line-haul = 14.180 unit.",
-              "Motor 93,7% armada; 70% last-mile kota besar via motor.",
+              "Motor 93,7% dari armada last-mile; 70% last-mile kota besar via motor.",
               "Target 200 kendaraan bersih akhir 2026 ≈ 1,4% armada (asumsi tim).",
               "Roadmap 3 fase + penyusutan 8 tahun menghindari lonjakan capex.",
             ],
