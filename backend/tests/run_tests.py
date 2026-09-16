@@ -233,8 +233,13 @@ check("cod-intel share negatif dijepit", _aci(-10, [], 40)["split"]["codPackages
 check("cod-intel share >100 dijepit", _aci(150, [], 40)["split"]["nonCodPackages"] == 0.0)
 check("cod-intel paket negatif -> 0", _aci(60, [], -5)["split"]["codPackages"] == 0.0)
 lv = _get("/ml/modalshift/levers")
-check("6 tuas biaya", len(lv["levers"]) == 6, str(len(lv["levers"])))
+check("7 tuas biaya (kanonik, sama dgn P&L)", len(lv["levers"]) == 7, str(len(lv["levers"])))
 check("total saving > 0", lv["summary"]["totalSavingIdrT"] > 0, str(lv["summary"]["totalSavingIdrT"]))
+# REGRESI B3: cost_levers (multimodal) & cost_waterfall (pnl) HARUS sepakat —
+# dulu 20,4% vs 8,7% utk tuas yg sama. Kini satu sumber kanonik (pnl.LEVERS).
+_pw = _get("/ml/pnl/waterfall")
+check("levers & waterfall sepakat (%)", lv["summary"]["savingPctOfCost"] == _pw["summary"]["totalSavingPct"], f"{lv['summary']['savingPctOfCost']} vs {_pw['summary']['totalSavingPct']}")
+check("jumlah tuas sepakat", len(lv["levers"]) == len(_pw["waterfall"]), f"{len(lv['levers'])} vs {len(_pw['waterfall'])}")
 
 print("== 5d. Digital Twin & COD-impact (input dihormati) ==")
 dt = _get("/ml/sim/digital-twin")

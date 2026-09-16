@@ -34,16 +34,67 @@ def _basis() -> dict[str, float]:
     }
 
 
-# Tuas: (nama, dimensi basis, porsi penghematan). Porsi = asumsi tim.
-# dimensi: "shipping" | "fulfilment" | "cost".
-_LEVERS = [
-    ("Modal shift laut-udara (rute jauh)", "shipping", 0.045),
-    ("Hilangkan idle time COD (digital)", "shipping", 0.022),
-    ("Address Intelligence (komplain & retur)", "fulfilment", 0.020),
-    ("Load balancing antar-hub", "cost", 0.012),
-    ("Elektrifikasi armada last-mile (EV)", "shipping", 0.030),
-    ("Kemasan reusable & degradable", "fulfilment", 0.015),
-    ("Konsolidasi line-haul & rute", "shipping", 0.018),
+# Tuas pengurangan biaya KANONIK (satu sumber kebenaran) — dipakai cost_waterfall
+# (P&L) DAN modalshift.cost_levers agar kedua UI tak saling bertentangan.
+# Porsi = ASUMSI TIM sebagai fraksi biaya kasus (Table 3). `dim` = basis mana yang
+# dipangkas: "shipping" | "fulfilment" | "cost". `mechanism`/`evidence` = narasi.
+LEVERS: list[dict[str, Any]] = [
+    {
+        "lever": "Modal shift laut-udara (rute jauh)",
+        "dim": "shipping",
+        "frac": 0.045,
+        "co2Pct": 18.4,
+        "mechanism": "Rute non-ekspres dialihkan ke laut/kapal (murah + emisi rendah).",
+        "evidence": "Modal-Shift Optimizer: hemat biaya & emisi pada 11 koridor.",
+    },
+    {
+        "lever": "Hilangkan idle time COD",
+        "dim": "shipping",
+        "frac": 0.022,
+        "co2Pct": 3.0,
+        "mechanism": "Pre-payment/PUDO/slot → kurir tidak menunggu; kapasitas naik tanpa armada baru.",
+        "evidence": "COD Intelligence: ketidakefisienan COD (138 vs 75 mnt) dipangkas.",
+    },
+    {
+        "lever": "Address Intelligence (tekan komplain & retur)",
+        "dim": "fulfilment",
+        "frac": 0.020,
+        "co2Pct": 2.0,
+        "mechanism": "Geotag + fuzzy matching → alamat presisi, retur gagal-antar turun.",
+        "evidence": "Komplain 5,5/juta → target <3/juta; tiap retur = 1 perjalanan terbuang.",
+    },
+    {
+        "lever": "Load balancing antar-hub",
+        "dim": "cost",
+        "frac": 0.012,
+        "co2Pct": 2.5,
+        "mechanism": "Alihkan overflow hub padat ke hub ber-headroom; hindari lembur & sortasi darurat.",
+        "evidence": "Network Optimizer: pindahkan overflow tanpa menciptakan overload baru.",
+    },
+    {
+        "lever": "Elektrifikasi armada last-mile (EV)",
+        "dim": "shipping",
+        "frac": 0.030,
+        "co2Pct": 12.0,
+        "mechanism": "200 EV menggantikan motor BBM pada rute urban → BBM & O&M turun.",
+        "evidence": "EV = 1,41% armada (pilot); emisi per paket target −20% per 2027.",
+    },
+    {
+        "lever": "Kemasan reusable & degradable",
+        "dim": "fulfilment",
+        "frac": 0.015,
+        "co2Pct": 4.0,
+        "mechanism": "Ganti sekali-pakai → kurangi biaya material & limbah; reusable transit bag.",
+        "evidence": "Kemasan sekali-pakai salah satu driver biaya fulfilment & emisi material.",
+    },
+    {
+        "lever": "Konsolidasi line-haul & rute",
+        "dim": "shipping",
+        "frac": 0.018,
+        "co2Pct": 2.0,
+        "mechanism": "Konsolidasi muatan line-haul & rute kurir → utilisasi truk naik, trip kosong turun.",
+        "evidence": "Load factor line-haul & cluster rute (Optimizer rute).",
+    },
 ]
 
 
@@ -59,7 +110,8 @@ def cost_waterfall(include_sustainability: bool = True) -> dict[str, Any]:
 
     steps: list[dict[str, Any]] = []
     running = base_cost
-    for name, dim, frac in _LEVERS:
+    for lever in LEVERS:
+        name, dim, frac = lever["lever"], lever["dim"], lever["frac"]
         if not include_sustainability and dim == "fulfilment" and "Kemasan" in name:
             continue
         if not include_sustainability and "EV" in name:

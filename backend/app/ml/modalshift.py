@@ -26,6 +26,7 @@ from typing import Any
 
 from app.db.loader import load
 from app.ml.metrics import clamp
+from app.ml.pnl import LEVERS
 
 # ── Profil moda (asumsi tim — dapat di-override via API) ────────────────────
 # costIdrPerPkgKm : biaya per paket per km (IDR)
@@ -216,13 +217,13 @@ def _mode_mix(rows: list[dict[str, Any]]) -> dict[str, int]:
 
 
 def cost_levers() -> dict[str, Any]:
-    """Enam tuas pengurangan biaya (Pertanyaan 6) dengan potensi & dampak sustainability.
+    """Tuas pengurangan biaya (Pertanyaan 6) dengan potensi & dampak sustainability.
 
-    Angka potensi = ASUMSI TIM yang diturunkan dari modul-modul lain (COD, modal
-    shift, address intelligence, load balancing, sustainability) — bukan pabrikasi,
-    melainkan sintesis dampak terukur yang sudah dihitung di modul masing-masing.
+    **Satu sumber kebenaran**: memakai tabel tuas kanonik `pnl.LEVERS` (sama dgn
+    yang dipakai Cost-Waterfall & P&L) agar kedua halaman TIDAK saling
+    bertentangan. Angka potensi = ASUMSI TIM sebagai fraksi biaya kasus (Table 3),
+    disintesis dari modul COD, modal-shift, address, load-balancing, sustainability.
     """
-    opt = optimize_corridors()
     # Ambil angka dari data kasus.
     data = load()
     fin = {f["year"]: f for f in data["financial"]}
@@ -231,60 +232,21 @@ def cost_levers() -> dict[str, Any]:
     fulfilment_t = float(f2023.get("fulfilmentT", 50.08))
     total_cost_t = shipping_t + fulfilment_t
 
-    levers = [
-        {
-            "lever": "Modal shift laut-udara (rute jauh)",
-            "mechanism": "Kontrol via data: rute non-ekspres dialihkan ke laut/kapal (murah + emisi rendah).",
-            "costImpactIdrT": round(shipping_t * 0.18, 2),
-            "costPct": 18.0,
-            "co2Pct": abs(opt["summary"]["co2SavingPct"]),
-            "evidence": f"Optimizer: emisi turun {abs(opt['summary']['co2SavingPct'])}% pada {opt['summary']['routes']} koridor.",
-        },
-        {
-            "lever": "Hilangkan idle time COD",
-            "mechanism": "Pre-payment/PUDO/slot → kurir tidak menunggu; kapasitas naik tanpa armada baru.",
-            "costImpactIdrT": round(shipping_t * 0.09, 2),
-            "costPct": 9.0,
-            "co2Pct": 3.0,
-            "evidence": "COD Intelligence: ketidakefisienan COD (138 vs 75 mnt) dipangkas.",
-        },
-        {
-            "lever": "Address Intelligence (tekan komplain & retur)",
-            "mechanism": "Geotag + fuzzy matching → alamat presisi, retur gagal-antar turun.",
-            "costImpactIdrT": round(fulfilment_t * 0.05, 2),
-            "costPct": 5.0,
-            "co2Pct": 2.0,
-            "evidence": "Komplain 5,5/juta → target <3/juta; tiap retur = 1 perjalanan terbuang.",
-        },
-        {
-            "lever": "Load balancing antar-hub",
-            "mechanism": "Alihkan overflow hub padat ke hub ber-headroom; hindari lembur & sortasi darurat.",
-            "costImpactIdrT": round(fulfilment_t * 0.04, 2),
-            "costPct": 4.0,
-            "co2Pct": 2.5,
-            "evidence": "Optimizer: utilisasi timur 41,5%→63,6%, hindari pengalihan mendadak Double 12.",
-        },
-        {
-            "lever": "Elektrifikasi armada last-mile (EV)",
-            "mechanism": "200 EV menggantikan motor BBM pada rute urban → BBM & O&M turun.",
-            "costImpactIdrT": round(fulfilment_t * 0.03, 2),
-            "costPct": 3.0,
-            "co2Pct": 12.0,
-            "evidence": "EV = 1,41% armada (pilot); emisi per paket target −20% per 2027.",
-        },
-        {
-            "lever": "Kemasan degradable & reusable",
-            "mechanism": "Ganti sekali-pakai → kurangi biaya material & limbah; reusable transit bag.",
-            "costImpactIdrT": round(fulfilment_t * 0.02, 2),
-            "costPct": 2.0,
-            "co2Pct": 4.0,
-            "evidence": "Kemasan sekali-pakai salah satu driver biaya fulfilment & emisi material.",
-        },
-    ]
+    levers = []
+    for lv in LEVERS:
+        base = shipping_t if lv["dim"] == "shipping" else fulfilment_t if lv["dim"] == "fulfilment" else total_cost_t
+        levers.append({
+            "lever": lv["lever"],
+            "mechanism": lv["mechanism"],
+            "costImpactIdrT": round(base * lv["frac"], 2),
+            "costPct": round(lv["frac"] * 100, 1),
+            "co2Pct": lv["co2Pct"],
+            "evidence": lv["evidence"],
+        })
     total_saving = round(sum(lv["costImpactIdrT"] for lv in levers), 2)
     return {
         "engine": "Cost-Lever Portfolio (Pertanyaan 6)",
-        "note": "Potensi per tuas = ASUMSI TIM sebagai fraksi biaya kasus; dipakai untuk prioritisasi relatif, bukan proyeksi pasti.",
+        "note": "Potensi per tuas = ASUMSI TIM sebagai fraksi biaya kasus; dipakai untuk prioritisasi relatif, bukan proyeksi pasti. Tabel tuas = kanonik (sama dgn P&L Waterfall).",
         "basisYear": f2023.get("year"),
         "totalCostT": round(total_cost_t, 2),
         "levers": levers,
