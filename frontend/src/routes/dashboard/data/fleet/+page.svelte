@@ -33,6 +33,9 @@
   const total = $derived(pieData.reduce((s, d) => s + d.value, 0));
   // Basis total aset = line-haul 840 + motor 12.500 + van 280 + truk 560 = 14.180
   const totalAll = $derived((fleet.lineHaul ?? 0) + total);
+  // Pangsa motor dari armada last-mile — pakai field API bila ada, kalau tidak
+  // HITUNG dari data (jangan hardcode 93,7 yang bisa drift dari sumber).
+  const motorSharePct = $derived(fleet.motorcycleSharePct ?? (total ? ((fleet.motorcycles ?? 0) / total) * 100 : 0));
 
   // ── Simulasi transisi EV (interaktif) ──────────────────────────────────
   // Asumsi tim (dilabel): emisi rata-rata per unit-km/hari & % km motor.
@@ -95,7 +98,7 @@
         <p class="text-xs text-muted-foreground">Total unit (line-haul + last-mile)</p>
       </div>
       <div class="rounded-2xl border border-primary/30 bg-card p-4 text-center">
-        <p class="kpi-value text-2xl text-primary">{fleet.motorcycleSharePct ?? 93.7}%</p>
+        <p class="kpi-value text-2xl text-primary">{numId(motorSharePct, 1)}%</p>
         <p class="text-xs text-muted-foreground">Motor (dari {new Intl.NumberFormat("id-ID").format(total)} last-mile)</p>
       </div>
       <div class="rounded-2xl border border-chart-3 bg-card p-4 text-center">
@@ -173,7 +176,7 @@
     </div>
 
     <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm">
-      Motor {fleet.motorcycleSharePct ?? 93.7}% armada ({new Intl.NumberFormat("id-ID").format(fleet.motorcycles ?? 0)} unit). Target {fleet.evTarget ?? 200} EV ≈ {numId(((fleet.evTarget ?? 200) / (totalAll || 1)) * 100, 2)}% dari {new Intl.NumberFormat("id-ID").format(totalAll)} unit. Perlu kebijakan penyusutan 8 tahun untuk transisi alami tanpa lonjakan capex.
+      Motor {numId(motorSharePct, 1)}% dari armada last-mile ({new Intl.NumberFormat("id-ID").format(fleet.motorcycles ?? 0)} unit). Target {fleet.evTarget ?? 200} EV ≈ {numId(((fleet.evTarget ?? 200) / (totalAll || 1)) * 100, 2)}% dari {new Intl.NumberFormat("id-ID").format(totalAll)} unit. Perlu kebijakan penyusutan 8 tahun untuk transisi alami tanpa lonjakan capex.
     </div>
   {:else}
     <PageState loading={true} skeletonCards={4} skeletonHeight={220} />

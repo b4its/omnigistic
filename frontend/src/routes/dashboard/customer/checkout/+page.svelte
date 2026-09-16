@@ -6,16 +6,19 @@
   import { shop, cartDetail, shippingCost, buyerReputation, type ResolvedCartItem, type Address, type PaymentMethod } from "$lib/stores/shop";
   import { CITIES } from "$lib/logistics";
   import { notify } from "$lib/toast";
-  import { api, type CodRiskResult } from "$lib/api";
+  import { api, type CodRiskResult, type Hub } from "$lib/api";
   import type { Reputation } from "$lib/shop/reputation";
 
   let items = $state<ResolvedCartItem[]>([]);
   let subtotal = $state(0);
   let savedAddress = $state<Address | null>(null);
   let reputation = $state<Reputation | null>(null);
+  // Utilisasi hub nyata (Table 1) untuk fitur model COD — bukan konstanta hardcode.
+  let hubs = $state<Hub[]>([]);
 
   onMount(() => {
     shop.init();
+    void api.hubs().then((h) => (hubs = h)).catch(() => (hubs = []));
     const unsub = cartDetail.subscribe((d) => {
       items = d.items;
       subtotal = d.subtotal;
@@ -63,6 +66,17 @@
   const phoneValid = $derived(/^[0-9+\-\s()]{8,}$/.test(phone.trim()));
   const addressValid = $derived(recipient.trim().length > 1 && phoneValid && street.trim().length > 4 && !!city);
 
+  // Kota → hub pengantar (Jabodetabek dilayani hub Jakarta). Sumber: Table 1.
+  const CITY_HUB: Record<string, string> = { Jakarta: "Jakarta", Depok: "Jakarta", Tangerang: "Jakarta", Bogor: "Jakarta", Bandung: "Bandung", Surabaya: "Surabaya" };
+  /** Utilisasi hub nyata (Table 1) untuk kota tujuan; fallback rata-rata hub bila data belum termuat. */
+  function hubUtilForCity(c: string): number {
+    const name = CITY_HUB[c] ?? "Jakarta";
+    const h = hubs.find((x) => x.name === name);
+    if (h) return h.utilizationPct;
+    if (hubs.length) return hubs.reduce((s, x) => s + x.utilizationPct, 0) / hubs.length;
+    return 60; // fallback kasar bila /api/hubs offline (model tetap jalan)
+  }
+
   // Skor risiko COD diturunkan dari model Predictive: nilai paket, jam, berat→proxy
   // zona, alamat (street length→proxy ambiguitas ringan). Non-COD tidak di-skor.
   async function scoreCod(): Promise<void> {
@@ -79,7 +93,7 @@
       const ambiguous = street.trim().length < 12 ? 1 : 0;
       const zone = totalWeight > 5 ? 2 : totalWeight > 2 ? 1 : 0;
       const res = await api.codRisk({
-        hub_util: 68.9,
+        hub_util: hubUtilForCity(city),
         value,
         hour,
         ambiguous,

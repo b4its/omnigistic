@@ -60,17 +60,26 @@
   }
 
   let shown = $state(untrack(() => value));
+  // Simpan sumber terakhir yang dianimasikan (non-reaktif) agar effect tidak
+  // me-restart animasi saat parent re-render dgn nilai SAMA (anti-jitter).
+  // Mulai undefined → run pertama tetap menganimasikan count-up awal.
+  let lastSrc: string | undefined = undefined;
   $effect(() => {
     const src = value;
     if (!src) {
       shown = src;
+      lastSrc = src;
       return;
     }
     const { pre, num, suf, dec } = parse(src);
     if (num === null) {
       shown = src;
+      lastSrc = src;
       return;
     }
+    // Nilai sumber tak berubah → biarkan animasi berjalan (jangan restart).
+    if (src === lastSrc) return;
+    lastSrc = src;
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       shown = fmt(pre, num, suf, dec);
       return;

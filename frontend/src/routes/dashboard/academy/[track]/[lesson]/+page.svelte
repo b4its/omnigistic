@@ -163,7 +163,7 @@
                     <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border {isSel ? 'border-primary bg-primary text-primary-foreground' : 'border-border'}">
                       {#if submitted && isCorrect}<Icon name="check" cls="h-3 w-3" weight="bold" />
                       {:else if submitted && isSel && !isCorrect}<Icon name="x" cls="h-3 w-3" weight="bold" />
-                      {:else if isSel}<span class="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]-foreground"></span>{/if}
+                      {:else if isSel}<span class="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]"></span>{/if}
                     </span>
                     <span class="flex-1">{opt.label}</span>
                   </button>

@@ -96,7 +96,10 @@
   });
 
   const greetingDone = $derived(shownWords >= wordCount);
-  const introDone = $derived(greetingDone && intro.insights.length > 0);
+  // Chip saran tampil begitu sapaan selesai — TIDAK menunggu insights (dulu
+  // insights kosong saat backend offline → chip tak pernah muncul; padahal itu
+  // justru momen paling butuh pertanyaan siap-pakai). chips punya fallback EMPTY_CHIPS.
+  const introDone = $derived(greetingDone);
   const chips = $derived((suggestions.length ? suggestions : EMPTY_CHIPS).slice(0, 3));
   const greetingWords = $derived(intro.greeting.split(" ").slice(0, shownWords).join(" "));
 
