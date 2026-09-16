@@ -3,7 +3,7 @@
   import type * as LeafletNS from "leaflet";
   import type { Hub } from "$lib/api";
   import { OSM_TILE } from "$lib/map/tiles";
-  import { PUDO_POINTS, pudoCountByRegion } from "$lib/logistics";
+  import { PUDO_POINTS, pudoCountByRegion, UTIL_THRESHOLD } from "$lib/logistics";
   import Icon from "$lib/components/Icon.svelte";
 
   interface Props {
@@ -42,9 +42,10 @@
   };
 
   function tone(u: number): { color: string; label: string } {
-    if (u > 65) return { color: "#a03123", label: "overload (>65%)" };
-    if (u >= 50) return { color: "#d9a441", label: "perhatian (50-65%)" };
-    return { color: "#3f5c3f", label: "sehat (<50%)" };
+    // Ambang dari SATU sumber (logistics.ts UTIL_THRESHOLD), bukan angka ajaib.
+    if (u > UTIL_THRESHOLD.critical) return { color: "#a03123", label: `overload (>${UTIL_THRESHOLD.critical}%)` };
+    if (u >= UTIL_THRESHOLD.warn) return { color: "#d9a441", label: `perhatian (${UTIL_THRESHOLD.warn}-${UTIL_THRESHOLD.critical}%)` };
+    return { color: "#3f5c3f", label: `sehat (<${UTIL_THRESHOLD.warn}%)` };
   }
 
   onMount(() => {
@@ -72,7 +73,7 @@
         const mk = L.circleMarker(c, {
           radius: 6 + h.capacityM * 18,
           color,
-          weight: h.utilizationPct > 65 ? 3 : 2,
+            weight: h.utilizationPct > UTIL_THRESHOLD.critical ? 3 : 2,
           fillColor: color,
           fillOpacity: 0.72
         }).addTo(m);
@@ -142,9 +143,9 @@
       <div id="hub-legend" class="max-h-[60%] space-y-2 overflow-y-auto border-t border-border px-3 py-2.5">
         <p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Utilisasi hub (warna)</p>
         <ul class="space-y-1.5">
-          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:#3f5c3f"></span> <span><b class="text-foreground">Sehat</b> — utilisasi &lt; 50%</span></li>
-          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:#d9a441"></span> <span><b class="text-foreground">Perhatian</b> — 50–65%</span></li>
-          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:#a03123"></span> <span><b class="text-foreground">Overload</b> — &gt; 65%</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:#3f5c3f"></span> <span><b class="text-foreground">Sehat</b> — utilisasi &lt; {UTIL_THRESHOLD.warn}%</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:#d9a441"></span> <span><b class="text-foreground">Perhatian</b> — {UTIL_THRESHOLD.warn}–{UTIL_THRESHOLD.critical}%</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:#a03123"></span> <span><b class="text-foreground">Overload</b> — &gt; {UTIL_THRESHOLD.critical}%</span></li>
         </ul>
         <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Ukuran &amp; simbol</p>
         <ul class="space-y-1.5">

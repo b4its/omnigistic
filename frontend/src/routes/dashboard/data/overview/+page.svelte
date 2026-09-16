@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { api, type Hub, type Insights } from "$lib/api";
   import { numId } from "$lib/utils";
+  import { UTIL_THRESHOLD } from "$lib/logistics";
   import RoleOverview from "$lib/components/RoleOverview.svelte";
 
   let greeting = $state("");
@@ -33,13 +34,13 @@
 
   onMount(() => void load());
 
-  const overloaded = $derived(hubs.filter((h) => h.utilizationPct > 65).length);
-  const underutilized = $derived(hubs.filter((h) => h.utilizationPct < 50).length);
+  const overloaded = $derived(hubs.filter((h) => h.utilizationPct > UTIL_THRESHOLD.critical).length);
+  const underutilized = $derived(hubs.filter((h) => h.utilizationPct < UTIL_THRESHOLD.warn).length);
 
   const kpi = $derived([
     { label: "Complaint Rate 2023", value: "5,5 / juta", sub: "≈ 6.105 kasus dari 1.110 jt paket", accent: "var(--color-destructive-foreground)" },
-    { label: "Hub Overloaded", value: String(overloaded), sub: "utilisasi >65% (hitung dari 23 hub)", accent: "var(--color-destructive-foreground)" },
-    { label: "Hub Underutilized", value: String(underutilized), sub: "utilisasi <50% (Kalimantan, Sulawesi, Maluku, Papua)" },
+    { label: "Hub Overloaded", value: String(overloaded), sub: `utilisasi >${UTIL_THRESHOLD.critical}% (hitung dari ${hubs.length} hub)`, accent: "var(--color-destructive-foreground)" },
+    { label: "Hub Underutilized", value: String(underutilized), sub: `utilisasi <${UTIL_THRESHOLD.warn}% (Kalimantan, Sulawesi, Maluku, Papua)` },
     { label: "Target 2026", value: "<3 / juta", sub: "lewat Address Intelligence", accent: "var(--color-success-foreground)" }
   ]);
 

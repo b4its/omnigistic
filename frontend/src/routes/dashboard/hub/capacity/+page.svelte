@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { api, type Hub } from "$lib/api";
+  import { UTIL_THRESHOLD } from "$lib/logistics";
   import { cn } from "$lib/utils";
   import { notify } from "$lib/toast";
 
@@ -25,7 +26,9 @@
 
   onMount(() => void load());
 
-  const THRESHOLD = 65; // ambang early-warning (skenario Double 12 2022)
+  // Ambang early-warning dari SATU sumber (logistics.ts UTIL_THRESHOLD), bukan
+  // angka ajaib lokal (skenario Double 12 2022).
+  const THRESHOLD = UTIL_THRESHOLD.critical;
   const bdg = $derived(hubs.find((h) => h.name === "Bandung"));
 
   // Simulasi kapasitas elastis 3 tingkat. Level = permintaan bulanan (Tabel 4):
@@ -69,7 +72,7 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <h1 class="font-heading text-xl font-semibold tracking-tight">Capacity Alert</h1>
-    <span class="hub-label text-muted-foreground">Early warning &gt;65%</span>
+    <span class="hub-label text-muted-foreground">Early warning &gt;{THRESHOLD}%</span>
   </div>
 
   {#if loaded && failed}
@@ -81,11 +84,11 @@
   {:else if loaded && bdg}
     <div class="rounded-2xl border border-border bg-card p-5">
       <p class="text-xs text-muted-foreground">Hub Bandung, utilisasi</p>
-      <p class="kpi-value text-3xl {bdg.utilizationPct > 65 ? 'text-destructive-foreground' : 'text-chart-3'}">{bdg.utilizationPct}%</p>
+      <p class="kpi-value text-3xl {bdg.utilizationPct > THRESHOLD ? 'text-destructive-foreground' : 'text-chart-3'}">{bdg.utilizationPct}%</p>
       <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div class="h-full {bdg.utilizationPct > 65 ? 'bg-destructive' : 'bg-chart-3'}" style="width: {bdg.utilizationPct}%"></div>
+        <div class="h-full {bdg.utilizationPct > THRESHOLD ? 'bg-destructive' : 'bg-chart-3'}" style="width: {bdg.utilizationPct}%"></div>
       </div>
-      <p class="mt-1 text-xs text-muted-foreground">{bdg.utilizationPct > 65 ? "Di atas ambang 65%, butuh perhatian" : "Dalam zona aman"}</p>
+      <p class="mt-1 text-xs text-muted-foreground">{bdg.utilizationPct > THRESHOLD ? "Di atas ambang " + THRESHOLD + "%, butuh perhatian" : "Dalam zona aman"}</p>
     </div>
 
     <div>
@@ -112,7 +115,7 @@
 
     <div class="grid gap-4 sm:grid-cols-3">
       <div class="rounded-2xl border border-border bg-card p-4">
-        <p class="text-xs text-muted-foreground">Hub menembus ambang &gt;65%</p>
+        <p class="text-xs text-muted-foreground">Hub menembus ambang &gt;{THRESHOLD}%</p>
         <p class="kpi-value text-2xl {breaches.length ? 'text-destructive-foreground' : 'text-chart-3'}">{breaches.length}<span class="text-sm text-muted-foreground"> / {hubs.length}</span></p>
       </div>
       <div class="rounded-2xl border border-border bg-card p-4">

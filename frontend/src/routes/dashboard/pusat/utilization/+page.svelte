@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { api, type Hub } from "$lib/api";
+  import { UTIL_THRESHOLD } from "$lib/logistics";
   import EChart from "$lib/components/EChart.svelte";
   import HubMap from "$lib/map/HubMap.svelte";
   import PageState from "$lib/components/PageState.svelte";
@@ -32,7 +33,7 @@
 <div class="space-y-6">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <h1 class="font-heading text-xl font-semibold tracking-tight">Utilization Map · 23 Hub</h1>
-    <span class="hub-label text-muted-foreground">ambang overload &gt; 65%</span>
+    <span class="hub-label text-muted-foreground">ambang overload &gt; {UTIL_THRESHOLD.critical}%</span>
   </div>
 
   {#if loaded && hubs.length}
@@ -40,7 +41,7 @@
       <div class="mb-3 flex flex-wrap items-end justify-between gap-2">
         <div>
           <p class="text-base font-semibold">Peta 23 hub · utilisasi</p>
-          <p class="text-[13.5px] text-muted-foreground">Warna menandai utilisasi: hijau &lt; 50%, kuning 50-65%, merah &gt; 65%. Ukuran bulatan = kapasitas. Klik hub untuk detail.</p>
+          <p class="text-[13.5px] text-muted-foreground">Warna menandai utilisasi: hijau &lt; {UTIL_THRESHOLD.warn}%, kuning {UTIL_THRESHOLD.warn}-{UTIL_THRESHOLD.critical}%, merah &gt; {UTIL_THRESHOLD.critical}%. Ukuran bulatan = kapasitas. Klik hub untuk detail.</p>
         </div>
         <span class="rounded-full bg-muted px-3 py-1 text-[13px] font-semibold text-muted-foreground">{hubs.length} hub</span>
       </div>
@@ -68,7 +69,7 @@
           sorted.map((h) => ({
             name: h.name,
             value: h.utilizationPct,
-            color: h.utilizationPct > 65 ? "var(--color-chart-4)" : h.utilizationPct > 50 ? "var(--color-chart-3)" : "var(--color-chart-2)"
+            color: h.utilizationPct > UTIL_THRESHOLD.critical ? "var(--color-chart-4)" : h.utilizationPct > UTIL_THRESHOLD.warn ? "var(--color-chart-3)" : "var(--color-chart-2)"
           }))
         )}
         height={Math.max(320, sorted.length * 24)}
