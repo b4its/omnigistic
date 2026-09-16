@@ -107,9 +107,14 @@ try {
   await goto("/dashboard/pusat/utilization");
   text = await page.locator("body").innerText();
   R((await page.locator(".leaflet-container").count()) >= 1, "pusat/utilization: peta hub tampil");
-  R(/Titik PUDO mitra/i.test(text), "pusat/utilization: legenda PUDO mitra tampil");
+  R(/PUDO mitra per region/i.test(text) || /PUDO mitra/i.test(text), "pusat/utilization: legenda PUDO mitra tampil");
+  // Legenda sebaran PUDO per-region (33 titik, 6 region).
+  const hubLegend = await page.locator("#hub-legend").innerText().catch(() => "");
+  R(/PUDO mitra per region/i.test(hubLegend), "pusat/utilization: legenda sebaran per-region tampil");
+  R(/33 titik/i.test(hubLegend), "pusat/utilization: total 33 titik PUDO", "");
+  R(/Java/.test(hubLegend) && /Maluku & Papua/.test(hubLegend) && /Kalimantan/.test(hubLegend), "pusat/utilization: 6 region tercantum di legenda");
   const shapesHub = await leafletShapeCount();
-  R(shapesHub >= 3, "pusat/utilization: marker hub + PUDO tergambar", `shapes=${shapesHub}`);
+  R(shapesHub >= 30, "pusat/utilization: marker hub + PUDO (nasional) tergambar", `shapes=${shapesHub}`);
 
   // ── 4. data/address: AddressMap dengan titik PUDO ──
   await goto("/dashboard/data/address", 3000);
