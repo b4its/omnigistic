@@ -79,7 +79,7 @@ omnigistic/
 │   │   │                          optimize.py (Network Optimization Engine), cod_intel.py (COD per-shift), metrics.py (turunan+rekonsiliasi)
 │   │   ├── security/            ← OWASP-aligned guard/port, port formatter.ts (scrub AI), port quota.ts, prompts (anonim)
 │   │   └── db/                  ← loader.py + seed.py + SQLModel (opsional — fallback JSON)
-│   ├── tests/run_tests.py       ← harness uji backend tanpa pytest (195 assert, TestClient)
+│   ├── tests/run_tests.py       ← harness uji backend tanpa pytest (205 assert, TestClient)
 │   └── requirements.txt
 ├── frontend/                    ← SvelteKit 2 (Svelte 5 runes), adapter-node
 │   ├── src/
@@ -112,11 +112,13 @@ omnigistic/
   - `POST /ml/cod-cash/risk` + `GET /ml/cod-cash/scenarios` — **COD Cash-Reconciliation Risk** (Pertanyaan 3): uang kas beredar, laju human-error, biaya selisih, waktu rekonsiliasi; 4 intervensi digital → risiko turun ~80%.
   - `GET|POST /ml/expansion/roi` — **Market-Expansion ROI** (Pertanyaan 5): kelayakan ekspansi per 23 hub (headroom × tarikan permintaan × unit-economics Table 3); ROI & payback portofolio.
   - `GET /ml/pnl/waterfall` — **Unified Cost-Waterfall & P&L** (Pertanyaan 6): 7 tuas biaya disatukan → waterfall 99,54T → 90,9T (hemat 8,7%), cost-to-sales 31,3%→28,6%, EBIT proxy +4%.
+  - `GET|POST /ml/route/plan` — **Route Intelligence** (navigasi kurir, Pertanyaan 2/3): kandidat jalur (arteri/tol/alternatif) dgn profil kepadatan berbeda; waktu tempuh memakai kurva BPR (`delay ∝ a·(v/c)^b`) → jalur tercepat & jalur terefisien (skor waktu 55% + biaya 20% + emisi 15% + keandalan 10%). POST menerima `distance_km`/`density_override`/`base_speed_kmh`.
 - **Halaman simulasi interaktif** (menggerakkan angka nyata, bukan label kosong):
   - `/dashboard/hub/surge` — **Peak-Surge Stress-Test** (Q2): slider amplifikasi puncak & kapasitas elastis + preset (Musiman/Festival/Double 12) → breach, spillover, pemulihan.
   - `/dashboard/kurir/cod-cash` — **COD Cash-Reconciliation Risk** (Q3): slider porsi COD + 4 intervensi digital → risiko & penghematan kas.
   - `/dashboard/pusat/expansion` — **Market-Expansion ROI** (Q5): slider capex & target util → prioritas, ROI, payback 23 hub.
   - `/dashboard/pusat/pnl` — **Cost-Waterfall & P&L** (Q6): toggle sustainability → waterfall 7 tuas & dampak margin.
+  - `/dashboard/kurir/tasks` & `/dashboard/kurir/pudo` — **Route Intelligence** (navigasi): peta menampilkan 3 kandidat jalur berwarna sesuai kepadatan; slider kepadatan (jam sibuk) + pemilih jalur (badge tercepat/efisien) → waktu tempuh, biaya, emisi, & skor dihitung ulang.
   - `/dashboard/hub/capacity` — level permintaan (Lembah/Normal/Puncak) men-skala volume → jumlah hub menembus ambang & overflow dihitung ulang.
   - `/dashboard/hub/load-balance` — 3 slider ambang (kritis/lantai/maks porsi) → POST & rencana ulang.
   - `/dashboard/hub/forecast` — 3 slider kekuatan event → proyeksi & fluktuasi ulang.
@@ -159,7 +161,7 @@ AI_MODEL=omnigistic-model
 ## Testing
 
 ```bash
-# Backend (195 assert, tanpa pytest)
+# Backend (205 assert, tanpa pytest)
 cd backend && SKIP_DB=1 .venv/bin/python tests/run_tests.py
 
 # Frontend E2E (52 assert; butuh backend :8000 + frontend dev :3000)
@@ -183,6 +185,9 @@ PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node script
 
 # Uji solusi tantangan kasus — surge/cod-cash/expansion/pnl (25)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-case.mjs
+
+# Uji Route Intelligence — jalur tercepat kurir (kepadatan + efisiensi) (9)
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-route.mjs
 
 # Uji state error saat backend offline — 8 halaman (8)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-offline.mjs
