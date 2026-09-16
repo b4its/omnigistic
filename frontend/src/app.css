@@ -196,6 +196,17 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Cegah scroll horizontal tak sengaja (tabel lebar, gambar, dll).
+       Konten yang memang lebar (tabel) tetap bisa di-scroll di dalam
+       pembungkus `overflow-x-auto` masing-masing. */
+    overflow-x: hidden;
+  }
+  /* Media tidak pernah melebihi lebar kontainer → mencegah overflow ponsel. */
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {

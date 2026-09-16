@@ -200,17 +200,19 @@
 
 <div class="landing min-h-screen antialiased" style="background: var(--lnd-bg); color: var(--lnd-ink)">
   <header class="sticky top-0 z-40 border-b border-[var(--lnd-line)] backdrop-blur" style="background: color-mix(in srgb, var(--lnd-bg) 86%, transparent)">
-    <div class="mx-auto flex h-16 max-w-[1520px] items-center gap-6 px-[clamp(1.25rem,4vw,4.5rem)]">
-      <a href={resolveHref("/")} class="flex items-baseline gap-1 font-serif text-[19px] font-semibold tracking-[0.02em]">
+    <div class="mx-auto flex h-16 max-w-[1520px] items-center gap-3 px-[clamp(1rem,4vw,4.5rem)] sm:gap-6">
+      <a href={resolveHref("/")} class="flex shrink-0 items-baseline gap-1 font-serif text-[19px] font-semibold tracking-[0.02em]">
         Omnigistic
       </a>
-      <nav class="ml-auto hidden items-center gap-6 sm:flex" aria-label="Bagian analisis">
+      <nav class="ml-auto hidden items-center gap-5 xl:flex" aria-label="Bagian analisis">
         {#each groups as [label, href] (href)}
           <a href={resolveHref(href)} class="text-[14px] font-medium uppercase tracking-[0.07em] text-[var(--lnd-soft)] transition-colors hover:text-[var(--lnd-accent-ink)]">{label}</a>
         {/each}
       </nav>
-      <a href={resolveHref("/")} class="rounded-full border border-[var(--lnd-ink)] px-4 py-2 text-[13.5px] font-semibold uppercase tracking-[0.07em] transition-colors hover:border-[var(--lnd-accent-ink)] hover:text-[var(--lnd-accent-ink)]">Beranda</a>
-      <a href={resolveHref("/login")} class="rounded-full bg-[var(--lnd-ink)] px-4 py-2 text-[13.5px] font-semibold uppercase tracking-[0.07em] text-[var(--lnd-bg)] transition-colors hover:bg-[var(--lnd-accent)]">Masuk Portal</a>
+      <div class="ml-auto flex shrink-0 items-center gap-2 xl:ml-6 xl:gap-3">
+        <a href={resolveHref("/")} class="hidden rounded-full border border-[var(--lnd-ink)] px-4 py-2 text-[13.5px] font-semibold uppercase tracking-[0.07em] transition-colors hover:border-[var(--lnd-accent-ink)] hover:text-[var(--lnd-accent-ink)] sm:inline-block">Beranda</a>
+        <a href={resolveHref("/login")} class="rounded-full bg-[var(--lnd-ink)] px-3.5 py-2 text-[13px] font-semibold uppercase tracking-[0.05em] text-[var(--lnd-bg)] transition-colors hover:bg-[var(--lnd-accent)] sm:px-4 sm:text-[13.5px] sm:tracking-[0.07em]">Masuk Portal</a>
+      </div>
     </div>
   </header>
 
