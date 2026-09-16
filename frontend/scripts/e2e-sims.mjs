@@ -100,6 +100,27 @@ try {
     await ctx.close();
   }
 
+  // ── 1c. ROI kustom (slider real-time, tanpa backend) ──
+  {
+    const { ctx, page, errs } = await openPage("/dashboard/pusat/roi");
+    const txt0 = await page.locator("body").innerText();
+    R(/Benefit-Cost|ROI/.test(txt0), "roi: judul");
+    R(/Simulasi Kustom/.test(txt0), "roi: panel kustom");
+    const sliders = page.locator('input[type="range"]');
+    R((await sliders.count()) === 4, "roi: 4 slider tuas", `n=${await sliders.count()}`);
+    // Baca capex sebelum & sesudah geser armada EV → harus berubah.
+    const before = await page.locator("body").innerText();
+    const ev = page.locator('input[aria-label="Armada EV unit"]');
+    await ev.fill("300");
+    await ev.dispatchEvent("change");
+    await page.waitForTimeout(400);
+    const after = await page.locator("body").innerText();
+    R(before !== after, "roi: geser EV mengubah hasil");
+    R(errs.length === 0, "roi: tanpa error JS", errs.join(" | "));
+    await page.screenshot({ path: "/tmp/opencode/shots/roi-custom.png" });
+    await ctx.close();
+  }
+
   // ── 2. Address Intelligence (input bebas) ──
   {
     let posts = 0;

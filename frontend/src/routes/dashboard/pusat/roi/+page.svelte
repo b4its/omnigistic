@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { api, type FinRow } from "$lib/api";
   import { numId } from "$lib/utils";
+  import Icon from "$lib/components/Icon.svelte";
 
   let fin = $state<FinRow[]>([]);
 
@@ -45,6 +46,33 @@
   }
 
   const computed = $derived(scenarios.map((s) => ({ ...s, ...compute(s) })));
+
+  // Skenario kustom interaktif (slider) — memungkinkan juri mengeksplorasi tuas.
+  let cCodSavedPct = $state(28);   // % penghematan COD (dari pool COD handling)
+  let cEvUnits = $state(120);      // unit EV → capex + hemat BBM
+  let cAddressCut = $state(25);    // % pemangkasan biaya komplain alamat
+  let cFuelSavingPct = $state(20); // % hemat BBM dari konversi EV
+
+  const custom = $derived.by(() => {
+    const s = {
+      name: "Kustom (interaktif)",
+      tag: "Asumsi tim",
+      codShiftPct: cCodSavedPct / 100,
+      codSavedPct: cCodSavedPct / 100,
+      forecastMapePct: 0,
+      evUnits: cEvUnits,
+      evFuelSavingPct: cFuelSavingPct / 100,
+      addressComplaintCut: cAddressCut / 100,
+    };
+    return { ...s, ...compute(s) };
+  });
+
+  function resetCustom() {
+    cCodSavedPct = 28;
+    cEvUnits = 120;
+    cAddressCut = 25;
+    cFuelSavingPct = 20;
+  }
 </script>
 
 <div class="space-y-6">
@@ -53,6 +81,45 @@
 
   <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm">
     <span class="font-medium">Basis angka:</span> Fulfilment expense 2023 Rp{numId(fulfilment2023, 1)}T · Shipping expense 2023 Rp{numId(shipping2023, 1)}T (Table 3). Estimasi komponen (COD handling ~30% shipping, BBM ~15% shipping, komplain alamat ~2% fulfilment) dan capex EV (Rp350 jt/unit + infra Rp5T) adalah asumsi tim.
+  </div>
+
+  <!-- Kustom interaktif -->
+  <div class="rounded-2xl border border-primary/30 bg-primary/5 p-5">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <p class="text-sm font-semibold">Simulasi Kustom — geser tuas</p>
+        <p class="mt-1 text-xs text-muted-foreground">Capex, hemat COD, dan hemat komplain dihitung ulang real-time dari angka kasus (Table 3).</p>
+      </div>
+      <button
+        type="button"
+        onclick={resetCustom}
+        class="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold hover:border-primary/40"
+      ><Icon name="trend" cls="h-3.5 w-3.5" /> Reset</button>
+    </div>
+    <div class="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <label class="block">
+        <span class="flex items-center justify-between text-xs font-medium text-muted-foreground"><span>Penghematan COD</span><span class="kpi-value text-foreground">{cCodSavedPct}%</span></span>
+        <input type="range" min="0" max="50" step="1" bind:value={cCodSavedPct} aria-label="Penghematan COD persen" class="mt-2 w-full accent-[var(--color-primary)]" />
+      </label>
+      <label class="block">
+        <span class="flex items-center justify-between text-xs font-medium text-muted-foreground"><span>Armada EV (unit)</span><span class="kpi-value text-foreground">{numId(cEvUnits, 0)}</span></span>
+        <input type="range" min="0" max="300" step="10" bind:value={cEvUnits} aria-label="Armada EV unit" class="mt-2 w-full accent-[var(--color-primary)]" />
+      </label>
+      <label class="block">
+        <span class="flex items-center justify-between text-xs font-medium text-muted-foreground"><span>Hemat BBM dari EV</span><span class="kpi-value text-foreground">{cFuelSavingPct}%</span></span>
+        <input type="range" min="0" max="40" step="1" bind:value={cFuelSavingPct} aria-label="Hemat BBM persen" class="mt-2 w-full accent-[var(--color-primary)]" />
+      </label>
+      <label class="block">
+        <span class="flex items-center justify-between text-xs font-medium text-muted-foreground"><span>Pangkas komplain alamat</span><span class="kpi-value text-foreground">{cAddressCut}%</span></span>
+        <input type="range" min="0" max="50" step="1" bind:value={cAddressCut} aria-label="Pangkas komplain persen" class="mt-2 w-full accent-[var(--color-primary)]" />
+      </label>
+    </div>
+    <div class="mt-4 grid gap-3 sm:grid-cols-4">
+      <div class="rounded-xl bg-card/70 p-3"><p class="text-xs text-muted-foreground">Total hemat/th</p><p class="kpi-value text-lg text-success-foreground">Rp{numId(custom.totalSave, 2)}T</p></div>
+      <div class="rounded-xl bg-card/70 p-3"><p class="text-xs text-muted-foreground">Capex</p><p class="kpi-value text-lg">Rp{numId(custom.capexT, 2)}T</p></div>
+      <div class="rounded-xl bg-card/70 p-3"><p class="text-xs text-muted-foreground">Payback</p><p class="kpi-value text-lg">{numId(custom.payback, 1)} thn</p></div>
+      <div class="rounded-xl bg-card/70 p-3"><p class="text-xs text-muted-foreground">ROI / thn</p><p class="kpi-value text-lg text-primary">{numId(custom.roiYr, 1)}x</p></div>
+    </div>
   </div>
 
   <div class="grid gap-6 lg:grid-cols-3">
