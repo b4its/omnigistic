@@ -4,7 +4,6 @@
   import L from "leaflet";
   import "leaflet/dist/leaflet.css";
   import { themeStore } from "$lib/stores/theme";
-  import { api } from "$lib/api";
   import { ROUTE_COORDS } from "$lib/map/route";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
   import { CITY_ROUTES, pudosForCity } from "$lib/logistics";
@@ -126,8 +125,6 @@
       mk.bindTooltip(`PUDO · ${p.name} (${p.partner})`, { direction: "top" });
       mk.bindPopup(`<strong>${p.name}</strong> · ${p.partner}<br/>${p.city} · jam ${p.hours}`);
     }
-    void api;
-
     map.fitBounds(route as unknown as L.LatLngBoundsExpression, { padding: [40, 40] });
 
     // rute mengikuti jalan, digambar progresif

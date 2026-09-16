@@ -96,23 +96,32 @@ def wrap_untrusted(q: str) -> str:
 HARD_REFUSAL = "Maaf, permintaan seperti itu di luar cakupan GC CMS 2.0."
 
 
-def filter_output(text: str) -> str:
+def filter_output(text: str | None) -> str:
+    """Buang baris tabel markdown + scrub sinyal identitas dari jawaban LLM.
+
+    None-safe (dipanggil dgn None bila LLM tak menjawab). Baris yang di-*indent*
+    (bullet bersarang/kutipan) TETAP dipertahankan — sebelumnya `re.match` dgn
+    anchor `^` + tanpa `strip` membuang baris berawalan spasi (kehilangan teks sah).
+    """
+    text = text or ""
     if (
         re.search(r"(?:sistem usulan|Hanya menjawab|ATURAN KETAT|DILARANG|Sapaan:|23 hub.*?utilis|DILARANG KERAS|sistem yang diusulkan untuk ISCEA Global)", text, re.I)
         or re.search(r"sk_live_|bearer [a-z0-9-]|postgresql://|base_url", text, re.I)
     ):
         return "Tanya langsung soal data GC Logistics."
-    lines = (text or "").split("\n")
+    lines = text.split("\n")
     out = []
     for line in lines:
-        if re.match(r"^\|", line) or re.search(r"\|[\w\s.]+\|$", line):
+        # Buang baris tabel markdown (pipe penuh).
+        if re.match(r"^\s*\|", line) or re.search(r"\|[\w\s.]+\|\s*$", line):
             continue
-        if not re.match(r"^(?:[-*•]\s|>\s|$|#{1,3}\s|\d+[.)]\s|[a-zA-Z][\w]*|Omnigistic|Kamu|Saya|Halo|Maaf).*", line):
+        # Terima baris kosong, bullet, heading, angka, atau teks biasa (termasuk
+        # yang ber-indent) — abaikan hanya indentasi spasi di awal saat mencocokkan.
+        if line.strip() and not re.match(r"^(?:[-*•]\s|>\s|#{1,3}\s|\d+[.)]\s|\S)", line.strip()):
             continue
         if len(line.strip()) < 1500:
             out.append(line)
-    joined = "\n".join(out)
-    return joined
+    return "\n".join(out)
 
 
 # ── Layer 4: rate limit (token bucket, 8 tokens, refill 8/60 per sec) ──

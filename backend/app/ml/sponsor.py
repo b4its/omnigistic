@@ -275,7 +275,7 @@ def compare_models(
     }
 
 
-def sensitivity(base: dict[str, Any] | None = None) -> dict[str, Any]:
+def sensitivity() -> dict[str, Any]:
     """Uji sensitivitas: bagaimana jumlah region-sponsor berubah saat ekuitas HQ diubah.
 
     Menjawab "kalau HQ mempertahankan lebih banyak ekuitas, apakah masih layak?".

@@ -430,6 +430,28 @@ try:
 except Exception:
     check("cod-risk artefak .pkl tertulis (joblib absen: skip)", True)
 
+print("== 7c. Cakupan endpoint/fungsi yang sebelumnya tanpa uji ==")
+# /api/insights — GET endpoint yang tadinya sama sekali tak diuji.
+ins = client.get("/api/insights", params={"role": "PUSAT"})
+check("insights PUSAT 200", ins.status_code == 200, str(ins.status_code))
+check("insights punya greeting/insights", "greeting" in ins.json() and "insights" in ins.json())
+check("insights role invalid 400", client.get("/api/insights", params={"role": "NOPE"}).status_code == 400)
+# guard.filter_output — buang tabel markdown & identitas; None-safe.
+from app.security.guard import filter_output as _fo, wrap_untrusted as _wu, check_rate as _cr
+check("filter_output aman None", _fo(None) == "" or isinstance(_fo(None), str))
+check("filter_output buang baris tabel", "|" not in _fo("Halo\n| a | b |\nTerima kasih"))
+check("filter_output pertahankan teks wajar", "Terima kasih" in _fo("Halo\nTerima kasih"))
+check("wrap_untrusted membungkus", _wu("hai").startswith("<OMNIGISTIC_USER_INSTRUCTION_UNTRUSTED>"))
+# rate-limit: bucket penuh → tolak; eviksi menjaga batas memori.
+import app.security.guard as _g
+_g._bucket.clear()
+allowed = sum(1 for _ in range(_g._CAP + 5) if _cr("test-key"))
+check("rate-limit membatasi burst", allowed <= _g._CAP + 1, str(allowed))
+for i in range(_g._MAX_BUCKETS + 50):
+    _cr(f"k{i}")
+check("rate-limit bucket dibatasi (anti-DoS)", len(_g._bucket) <= _g._MAX_BUCKETS + 1, str(len(_g._bucket)))
+_g._bucket.clear()
+
 print("== 8. Robustness ==")
 check("address kosong ok", client.post("/ml/address-parse", json={"address": ""}).status_code == 200)
 check("address kosong -> best null (jujur)", client.post("/ml/address-parse", json={"address": ""}).json()["best"] is None)
