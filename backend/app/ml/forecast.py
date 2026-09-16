@@ -55,11 +55,12 @@ def _seasonal_decomp(series: list[float], horizon: int) -> list[float]:
     return out
 
 
-def _selftest(forecast: dict) -> dict:
-    """Backtest sederhana: rekonstruksi 12 titik 2023 dari model, hitung MAPE.
+def _in_sample_fit() -> dict:
+    """Ukur galat REKONSTRUKSI in-sample (bukan backtest hold-out).
 
-    Metode 'in-sample': model diuji apakah mampu mereproduksi pola historis
-    (bukan hold-out, karena hanya ada 12 titik). Jujur dilabeli prototipe.
+    Model di-fit pada seluruh 12 titik lalu dipakai merekonstruksi titik yang sama
+    → galat kecil (≈1,3%) itu tautologis, BUKAN ukuran kemampuan prediksi. Hanya
+    ada 12 titik sehingga validasi hold-out belum dimungkinkan. Jujur dilabeli.
     """
     series = _base_series()
     n = len(series)
@@ -75,7 +76,7 @@ def _selftest(forecast: dict) -> dict:
         pred = max(0.0, (intercept + slope * i) * seasonal[i])
         errs.append(abs(pred - actual) / actual if actual else 0.0)
     mape = sum(errs) / len(errs) * 100 if errs else 0.0
-    return {"mapePct": round(mape, 1), "method": "in-sample seasonal+trend"}
+    return {"mapePct": round(mape, 1), "method": "in-sample fit (bukan hold-out)", "isHoldout": False}
 
 
 def _apply_events(vals: list[float], event_scale: dict[str, float] | None = None, base_year: int = 2024) -> list[dict]:
@@ -123,7 +124,7 @@ def forecast_next_12(
         "peak": {"month": peak["month"], "label": peak["label"], "totalM": peak["totalM"]},
         "trough": {"month": trough["month"], "label": trough["label"], "totalM": trough["totalM"]},
         "fluctuationPct": round((max(totals) - min(totals)) / min(totals) * 100, 1) if min(totals) else 0.0,
-        "backtest": _selftest({"projection": proj}),
+        "inSampleFit": _in_sample_fit(),
     }
 
 

@@ -94,7 +94,9 @@ check("12 titik proyeksi", len(fc["projection"]) == 12)
 check("mulai Januari", fc["projection"][0]["month"] == "Jan", fc["projection"][0]["month"])
 check("berakhir Desember", fc["projection"][-1]["month"] == "Dec", fc["projection"][-1]["month"])
 check("ada event TikTok di Okt", any("TikTok" in p["events"][0] for p in fc["projection"] if p["events"] and p["month"] == "Oct"))
-check("backtest MAPE < 5%", fc["backtest"]["mapePct"] < 5.0, str(fc["backtest"]["mapePct"]))
+# In-sample FIT (bukan backtest hold-out) — jujur: isHoldout=False.
+check("in-sample fit MAPE < 5%", fc["inSampleFit"]["mapePct"] < 5.0, str(fc["inSampleFit"]["mapePct"]))
+check("in-sample fit TIDAK diklaim hold-out", fc["inSampleFit"]["isHoldout"] is False)
 check("peak > trough", fc["peak"]["totalM"] > fc["trough"]["totalM"])
 # Simulasi interaktif: skala event dapat diubah.
 check("forecast punya katalog event", len(fc["eventCatalog"]) == 3, str(len(fc.get("eventCatalog", []))))

@@ -202,7 +202,8 @@ export interface ForecastResult {
   peak: { month: string; label: string; totalM: number };
   trough: { month: string; label: string; totalM: number };
   fluctuationPct: number;
-  backtest?: { mapePct: number; method: string };
+  /** Galat rekonstruksi in-sample (bukan hold-out) — lihat `isHoldout`. */
+  inSampleFit?: { mapePct: number; method: string; isHoldout: boolean };
 }
 export interface DemandActualResult {
   year: number;

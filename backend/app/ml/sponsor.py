@@ -30,7 +30,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
-from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN, clamp
+from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN, clamp, unit_economics
 
 # ── Parameter default (asumsi tim — dapat di-override via API) ──────────────
 # Porsi biaya tetap (dari total unit cost) yang bergeser ke mitra pada model sponsor.
@@ -66,30 +66,30 @@ def _num(v: Any, default: float = 0.0) -> float:
 
 
 def _national_unit_cost() -> dict[str, float]:
-    """Unit cost nasional dari Tabel 3 & 4 (IDR per paket) — angka kasus."""
+    """Unit cost nasional dari Tabel 3 & 4 (IDR per paket) — angka kasus.
+
+    Basis biaya/paket diambil dari helper kanonik `metrics.unit_economics()`.
+    """
     data = load()
     fin = {f["year"]: f for f in data["financial"]}
     f2023 = fin.get(2023) or data["financial"][-1]
-    total_cost_t = _num(f2023.get("fulfilmentT")) + _num(f2023.get("shippingT"))  # triliun IDR
-    parcels_m = sum(_num(d.get("totalM")) for d in data["monthlyDemand"])  # juta paket
-    # triliun / juta = 1e12 / 1e6 = 1e6 IDR per paket
-    per_parcel = (total_cost_t * 1e12) / (parcels_m * 1e6) if parcels_m else 0.0
+    ue = unit_economics()
+    total_cost_t = _num(f2023.get("fulfilmentT")) + _num(f2023.get("shippingT"))
     return {
         "year": f2023.get("year"),
         "totalCostT": round(total_cost_t, 2),
-        "parcelsM": round(parcels_m, 1),
-        "unitCostIdr": round(per_parcel),
+        "parcelsM": round(ue["parcels"] / 1e6, 1),
+        "unitCostIdr": round(ue["costPerParcelIdr"]),
     }
 
 
 def _revenue_per_parcel() -> float:
-    """Revenue rata-rata per paket (net sales Tabel 3 ÷ volume Tabel 4)."""
-    data = load()
-    fin = {f["year"]: f for f in data["financial"]}
-    f2023 = fin.get(2023) or data["financial"][-1]
-    sales_t = _num(f2023.get("netSalesT"))
-    parcels_m = sum(_num(d.get("totalM")) for d in data["monthlyDemand"])
-    return (sales_t * 1e12) / (parcels_m * 1e6) if parcels_m else 0.0
+    """Revenue rata-rata per paket (net sales Tabel 3 ÷ volume Tabel 4).
+
+    Memakai helper kanonik `metrics.unit_economics()` (satu sumber dgn
+    cod_cash/expansion) — hindari salinan rumus yang bisa drift.
+    """
+    return unit_economics()["revenuePerParcelIdr"]
 
 
 def _region_metrics() -> list[dict[str, Any]]:

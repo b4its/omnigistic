@@ -61,6 +61,26 @@ def _roi(a: float, b: float) -> float:
     return round((b / a - 1) * 100, 1) if a else 0.0
 
 
+def unit_economics() -> dict[str, float]:
+    """Unit economics per paket dari Table 3 & 4 (angka kasus) — SATU sumber.
+
+    Dipakai cod_cash/expansion/sponsor agar rumus AOV & biaya-per-paket tak
+    disalin 3× (cegah drift). Nilai = seluruh demand 2023 (1.110 jt paket).
+    """
+    data = load()
+    fin = {f["year"]: f for f in data["financial"]}
+    f2023 = fin.get(2023) or data["financial"][-1]
+    parcels = sum(float(d["totalM"]) for d in data["monthlyDemand"]) * 1e6  # paket/tahun
+    sales = float(f2023["netSalesT"]) * 1e12
+    cost = (float(f2023["fulfilmentT"]) + float(f2023["shippingT"])) * 1e12
+    return {
+        "year": float(f2023.get("year", 2023)),
+        "parcels": parcels,
+        "revenuePerParcelIdr": (sales / parcels) if parcels else 0.0,
+        "costPerParcelIdr": (cost / parcels) if parcels else 0.0,
+    }
+
+
 def region_summary() -> list[dict[str, Any]]:
     """Agregat per region: jumlah hub, kapasitas total, rata-rata utilisasi, outlets."""
     hub_rows = load()["hubs"]

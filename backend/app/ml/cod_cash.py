@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
-from app.ml.metrics import clamp
+from app.ml.metrics import clamp, unit_economics
 
 # Porsi paket COD dari total (asumsi tim; kasus: COD "large portion").
 _COD_SHARE = 0.45
@@ -44,13 +44,13 @@ INTERVENTIONS = {
 
 
 def _avg_order_value() -> float:
-    """Nilai rata-rata per paket dari net sales Tabel 3 ÷ volume Tabel 4."""
-    data = load()
-    fin = {f["year"]: f for f in data["financial"]}
-    f2023 = fin.get(2023) or data["financial"][-1]
-    sales = float(f2023.get("netSalesT", 0)) * 1e12
-    parcels = sum(float(d["totalM"]) for d in data["monthlyDemand"]) * 1e6
-    return (sales / parcels) if parcels else _FALLBACK_AOV_IDR
+    """Nilai rata-rata per paket dari net sales Tabel 3 ÷ volume Tabel 4.
+
+    Memakai helper kanonik `metrics.unit_economics()` (satu sumber, sama dgn
+    expansion/sponsor) agar rumus tak disalin & tak drift.
+    """
+    v = unit_economics()["revenuePerParcelIdr"]
+    return v if v else _FALLBACK_AOV_IDR
 
 
 def cod_cash_risk(

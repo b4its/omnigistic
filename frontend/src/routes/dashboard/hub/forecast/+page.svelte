@@ -23,7 +23,7 @@
     peak: { month: string; label: string; totalM: number };
     trough: { month: string; label: string; totalM: number };
     fluctuationPct: number;
-    backtest?: { mapePct: number; method: string };
+    inSampleFit?: { mapePct: number; method: string; isHoldout: boolean };
   }
 
   let forecast = $state<ForecastResp | null>(null);
@@ -170,9 +170,9 @@
       <div class="rounded-2xl border border-border bg-card p-5">
         <h2 class="text-sm font-semibold">Catatan jujur model</h2>
         <p class="mt-2 text-[15px] leading-relaxed text-muted-foreground">{forecast.note}</p>
-        {#if forecast.backtest}
+        {#if forecast.inSampleFit}
           <p class="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-            Backtest in-sample ({forecast.backtest.method}): <span class="font-semibold text-foreground">MAPE {new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(forecast.backtest.mapePct)}%</span> — model mereproduksi pola 2023 dengan galat rendah, namun hanya tersedia 12 titik sehingga validasi hold-out belum dimungkinkan.
+            Galat <span class="font-semibold text-foreground">in-sample (rekonstruksi)</span>, bukan backtest hold-out: MAPE {new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(forecast.inSampleFit.mapePct)}%. Angka ini mengukur seberapa baik model mereproduksi 12 titik yang sama (tautologis) — hanya tersedia 12 titik sehingga validasi hold-out belum dimungkinkan. <span class="italic">Jujur dilabeli prototipe.</span>
           </p>
         {/if}
       </div>

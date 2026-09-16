@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
-from app.ml.metrics import clamp
+from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN, clamp, unit_economics
 
 # Capex ekspansi per hub (asumsi tim, IDR) — perluasan kapasitas/menambah outlet.
 _CAPEX_PER_HUB_IDR = 50_000_000_000       # Rp50 M/hub (asumsi tim, pilot: hub+armada)
@@ -43,12 +43,9 @@ def _unit_economics() -> dict[str, float]:
     tercakup). Maka MARGIN KONTRIBUSI = revenue − (total_cost × porsi variabel),
     bukan (revenue − total_cost) × porsi (asumsi tim, dilabel).
     """
-    data = load()
-    fin = {f["year"]: f for f in data["financial"]}
-    f2023 = fin.get(2023) or data["financial"][-1]
-    parcels = sum(float(d["totalM"]) for d in data["monthlyDemand"]) * 1e6  # paket/tahun
-    sales_per = (float(f2023["netSalesT"]) * 1e12 / parcels) if parcels else 0.0
-    cost_per = ((float(f2023["fulfilmentT"]) + float(f2023["shippingT"])) * 1e12 / parcels) if parcels else 0.0
+    ue = unit_economics()
+    sales_per = ue["revenuePerParcelIdr"]
+    cost_per = ue["costPerParcelIdr"]
     gross_margin = sales_per - cost_per
     variable_cost_per = cost_per * _VARIABLE_COST_FRAC
     # Kontribusi: revenue − biaya VARIABEL inkremental (fixed cost tak berubah).
@@ -93,11 +90,16 @@ def expansion_roi(capex_per_hub_idr: float | None = None, target_util: float | N
         # Skor tarikan pasar = outlets (densitas) × utilisasi (permintaan terpakai).
         demand_score = round(h["outlets"] * util, 1)
 
-        if util >= 0.90:
+        # Klasifikasi prioritas memakai ambang utilisasi KANONIK (metrics), bukan
+        # angka ajaib sendiri: near-saturated ≥ CRITICAL, prioritas ≥ WARN, nurture
+        # bila jauh di bawah WARN. `util` = fraksi 0..1; ambang kanonik = persen.
+        crit_f = UTIL_CRITICAL / 100.0
+        warn_f = UTIL_WARN / 100.0
+        if util >= crit_f:
             priority, note = "Perluas kapasitas", "Hampir jenuh — risiko overload"
-        elif headroom_m > 0 and util >= 0.55:
+        elif headroom_m > 0 and util >= warn_f:
             priority, note = "Ekspansi prioritas", "Headroom + permintaan sehat"
-        elif util < 0.45:
+        elif util < warn_f - 0.10:
             priority, note = "Nurture permintaan", "Kapasitas menganggur"
         else:
             priority, note = "Optimalkan dulu", "Utilisasi sedang"
