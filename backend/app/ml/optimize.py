@@ -74,10 +74,12 @@ def optimize_load_balance(
 
     hubs = [dict(h) for h in load()["hubs"]]
 
-    # Volume efektif & headroom.
+    # Volume efektif & headroom. Headroom = ruang sampai ambang AMAN (`warn`),
+    # BUKAN sampai 100% kapasitas — agar pengalihan TIDAK menciptakan overload baru
+    # pada hub penerima (dulu penerima diisi sampai 100% → jadi kritis).
     for h in hubs:
         h["usedM"] = round(h["capacityM"] * h["utilizationPct"] / 100, 4)
-        headroom_frac = max(0.0, min(1.0, 1.0 - h["utilizationPct"] / 100))
+        headroom_frac = max(0.0, min(1.0, (warn - h["utilizationPct"]) / 100))
         h["headroomM"] = round(h["capacityM"] * headroom_frac, 4)
         h["divertCapM"] = round(h["capacityM"] * max_frac, 4)
 
