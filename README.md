@@ -83,7 +83,7 @@ omnigistic/
 │   └── requirements.txt
 ├── frontend/                    ← SvelteKit 2 (Svelte 5 runes), adapter-node
 │   ├── src/
-│   │   ├── app.css              ← Tailwind v4 + token CSS penuh (bone/ink/terracotta + dark)
+│   │   ├── app.css              ← Tailwind v4 + token sistem "Bitcoin DeFi" (dark+light, glow/grid/glass)
 │   │   ├── routes/              ← landing, login/**; dashboard (M3+role), 13+3 halaman + 3 shared
 │   │   └── lib/                 ← components (M3Nav, nigi-ai, role, drawer, chat, map), stores, charts (ECharts), api
 │   │   ├── lib/map/             ← Leaflet AddressMap (offline-tile fallback, kurir-animated)
@@ -117,6 +117,19 @@ omnigistic/
   - `/dashboard/data/multimodal`, `/dashboard/pusat/digital-twin`, `/dashboard/kurir/cod-intel`, `/dashboard/data/complaint`, `/dashboard/data/ev-sites` — sudah interaktif sebelumnya.
 - **Material 3 + sidebar kolaps**: bottom Navigation Bar (compact <600px) / Navigation Rail (medium 600–840px) / Sidebar penuh (expanded ≥840px). Sidebar bisa **dibuka/ditutup** (w-64 ⇄ rail ikon w-22) lewat tombol di header sidebar, hamburger di Topbar, atau pintasan **Ctrl/Cmd+B**; preferensi dipersist ke localStorage. Responsif penuh 320px–ultrawide, 0 overflow horizontal.
 - **Map**: Leaflet + 3 kandidat ambigu, path animasi + ETA menit ("Jl. Raya Jakarta-Bogor No.12") dengan Nigi AI saran
+
+## Sistem Desain — "Bitcoin DeFi"
+
+Seluruh UI memakai satu sistem desain yang **dipusatkan di token** (`frontend/src/app.css`),
+dengan **dua tema lengkap** (terang + gelap) lewat toggle.
+
+- **Palet (gelap)**: True Void `#030304` · Bitcoin Orange `#F7931A` · Burnt Orange `#EA580C` · Digital Gold `#FFD600` · Stardust `#94A3B8`; border ultra-tipis `rgba(255,255,255,.1)`; bayangan **berwarna** (orange/gold), bukan hitam. Terang = permukaan hampir putih + aksen orange/gold yang sama (toggle tetap bermakna).
+- **Tipografi**: Space Grotesk (heading) · Inter (body) · JetBrains Mono (data/label teknis, uppercase).
+- **Utility khas** (`app.css`): `glow-orange`/`glow-gold`, `glass`, `bg-grid`/`bg-grid-sm`, `text-gradient`, `ambient-glow`, `animate-float`/`animate-pulse-glow`, `spin-slow`, `btn-primary`.
+- **Komponen reusable** (`lib/components/ui/`): `Button` (primary/gold/outline/ghost/link), `Card` (solid/glass/outline), `Input` (border-b menyala) — memakai `cn()` + `$props()` mengikuti pola repo, **tanpa dependensi baru**.
+- **Ikon**: `Icon.svelte` internal (36+ ikon berbasis nama, stroke teknis) — **tanpa emoji** di seluruh UI.
+- **Tekstur void global**: satu layer grid blockchain + ambient glow di `dashboard/+layout` sehingga seluruh halaman mewarisi estetika tanpa duplikasi.
+- **Tema**: toggle pill sun/moon (`ThemeToggle`) — set/restore via `localStorage` + `prefers-color-scheme`, anti-flash di `app.html`; `prefers-reduced-motion` dihormati.
 
 ## Env (backend/.env or .env.local di repo root, di-ignore)
 
