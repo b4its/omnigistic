@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { Role } from "$lib/stores/role";
-  import { cn, resolveHref } from "$lib/utils";
+  import { resolveHref } from "$lib/utils";
   import { api, online, type Hub } from "$lib/api";
   import { shop, type Order } from "$lib/stores/shop";
   import { pnlSummary } from "$lib/shop/analytics";
@@ -27,7 +27,6 @@
     CUSTOMER: { name: "Sari", sub: "Pembeli", letter: "S" },
     SELLER: { name: "Rina", sub: "Penjual", letter: "R" }
   };
-  const RANGES = ["7 hari terakhir", "30 hari terakhir", "90 hari terakhir", "Tahun berjalan"];
   const roleRoutes: Record<string, string> = {
     PUSAT: "/dashboard/pusat/overview",
     HUB: "/dashboard/hub/overview",
@@ -39,8 +38,11 @@
 
   const meta = $derived(roleMeta[role] ?? { name: "Guest", sub: "", letter: "G" });
 
-  let range = $state(RANGES[1]);
-  let openPop = $state<null | "range" | "notif" | "profile">(null);
+  // Semua angka = dataset kasus ISCEA (2023, 12 titik). Filter rentang waktu
+  // TIDAK bermakna di sini, jadi ditampilkan sebagai label periode yang jujur
+  // (bukan dropdown yang tak mengubah apa pun).
+  const PERIOD_LABEL = "Data kasus 2023";
+  let openPop = $state<null | "notif" | "profile">(null);
 
   // Notifikasi statis per role (klaim umum, tanpa angka yang bisa bertentangan).
   const staticNotifs: Record<string, string[]> = {
@@ -160,33 +162,13 @@
       </p>
     </div>
 
-    <div class="relative">
-      <button
-        type="button"
-        aria-label="Rentang waktu"
-        aria-expanded={openPop === "range"}
-        onclick={() => (openPop = openPop === "range" ? null : "range")}
-        class="ml-1 flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary/60 sm:ml-2"
-      >
-        <Icon name="calendar" cls="h-3.5 w-3.5" />
-        <span class="hidden sm:inline">{range}</span>
-        <Icon name="caret-down" cls="h-3 w-3" />
-      </button>
-      {#if openPop === "range"}
-        <div class="absolute left-0 top-[calc(100%+8px)] z-30 w-44 rounded-xl border border-border bg-card p-1 shadow-pop">
-          {#each RANGES as r (r)}
-            <button
-              type="button"
-              onclick={() => { range = r; openPop = null; window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `Rentang waktu: ${r}`, type: "info", title: "Periode" } })); }}
-              class={cn("flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs", r === range ? "bg-accent font-semibold text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}
-            >
-              {r}
-              {#if r === range}<Icon name="check" cls="h-3 w-3" weight="bold" />{/if}
-            </button>
-          {/each}
-        </div>
-      {/if}
-    </div>
+    <span
+      class="ml-1 hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground sm:ml-2 sm:flex"
+      title="Seluruh angka berasal dari dataset studi kasus ISCEA (12 titik, 2023)"
+    >
+      <Icon name="calendar" cls="h-3.5 w-3.5" />
+      {PERIOD_LABEL}
+    </span>
   </div>
 
   <div class="flex shrink-0 items-center gap-1.5 sm:gap-2">
