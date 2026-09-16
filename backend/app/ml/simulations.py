@@ -1,4 +1,13 @@
-"""Port simulations.ts — pure math, no AI. Digital Twin + COD impact."""
+"""Port simulations.ts — pure math, no AI. Digital Twin + COD impact.
+
+Catatan transparansi (prototipe presentasi):
+  * ``calculate_digital_twin`` — koefisien dampak (util +15pt, capex ×0,35, on-time
+    −3pt per 100% sponsor) = asumsi tim model, dinyatakan; base util & volume
+    sponsor diturunkan dari data kasus (hubs + financial 2023).
+  * ``calculate_cod_impact`` — durasi kini benar-benar diturunkan dari jumlah paket
+    input memakai angka kasus Figure 2 (75 vs 138 mnt / 8 pkg); sebelumnya input
+    ``cod_packets`` diabaikan (bug). Waiting COD & porsi digital = asumsi tim.
+"""
 from __future__ import annotations
 from app.db.loader import load
 
@@ -43,20 +52,50 @@ DIGITAL_TWIN_SCENARIOS = {
 }
 
 
+# Angka kasus Figure 2 (jangan diubah tanpa sumber kasus): satu "siklus" 8 paket.
+_ROUTE_NON_COD_MIN = 75.0   # non-COD, 8 paket
+_ROUTE_COD_MIN = 138.0      # COD, 8 paket  (waiting COD = 63 mnt / 8 paket)
+_ROUTE_PACKAGES = 8.0
+# Porsi paket yang benar-benar COD (asumsi tim, dilabel). Sisa = non-COD.
+_COD_SHARE_DEFAULT = 0.60
+
+
 def calculate_cod_impact(cod_packets: int = 8, prob_digital: float = 60) -> dict:
-    current_time = 138
-    current_per_hour = 3.48
-    new_time = 138 - (138 - 75) * (prob_digital / 100)
-    new_per_hour = 8 / (new_time / 60)
-    time_saved = current_time - new_time
-    capacity_gain_pct = round(((new_per_hour - current_per_hour) / current_per_hour) * 100)
-    packages_freed = round(cod_packets * (prob_digital / 100) * 0.28)
+    """Dampak COD pada SATU shift (default 8 paket, angka kasus Figure 2).
+
+    Berbeda dari versi lama yang mengabaikan ``cod_packets``: di sini durasi &
+    produktivitas shift benar-benar diturunkan dari jumlah paket input, memakai
+    tempo non-COD (75 mnt/8 pkg) + waiting COD (63 mnt/8 pkg) yang dipangkas
+    oleh ``prob_digital`` (porsi waiting yang dihilangkan intervensi digital).
+    """
+    cod_packets = max(0, int(cod_packets))
+    p_digital = min(1.0, max(0.0, float(prob_digital) / 100))
+
+    tempo_non_cod = _ROUTE_NON_COD_MIN / _ROUTE_PACKAGES      # mnt pkg⁻¹ non-COD
+    wait_cod_per_pkg = (_ROUTE_COD_MIN - _ROUTE_NON_COD_MIN) / _ROUTE_PACKAGES  # ≈7,875 mnt
+
+    # Asumsi komposisi: porsi COD dari total paket (default 60%, dilabel).
+    cod_share = _COD_SHARE_DEFAULT if cod_packets != _ROUTE_PACKAGES else 1.0
+    n_cod = cod_packets * cod_share
+    n_non = cod_packets - n_cod
+
+    dur_before = n_non * tempo_non_cod + n_cod * (tempo_non_cod + wait_cod_per_pkg)
+    dur_after = n_non * tempo_non_cod + n_cod * (tempo_non_cod + wait_cod_per_pkg * (1 - p_digital))
+
+    per_hour_before = round((cod_packets / dur_before) * 60, 2) if dur_before else 0.0
+    per_hour_after = round((cod_packets / dur_after) * 60, 2) if dur_after else 0.0
+    time_saved = dur_before - dur_after
+    capacity_gain_pct = round(((per_hour_after - per_hour_before) / per_hour_before) * 100) if per_hour_before else 0
+    # Paket ekstra yang bisa diantar dengan waktu yang dihemat (pakai tempo setelah).
+    tempo_after = dur_after / cod_packets if cod_packets else 0.0
+    packages_freed = round(time_saved / tempo_after) if tempo_after else 0
+
     return {
-        "currentTime": current_time,
-        "newTime": round(new_time),
+        "currentTime": round(dur_before),
+        "newTime": round(dur_after),
         "timeSaved": round(time_saved),
-        "currentPerHour": current_per_hour,
-        "newPerHour": round(new_per_hour, 2),
+        "currentPerHour": per_hour_before,
+        "newPerHour": per_hour_after,
         "capacityGainPct": capacity_gain_pct,
         "packagesFreed": packages_freed,
     }

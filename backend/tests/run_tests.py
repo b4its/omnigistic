@@ -155,13 +155,32 @@ lv = _get("/ml/modalshift/levers")
 check("6 tuas biaya", len(lv["levers"]) == 6, str(len(lv["levers"])))
 check("total saving > 0", lv["summary"]["totalSavingIdrT"] > 0, str(lv["summary"]["totalSavingIdrT"]))
 
+print("== 5d. Digital Twin & COD-impact (input dihormati) ==")
+dt = _get("/ml/sim/digital-twin")
+check("digital-twin punya skenario", len(dt) >= 3, str(len(dt) if isinstance(dt, dict) else "?"))
+ci8 = _get("/ml/sim/cod-impact")
+# Invarian: proyeksi mandiri (0% digital) harus == angka kasus Figure 2 untuk 8 paket.
+res8 = ci8["result"]
+check("COD-impact mandiri = 138 mnt", res8["currentTime"] == 138, str(res8["currentTime"]))
+check("COD-impact mandiri 3,48/jam", abs(res8["currentPerHour"] - 3.48) < 0.02, str(res8["currentPerHour"]))
+# REGRESI: input paket harus mengubah durasi (bug lama: diabaikan).
+from app.ml.simulations import calculate_cod_impact as _cci
+big = _cci(80, 60)
+small = _cci(8, 60)
+check("paket lebih banyak -> durasi lebih lama", big["currentTime"] > small["currentTime"], f"{small['currentTime']}->{big['currentTime']}")
+check("digital 0% tak hemat", _cci(8, 0)["timeSaved"] == 0)
+check("digital 100% -> non-COD 6,4/jam", abs(_cci(8, 100)["newPerHour"] - 6.4) < 0.02, str(_cci(8, 100)["newPerHour"]))
+
 print("== 6. ML lama tetap jalan ==")
 check("cod-risk demo", client.get("/ml/cod-risk/demo").status_code == 200)
 check("address-demo", client.get("/ml/address-demo").status_code == 200)
 check("digital-twin", client.get("/ml/sim/digital-twin").status_code == 200)
 check("demand-actual", client.get("/ml/demand-actual").status_code == 200)
+dem_act = _get("/ml/demand-actual")
+check("demand-actual 12 baris", len(dem_act["rows"]) == 12, str(len(dem_act.get("rows", []))))
 pkg = client.post("/ml/cod-risk", json={"hub_util": 68.9, "value": 320, "hour": 19, "ambiguous": 1, "zone": 2}).json()
 check("cod-risk skor 0..1", 0 <= pkg["score"] <= 1)
+check("cod-risk punya rincian faktor", len(pkg.get("factors", [])) == 5, str(len(pkg.get("factors", []))))
 addr = client.post("/ml/address-parse", json={"address": "Jl. Raya Jakarta-Bogor No.12 Cibinong"}).json()
 check("address best terisi", addr["best"] is not None)
 
