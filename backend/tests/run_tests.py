@@ -330,6 +330,28 @@ check("pnl waterfall monotonic turun", all(costs[i] >= costs[i + 1] for i in ran
 pn_ns = client.get("/ml/pnl/waterfall", params={"include_sustainability": "false"}).json()
 check("pnl tanpa sustainability lebih sedikit tuas", len(pn_ns["waterfall"]) < len(pn["waterfall"]), f"{len(pn_ns['waterfall'])} vs {len(pn['waterfall'])}")
 
+print("== 5i. Route Intelligence (jalur tercepat: kepadatan + efisiensi) ==")
+rt = _get("/ml/route/plan?distance_km=38.4")
+check("route 3 kandidat jalur", len(rt["candidates"]) == 3, str(len(rt["candidates"])))
+check("route ada rekomendasi", rt["recommended"] in {c["key"] for c in rt["candidates"]}, rt["recommended"])
+check("route tercepat = waktu minimum", rt["fastestKey"] == min(rt["candidates"], key=lambda c: c["timeMin"])["key"])
+check("route efisiensi 0..1", all(0 <= c["efficiencyScore"] <= 1 for c in rt["candidates"]))
+# Jalur tercepat tidak lebih lambat dari baseline (kecepatan dasar).
+check("route hemat waktu vs baseline", rt["summary"]["timeSavedMin"] > 0, str(rt["summary"]["timeSavedMin"]))
+# Tol: kepadatan rendah; arteri: kepadatan lebih tinggi (profil beda).
+tol = next(c for c in rt["candidates"] if c["key"] == "tol")
+art = next(c for c in rt["candidates"] if c["key"] == "arteri")
+check("route tol lebih lengang dari arteri", tol["density"] < art["density"], f"{tol['density']} vs {art['density']}")
+# Semakin padat → waktu tempuh tercepat naik (deterministik).
+lo_d = client.post("/ml/route/plan", json={"distance_km": 38.4, "density_override": 0.2}).json()
+hi_d = client.post("/ml/route/plan", json={"distance_km": 38.4, "density_override": 0.9}).json()
+check("route padat -> waktu naik", hi_d["summary"]["fastestTimeMin"] > lo_d["summary"]["fastestTimeMin"], f"{lo_d['summary']['fastestTimeMin']}->{hi_d['summary']['fastestTimeMin']}")
+# Saat lengang, jalur paling efisien bisa BUKAN tol (tol berbiaya) → trade-off nyata.
+check("route lengang: efisien bisa non-tol", lo_d["mostEfficientKey"] in {"arteri", "alternatif"}, lo_d["mostEfficientKey"])
+# Klamp jarak ekstrem tak error.
+check("route jarak 0 dijepit", client.post("/ml/route/plan", json={"distance_km": 0}).status_code == 200)
+check("route distanceKm dijepit > 0", client.post("/ml/route/plan", json={"distance_km": 0}).json()["inputs"]["distanceKm"] > 0)
+
 print("== 6. ML lama tetap jalan ==")
 check("cod-risk demo", client.get("/ml/cod-risk/demo").status_code == 200)
 check("address-demo", client.get("/ml/address-demo").status_code == 200)

@@ -16,6 +16,7 @@ from app.ml.forecast import demand_actual_tiktok, forecast_next_12
 from app.ml.modalshift import cost_levers, optimize_corridors
 from app.ml.optimize import optimize_load_balance
 from app.ml.pnl import cost_waterfall
+from app.ml.route_intel import plan_route
 from app.ml.simulations import DIGITAL_TWIN_SCENARIOS, calculate_cod_impact, calculate_digital_twin
 from app.ml.sponsor import compare_models, sensitivity
 from app.ml.surge import stress_test
@@ -182,6 +183,25 @@ def expansion_custom(body: ExpansionBody):
 def pnl_waterfall(include_sustainability: bool = True):
     """Waterfall biaya sekarang → teroptimasi + dampak P&L dari Table 3."""
     return cost_waterfall(include_sustainability)
+
+
+# ── Route Intelligence (jalur tercepat: kepadatan + efisiensi) ────────────
+class RoutePlanBody(BaseModel):
+    distance_km: float = 10.0
+    density_override: float | None = None
+    base_speed_kmh: float = 22.0
+
+
+@router.get("/route/plan")
+def route_plan(distance_km: float = 10.0, density_override: float | None = None, base_speed_kmh: float = 22.0):
+    """Rencana jalur tercepat + kandidat terskor (kepadatan & efisiensi)."""
+    return plan_route(distance_km, density_override, base_speed_kmh)
+
+
+@router.post("/route/plan")
+def route_plan_custom(body: RoutePlanBody):
+    """Versi interaktif: jarak, kepadatan (jam sibuk), & kecepatan dasar."""
+    return plan_route(body.distance_km, body.density_override, body.base_speed_kmh)
 
 
 # ── Metrik turunan & rekonsiliasi angka ───────────────────────────────────
