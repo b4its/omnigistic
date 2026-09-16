@@ -47,8 +47,22 @@ def _cost(src_region: str, dst_region: str) -> float:
     return _REGION_COST.get(src_region, {}).get(dst_region, 9.9)
 
 
-def optimize_load_balance() -> dict[str, Any]:
-    """Hitung rencana pengalihan + sebelum/sesudah per hub & dampak biaya proxy."""
+def optimize_load_balance(
+    critical: float | None = None,
+    safe_floor: float | None = None,
+    max_divert_frac: float | None = None,
+) -> dict[str, Any]:
+    """Hitung rencana pengalihan + sebelum/sesudah per hub & dampak biaya proxy.
+
+    Ambang dapat di-override (simulasi interaktif): ``critical`` (default 65),
+    ``safe_floor`` (60), ``max_divert_frac`` (0,35). Nilai diklem ke rentang aman.
+    """
+    crit = CRITICAL if critical is None else min(99.0, max(10.0, float(critical)))
+    floor = SAFE_FLOOR if safe_floor is None else min(99.0, max(0.0, float(safe_floor)))
+    # Lantai aman tak boleh melebihi ambang kritis (kalau tidak, tak ada kebutuhan).
+    floor = min(floor, crit)
+    max_frac = MAX_DIVERT_FRAC if max_divert_frac is None else min(1.0, max(0.0, float(max_divert_frac)))
+
     hubs = [dict(h) for h in load()["hubs"]]
 
     # Volume efektif & headroom.
@@ -56,16 +70,16 @@ def optimize_load_balance() -> dict[str, Any]:
         h["usedM"] = round(h["capacityM"] * h["utilizationPct"] / 100, 4)
         headroom_frac = max(0.0, min(1.0, 1.0 - h["utilizationPct"] / 100))
         h["headroomM"] = round(h["capacityM"] * headroom_frac, 4)
-        h["divertCapM"] = round(h["capacityM"] * MAX_DIVERT_FRAC, 4)
+        h["divertCapM"] = round(h["capacityM"] * max_frac, 4)
 
-    sources = [h for h in hubs if h["utilizationPct"] > CRITICAL]
+    sources = [h for h in hubs if h["utilizationPct"] > crit]
     # Tujuan: hub dengan utilisasi < warn 50% (headroom nyata & sehat untuk menerima).
     targets = [h for h in hubs if h["utilizationPct"] < 50.0 and h["headroomM"] > 0]
 
     # Kebutuhan pengalihan tiap sumber: turunkan ke lantai aman (SAFE_FLOOR),
     # dibatasi porsi maksimum.
     for s in sources:
-        floor_vol = s["capacityM"] * SAFE_FLOOR / 100
+        floor_vol = s["capacityM"] * floor / 100
         need = max(0.0, s["usedM"] - floor_vol)
         s["needM"] = round(min(need, s["divertCapM"]), 4)
         s["remainingNeedM"] = s["needM"]
@@ -127,8 +141,8 @@ def optimize_load_balance() -> dict[str, Any]:
         )
 
     total_moved = round(sum(m["quantityM"] for m in moves), 4)
-    over_before = sum(1 for h in hubs if h["utilizationPct"] > CRITICAL)
-    over_after = sum(1 for r in after_rows if r["afterPct"] > CRITICAL)
+    over_before = sum(1 for h in hubs if h["utilizationPct"] > crit)
+    over_after = sum(1 for r in after_rows if r["afterPct"] > crit)
     # Utilisasi timur (Kalimantan+Sulawesi+Maluku) sebelum vs sesudah.
     east_regions = {"Kalimantan", "Sulawesi", "Maluku & Papua"}
     east_before = [r["beforePct"] for r in after_rows if r["region"] in east_regions]
@@ -138,7 +152,7 @@ def optimize_load_balance() -> dict[str, Any]:
     return {
         "engine": "transportation-heuristic (greedy cheapest-link-first)",
         "note": "Biaya = indeks relatif antar-region (proxy prototipe), bukan tarif nyata. Kendala: headroom tujuan, lantai aman 60%, maks 35% dialihkan.",
-        "thresholds": {"critical": CRITICAL, "safeFloor": SAFE_FLOOR, "maxDivertFrac": MAX_DIVERT_FRAC},
+        "thresholds": {"critical": crit, "safeFloor": floor, "maxDivertFrac": max_frac},
         "summary": {
             "totalMovedM": total_moved,
             "moves": len(moves),

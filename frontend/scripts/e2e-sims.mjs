@@ -77,6 +77,29 @@ try {
     await ctx.close();
   }
 
+  // ── 1b. Load Balancing (ambang interaktif) ──
+  {
+    let posts = 0;
+    const { ctx, page, errs } = await openPage("/dashboard/hub/load-balance", (r) => {
+      if (r.method() === "POST" && r.url().includes("/ml/optimize/load-balance")) posts++;
+    });
+    const txt0 = await page.locator("body").innerText();
+    R(/Load Balancing/.test(txt0), "loadbalance: judul");
+    R(/Simulasi ambang optimizer/.test(txt0), "loadbalance: panel simulasi");
+    const sliders = page.locator('input[type="range"]');
+    R((await sliders.count()) === 3, "loadbalance: 3 slider ambang", `n=${await sliders.count()}`);
+    // Geser ambang kritis lalu Jalankan → POST terpanggil.
+    const crit = page.locator('input[aria-label="Ambang kritis persen"]');
+    await crit.fill("80");
+    await crit.dispatchEvent("change");
+    await page.locator('button', { hasText: "Jalankan optimizer" }).click();
+    await page.waitForTimeout(1200);
+    R(posts >= 1, "loadbalance: Jalankan memicu POST", `posts=${posts}`);
+    R(errs.length === 0, "loadbalance: tanpa error JS", errs.join(" | "));
+    await page.screenshot({ path: "/tmp/opencode/shots/loadbalance-sim.png" });
+    await ctx.close();
+  }
+
   // ── 2. Address Intelligence (input bebas) ──
   {
     let posts = 0;

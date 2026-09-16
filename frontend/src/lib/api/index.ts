@@ -463,6 +463,8 @@ export const api = {
   digitalTwin: () => get<Record<string, TwinResult>>("/ml/sim/digital-twin"),
   codImpact: () => get<{ prob: number; result: CodImpact }>("/ml/sim/cod-impact"),
   optimizeLoadBalance: () => get<OptimizeResult>("/ml/optimize/load-balance"),
+  optimizeLoadBalanceCustom: (body: { critical?: number; safe_floor?: number; max_divert_frac?: number }) =>
+    post<OptimizeResult>("/ml/optimize/load-balance", body),
   codIntel: (body: { cod_share_pct?: number; interventions?: string[]; packages_per_shift?: number }) =>
     post<CodIntelResult>("/ml/cod-intel", body),
   codIntelScenarios: () => get<Record<string, CodIntelResult>>("/ml/cod-intel/scenarios"),

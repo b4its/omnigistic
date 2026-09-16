@@ -11,6 +11,27 @@
   let loaded = $state(false);
   let failed = $state(false);
 
+  // Ambang simulasi interaktif (dikirim ke engine). Default = nilai kasus.
+  let critical = $state(65);
+  let safeFloor = $state(60);
+  let maxDivert = $state(35);
+
+  async function recompute(userTriggered = true) {
+    if (userTriggered) notify({ message: "Menjalankan optimizer jaringan…", type: "info", title: "Load Balancing" });
+    try {
+      opt = await api.optimizeLoadBalanceCustom({
+        critical,
+        safe_floor: Math.min(safeFloor, critical),
+        max_divert_frac: maxDivert / 100,
+      });
+      if (userTriggered) notify({ message: "Rencana optimal diperbarui", type: "success", title: "Load Balancing" });
+    } catch {
+      opt = null;
+      failed = true;
+      if (userTriggered) notify({ message: "Gagal menjalankan optimizer", type: "error", title: "Load Balancing" });
+    }
+  }
+
   async function load(userTriggered = false) {
     failed = false;
     loaded = false;
@@ -24,6 +45,13 @@
       if (userTriggered) notify({ message: "Gagal memuat optimizer", type: "error", title: "Load Balancing" });
     }
     loaded = true;
+  }
+
+  async function resetDefaults() {
+    critical = 65;
+    safeFloor = 60;
+    maxDivert = 35;
+    await recompute(true);
   }
 
   onMount(() => void load());
@@ -56,14 +84,47 @@
     </div>
     <button
       type="button"
-      onclick={() => load(true)}
+      onclick={resetDefaults}
       class="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold hover:border-primary/40"
     >
-      <Icon name="trend" cls="h-3.5 w-3.5" /> Jalankan ulang
+      <Icon name="trend" cls="h-3.5 w-3.5" /> Reset ambang
     </button>
   </div>
 
   {#if loaded && opt}
+    <!-- Panel simulasi ambang (interaktif) -->
+    <div class="rounded-2xl border border-primary/30 bg-primary/5 p-5">
+      <p class="text-sm font-semibold">Simulasi ambang optimizer</p>
+      <p class="mt-1 text-xs text-muted-foreground">Geser lalu klik Jalankan — engine menyusun ulang rencana pengalihan dari ambang baru.</p>
+      <div class="mt-4 grid gap-5 sm:grid-cols-3">
+        <label class="block">
+          <span class="flex items-center justify-between text-xs font-medium text-muted-foreground">
+            <span>Ambang kritis (over-utilisasi)</span><span class="kpi-value text-foreground">{critical}%</span>
+          </span>
+          <input type="range" min="50" max="95" step="1" bind:value={critical} aria-label="Ambang kritis persen" class="mt-2 w-full accent-[var(--color-primary)]" />
+        </label>
+        <label class="block">
+          <span class="flex items-center justify-between text-xs font-medium text-muted-foreground">
+            <span>Lantai aman hub sumber</span><span class="kpi-value text-foreground">{safeFloor}%</span>
+          </span>
+          <input type="range" min="30" max={critical} step="1" bind:value={safeFloor} aria-label="Lantai aman persen" class="mt-2 w-full accent-[var(--color-primary)]" />
+        </label>
+        <label class="block">
+          <span class="flex items-center justify-between text-xs font-medium text-muted-foreground">
+            <span>Maks kapasitas boleh dialihkan</span><span class="kpi-value text-foreground">{maxDivert}%</span>
+          </span>
+          <input type="range" min="5" max="60" step="5" bind:value={maxDivert} aria-label="Maks porsi dialihkan persen" class="mt-2 w-full accent-[var(--color-primary)]" />
+        </label>
+      </div>
+      <button
+        type="button"
+        onclick={() => recompute(true)}
+        class="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground transition-transform hover:-translate-y-px active:translate-y-0"
+      >
+        <Icon name="trend" cls="h-3.5 w-3.5" /> Jalankan optimizer
+      </button>
+    </div>
+
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <MetricCard
         label="Volume Dialihkan"

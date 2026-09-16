@@ -98,6 +98,20 @@ check("hub setelah punya delta", all("deltaPct" in h for h in opt["hubs"]))
 inflow = round(sum(h["movedInM"] for h in opt["hubs"]), 3)
 outflow = round(sum(h["movedOutM"] for h in opt["hubs"]), 3)
 check("konservasi volume (in==out)", abs(inflow - outflow) < 0.01, f"in={inflow} out={outflow}")
+# Ambang dapat di-override (simulasi interaktif): floor lebih rendah -> alihkan lebih banyak.
+custom_lo = client.post("/ml/optimize/load-balance", json={"safe_floor": 40}).json()
+custom_hi = client.post("/ml/optimize/load-balance", json={"safe_floor": 63}).json()
+check("POST load-balance 200", custom_lo["thresholds"]["safeFloor"] == 40.0, str(custom_lo["thresholds"]["safeFloor"]))
+check("floor lebih rendah -> alihkan lebih banyak", custom_lo["summary"]["totalMovedM"] > custom_hi["summary"]["totalMovedM"], f"{custom_lo['summary']['totalMovedM']} vs {custom_hi['summary']['totalMovedM']}")
+# Ambang kritis lebih tinggi -> lebih sedikit hub over-utilisasi.
+low_crit = client.post("/ml/optimize/load-balance", json={"critical": 65}).json()
+check("critical 65 -> 5 hub over", low_crit["summary"]["overloadedBefore"] == 5, str(low_crit["summary"]["overloadedBefore"]))
+# max_divert kecil -> volume dialihkan lebih sedikit.
+small_div = client.post("/ml/optimize/load-balance", json={"max_divert_frac": 0.1}).json()
+check("maxDivert 0,1 -> lebih sedikit dialihkan", small_div["summary"]["totalMovedM"] < custom_hi["summary"]["totalMovedM"] + 0.3 and small_div["summary"]["totalMovedM"] > 0, str(small_div["summary"]["totalMovedM"]))
+# Klamp: safe_floor tak boleh melebihi critical.
+clamped = client.post("/ml/optimize/load-balance", json={"critical": 60, "safe_floor": 90}).json()
+check("floor diklamp <= critical", clamped["thresholds"]["safeFloor"] <= clamped["thresholds"]["critical"], str(clamped["thresholds"]))
 
 print("== 5. COD Decision Intelligence ==")
 sc = _get("/ml/cod-intel/scenarios")

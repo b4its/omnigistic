@@ -77,6 +77,18 @@ def optimize_balance():
     return optimize_load_balance()
 
 
+class LoadBalanceBody(BaseModel):
+    critical: float | None = None
+    safe_floor: float | None = None
+    max_divert_frac: float | None = None
+
+
+@router.post("/optimize/load-balance")
+def optimize_balance_custom(body: LoadBalanceBody):
+    """Versi interaktif: ambang kritis / lantai aman / porsi maks dapat diubah."""
+    return optimize_load_balance(body.critical, body.safe_floor, body.max_divert_frac)
+
+
 # ── COD Decision Intelligence (dampak per shift kurir) ────────────────────
 class CodIntelBody(BaseModel):
     cod_share_pct: float = 60.0
