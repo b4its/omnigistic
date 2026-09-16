@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import Icon from "$lib/components/Icon.svelte";
+  import { SvelteSet } from "svelte/reactivity";
   import MetricCard from "$lib/components/MetricCard.svelte";
   import EChart from "$lib/components/EChart.svelte";
   import { barChart } from "$lib/charts/options";
@@ -16,13 +16,11 @@
   // Kontrol interaktif
   let codShare = $state(60);
   let packagesPerShift = $state(40);
-  let active = $state<Set<string>>(new Set());
+  let active = new SvelteSet<string>();
 
   function toggle(key: string, checked: boolean) {
-    const next = new Set(active);
-    if (checked) next.add(key);
-    else next.delete(key);
-    active = next;
+    if (checked) active.add(key);
+    else active.delete(key);
     void recompute();
   }
 

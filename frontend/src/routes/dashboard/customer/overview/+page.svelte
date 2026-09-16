@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { resolveHref } from "$lib/utils";
+  import { resolveHref, numId } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import { PRODUCTS, CATEGORIES, searchProducts, formatRupiah, type Product } from "$lib/shop/catalog";
   import { shop, cartCount, orderCount, buyerReputation } from "$lib/stores/shop";
@@ -206,7 +206,7 @@
               <p class="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{p.desc}</p>
             </div>
             <div class="flex items-center gap-2 text-[11px] text-muted-foreground">
-              <span class="inline-flex items-center gap-0.5 font-semibold text-warning-foreground">★ {p.rating.toFixed(1)}</span>
+              <span class="inline-flex items-center gap-0.5 font-semibold text-warning-foreground">★ {numId(p.rating, 1)}</span>
               <span>·</span>
               <span>{new Intl.NumberFormat("id-ID").format(p.sold)} terjual</span>
             </div>

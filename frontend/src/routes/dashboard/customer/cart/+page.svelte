@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { resolveHref } from "$lib/utils";
+  import { resolveHref, numId } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, cartDetail, shippingCost, type ResolvedCartItem } from "$lib/stores/shop";
@@ -44,7 +44,7 @@
   <header class="flex items-center justify-between gap-4">
     <div class="space-y-1">
       <h1 class="font-heading text-xl font-semibold tracking-tight">Keranjang</h1>
-      <p class="text-sm text-muted-foreground">{totalItems} item · perkiraan berat {totalWeight.toFixed(1)} kg</p>
+      <p class="text-sm text-muted-foreground">{totalItems} item · perkiraan berat {numId(totalWeight, 1)} kg</p>
     </div>
     {#if items.length > 0}
       <button type="button" onclick={clearAll} class="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-destructive/50 hover:text-destructive-foreground">

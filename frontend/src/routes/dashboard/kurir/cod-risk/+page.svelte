@@ -4,7 +4,7 @@
   import Icon from "$lib/components/Icon.svelte";
   import EChart from "$lib/components/EChart.svelte";
   import { donutChart } from "$lib/charts/options";
-  import { resolveHref } from "$lib/utils";
+  import { resolveHref, numId } from "$lib/utils";
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, type Order } from "$lib/stores/shop";
   import { COURIER, COD_DECISION_LABEL } from "$lib/logistics";
@@ -281,7 +281,7 @@
                               <div class="flex items-center justify-between text-[14.5px]">
                                 <span class="text-foreground">{f.label} <span class="text-muted-foreground">= {f.value}</span></span>
                                 <span class={f.contribution >= 0 ? "font-semibold text-destructive-foreground" : "font-semibold text-success-foreground"}>
-                                  {f.contribution >= 0 ? "+" : ""}{f.contribution.toFixed(2)}
+                                  {f.contribution >= 0 ? "+" : ""}{numId(f.contribution, 2)}
                                 </span>
                               </div>
                               <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-border/60">
@@ -296,7 +296,7 @@
                         <p class="text-[13px] font-semibold uppercase tracking-wider text-primary">Bagaimana · cara hitung</p>
                         <div class="mt-3 space-y-1.5 text-[14.5px] text-muted-foreground">
                           <p>Model: <span class="text-foreground">{p.model ?? "Logistic Regression"}</span>{p.accuracy != null ? ` · akurasi uji ${(p.accuracy * 100).toFixed(0)}%` : ""}</p>
-                          <p>logit = intercept ({p.intercept?.toFixed(2)}) + Σ (koef × fitur) = <span class="text-foreground">{p.logit?.toFixed(2)}</span></p>
+                          <p>logit = intercept ({p.intercept != null ? numId(p.intercept, 2) : "-"}) + Σ (koef × fitur) = <span class="text-foreground">{p.logit != null ? numId(p.logit, 2) : "-"}</span></p>
                           <p>P(gagal COD) = 1 / (1 + e^−logit) = <span class="font-semibold text-foreground">{(p.score * 100).toFixed(0)}%</span></p>
                           <p>Ambang: &lt; 35% antar-normal · 35-65% PUDO · ≥ 65% pre-payment.</p>
                         </div>

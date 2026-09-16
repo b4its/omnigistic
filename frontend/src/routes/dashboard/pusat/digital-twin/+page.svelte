@@ -6,6 +6,7 @@
   import { barChart } from "$lib/charts/options";
   import { api, type SponsorResult, type SponsorSensitivity } from "$lib/api";
   import { notify } from "$lib/toast";
+  import { numId } from "$lib/utils";
 
   let res = $state<SponsorResult | null>(null);
   let sens = $state<SponsorSensitivity | null>(null);
@@ -55,9 +56,9 @@
   const rp = (n: number) => "Rp" + new Intl.NumberFormat("id-ID").format(Math.round(n));
   const rpShort = (n: number) => {
     const abs = Math.abs(n);
-    if (abs >= 1e12) return `Rp${(n / 1e12).toFixed(1)}T`;
-    if (abs >= 1e9) return `Rp${(n / 1e9).toFixed(1)}M`;
-    if (abs >= 1e6) return `Rp${(n / 1e6).toFixed(1)}jt`;
+    if (abs >= 1e12) return `Rp${numId(n / 1e12, 1)}T`;
+    if (abs >= 1e9) return `Rp${numId(n / 1e9, 1)}M`;
+    if (abs >= 1e6) return `Rp${numId(n / 1e6, 1)}jt`;
     return rp(n);
   };
 

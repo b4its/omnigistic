@@ -21,7 +21,7 @@
     peak: { month: string; label: string; totalM: number };
     trough: { month: string; label: string; totalM: number };
     fluctuationPct: number;
-    mapeInfo?: string;
+    backtest?: { mapePct: number; method: string };
   }
 
   let forecast = $state<ForecastResp | null>(null);
@@ -101,7 +101,11 @@
       <div class="rounded-2xl border border-border bg-card p-5">
         <h2 class="text-sm font-semibold">Catatan jujur model</h2>
         <p class="mt-2 text-[15px] leading-relaxed text-muted-foreground">{forecast.note}</p>
-        <p class="mt-2 text-[15px] leading-relaxed text-muted-foreground">{forecast.mapeInfo}</p>
+        {#if forecast.backtest}
+          <p class="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+            Backtest in-sample ({forecast.backtest.method}): <span class="font-semibold text-foreground">MAPE {new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(forecast.backtest.mapePct)}%</span> — model mereproduksi pola 2023 dengan galat rendah, namun hanya tersedia 12 titik sehingga validasi hold-out belum dimungkinkan.
+          </p>
+        {/if}
       </div>
     </div>
   {:else if loaded && failed}

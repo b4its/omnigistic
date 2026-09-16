@@ -21,6 +21,18 @@ export function formatId(n: number): string {
   return new Intl.NumberFormat("id-ID").format(n);
 }
 
+/**
+ * Format angka desimal gaya Indonesia (koma sebagai pemisah desimal).
+ * Pengganti `toFixed()` yang menghasilkan titik (mis. "50.1" → "50,1").
+ */
+export function numId(n: number, digits = 1): string {
+  if (!Number.isFinite(n)) return "-";
+  return new Intl.NumberFormat("id-ID", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: digits
+  }).format(n);
+}
+
 export function regionUtil(hubs: Array<{ region: string; utilizationPct: number }>, region: string): number {
   const hs = hubs.filter((h) => h.region === region);
   return hs.length

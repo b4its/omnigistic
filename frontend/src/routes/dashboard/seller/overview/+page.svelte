@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { resolveHref } from "$lib/utils";
+  import { resolveHref, numId } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import EChart from "$lib/components/EChart.svelte";
   import { lineChart, donutChart } from "$lib/charts/options";
@@ -11,9 +11,9 @@
 
   const rupiah = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
   const compact = (n: number) => {
-    if (Math.abs(n) >= 1e9) return `Rp${(n / 1e9).toFixed(2)} M`;
-    if (Math.abs(n) >= 1e6) return `Rp${(n / 1e6).toFixed(1)} jt`;
-    if (Math.abs(n) >= 1e3) return `Rp${(n / 1e3).toFixed(0)} rb`;
+    if (Math.abs(n) >= 1e9) return `Rp${numId(n / 1e9, 2)} M`;
+    if (Math.abs(n) >= 1e6) return `Rp${numId(n / 1e6, 1)} jt`;
+    if (Math.abs(n) >= 1e3) return `Rp${numId(n / 1e3, 0)} rb`;
     return rupiah(n);
   };
 
