@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { api, type FinRow } from "$lib/api";
+  import { api, type FinRow, type RegionSummary, type Hub } from "$lib/api";
   import EChart from "$lib/components/EChart.svelte";
   import MetricCard from "$lib/components/MetricCard.svelte";
   import Icon from "$lib/components/Icon.svelte";
@@ -15,13 +15,17 @@
   ];
 
   let fin = $state<FinRow[]>([]);
+  let regions = $state<RegionSummary[]>([]);
+  let hubs = $state<Hub[]>([]);
   let loaded = $state(false);
 
   onMount(async () => {
     try {
-      fin = await api.financial();
+      [fin, regions, hubs] = await Promise.all([api.financial(), api.metricRegions(), api.hubs()]);
     } catch {
       fin = [];
+      regions = [];
+      hubs = [];
     }
     loaded = true;
   });
@@ -32,14 +36,18 @@
   const fulfilG = $derived(latest && first ? ((latest.fulfilmentT / first.fulfilmentT - 1) * 100).toFixed(1) : "0");
   const costSales = $derived(latest ? ((latest.fulfilmentT + latest.shippingT) / latest.netSalesT) * 100 : 0);
 
-  const regUtil = $derived([
-    { label: "Jawa", value: 69.4 },
-    { label: "Sumatra", value: 53.2 },
-    { label: "Bali & NT", value: 54.4 },
-    { label: "Kalimantan", value: 46.8 },
-    { label: "Sulawesi", value: 44.9 },
-    { label: "Papua", value: 30.1 }
-  ]);
+  // Utilisasi per region dari SATU sumber kebenaran (/ml/metrics/regions), bukan hardcode.
+  const regUtil = $derived(
+    regions.map((r) => ({
+      label: r.region.replace(" & Nusa Tenggara", "").replace("Maluku & ", ""),
+      value: r.avgUtilizationPct
+    }))
+  );
+  const highestUtil = $derived(regions.length ? regions.reduce((a, b) => (b.avgUtilizationPct > a.avgUtilizationPct ? b : a)) : null);
+  const lowestUtil = $derived(regions.length ? regions.reduce((a, b) => (b.avgUtilizationPct < a.avgUtilizationPct ? b : a)) : null);
+  // Hub paling padat & paling longgar langsung dari Table 1 (via /api/hubs).
+  const busiestHub = $derived(hubs.length ? hubs.reduce((a, b) => (b.utilizationPct > a.utilizationPct ? b : a)) : null);
+  const quietestHub = $derived(hubs.length ? hubs.reduce((a, b) => (b.utilizationPct < a.utilizationPct ? b : a)) : null);
 
   const finData = $derived(
     fin.map((f) => ({ y: String(f.year), s: f.netSalesT, f: f.fulfilmentT }))
@@ -53,7 +61,7 @@
       <MetricCard label="Net Sales 2023" value={latest ? `Rp${latest.netSalesT}T` : "-"} delta={`+${salesG}%`} deltaTone="up" sub="vs Rp213,64T (2020)" />
       <MetricCard label="Fulfilment Expense" value={latest ? `Rp${latest.fulfilmentT}T` : "-"} delta={`+${fulfilG}%`} deltaTone="warn" sub="naik lebih cepat dari sales" />
       <MetricCard label="Cost-to-Sales Ratio" value={`${costSales.toFixed(1)}%`} delta="+0,4pt" deltaTone="warn" sub="dari 30,9% di 2020" />
-      <MetricCard label="Utilisasi tertinggi" value="JKT 90,4%" delta="90,4%" deltaTone="warn" sub="vs Jayapura 28,1%" />
+      <MetricCard label="Utilisasi tertinggi" value={busiestHub ? `${busiestHub.code} ${busiestHub.utilizationPct}%` : "-"} delta={busiestHub ? `${busiestHub.utilizationPct}%` : ""} deltaTone="warn" sub={quietestHub ? `vs ${quietestHub.name} ${quietestHub.utilizationPct}%` : ""} />
     </div>
 
     <div class="grid gap-4 lg:grid-cols-[1.7fr_1fr]">
@@ -88,7 +96,10 @@
           )}
           height={230}
         />
-        <p class="mt-1 text-[14px] text-muted-foreground">Threshold over 65% ditandai merah; timur (Papua 30%) perlu Regional Sponsor.</p>
+        <p class="mt-1 text-[14px] text-muted-foreground">
+          Threshold utilisasi 65% = ambang kritis. {highestUtil ? `${highestUtil.region} tertinggi (${highestUtil.avgUtilizationPct}%)` : ""}
+          {lowestUtil ? `; ${lowestUtil.region} terendah (${lowestUtil.avgUtilizationPct}%) → kandidat Regional Sponsor.` : ""}
+        </p>
       </section>
     </div>
 
