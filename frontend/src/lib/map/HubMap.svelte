@@ -3,7 +3,7 @@
   import type * as LeafletNS from "leaflet";
   import type { Hub } from "$lib/api";
   import { OSM_TILE } from "$lib/map/tiles";
-  import { PUDO_POINTS } from "$lib/logistics";
+  import { PUDO_POINTS, pudoCountByRegion } from "$lib/logistics";
   import Icon from "$lib/components/Icon.svelte";
 
   interface Props {
@@ -17,6 +17,17 @@
   let mapEl = $state<HTMLElement | undefined>();
   /** Legenda peta: terbuka default (collapsible). */
   let legendOpen = $state(true);
+
+  /** Warna PUDO per region (6 region kasus) — untuk legenda & marker. */
+  const PUDO_REGION_COLOR: Record<string, { color: string; fill: string }> = {
+    Java: { color: "#7c3aed", fill: "#ddd6fe" },
+    Sumatra: { color: "#0891b2", fill: "#cffafe" },
+    Kalimantan: { color: "#16a34a", fill: "#dcfce7" },
+    Sulawesi: { color: "#ea580c", fill: "#ffedd5" },
+    "Bali & Nusa Tenggara": { color: "#ca8a04", fill: "#fef9c3" },
+    "Maluku & Papua": { color: "#db2777", fill: "#fce7f3" },
+  };
+  const regionCounts = pudoCountByRegion();
 
   // Koordinat kota hub (data publik). Kode mengikuti `code` di data-kas.json.
   const COORDS: Record<string, [number, number]> = {
@@ -72,19 +83,25 @@
         bounds.push(c);
       }
 
-      // ── Titik PUDO mitra (overlay informasi di seluruh wilayah) ──
+      // ── Titik PUDO mitra (overlay informasi) — warna per REGION ──
       if (showPudo) {
         for (const p of PUDO_POINTS) {
+          const rc = PUDO_REGION_COLOR[p.region] ?? { color: "#8b5cf6", fill: "#ddd6fe" };
           const mk = L.circleMarker(p.coord as unknown as LeafletNS.LatLngExpression, {
             radius: 5,
-            color: "#8b5cf6",
+            color: rc.color,
             weight: 2,
-            fillColor: "#ddd6fe",
-            fillOpacity: 0.9,
+            fillColor: rc.fill,
+            fillOpacity: 0.92,
             dashArray: "2 3",
           }).addTo(m);
-          mk.bindTooltip(`PUDO · ${p.name} (${p.partner})`, { direction: "top" });
-          mk.bindPopup(`<strong>${p.name}</strong> · ${p.partner}<br/>${p.city} · jam ${p.hours}<br/>Kapasitas ${p.capacityPerDay} paket/hari`);
+          mk.bindTooltip(`PUDO · ${p.name} (${p.region})`, { direction: "top" });
+          mk.bindPopup(
+            `<strong>${p.name}</strong> · ${p.partner}<br/>` +
+              `<span style="opacity:.8">${p.address}</span><br/>` +
+              `${p.city} · ${p.region}<br/>Jam ${p.hours} · kapasitas ${p.capacityPerDay} paket/hari<br/>` +
+              `<span style="opacity:.7;font-size:11px">Koordinat: ${p.source === "osm" ? "OpenStreetMap" : "asumsi tim"}</span>`
+          );
         }
       }
 
@@ -132,12 +149,19 @@
         <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Ukuran &amp; simbol</p>
         <ul class="space-y-1.5">
           <li class="flex items-center gap-2"><span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-foreground/40 bg-foreground/10"></span> <span>Bulatan besar = kapasitas hub lebih besar</span></li>
-          {#if showPudo}
-            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span> <span>Titik PUDO mitra (koordinat OSM)</span></li>
-          {/if}
         </ul>
+        {#if showPudo}
+          <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">PUDO mitra per region ({PUDO_POINTS.length} titik)</p>
+          <ul class="space-y-1.5">
+            {#each regionCounts as rc (rc.region)}
+              {@const col = PUDO_REGION_COLOR[rc.region] ?? { color: "#8b5cf6", fill: "#ddd6fe" }}
+              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2" style="border-color:{col.color};background:{col.fill}"></span> <span class="text-muted-foreground">{rc.region} <b class="text-foreground">· {rc.count}</b></span></li>
+            {/each}
+          </ul>
+        {/if}
         <p class="border-t border-border pt-2 text-[10px] italic leading-snug text-muted-foreground">
-          Ubin peta © OpenStreetMap. Warna = utilisasi Table 1 (kasus); ukuran = kapasitas harian. Titik PUDO diverifikasi dari OpenStreetMap (ODbL).
+          Ubin peta © OpenStreetMap. Warna hub = utilisasi Table 1 (kasus); ukuran = kapasitas harian.
+          Koordinat & alamat PUDO diverifikasi dari OpenStreetMap (ODbL); jam/kapasitas = asumsi tim.
         </p>
       </div>
     {/if}

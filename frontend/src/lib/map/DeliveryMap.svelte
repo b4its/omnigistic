@@ -13,7 +13,7 @@
   import { get } from "svelte/store";
   import { themeStore } from "$lib/stores/theme";
   import Icon from "$lib/components/Icon.svelte";
-  import { coordsForCity, HUB_LABEL, etaForCity, distanceForCity, pudosForCity, pudoDropRecommendation } from "$lib/logistics";
+  import { coordsForCity, HUB_LABEL, etaForCity, distanceForCity, pudosForCity, pudoDropRecommendation, PUDO_POINTS } from "$lib/logistics";
   import { api, type RoutePlanResult } from "$lib/api";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
 
@@ -390,8 +390,8 @@
 
         <!-- Sumber & catatan -->
         <p class="border-t border-border pt-2 text-[10px] italic leading-snug text-muted-foreground">
-          Ubin peta © OpenStreetMap. Titik PUDO & koordinat diverifikasi dari OpenStreetMap (ODbL);
-          jam/kapasitas & kepadatan = asumsi tim (prototipe).
+          Jaringan PUDO nasional: {PUDO_POINTS.length} titik mitra di 6 region. Ubin peta © OpenStreetMap;
+          koordinat & alamat PUDO diverifikasi dari OpenStreetMap (ODbL); jam/kapasitas & kepadatan = asumsi tim (prototipe).
         </p>
       </div>
     {/if}
