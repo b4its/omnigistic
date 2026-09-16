@@ -79,7 +79,7 @@ omnigistic/
 │   │   │                          optimize.py (Network Optimization Engine), cod_intel.py (COD per-shift), metrics.py (turunan+rekonsiliasi)
 │   │   ├── security/            ← OWASP-aligned guard/port, port formatter.ts (scrub AI), port quota.ts, prompts (anonim)
 │   │   └── db/                  ← loader.py + seed.py + SQLModel (opsional — fallback JSON)
-│   ├── tests/run_tests.py       ← harness uji backend tanpa pytest (105 assert, TestClient)
+│   ├── tests/run_tests.py       ← harness uji backend tanpa pytest (138 assert, TestClient)
 │   └── requirements.txt
 ├── frontend/                    ← SvelteKit 2 (Svelte 5 runes), adapter-node
 │   ├── src/
@@ -150,7 +150,7 @@ AI_MODEL=omnigistic-model
 ## Testing
 
 ```bash
-# Backend (105 assert, tanpa pytest)
+# Backend (138 assert, tanpa pytest)
 cd backend && SKIP_DB=1 .venv/bin/python tests/run_tests.py
 
 # Frontend E2E (52 assert; butuh backend :8000 + frontend dev :3000)
