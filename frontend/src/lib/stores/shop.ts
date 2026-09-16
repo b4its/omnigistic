@@ -26,7 +26,8 @@ export type OrderStatus = "dikemas" | "dijemput" | "transit" | "dikirim" | "terk
 export interface OrderItem {
   productId: string;
   name: string;
-  emoji: string;
+  /** Nama ikon tema (bukan emoji). */
+  icon: string;
   price: number;
   qty: number;
 }
@@ -111,7 +112,13 @@ function normalizeOrder(o: Partial<Order>): Order {
   return {
     id: o.id ?? `ORD-${now.toString(36).toUpperCase()}`,
     createdAt: o.createdAt ?? now,
-    items: Array.isArray(o.items) ? o.items : [],
+    // Migrasi lama: order tersimpan dgn field `emoji` → peta ke `icon` (default "box").
+    items: Array.isArray(o.items)
+      ? o.items.map((it) => {
+          const legacy = it as unknown as { icon?: string; emoji?: string };
+          return { ...it, icon: legacy.icon ?? "box" };
+        })
+      : [],
     subtotal: o.subtotal ?? 0,
     shipping: o.shipping ?? 0,
     total: o.total ?? 0,

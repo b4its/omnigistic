@@ -9,6 +9,7 @@
    * riwayat yang sama (satu store lintas role: `$lib/stores/shop`).
    */
   import { onMount } from "svelte";
+  import type { IconName } from "$lib/icon-names";
   import Icon from "$lib/components/Icon.svelte";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { resolveHref } from "$lib/utils";
@@ -317,7 +318,7 @@
                 <ul class="space-y-1.5 border-t border-border pt-3">
                   {#each o.items as it (it.productId)}
                     <li class="flex items-center gap-2 text-xs">
-                      <span class="text-base" aria-hidden="true">{it.emoji}</span>
+                      <Icon name={it.icon as IconName} cls="h-4 w-4 text-[var(--bitcoin)]" />
                       <span class="min-w-0 flex-1 truncate text-muted-foreground">{it.name} × {it.qty}</span>
                     </li>
                   {/each}

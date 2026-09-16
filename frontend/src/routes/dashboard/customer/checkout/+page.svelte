@@ -121,7 +121,7 @@
     const orderItems = items.map((i) => ({
       productId: i.product.id,
       name: i.product.name,
-      emoji: i.product.emoji,
+      icon: i.product.icon,
       price: i.product.price,
       qty: i.qty
     }));
@@ -279,7 +279,7 @@
           <ul class="space-y-2">
             {#each items as it (it.product.id)}
               <li class="flex items-center gap-2 text-sm">
-                <span class="text-lg" aria-hidden="true">{it.product.emoji}</span>
+                <Icon name={it.product.icon} cls="h-4.5 w-4.5" style="color:{it.product.accent}" />
                 <span class="min-w-0 flex-1 truncate text-muted-foreground">{it.product.name} × {it.qty}</span>
                 <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(it.lineTotal)}</span>
               </li>

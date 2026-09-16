@@ -60,7 +60,7 @@
       <div>
         <p class="text-base font-semibold">Titik PUDO &amp; rekomendasi drop</p>
         <p class="text-[13.5px] text-muted-foreground">
-          Peta menampilkan seluruh titik mitra. Titik <span class="font-semibold" style="color:#7c3aed">★ rekomendasi</span> adalah arah drop terdekat dari alamat penerima untuk kurir.
+          Peta menampilkan seluruh titik mitra. Titik <span class="font-semibold" style="color:#7c3aed">rekomendasi</span> adalah arah drop terdekat dari alamat penerima untuk kurir.
         </p>
       </div>
       <span class="rounded-full bg-muted px-3 py-1 text-[13px] font-semibold text-muted-foreground">{PUDO_POINTS.length} titik mitra</span>

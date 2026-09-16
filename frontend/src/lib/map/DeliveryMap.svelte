@@ -171,7 +171,7 @@
           fillOpacity: isRec ? 1 : 0.85,
           dashArray: isRec ? undefined : "2 3",
         }).addTo(map);
-        const tag = isRec ? (isCourier ? "★ Titik drop rekomendasi (kurir)" : "★ PUDO terdekat") : "PUDO mitra";
+        const tag = isRec ? (isCourier ? "Titik drop rekomendasi (kurir)" : "PUDO terdekat (rekomendasi)") : "PUDO mitra";
         mk.bindTooltip(`${tag} · ${p.name} (${p.partner})`, { direction: "top" });
         mk.bindPopup(
           `<strong>${p.name}</strong> · ${p.partner}<br/>${isCourier ? "Titik drop paket rekomendasi" : "Titik ambil/bayar paket"}<br/>Jam layanan ${p.hours} · kapasitas ${p.capacityPerDay} paket/hari` +
@@ -231,7 +231,7 @@
   {#if showPudo && dropRec}
     <div class="pointer-events-none absolute bottom-2 left-2 z-[1000] max-w-[calc(100%-1rem)] rounded-lg border border-[#7c3aed]/40 bg-background/95 px-3 py-2 text-[12px] shadow-pop">
       <p class="font-semibold text-foreground">
-        {#if isCourier}★ Titik drop paket rekomendasi{:else}★ PUDO terdekat untuk penerima{/if}
+        {#if isCourier}Titik drop paket rekomendasi{:else}PUDO terdekat untuk penerima{/if}
       </p>
       <p class="text-muted-foreground">{dropRec.pudo.name} · {dropRec.pudo.partner} · ± {dropRec.distanceKm} km · ETA ± {dropRec.etaMin} mnt · {dropRec.pudo.hours}</p>
       <p class="mt-0.5 text-[11px] text-muted-foreground">

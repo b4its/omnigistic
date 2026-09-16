@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import type { IconName } from "$lib/icon-names";
   import { resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
@@ -157,7 +158,7 @@
               <ul class="space-y-2">
                 {#each o.items as it (it.productId)}
                   <li class="flex items-center gap-3 text-sm">
-                    <span class="text-lg" aria-hidden="true">{it.emoji}</span>
+                    <Icon name={it.icon as IconName} cls="h-4.5 w-4.5 text-[var(--bitcoin)]" />
                     <span class="min-w-0 flex-1 truncate text-muted-foreground">{it.name} × {it.qty}</span>
                     <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(it.price * it.qty)}</span>
                   </li>

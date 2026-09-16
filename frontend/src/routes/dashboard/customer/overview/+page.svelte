@@ -196,7 +196,7 @@
       {#each results as p (p.id)}
         <article class="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-primary/40">
           <div class="relative flex h-36 items-center justify-center" style="background:color-mix(in srgb, {p.accent} 12%, var(--color-card))">
-            <span class="text-5xl" aria-hidden="true">{p.emoji}</span>
+            <Icon name={p.icon} cls="h-14 w-14" style="color:{p.accent}" />
             {#if p.strikePrice}<span class="absolute left-2 top-2 rounded-full bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground">-{discountPct(p)}%</span>{/if}
             {#if p.tags?.includes("COD")}<span class="absolute right-2 top-2 rounded-full bg-card/90 px-2 py-0.5 text-[11px] font-bold text-foreground ring-1 ring-border">COD</span>{/if}
           </div>
@@ -206,7 +206,7 @@
               <p class="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{p.desc}</p>
             </div>
             <div class="flex items-center gap-2 text-[11px] text-muted-foreground">
-              <span class="inline-flex items-center gap-0.5 font-semibold text-warning-foreground">★ {numId(p.rating, 1)}</span>
+              <span class="inline-flex items-center gap-0.5 font-semibold text-warning-foreground"><Icon name="sparkles" cls="h-3 w-3" weight="bold" /> {numId(p.rating, 1)}</span>
               <span>·</span>
               <span>{new Intl.NumberFormat("id-ID").format(p.sold)} terjual</span>
             </div>

@@ -18,7 +18,7 @@ export interface LiveOrderLine {
   codScore: number | null;
   codDecision: string | null;
   /** Hanya item yang merupakan produk penjual ini. */
-  items: Array<{ productId: string; name: string; emoji: string; price: number; qty: number }>;
+  items: Array<{ productId: string; name: string; icon: string; price: number; qty: number }>;
   /** Nilai item milik penjual ini. */
   sellerValue: number;
   /** Laba kotor item milik penjual ini (harga − HPP). */

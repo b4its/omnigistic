@@ -8,6 +8,8 @@
  * (dipakai sebagai fitur input ke model Predictive COD).
  */
 
+import type { IconName } from "$lib/icon-names";
+
 export interface Product {
   id: string;
   name: string;
@@ -27,8 +29,8 @@ export interface Product {
   weightKg: number;
   /** Boleh dibayar di tempat? */
   codEligible: boolean;
-  /** Emoji sebagai visual ringan (tanpa aset gambar). */
-  emoji: string;
+  /** Ikon tema (bukan emoji) untuk visual kartu. */
+  icon: IconName;
   /** Warna aksen kartu (CSS token). */
   accent: string;
   /** Deskripsi singkat. */
@@ -51,7 +53,7 @@ export const PRODUCTS: Product[] = [
     store: "Jakarta",
     weightKg: 0.2,
     codEligible: true,
-    emoji: "🎧",
+    icon: "activity",
     accent: "var(--color-chart-1)",
     desc: "Earbuds TWS Active Noise Cancelling, baterai 36 jam, cocok untuk kerja & olahraga.",
     tags: ["Terlaris", "COD"],
@@ -67,7 +69,7 @@ export const PRODUCTS: Product[] = [
     store: "Bandung",
     weightKg: 0.35,
     codEligible: true,
-    emoji: "⌚",
+    icon: "clock",
     accent: "var(--color-chart-2)",
     desc: "Jam pintar dengan monitor detak jantung, SpO2, 100+ mode olahraga, tahan air IP68.",
     tags: ["COD"],
@@ -82,7 +84,7 @@ export const PRODUCTS: Product[] = [
     store: "Surabaya",
     weightKg: 0.45,
     codEligible: true,
-    emoji: "🔋",
+    icon: "zap",
     accent: "var(--color-chart-3)",
     desc: "Fast charging 22.5W, 3 output, aman untuk perjalanan jauh.",
   },
@@ -97,7 +99,7 @@ export const PRODUCTS: Product[] = [
     store: "Bekasi-Karawang",
     weightKg: 0.3,
     codEligible: true,
-    emoji: "🌀",
+    icon: "activity",
     accent: "var(--color-chart-4)",
     desc: "Kipas portabel 3 kecepatan, bisa diisi ulang, hemat daya.",
     tags: ["Hemat"],
@@ -113,7 +115,7 @@ export const PRODUCTS: Product[] = [
     store: "Bandung",
     weightKg: 0.4,
     codEligible: true,
-    emoji: "👔",
+    icon: "box",
     accent: "var(--color-chart-1)",
     desc: "Bahan katun flanel, unisex, tersedia banyak motif. Nyaman untuk cuaca tropis.",
     tags: ["COD"],
@@ -129,7 +131,7 @@ export const PRODUCTS: Product[] = [
     store: "Jakarta",
     weightKg: 0.8,
     codEligible: true,
-    emoji: "👟",
+    icon: "route",
     accent: "var(--color-chart-5)",
     desc: "Sepatu lari ringan dengan bantalan responsif, outsole anti-slip.",
     tags: ["COD"],
@@ -144,7 +146,7 @@ export const PRODUCTS: Product[] = [
     store: "Surabaya",
     weightKg: 0.7,
     codEligible: true,
-    emoji: "🎒",
+    icon: "box",
     accent: "var(--color-chart-2)",
     desc: "Ransel laptop 15,6\", bahan polyester anti air, banyak kompartemen.",
   },
@@ -159,7 +161,7 @@ export const PRODUCTS: Product[] = [
     store: "Bandung",
     weightKg: 0.4,
     codEligible: true,
-    emoji: "🥤",
+    icon: "cube",
     accent: "var(--color-chart-3)",
     desc: "Botol minum tahan panas/dingin 12 jam, bebas BPA.",
     tags: ["Hemat", "COD"],
@@ -174,7 +176,7 @@ export const PRODUCTS: Product[] = [
     store: "Bekasi-Karawang",
     weightKg: 0.6,
     codEligible: true,
-    emoji: "💡",
+    icon: "zap",
     accent: "var(--color-chart-4)",
     desc: "Lampu baca 3 mode warna, kontrol sentuh, adaptor USB.",
   },
@@ -189,7 +191,7 @@ export const PRODUCTS: Product[] = [
     store: "Surabaya",
     weightKg: 1.8,
     codEligible: false,
-    emoji: "🧺",
+    icon: "box",
     accent: "var(--color-chart-5)",
     desc: "Rak besi kokoh untuk dapur/kamar mandi, perakitan mudah.",
     tags: ["Berat"],
@@ -205,7 +207,7 @@ export const PRODUCTS: Product[] = [
     store: "Jakarta",
     weightKg: 0.15,
     codEligible: true,
-    emoji: "💊",
+    icon: "shield",
     accent: "var(--color-chart-1)",
     desc: "Suplemen daya tahan tubuh, kemasan 60 tablet, BPOM.",
     tags: ["COD"],
@@ -220,7 +222,7 @@ export const PRODUCTS: Product[] = [
     store: "Bekasi-Karawang",
     weightKg: 0.1,
     codEligible: true,
-    emoji: "😷",
+    icon: "shield",
     accent: "var(--color-chart-2)",
     desc: "Masker 5 lapis, perlindungan partikel halus, nyaman dipakai harian.",
     tags: ["Hemat"],
@@ -236,7 +238,7 @@ export const PRODUCTS: Product[] = [
     store: "Bandung",
     weightKg: 1.5,
     codEligible: false,
-    emoji: "🧘",
+    icon: "target",
     accent: "var(--color-chart-3)",
     desc: "Matras tebal nyaman, permukaan anti slip, mudah digulung.",
     tags: ["Berat"],
@@ -251,7 +253,7 @@ export const PRODUCTS: Product[] = [
     store: "Surabaya",
     weightKg: 10.0,
     codEligible: false,
-    emoji: "🏋️",
+    icon: "gauge",
     accent: "var(--color-chart-4)",
     desc: "Set angkat beban rumahan, plat dapat dilepas, gagang bertekstur.",
     tags: ["Berat"],
@@ -267,7 +269,7 @@ export const PRODUCTS: Product[] = [
     store: "Jakarta",
     weightKg: 0.5,
     codEligible: true,
-    emoji: "🦸",
+    icon: "sparkles",
     accent: "var(--color-chart-5)",
     desc: "Figur edisi terbatas, detail tinggi, box eksklusif untuk kolektor.",
     tags: ["Kolektor", "COD"],
@@ -282,7 +284,7 @@ export const PRODUCTS: Product[] = [
     store: "Bandung",
     weightKg: 0.9,
     codEligible: true,
-    emoji: "🧱",
+    icon: "cube",
     accent: "var(--color-chart-1)",
     desc: "Mainan edukatif balok susun, melatih kreativitas anak.",
   },
@@ -297,7 +299,7 @@ export const PRODUCTS: Product[] = [
     store: "Jakarta",
     weightKg: 0.6,
     codEligible: true,
-    emoji: "📸",
+    icon: "eye",
     accent: "var(--color-chart-2)",
     desc: "Kamera cetak instan, hasil foto langsung jadi, cocok untuk hadiah.",
     tags: ["Premium", "COD"],

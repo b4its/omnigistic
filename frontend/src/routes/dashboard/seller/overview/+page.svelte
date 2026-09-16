@@ -88,7 +88,7 @@
   <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div class="space-y-1">
       <h1 class="font-heading text-xl font-semibold tracking-tight">Analitik Penjualan</h1>
-      <p class="text-sm text-muted-foreground">{SELLER.store} · {SELLER.city} · ★ {SELLER.rating}</p>
+      <p class="text-sm text-muted-foreground">{SELLER.store} · {SELLER.city} · rating {SELLER.rating}</p>
     </div>
     <div class="flex shrink-0 items-center gap-2">
       <a href={resolveHref("/dashboard/seller/products")} class="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
@@ -207,7 +207,7 @@
       <ul class="mt-3 grid gap-2 sm:grid-cols-2">
         {#each danger as m (m.sp.product.id)}
           <li class="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm">
-            <span class="min-w-0 truncate text-foreground">{m.sp.product.emoji} {m.sp.product.name}</span>
+            <span class="flex min-w-0 items-center gap-2 truncate text-foreground"><Icon name={m.sp.product.icon} cls="h-4 w-4 shrink-0 text-[var(--bitcoin)]" /> {m.sp.product.name}</span>
             <span class="shrink-0 text-xs font-semibold {m.marginPct < 34 ? 'text-destructive-foreground' : 'text-warning-foreground'}">
               {m.marginPct < 34 ? `margin ${m.marginPct}%` : `retur ${m.returnRatePct}%`}
             </span>

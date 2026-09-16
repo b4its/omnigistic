@@ -69,7 +69,7 @@
         {#each items as it (it.product.id)}
           <li class="flex gap-4 rounded-2xl border border-border bg-card p-4">
             <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl" style="background:color-mix(in srgb, {it.product.accent} 12%, var(--color-card))">
-              <span class="text-3xl" aria-hidden="true">{it.product.emoji}</span>
+              <Icon name={it.product.icon} cls="h-8 w-8" style="color:{it.product.accent}" />
             </div>
             <div class="flex min-w-0 flex-1 flex-col gap-1">
               <div class="flex items-start justify-between gap-3">

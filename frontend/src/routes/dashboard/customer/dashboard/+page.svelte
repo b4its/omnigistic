@@ -3,6 +3,7 @@
   import { SvelteSet } from "svelte/reactivity";
   import { resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
+  import type { IconName } from "$lib/icon-names";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, cartDetail, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, COURIER_TASK, nextStatus, progressForStatus, lastOutForDeliveryOrder, type Order } from "$lib/stores/shop";
@@ -11,7 +12,7 @@
 
   interface CartLine {
     name: string;
-    emoji: string;
+    icon: string;
     qty: number;
     lineTotal: number;
   }
@@ -29,7 +30,7 @@
   onMount(() => {
     shop.init();
     const unsubCart = cartDetail.subscribe((d) => {
-      cartLines = d.items.map((i) => ({ name: i.product.name, emoji: i.product.emoji, qty: i.qty, lineTotal: i.lineTotal }));
+      cartLines = d.items.map((i) => ({ name: i.product.name, icon: i.product.icon, qty: i.qty, lineTotal: i.lineTotal }));
       cartSubtotal = d.subtotal;
       cartCount = d.count;
     });
@@ -274,7 +275,7 @@
         <ul class="space-y-2">
           {#each cartLines as line (line.name)}
             <li class="flex items-center gap-3 text-sm">
-              <span class="text-lg" aria-hidden="true">{line.emoji}</span>
+              <Icon name={line.icon as IconName} cls="h-4.5 w-4.5 text-[var(--bitcoin)]" />
               <span class="min-w-0 flex-1 truncate text-muted-foreground">{line.name} × {line.qty}</span>
               <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(line.lineTotal)}</span>
             </li>
@@ -356,7 +357,7 @@
                   <ul class="space-y-1.5">
                     {#each o.items as it (it.productId)}
                       <li class="flex items-center gap-2 text-sm">
-                        <span aria-hidden="true">{it.emoji}</span>
+                        <Icon name={(it.icon as IconName) ?? "box"} cls="h-4 w-4 text-[var(--bitcoin)]" />
                         <span class="min-w-0 flex-1 truncate text-muted-foreground">{it.name} × {it.qty}</span>
                         <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(it.price * it.qty)}</span>
                       </li>

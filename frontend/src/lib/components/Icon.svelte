@@ -4,6 +4,8 @@
   export let name: IconName = "circle";
   export let cls = "h-5 w-5";
   export let weight: "fill" | "regular" | "bold" | "duotone" = "regular";
+  /** Gaya inline opsional (mis. `color:var(--bitcoin)`). */
+  export let style = "";
 
   const d: Record<IconName, string> = {
     circle: "M128 96a32 32 0 1 1-32 32 32 32 0 0 1 32-32Zm0-24a56 56 0 1 0 56 56 56 56 0 0 0-56-56Z",
@@ -69,6 +71,7 @@
   height="20"
   viewBox="0 0 256 256"
   class={cls}
+  {style}
   fill={weight === "fill" ? "currentColor" : "none"}
   stroke={weight === "fill" ? "none" : "currentColor"}
   stroke-width={weight === "bold" ? "24" : "16"}

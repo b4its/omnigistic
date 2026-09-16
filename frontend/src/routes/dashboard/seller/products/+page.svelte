@@ -110,7 +110,7 @@
           <tr class="border-b border-border last:border-0">
             <td class="px-4 py-3">
               <div class="flex items-center gap-3">
-                <span class="text-lg" aria-hidden="true">{m.sp.product.emoji}</span>
+                <Icon name={m.sp.product.icon} cls="h-5 w-5" style="color:{m.sp.product.accent}" />
                 <div class="min-w-0">
                   <p class="truncate font-medium text-foreground">{m.sp.product.name}</p>
                   <p class="text-xs text-muted-foreground">{m.sp.product.category} · {m.sp.product.store}</p>
