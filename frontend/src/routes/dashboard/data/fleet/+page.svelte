@@ -33,6 +33,51 @@
   const total = $derived(pieData.reduce((s, d) => s + d.value, 0));
   // Basis total aset = line-haul 840 + motor 12.500 + van 280 + truk 560 = 14.180
   const totalAll = $derived((fleet.lineHaul ?? 0) + total);
+
+  // ── Simulasi transisi EV (interaktif) ──────────────────────────────────
+  // Asumsi tim (dilabel): emisi rata-rata per unit-km/hari & % km motor.
+  // Digunakan HANYA untuk membandingkan skenario, bukan klaim emisi absolut.
+  const CO2_MOTOR_KG_YR = 780; // emisi tahunan proxy 1 motor BBM (asumsi)
+  const CO2_EV_KG_YR = 156;    // emisi tahunan proxy 1 motor EV (grid, asumsi)
+  const CO2_VAN_KG_YR = 4200;
+  const CO2_TRUCK_KG_YR = 9500;
+
+  let evAdoptionPct = $state(0);   // % armada last-mile dikonversi ke EV
+  let showSim = $state(false);
+
+  const sim = $derived.by(() => {
+    const motor = fleet.motorcycles ?? 0;
+    const van = fleet.vans ?? 0;
+    const truck = fleet.trucks ?? 0;
+    const lastMile = motor + van + truck;
+    const convert = Math.round((lastMile * evAdoptionPct) / 100);
+    // Basis mix: konversi proporsional dari motor (yang paling dominan).
+    const motorEv = Math.min(convert, motor);
+    const sisaEv = Math.max(0, convert - motorEv);
+    const vanEv = Math.min(sisaEv, van);
+    const truckEv = Math.min(Math.max(0, sisaEv - vanEv), truck);
+
+    const co2Before = motor * CO2_MOTOR_KG_YR + van * CO2_VAN_KG_YR + truck * CO2_TRUCK_KG_YR;
+    const co2After =
+      (motor - motorEv) * CO2_MOTOR_KG_YR +
+      (van - vanEv) * CO2_VAN_KG_YR +
+      (truck - truckEv) * CO2_TRUCK_KG_YR +
+      (motorEv + vanEv + truckEv) * CO2_EV_KG_YR;
+    const co2SavedKg = co2Before - co2After;
+    return {
+      convert, motorEv, vanEv, truckEv,
+      evSharePct: lastMile ? (convert / lastMile) * 100 : 0,
+      co2Before, co2After, co2SavedKg,
+      co2SavedPct: co2Before ? (co2SavedKg / co2Before) * 100 : 0,
+    };
+  });
+
+  const simPie = $derived([
+    { name: "Motor BBM", value: (fleet.motorcycles ?? 0) - sim.motorEv, color: "var(--color-chart-1)" },
+    { name: "Van", value: (fleet.vans ?? 0) - sim.vanEv, color: "var(--color-chart-3)" },
+    { name: "Truck", value: (fleet.trucks ?? 0) - sim.truckEv, color: "var(--color-chart-5)" },
+    { name: "EV", value: sim.convert, color: "var(--color-success-foreground, var(--color-primary))" }
+  ]);
 </script>
 
 <div class="space-y-6">
@@ -63,9 +108,59 @@
       </div>
     </div>
 
+    <div class="rounded-2xl border border-primary/30 bg-primary/5 p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p class="text-sm font-semibold">Simulasi transisi EV</p>
+          <p class="mt-1 text-xs text-muted-foreground">Geser % armada last-mile yang dikonversi ke EV → lihat bauran &amp; penurunan emisi (faktor emisi = asumsi tim, dilabel).</p>
+        </div>
+        <button
+          type="button"
+          onclick={() => { evAdoptionPct = 0; showSim = false; }}
+          class="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold hover:border-primary/40"
+        >Reset</button>
+      </div>
+      <label class="mt-4 block">
+        <span class="flex items-center justify-between text-xs font-medium text-muted-foreground">
+          <span>Adopsi EV (armada last-mile)</span><span class="kpi-value text-foreground">{evAdoptionPct}% · {new Intl.NumberFormat("id-ID").format(sim.convert)} unit</span>
+        </span>
+        <input
+          type="range" min="0" max="100" step="5"
+          bind:value={evAdoptionPct}
+          oninput={() => (showSim = true)}
+          aria-label="Adopsi EV persen"
+          class="mt-2 w-full accent-[var(--color-primary)]"
+        />
+      </label>
+      <div class="mt-4 grid gap-3 sm:grid-cols-3">
+        <div class="rounded-xl bg-card/70 p-3">
+          <p class="text-xs text-muted-foreground">Porsi EV armada</p>
+          <p class="kpi-value text-lg">{numId(sim.evSharePct, 1)}%</p>
+          <p class="text-[11px] text-muted-foreground">kasus awal {numId(((fleet.evTarget ?? 200) / (total || 1)) * 100, 2)}%</p>
+        </div>
+        <div class="rounded-xl bg-card/70 p-3">
+          <p class="text-xs text-muted-foreground">Emisi before → after</p>
+          <p class="kpi-value text-lg">{numId(sim.co2Before / 1000, 1)} → {numId(sim.co2After / 1000, 1)} <span class="text-xs">t</span></p>
+          <p class="text-[11px] text-muted-foreground">proxy tahunan, unit last-mile</p>
+        </div>
+        <div class="rounded-xl bg-card/70 p-3">
+          <p class="text-xs text-muted-foreground">Penurunan emisi</p>
+          <p class="kpi-value text-lg text-success-foreground">−{numId(sim.co2SavedPct, 1)}%</p>
+          <p class="text-[11px] text-muted-foreground">{numId(sim.co2SavedKg / 1000, 1)} t CO₂e/tahun</p>
+        </div>
+      </div>
+    </div>
+
     <div class="rounded-2xl border bg-card p-5">
-      <p class="mb-3 text-sm font-medium">Armada composition (motor dominan)</p>
-      <EChart option={donutChart(pieData)} height={220} />
+      <p class="mb-3 text-sm font-medium">Armada composition {showSim && evAdoptionPct > 0 ? `(simulasi EV ${evAdoptionPct}%)` : "(motor dominan)"}</p>
+      <EChart option={donutChart(showSim && evAdoptionPct > 0 ? simPie : pieData)} height={220} />
+      {#if showSim && evAdoptionPct > 0}
+        <p class="mt-3 text-xs text-muted-foreground">
+          Konversi: {new Intl.NumberFormat("id-ID").format(sim.motorEv)} motor ·
+          {new Intl.NumberFormat("id-ID").format(sim.vanEv)} van ·
+          {new Intl.NumberFormat("id-ID").format(sim.truckEv)} truk → EV.
+        </p>
+      {/if}
     </div>
 
     <div class="rounded-2xl border bg-card p-5">

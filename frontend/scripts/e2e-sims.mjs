@@ -145,6 +145,26 @@ try {
     await ctx.close();
   }
 
+  // ── 1e. Fleet transisi EV (slider, tanpa backend) ──
+  {
+    const { ctx, page, errs } = await openPage("/dashboard/data/fleet");
+    const txt0 = await page.locator("body").innerText();
+    R(/Fleet/.test(txt0), "fleet: judul");
+    R(/Simulasi transisi EV/.test(txt0), "fleet: panel simulasi");
+    const slider = page.locator('input[aria-label="Adopsi EV persen"]');
+    R((await slider.count()) === 1, "fleet: slider adopsi EV ada");
+    const before = await page.locator("body").innerText();
+    await slider.fill("50");
+    await page.dispatchEvent('input[aria-label="Adopsi EV persen"]', "input");
+    await page.waitForTimeout(400);
+    const after = await page.locator("body").innerText();
+    R(before !== after, "fleet: geser EV mengubah bauran/emisi");
+    R(/Konversi:/.test(after) || /50%/.test(after), "fleet: detail konversi tampil");
+    R(errs.length === 0, "fleet: tanpa error JS", errs.join(" | "));
+    await page.screenshot({ path: "/tmp/opencode/shots/fleet-ev-sim.png" });
+    await ctx.close();
+  }
+
   // ── 2. Address Intelligence (input bebas) ──
   {
     let posts = 0;
