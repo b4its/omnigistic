@@ -1,7 +1,7 @@
 """Fuzzy QA — keyword overlap vs DB (fallback_chat_qa); bila DB off, fallback ke data-kas.json."""
 from __future__ import annotations
 import json
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 from app.db.models import FallbackChatQARow
 from app.db.loader import load
@@ -59,6 +59,11 @@ def match_chat_qa(role: str, query: str) -> dict | None:
 
 @router.get("/suggested")
 def suggested(page: str):
-    items = [s for s in load()["suggestedQuestions"] if s["page"] == page]
+    """Pertanyaan kurasi untuk sebuah halaman; page tak dikenal → 404 (bukan [] bisu)."""
+    rows = load()["suggestedQuestions"]
+    known = {s["page"] for s in rows}
+    if page not in known:
+        raise HTTPException(status_code=404, detail=f"halaman '{page}' tidak punya pertanyaan kurasi")
+    items = [s for s in rows if s["page"] == page]
     items.sort(key=lambda x: x["order"])
     return items

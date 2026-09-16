@@ -1,5 +1,8 @@
-"""SQLModel models — memetakan prisma/schema (11 model inti; User opsional).
-    Hanya model yang dibutuhkan untuk API/seed; sisanya disimpan di JSON loader.
+"""SQLModel models — SUBSET dari schema Prisma lama yang dibutuhkan untuk API/seed.
+
+Empat tabel: User, FallbackInsightRow, FallbackChatQARow, SuggestedQuestionRow.
+Sisanya (hubs, demand, financial, dll.) tidak dipetakan ke DB — dibaca langsung
+dari shared/data-kas.json via db/loader.py. DB bersifat opsional (SKIP_DB=1 default).
 """
 from __future__ import annotations
 from uuid import uuid4

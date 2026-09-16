@@ -1,6 +1,9 @@
 """Predictive COD — LogisticRegression sklearn pada data sintetik ber-logika kasus.
-   Dilatih sekali saat import/load; artefak disimpan ke backend/models/cod_risk.pkl (bila joblib tersedia).
-   Prototipe presentasi: threshold membagikan paket ke cluster aman / PUDO / non-COD.
+
+Dilatih sekali saat akses pertama; artefak disimpan ke backend/models/cod_risk.pkl
+dan dimuat ulang bila ada (joblib). Prototipe presentasi: threshold membagikan
+paket ke cluster aman / PUDO / non-COD. Data latih = SINTETIK ber-logika kasus
+(bukan data COD nyata) — akurasi dilaporkan pada split sintetik, dilabel jujur.
 """
 from __future__ import annotations
 from pathlib import Path
@@ -46,23 +49,49 @@ def _synthetic():
 
 
 _model = None
-_fitted = False
+
+
+def _save_model(m, acc: float) -> None:
+    """Simpan artefak model ke PKL (bila joblib tersedia). Best-effort, tak fatal."""
+    try:
+        import joblib  # type: ignore
+        joblib.dump({"model": m, "acc": acc}, PKL)
+    except Exception:  # pragma: no cover - joblib opsional
+        pass
+
+
+def _load_model():
+    """Muat artefak PKL bila ada & valid; return {model, acc} atau None."""
+    if not PKL.exists():
+        return None
+    try:
+        import joblib  # type: ignore
+        blob = joblib.load(PKL)
+        if isinstance(blob, dict) and blob.get("model") is not None:
+            return blob
+    except Exception:  # pragma: no cover - artefak rusak → latih ulang
+        pass
+    return None
 
 
 def _get_model():
-    global _model, _fitted
+    global _model
     if _model is not None:
         return _model
     if HAVE_SKLEARN:
+        cached = _load_model()
+        if cached is not None:
+            _model = cached
+            return _model
         X, y = _synthetic()
         Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2, random_state=7)
         m = LogisticRegression(max_iter=600)
         m.fit(Xtr, ytr)
         acc = float(m.score(Xte, yte))
+        _save_model(m, acc)
         _model = {"model": m, "acc": acc}
     else:  # pragma: no cover
         _model = {"model": None, "acc": None}
-    _fitted = True
     return _model
 
 

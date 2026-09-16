@@ -12,11 +12,18 @@ EMOJI_RE = re.compile(
 )
 
 _IDENTITY_RE: re.Pattern | None = None
+_IDENTITY_KEY: tuple[str, str] | None = None  # (model, base_url) saat regex dibangun
 
 
 def _identity_re() -> re.Pattern:
-    global _IDENTITY_RE
-    if _IDENTITY_RE is not None:
+    """Regex scrub identitas, di-cache berdasarkan (AI_MODEL, AI_API_BASE_URL).
+
+    Versi lama meng-cache regex sekali selamanya sehingga mengubah env SETELAH
+    panggilan pertama tak pernah memperbarui daftar istilah terlarang.
+    """
+    global _IDENTITY_RE, _IDENTITY_KEY
+    key = (os.environ.get("AI_MODEL", ""), os.environ.get("AI_API_BASE_URL", ""))
+    if _IDENTITY_RE is not None and _IDENTITY_KEY == key:
         return _IDENTITY_RE
 
     env_terms: list[str] = []
@@ -56,7 +63,15 @@ def _identity_re() -> re.Pattern:
         env_alt = host_label
     parts = [p for p in [env_alt, *(generic + public_names)] if p]
     _IDENTITY_RE = re.compile(rf"(?:{'|'.join(parts)})", re.I)
+    _IDENTITY_KEY = key
     return _IDENTITY_RE
+
+
+def _reset_cache() -> None:
+    """Bersihkan cache regex (dipakai uji setelah mengubah env)."""
+    global _IDENTITY_RE, _IDENTITY_KEY
+    _IDENTITY_RE = None
+    _IDENTITY_KEY = None
 
 
 def _scrub(text: str) -> str:
@@ -83,11 +98,12 @@ def clean_text(raw: str) -> str:
     return t
 
 
-def format_chat_response(reply: str, suggestions=None, quota_status="ok") -> dict:
+def format_chat_response(reply: str, suggestions=None, quota_status="ok", mode: str = "chat") -> dict:
+    """Bungkus jawaban chat. ``mode`` mencerminkan jalur nyata (mis. 'llm'/'fallback'/'blocked')."""
     return {
         "role": "assistant",
         "content": clean_text(reply),
-        "mode": "chat",
+        "mode": mode,
         "suggestions": suggestions or [],
         "quotaStatus": quota_status,
     }

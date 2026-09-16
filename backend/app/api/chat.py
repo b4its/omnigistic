@@ -17,7 +17,7 @@ from app.api.qa import match_chat_qa
 router = APIRouter(prefix="/api", tags=["chat"])
 log = logging.getLogger("omnigistic.chat")
 VALID = {"PUSAT", "HUB", "KURIR", "DATA", "CUSTOMER", "SELLER"}
-# chip saran HARUS punya padanan di bank QA (48 entri) supaya klik → jawab DB, bukan "offline"
+# chip saran sebaiknya punya padanan di bank QA (54 entri di data-kas.json) supaya klik → jawab DB
 _DEFAULT_SUGGESTIONS: list[str] = ["Apa masalah utama GC Logistics?", "Bagaimana solusi Omnigistic?", "Berapa utilisasi Jakarta?"]
 _ROLE_SUGGESTIONS = {
     "PUSAT": ["Kenapa biaya naik lebih cepat dari sales?", "Kenapa Jakarta overload?", "Apa target roadmap Omnigistic?"],
@@ -54,7 +54,7 @@ def _system_for(role: str, qa: dict | None = None) -> str:
 
 def _call_llm(role: str, user_msg: str, session: str, qa: dict | None = None) -> str | None:
     """Panggil LLM (OpenAI-compatible). Return None bila gagal, tidak pernah raise,
-    supaya pemanggil bisa jatuh ke bank QA 48. Header x-opencode-session wajib untuk OpenCode Go."""
+    supaya pemanggil bisa jatuh ke bank QA kasus. Header x-opencode-session wajib untuk OpenCode Go."""
     import os
     import openai
     base = os.environ.get("AI_API_BASE_URL")
@@ -117,13 +117,14 @@ async def chat(body: ChatBody, req: Request):
     if out.strip():
         return format_chat_response(out, default_suggestions(role))
 
-    # 3) Fallback bank QA 48 (angka terkunci) bila LLM gagal/offline/limit
+    # 3) Fallback bank QA kasus (angka terkunci) bila LLM gagal/offline/limit
     if qa:
         from app.security.formatter import clean_text
         return format_chat_response(
             clean_text(qa["answer"]),
             (qa["followups"] or default_suggestions(role)[:2]),
             "fallback",
+            mode="fallback",
         )
 
-    return format_chat_response("Nigi AI sedang offline.", default_suggestions(role), "exhausted")
+    return format_chat_response("Nigi AI sedang offline.", default_suggestions(role), "exhausted", mode="offline")
