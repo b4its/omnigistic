@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.ml.metrics import clamp
+
 # Angka kasus (Figure 2) — jangan diubah tanpa sumber kasus.
 NON_COD = {"packages": 8, "distanceKm": 5.3, "durationMin": 75}
 COD = {"packages": 8, "distanceKm": 5.3, "durationMin": 138}
@@ -46,8 +48,8 @@ def analyze_cod_impact(
         packages_per_shift: total paket dalam satu shift (dijepit ≥ 0).
     """
     # Jepit input ke rentang sah agar tak ada paket negatif / porsi tak wajar.
-    cod_share_pct = min(100.0, max(0.0, float(cod_share_pct)))
-    packages_per_shift = max(0, int(packages_per_shift))
+    cod_share_pct = clamp(cod_share_pct, 0.0, 100.0, 60.0)
+    packages_per_shift = int(clamp(packages_per_shift, 0, 1_000_000, 40))
     interventions = [k for k in (interventions or []) if k in INTERVENTIONS]
     # Komponen waktu tunggu COD murni = durasi COD - durasi non-COD (per 8 paket).
     base_wait = COD["durationMin"] - NON_COD["durationMin"]  # 63 menit / 8 paket

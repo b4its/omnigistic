@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
+from app.ml.metrics import clamp
 
 _MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 
@@ -110,7 +111,7 @@ def forecast_next_12(
     event_scale: dict[str, float] | None = None,
     base_year: int = 2024,
 ) -> dict[str, Any]:
-    horizon = max(1, min(24, int(horizon)))
+    horizon = int(clamp(horizon, 1, 24, 12))
     series = _base_series()
     vals = _seasonal_decomp(series, horizon)
     proj = _apply_events(vals, event_scale, base_year)

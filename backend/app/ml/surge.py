@@ -21,6 +21,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
+from app.ml.metrics import clamp
 
 # Kapasitas jaringan saat puncak (dokumen): ">3 juta paket/hari" — patokan
 # kapasitas jaringan, bukan demand. Dipakai sebagai checkpoint referensi.
@@ -55,8 +56,8 @@ def stress_test(
             buffer armada sewa). Dijepit 0,5..3.
         allow_spillover: bila True, overflow dialihkan ke hub ber-headroom.
     """
-    pm = _SEASONAL_PEAK_MULT if peak_multiplier is None else min(10.0, max(1.0, float(peak_multiplier)))
-    cf = min(3.0, max(0.5, float(surge_capacity_factor)))
+    pm = clamp(peak_multiplier if peak_multiplier is not None else _SEASONAL_PEAK_MULT, 1.0, 10.0, _SEASONAL_PEAK_MULT)
+    cf = clamp(surge_capacity_factor, 0.5, 3.0, 1.0)
 
     data = load()
     hubs = [dict(h) for h in data["hubs"]]

@@ -20,6 +20,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
+from app.ml.metrics import clamp
 
 # Porsi paket COD dari total (asumsi tim; kasus: COD "large portion").
 _COD_SHARE = 0.45
@@ -70,7 +71,7 @@ def cod_cash_risk(
         cod_share_pct: porsi paket COD dari total (dijepit 0..100).
         interventions: daftar kunci intervensi digital yang diaktifkan.
     """
-    cod_share_pct = min(100.0, max(0.0, float(cod_share_pct)))
+    cod_share_pct = clamp(cod_share_pct, 0.0, 100.0, _COD_SHARE * 100)
     interventions = [k for k in (interventions or []) if k in INTERVENTIONS]
 
     data = load()

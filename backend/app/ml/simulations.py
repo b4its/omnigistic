@@ -10,6 +10,7 @@ Catatan transparansi (prototipe presentasi):
 """
 from __future__ import annotations
 from app.db.loader import load
+from app.ml.metrics import clamp
 
 
 _SHARE_KEYS = ["javaShare", "sumatraShare", "kalimantanShare", "sulawesiShare", "baliShare", "malukuShare"]
@@ -25,11 +26,8 @@ def _east_hubs(data: dict):
 
 
 def _clamp_pct(x: float) -> float:
-    """Jepit porsi ke 0..100 (input user bisa negatif/>100)."""
-    try:
-        return min(100.0, max(0.0, float(x)))
-    except (TypeError, ValueError):
-        return 0.0
+    """Jepit porsi ke 0..100 (input user bisa negatif/>100/NaN)."""
+    return clamp(x, 0.0, 100.0, 0.0)
 
 
 def calculate_digital_twin(shares: dict[str, float]) -> dict:
@@ -92,9 +90,9 @@ def calculate_cod_impact(cod_packets: int = 8, prob_digital: float = 60, cod_sha
     sehingga default mereproduksi 138 mnt). ``prob_digital`` = porsi waiting yang
     dihilangkan intervensi digital. Semua input dijepit ke rentang sah.
     """
-    cod_packets = max(0, int(cod_packets))
-    p_digital = min(1.0, max(0.0, float(prob_digital) / 100))
-    share = min(1.0, max(0.0, float(cod_share_pct) / 100))
+    cod_packets = int(clamp(cod_packets, 0, 1_000_000, 8))
+    p_digital = clamp(prob_digital, 0.0, 100.0, 60.0) / 100
+    share = clamp(cod_share_pct, 0.0, 100.0, _COD_SHARE_DEFAULT) / 100
 
     tempo_non_cod = _ROUTE_NON_COD_MIN / _ROUTE_PACKAGES      # 9,375 mnt pkg⁻¹
     wait_cod_per_pkg = (_ROUTE_COD_MIN - _ROUTE_NON_COD_MIN) / _ROUTE_PACKAGES  # ≈7,875 mnt

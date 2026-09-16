@@ -13,9 +13,27 @@ konsisten, kita hitung ulang dari baris (row-level) dan laporkan selisihnya.
 """
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from app.db.loader import load
+
+
+def clamp(value: Any, lo: float, hi: float, default: float) -> float:
+    """Jepit nilai numerik ke [lo, hi], aman untuk None/NaN/inf/tipe salah.
+
+    NaN & ±inf → default (bukan diteruskan, karena min/max Python meneruskan NaN
+    dan JSON serialization menghasilkan NaN yang tak valid). Menjadi helper
+    bersama agar semua mesin konsisten memvalidasi input pengguna.
+    """
+    try:
+        x = float(value)
+    except (TypeError, ValueError):
+        return default
+    if not math.isfinite(x):
+        return default
+    return min(hi, max(lo, x))
+
 
 # Urutan & label region sesuai dokumen kasus (Tabel 1).
 REGION_ORDER = [
@@ -191,7 +209,10 @@ def data_audit() -> dict[str, Any]:
             {
                 "id": "ecommerce-total",
                 "label": "Total e-commerce (baris) = 651, dokumen menulis 641",
-                "ok": d["reconciliation"]["ecommerceM"]["delta"] == 0,
+                # ok = true: nilai kanonik kita (hasil hitung baris) BENAR; selisih 10
+                # adalah temuan pada dokumen (bukan kegagalan aplikasi) → ditandai 'finding'.
+                "ok": d["ecommerceM"] == 651,
+                "finding": d["reconciliation"]["ecommerceM"]["delta"] != 0,
                 "value": d["ecommerceM"],
                 "note": "Selisih 10 unit pada dokumen kasus; kami pakai hasil hitung baris.",
             },

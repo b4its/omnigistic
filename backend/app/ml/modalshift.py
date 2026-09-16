@@ -25,6 +25,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
+from app.ml.metrics import clamp
 
 # ── Profil moda (asumsi tim — dapat di-override via API) ────────────────────
 # costIdrPerPkgKm : biaya per paket per km (IDR)
@@ -88,10 +89,10 @@ def optimize_corridors(
     """
     # Validasi input: SLA harus > 0 (dijepit ke rentang wajar), bobot ≥ 0 & dikenal,
     # mode_filter hanya nama moda yang ada (kalau tak ada yang sah → semua moda).
-    sla_hours = min(240.0, max(1.0, float(sla_hours)))
+    sla_hours = clamp(sla_hours, 1.0, 240.0, DEFAULT_SLA_HOURS)
     w = dict(DEFAULT_WEIGHTS)
     if weights:
-        w.update({k: max(0.0, float(v)) for k, v in weights.items() if k in w})
+        w.update({k: clamp(v, 0.0, 1e6, w[k]) for k, v in weights.items() if k in w})
     total_w = sum(w.values())
     # Semua bobot 0 → objektif tak terdefinisi; fallback ke bobot default (transparan).
     if total_w <= 0:

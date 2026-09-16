@@ -25,7 +25,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
-from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN
+from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN, clamp
 
 # Matriks biaya relatif antar region (indeks: 0 = termurah/sama region).
 # Merupakan proxy logistik (jarak+transshipment+risiko). Angka prototipe tim,
@@ -62,14 +62,14 @@ def optimize_load_balance(
     ``safe_floor`` (60), ``max_divert_frac`` (0,35), ``warn_util`` (50, batas hub
     penerima). Semua dijepit ke rentang aman & konsisten satu sama lain.
     """
-    crit = CRITICAL if critical is None else min(99.0, max(10.0, float(critical)))
-    floor = SAFE_FLOOR if safe_floor is None else min(99.0, max(0.0, float(safe_floor)))
+    crit = clamp(critical if critical is not None else CRITICAL, 10.0, 99.0, CRITICAL)
+    floor = clamp(safe_floor if safe_floor is not None else SAFE_FLOOR, 0.0, 99.0, SAFE_FLOOR)
     # Lantai aman tak boleh melebihi ambang kritis (kalau tidak, tak ada kebutuhan).
     floor = min(floor, crit)
-    max_frac = MAX_DIVERT_FRAC if max_divert_frac is None else min(1.0, max(0.0, float(max_divert_frac)))
+    max_frac = clamp(max_divert_frac if max_divert_frac is not None else MAX_DIVERT_FRAC, 0.0, 1.0, MAX_DIVERT_FRAC)
     # Ambang penerima harus < kritis agar ada gradien sumber→tujuan (cegah hasil
     # kontradiktif 'overloadedAfter tak turun' saat critical diturunkan jauh).
-    warn = WARN_UTIL if warn_util is None else min(99.0, max(0.0, float(warn_util)))
+    warn = clamp(warn_util if warn_util is not None else WARN_UTIL, 0.0, 99.0, WARN_UTIL)
     warn = min(warn, crit - 1.0) if crit > 1.0 else warn
 
     hubs = [dict(h) for h in load()["hubs"]]

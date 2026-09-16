@@ -33,10 +33,13 @@ def _from_json(role: str, query: str) -> dict | None:
 
 
 def match_chat_qa(role: str, query: str) -> dict | None:
+    # Normalisasi role ke huruf besar agar jalur DB & JSON konsisten
+    # (JSON path memakai .upper(); sebelumnya DB path case-sensitive → divergen).
+    role_u = (role or "").upper()
     if db_available():
         try:
             with Session(engine()) as s:
-                rows = s.exec(select(FallbackChatQARow).where(FallbackChatQARow.role == role)).all()
+                rows = s.exec(select(FallbackChatQARow).where(FallbackChatQARow.role == role_u)).all()
             best, best_score = None, -1
             for row in rows:
                 kws = json.loads(row.keywords)
