@@ -4,6 +4,7 @@
   import { onMount } from "svelte";
   import { windowClass, type M3Window } from "$lib/stores/window-class";
   import { roleFromPath, roleFromValue, setRoleCookie, type Role } from "$lib/stores/role";
+  import { sidebarStore } from "$lib/stores/sidebar";
   import { cn, resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import M3Nav, { type NavItem } from "$lib/components/M3Nav.svelte";
@@ -122,12 +123,18 @@
   let role = $derived<Role | null>(roleFromPath(pathname) ?? roleFromValue(data?.cookieRole));
   let reduceMotion = $derived(typeof window !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);
   let mode = $state<M3Window>("expanded");
+  let sidebarOpen = $state(true);
 
   onMount(() => {
     windowClass.init();
+    sidebarStore.restore();
     void probeBackend();
     const unsubWc = windowClass.subscribe((w) => (mode = w));
-    return () => unsubWc();
+    const unsubSb = sidebarStore.subscribe((s) => (sidebarOpen = s.desktopOpen));
+    return () => {
+      unsubWc();
+      unsubSb();
+    };
   });
 
   $effect(() => {
@@ -177,12 +184,12 @@
     >Lewati ke konten</a
   >
   {#if role}
-    <M3Nav items={navItems} sharedItems={sharedNavFor(role)} userName={userLabel} />
+    <M3Nav items={navItems} sharedItems={sharedNavFor(role)} userName={userLabel} open={sidebarOpen} ontoggle={() => sidebarStore.toggleDesktop()} />
   {/if}
 
   <div class="flex min-w-0 flex-1 flex-col">
     {#if role}
-      <Topbar role={role} />
+      <Topbar role={role} onmenutoggle={() => sidebarStore.toggleDesktop()} sidenavOpen={sidebarOpen} sidenavVisible={mode !== "compact"} />
     {:else}
       <header class="flex h-16 shrink-0 items-center justify-between border-b border-sidebar-border px-6">
         <div class="flex items-center gap-3">
@@ -193,15 +200,15 @@
       </header>
     {/if}
 
-    <main id="omnigistic-main" class="overscroll-isolate min-h-0 flex-1 overflow-y-auto">
+    <main id="omnigistic-main" class="overscroll-isolate min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
       {#key pathname}
       <div
         transition:fade={{ duration: reduceMotion ? 0 : 120 }}
         class={cn(
-          "mx-auto py-6",
+          "mx-auto w-full min-w-0 py-6",
           mode === "compact" && "max-w-[600px] px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]",
-          mode === "medium" && "w-full px-6",
-          mode === "expanded" && "w-full max-w-[1920px] px-8"
+          mode === "medium" && "max-w-[1100px] px-4 sm:px-6",
+          mode === "expanded" && "max-w-[1920px] px-4 sm:px-6 lg:px-8"
         )}
       >
         {#if questionLabel}

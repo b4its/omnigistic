@@ -9,7 +9,15 @@
   import ThemeToggle from "./ThemeToggle.svelte";
   import Icon from "./Icon.svelte";
 
-  let { role = "PUSAT" }: { role?: Role | string } = $props();
+  let { role = "PUSAT", onmenutoggle, sidenavOpen = true, sidenavVisible = true }: {
+    role?: Role | string;
+    /** Callback tombol hamburger (buka/tutup sidebar). */
+    onmenutoggle?: () => void;
+    /** Apakah sidebar sedang terbuka (untuk aria-expanded). */
+    sidenavOpen?: boolean;
+    /** Apakah sidebar memang ada di layar ini (compact = bar bawah, jadi tombol disembunyikan). */
+    sidenavVisible?: boolean;
+  } = $props();
 
   const roleMeta: Record<string, { name: string; sub: string; letter: string }> = {
     PUSAT: { name: "Dalila", sub: "Manajer Pusat", letter: "D" },
@@ -90,11 +98,20 @@
     const esc = (e: KeyboardEvent) => {
       if (e.key === "Escape") openPop = null;
     };
+    // Pintasan Ctrl/Cmd+B untuk buka/tutup sidebar (umum di editor/dashboard).
+    const shortcut = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "b" || e.key === "B") && sidenavVisible) {
+        e.preventDefault();
+        onmenutoggle?.();
+      }
+    };
     document.addEventListener("mousedown", close);
     document.addEventListener("keydown", esc);
+    document.addEventListener("keydown", shortcut);
     return () => {
       document.removeEventListener("mousedown", close);
       document.removeEventListener("keydown", esc);
+      document.removeEventListener("keydown", shortcut);
     };
   });
 
@@ -121,22 +138,35 @@
   }
 </script>
 
-<header bind:this={headerEl} class="flex shrink-0 items-center justify-between gap-4 border-b border-sidebar-border bg-background/80 px-6 py-3 backdrop-blur">
-  <div class="flex min-w-0 items-center gap-3">
+<header bind:this={headerEl} class="flex shrink-0 items-center justify-between gap-2 border-b border-sidebar-border bg-background/80 px-3 py-3 backdrop-blur sm:gap-4 sm:px-6">
+  <div class="flex min-w-0 items-center gap-2 sm:gap-3">
+    {#if sidenavVisible && onmenutoggle}
+      <button
+        type="button"
+        onclick={onmenutoggle}
+        aria-label={sidenavOpen ? "Tutup sidebar" : "Buka sidebar"}
+        aria-expanded={sidenavOpen}
+        title={sidenavOpen ? "Tutup sidebar" : "Buka sidebar"}
+        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary"
+      >
+        <Icon name={sidenavOpen ? "panel-left" : "menu"} cls="h-4.5 w-4.5" />
+      </button>
+    {/if}
     <div class="min-w-0">
-      <p class="truncate font-serif text-xl font-semibold tracking-tight text-foreground">{meta.name} · <span class="text-muted-foreground">{meta.sub}</span></p>
+      <p class="truncate font-serif text-lg font-semibold tracking-tight text-foreground sm:text-xl">{meta.name} · <span class="text-muted-foreground">{meta.sub}</span></p>
       <p class="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span class={"inline-block h-1.5 w-1.5 rounded-full " + ($online ? "bg-success-foreground" : "bg-warning-foreground")}></span>
-        {$online ? "Data studi kasus ISCEA 2026 · langsung" : "Data lokal (backend offline)"}
+        <span class="truncate">{$online ? "Data studi kasus ISCEA 2026 · langsung" : "Data lokal (backend offline)"}</span>
       </p>
     </div>
 
     <div class="relative">
       <button
         type="button"
+        aria-label="Rentang waktu"
         aria-expanded={openPop === "range"}
         onclick={() => (openPop = openPop === "range" ? null : "range")}
-        class="ml-2 flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary/60"
+        class="ml-1 flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary/60 sm:ml-2"
       >
         <Icon name="calendar" cls="h-3.5 w-3.5" />
         <span class="hidden sm:inline">{range}</span>
@@ -159,7 +189,7 @@
     </div>
   </div>
 
-  <div class="flex items-center gap-2">
+  <div class="flex shrink-0 items-center gap-1.5 sm:gap-2">
     <button
       type="button"
       onclick={() => window.dispatchEvent(new CustomEvent("omnigistic-open-widgets"))}
