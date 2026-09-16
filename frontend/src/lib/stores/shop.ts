@@ -511,6 +511,29 @@ export function nextStatus(status: OrderStatus): OrderStatus | null {
   return i >= 0 && i < ORDER_STATUS_FLOW.length - 1 ? ORDER_STATUS_FLOW[i + 1] : null;
 }
 
+/**
+ * Pesanan yang "sedang dalam pengantaran" (status `dikirim`, kurir menuju alamat).
+ * Dipakai dashboard pembeli untuk membuka otomatis pelacakan yang relevan.
+ */
+export function isOutForDelivery(status: OrderStatus): boolean {
+  return status === "dikirim";
+}
+
+/**
+ * Pesanan terakhir (paling baru) yang sedang dalam pengantaran — inilah satu-satunya
+ * pesanan yang dibuka otomatis pada dashboard pembeli; sisanya tertutup default.
+ *
+ * Prioritas: (1) pesanan terbaru berstatus `dikirim`; (2) bila tak ada, pesanan
+ * terbaru yang masih aktif (belum `terkirim`) agar pengguna tetap melihat progres.
+ * Kembalikan null bila semua pesanan sudah terkirim / belum ada pesanan.
+ */
+export function lastOutForDeliveryOrder(orders: Order[]): Order | null {
+  // orders selalu terbaru-di-depan (placeOrder unshift). Ambil yang cocok pertama.
+  const delivering = orders.find((o) => isOutForDelivery(o.status));
+  if (delivering) return delivering;
+  return orders.find((o) => o.status !== "terkirim") ?? null;
+}
+
 /* ── Derivasi lintas-role (dipakai kurir & seller) ──────────────────────── */
 
 /** Pesanan yang belum terkirim (masih butuh aksi kurir). */
