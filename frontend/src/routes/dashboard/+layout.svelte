@@ -178,7 +178,10 @@
   <title>{routeLabel} · Omnigistic</title>
 </svelte:head>
 
-<div class="flex h-dvh w-full overflow-hidden bg-background">
+<div class="relative flex h-dvh w-full overflow-hidden bg-background">
+  <!-- Tekstur void: grid blockchain halus + ambient glow orange (global, 1 layer) -->
+  <div class="pointer-events-none absolute inset-0 z-0 bg-grid-sm opacity-[0.5] dark:opacity-100" aria-hidden="true"></div>
+  <div class="pointer-events-none absolute -right-40 -top-48 z-0 hidden h-[42rem] w-[42rem] rounded-full ambient-glow md:block" aria-hidden="true"></div>
   <a
     href="#omnigistic-main"
     class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[200] focus:rounded-lg focus:bg-foreground focus:px-4 focus:py-2 focus:text-sm focus:text-background"
@@ -188,7 +191,7 @@
     <M3Nav items={navItems} sharedItems={sharedNavFor(role)} userName={userLabel} open={sidebarOpen} ontoggle={() => sidebarStore.toggleDesktop()} />
   {/if}
 
-  <div class="flex min-w-0 flex-1 flex-col">
+  <div class="relative z-10 flex min-w-0 flex-1 flex-col">
     {#if role}
       <Topbar role={role} onmenutoggle={() => sidebarStore.toggleDesktop()} sidenavOpen={sidebarOpen} sidenavVisible={mode !== "compact"} />
     {:else}
@@ -213,7 +216,7 @@
         )}
       >
         {#if questionLabel}
-          <p class="mb-4 inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-[13.5px] font-semibold uppercase tracking-wider text-accent-foreground">{questionLabel}</p>
+          <p class="mb-4 inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_35%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--bitcoin)]"><span class="inline-block h-1.5 w-1.5 rounded-full bg-[var(--gold)]"></span>{questionLabel}</p>
         {/if}
         <WidgetStrip />
         {@render children()}

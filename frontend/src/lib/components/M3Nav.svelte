@@ -100,7 +100,7 @@
     aria-label={mode === "expanded" ? "Sections" : "Primary"}
     data-open={open}
     class={cn(
-      "flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out",
+      "relative z-10 flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out",
       railCollapsed ? "w-22 items-center" : "w-64"
     )}
   >
