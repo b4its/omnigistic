@@ -25,7 +25,7 @@
 
   const titleMap: Record<string, string> = {
     overview: "Portal", executive: "Executive Dashboard", "digital-twin": "Digital Twin",
-    utilization: "Utilization Map", network: "Network Expansion", expansion: "Market-Expansion ROI", roi: "ROI & Benefit-Cost", pnl: "Cost-Waterfall & P&L",
+    utilization: "Utilization Map", network: "Network Expansion", expansion: "Market-Expansion ROI", roi: "ROI & Benefit-Cost", pnl: "Cost-Waterfall & P&L", "ev-bca": "EV Fleet BCA",
     dashboard: "Hub Dashboard", forecast: "Demand Forecast", "load-balance": "Load Balancing",
     capacity: "Capacity Alert", surge: "Peak-Surge Test", routes: "Route Clustering", "cod-risk": "Predictive COD",
     "cod-intel": "COD Decision Intelligence", "cod-cash": "COD Cash-Reconciliation Risk",
@@ -65,6 +65,7 @@
       { label: "Utilization Map", href: "/dashboard/pusat/utilization", icon: "chart" },
       { label: "Network Expansion", href: "/dashboard/pusat/network", icon: "stack" },
       { label: "Market Expansion ROI", href: "/dashboard/pusat/expansion", icon: "target" },
+      { label: "EV Fleet BCA", href: "/dashboard/pusat/ev-bca", icon: "chart" },
       { label: "ROI & BCA", href: "/dashboard/pusat/roi", icon: "currency" },
       { label: "Cost-Waterfall P&L", href: "/dashboard/pusat/pnl", icon: "coins" }
     ],
@@ -161,7 +162,7 @@
     forecast: "2", "load-balance": "2", capacity: "2", surge: "2",
     "cod-risk": "3", "cod-cash": "3", routes: "3", slot: "3", payment: "3", pudo: "3", tasks: "3",
     address: "6", complaint: "6", multimodal: "6",
-    fleet: "4", "ev-sites": "4", roi: "4",
+    fleet: "4", "ev-sites": "4", roi: "4", "ev-bca": "4",
     executive: "5", expansion: "5", pnl: "6",
     shop: "3", cart: "3", checkout: "3", orders: "3",
     analytics: "5", products: "5", customers: "6", "seller-orders": "3"

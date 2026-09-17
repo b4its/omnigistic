@@ -11,6 +11,7 @@ from app.ml.address_parse import demo_address, parse_address
 from app.ml.cod_cash import cod_cash_risk, default_scenarios as cod_cash_scenarios
 from app.ml.cod_intel import analyze_cod_impact, default_scenarios
 from app.ml.cod_risk import demo_packages, score_package
+from app.ml.ev_bca import ev_bca
 from app.ml.expansion import expansion_roi
 from app.ml.forecast import demand_actual_tiktok, forecast_next_12
 from app.ml.modalshift import cost_levers, optimize_corridors
@@ -278,3 +279,22 @@ def modalshift_optimize_default():
 def modalshift_levers():
     """Portofolio tuas pengurangan biaya + dampak sustainability (Pertanyaan 6)."""
     return cost_levers()
+
+
+# ── EV Fleet Benefit-Cost Analysis (roadmap sustainability) ───────────────
+class EvBcaBody(BaseModel):
+    units: float | None = None
+    pertamax_override: float | None = None
+    include_maintenance: bool = False
+
+
+@router.get("/ev-bca")
+def ev_bca_default():
+    """BCA armada EV default (200 unit, benchmark nasional, BaaS)."""
+    return ev_bca()
+
+
+@router.post("/ev-bca")
+def ev_bca_run(body: EvBcaBody):
+    """Versi interaktif: jumlah unit, harga BBM, & sertakan maintenance."""
+    return ev_bca(body.units, body.pertamax_override, body.include_maintenance)

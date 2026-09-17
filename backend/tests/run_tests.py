@@ -480,6 +480,41 @@ check("surge NaN -> kalkulasi terhingga", _m.isfinite(_str["summary"]["totalPeak
 _erh = _er(target_util=float("nan"))
 check("expansion NaN -> target default", _erh["inputs"]["targetUtil"] == 0.75, str(_erh["inputs"]["targetUtil"]))
 
+print("== 9. EV Fleet Benefit-Cost Analysis ==")
+# Benchmark nasional: Pertamax capacity-weighted dari Table 1 (5,098 jt paket/hari).
+from app.ml.ev_bca import ev_bca as _ev, _pertamax_national as _pn
+_pnat = _pn()
+check("Pertamax dalam rentang nasional 15.950–16.650", 15950 <= _pnat["priceIdrPerL"] <= 16650, str(_pnat["priceIdrPerL"]))
+check("total kapasitas hub = 5,098 jt", _pnat["totalCapacityM"] == 5.098, str(_pnat["totalCapacityM"]))
+_evr = _get("/ml/ev-bca")
+check("3 skenario (conservative/base/upside)", set(_evr["scenarios"]) == {"conservative", "base", "upside"})
+check("battery lease = recurring (BaaS)", _evr["scenarios"]["base"]["annual"]["batteryLeaseIdr"] == 300_000_000, str(_evr["scenarios"]["base"]["annual"]["batteryLeaseIdr"]))
+check("headline = base replacement", _evr["headline"]["label"].startswith("Base"), _evr["headline"]["label"])
+check("CO2 base ≈ 112 t/th", abs(_evr["headline"]["co2ReductionTonsYear"] - 111.8) < 0.5, str(_evr["headline"]["co2ReductionTonsYear"]))
+# Net saving naik monoton seiring utilisasi (conservative < base < upside).
+_ns = [_evr["scenarios"][k]["annual"]["netAnnualSavingIdr"] for k in ("conservative", "base", "upside")]
+check("net saving naik conservative<base<upside", _ns[0] < _ns[1] < _ns[2], str(_ns))
+# NPV & BCR positif di base (replacement); maintenance default di luar headline.
+check("NPV base > 0 (replacement)", _evr["scenarios"]["base"]["kpi"]["npvIdr"] > 0)
+check("maintenance default di luar headline (=0)", _evr["scenarios"]["base"]["annual"]["maintenanceSavingIdr"] == 0)
+# Stress-test fleet tambahan (incremental) → economics lebih lemah (NPV < replacement).
+check("incremental NPV < replacement NPV", _evr["incrementalFleetStressTest"]["base"]["kpi"]["npvIdr"] < _evr["scenarios"]["base"]["kpi"]["npvIdr"])
+# Sensitivitas utilisasi monoton & punya titik positif.
+_sens = _evr["utilizationSensitivity"]["rows"]
+check("sensitivitas util monoton", _sens[0]["npvIdr"] < _sens[-1]["npvIdr"], str((_sens[0]["npvIdr"], _sens[-1]["npvIdr"])))
+check("semua baris sensitivitas punya positiveNpv", all(isinstance(r["positiveNpv"], bool) for r in _sens))
+# Override harga BBM menaikkan benefit (fuel cost dihindari lebih besar).
+_hi = client.post("/ml/ev-bca", json={"pertamax_override": 20000}).json()
+check("Pertamax override dipakai", _hi["inputs"]["pertamaxIdrPerL"] == 20000.0, str(_hi["inputs"]["pertamaxIdrPerL"]))
+check("fuel cost naik dgn harga BBM", _hi["scenarios"]["base"]["annual"]["iceFuelCostIdr"] > _evr["scenarios"]["base"]["annual"]["iceFuelCostIdr"])
+# Include maintenance menambah net saving (upside opsional, bukan fondasi).
+_wm = client.post("/ml/ev-bca", json={"include_maintenance": True}).json()
+check("maintenance (opsional) naikkan net saving", _wm["scenarios"]["base"]["annual"]["netAnnualSavingIdr"] > _evr["scenarios"]["base"]["annual"]["netAnnualSavingIdr"])
+# NaN-safe: input aneh → default, kalkulasi terhingga.
+_evn = _ev(float("nan"))
+check("ev-bca NaN units -> default 200", _evn["inputs"]["units"] == 200.0, str(_evn["inputs"]["units"]))
+check("ev-bca NaN -> NPV terhingga", _m.isfinite(_evn["scenarios"]["base"]["kpi"]["npvIdr"]))
+
 print(f"\n===== BACKEND {_passed}/{_passed + _failed} PASS =====")
 if _failed:
     print(f"  {_failed} GAGAL")

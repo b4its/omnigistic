@@ -447,6 +447,96 @@ export interface CostLeverResult {
   summary: { totalSavingIdrT: number; savingPctOfCost: number; avgCo2Pct: number };
 }
 
+// ── EV Fleet Benefit-Cost Analysis ──
+export interface EvBcaAssumptions {
+  units: number;
+  operatingDays: number;
+  distanceKmPerUnitDay: number;
+  iceEfficiencyKmPerL: number;
+  evWhPerKm: number;
+  chargingLossPct: number;
+  discountRatePct: number;
+}
+export interface EvBcaScenario {
+  key: string;
+  label: string;
+  assumptions: EvBcaAssumptions;
+  annual: {
+    distanceKm: number;
+    iceLiters: number;
+    iceFuelCostIdr: number;
+    evKwh: number;
+    evEnergyCostIdr: number;
+    batteryLeaseIdr: number;
+    maintenanceSavingIdr: number;
+    netAnnualSavingIdr: number;
+  };
+  capex: {
+    evVehicleCostIdr: number;
+    iceVehicleAvoidedIdr: number;
+    vehicleDeltaIdr: number;
+    chargingPoints: number;
+    chargingInfraIdr: number;
+    implementationTrainingIdr: number;
+    initialInvestmentIdr: number;
+  };
+  kpi: {
+    fuelBenefit5yIdr: number;
+    totalCost5yIdr: number;
+    bcrSimple: number;
+    bcrDiscounted: number;
+    npvIdr: number;
+    roi5yPct: number;
+    paybackYears: number | null;
+    paybackMonths: number | null;
+  };
+  co2: {
+    iceCo2KgYear: number;
+    evCo2KgYear: number;
+    reductionKgYear: number;
+    reductionTonsYear: number;
+    reductionTons5y: number;
+  };
+}
+export interface EvBcaSensitivityRow {
+  distanceKmPerUnitDay: number;
+  annualNetSavingIdr: number;
+  npvIdr: number;
+  bcrDiscounted: number;
+  paybackYears: number | null;
+  co2ReductionTonsYear: number;
+  positiveNpv: boolean;
+}
+export interface EvBcaResult {
+  engine: string;
+  note: string;
+  references: {
+    pertamax: { priceIdrPerL: number; totalCapacityM: number; method: string; rangeNationalIdrPerL: number[]; byRegionCapacityM: Record<string, number> };
+    plnTariffIdrPerKwh: number;
+    evUnitPriceIdr: number;
+    iceUnitPriceIdr: number;
+    evBatteryKwh: number;
+    evClaimedRangeKm: number;
+    batteryLeaseIdrPerMonth: number;
+    gasolineCo2KgPerL: number;
+    gridCo2KgPerKwh: number;
+    maintenanceBenchmarkIdrPerUnitYear: number;
+  };
+  inputs: { units: number; pertamaxIdrPerL: number; includeMaintenance: boolean; horizonYears: number; discountRatePct: number };
+  headline: {
+    label: string;
+    npvIdr: number;
+    bcrDiscounted: number;
+    annualNetSavingIdr: number;
+    co2ReductionTonsYear: number;
+    caveat: string;
+  };
+  scenarios: Record<string, EvBcaScenario>;
+  incrementalFleetStressTest: Record<string, EvBcaScenario>;
+  utilizationSensitivity: { metric: string; note: string; rows: EvBcaSensitivityRow[] };
+  strategicTakeaway: string;
+}
+
 // ── Peak-Surge Stress-Test (Pertanyaan 2) ──
 export interface SurgeHub {
   name: string;
@@ -627,6 +717,8 @@ export const api = {
   costLevers: () => get<CostLeverResult>("/ml/modalshift/levers"),
   surge: (body?: { peak_multiplier?: number; surge_capacity_factor?: number; allow_spillover?: boolean }) =>
     body ? post<SurgeResult>("/ml/sim/surge", body) : get<SurgeResult>("/ml/sim/surge"),
+  evBca: (body?: { units?: number; pertamax_override?: number; include_maintenance?: boolean }) =>
+    body ? post<EvBcaResult>("/ml/ev-bca", body) : get<EvBcaResult>("/ml/ev-bca"),
   codCash: (body: { cod_share_pct?: number; interventions?: string[] }) =>
     post<CodCashResult>("/ml/cod-cash/risk", body),
   codCashScenarios: () => get<Record<string, CodCashResult>>("/ml/cod-cash/scenarios"),
