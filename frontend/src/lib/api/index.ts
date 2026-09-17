@@ -457,6 +457,18 @@ export interface EvBcaAssumptions {
   chargingLossPct: number;
   discountRatePct: number;
 }
+export interface EvBcaCashflowRow {
+  year: number;
+  netCashFlowIdr: number;
+  discountedIdr: number;
+  cumulativeIdr: number;
+  cumulativeDiscountedIdr?: number;
+}
+export interface EvBcaCashflow {
+  rows: EvBcaCashflowRow[];
+  totalNetIdr: number;
+  npvIdr: number;
+}
 export interface EvBcaScenario {
   key: string;
   label: string;
@@ -476,6 +488,9 @@ export interface EvBcaScenario {
     iceVehicleAvoidedIdr: number;
     vehicleDeltaIdr: number;
     chargingPoints: number;
+    dailyKwhDemand: number;
+    chargerKw: number;
+    chargingWindowHours: number;
     chargingInfraIdr: number;
     implementationTrainingIdr: number;
     initialInvestmentIdr: number;
@@ -497,6 +512,7 @@ export interface EvBcaScenario {
     reductionTonsYear: number;
     reductionTons5y: number;
   };
+  cashflow: EvBcaCashflow;
 }
 export interface EvBcaSensitivityRow {
   distanceKmPerUnitDay: number;
@@ -506,6 +522,35 @@ export interface EvBcaSensitivityRow {
   paybackYears: number | null;
   co2ReductionTonsYear: number;
   positiveNpv: boolean;
+}
+export interface EvBcaComparisonRow {
+  key: string;
+  label: string;
+  distanceKmPerUnitDay: number;
+  netAnnualSavingIdr: number;
+  npvIdr: number;
+  bcrDiscounted: number;
+  roi5yPct: number;
+  paybackYears: number | null;
+  co2ReductionTonsYear: number;
+  initialInvestmentIdr: number;
+  incrementalNpvIdr: number;
+  incrementalBcrDiscounted: number;
+  incrementalPaybackYears: number | null;
+}
+export interface EvBcaRoadmapPhase {
+  phase: number;
+  label: string;
+  monthFrom: number;
+  monthTo: number;
+  addedUnits: number;
+  cumulativeUnits: number;
+  cumulativeUnitsPctOfMotor: number;
+  initialInvestmentIdr: number;
+  netAnnualSavingIdr: number;
+  npvIdr: number;
+  co2ReductionTonsYear: number;
+  note: string;
 }
 export interface EvBcaResult {
   engine: string;
@@ -518,11 +563,25 @@ export interface EvBcaResult {
     evBatteryKwh: number;
     evClaimedRangeKm: number;
     batteryLeaseIdrPerMonth: number;
+    batteryLeaseIdrPerYear: number;
     gasolineCo2KgPerL: number;
     gridCo2KgPerKwh: number;
     maintenanceBenchmarkIdrPerUnitYear: number;
+    chargerKw: number;
+    chargingWindowHours: number;
   };
-  inputs: { units: number; pertamaxIdrPerL: number; includeMaintenance: boolean; horizonYears: number; discountRatePct: number };
+  inputs: {
+    units: number;
+    pertamaxIdrPerL: number;
+    includeMaintenance: boolean;
+    discountRatePct: number;
+    tariffIdrPerKwh: number;
+    batteryLeaseIdrPerYear: number;
+    evUnitPriceIdr: number;
+    iceUnitPriceIdr: number;
+    horizonYears: number;
+  };
+  fleetBasis: { motorcycles: number; totalArmada: number; evTarget: number; evTargetPctOfMotor: number; lastMileMotorPct: number };
   headline: {
     label: string;
     npvIdr: number;
@@ -533,7 +592,24 @@ export interface EvBcaResult {
   };
   scenarios: Record<string, EvBcaScenario>;
   incrementalFleetStressTest: Record<string, EvBcaScenario>;
-  utilizationSensitivity: { metric: string; note: string; rows: EvBcaSensitivityRow[] };
+  scenarioComparison: EvBcaComparisonRow[];
+  utilizationSensitivity: {
+    metric: string;
+    note: string;
+    breakevenDistanceKmPerUnitDay: number | null;
+    breakevenIncrementalKmPerUnitDay: number | null;
+    breakevenNote: string;
+    rows: EvBcaSensitivityRow[];
+    incrementalRows: EvBcaSensitivityRow[];
+  };
+  discountRateSensitivity: { metric: string; note: string; rows: { discountRatePct: number; npvIdr: number; bcrDiscounted: number }[] };
+  roadmap: {
+    basisMotorcycles: number;
+    note: string;
+    phases: EvBcaRoadmapPhase[];
+    totalCumulativeUnits: number;
+    totalCumulativeUnitsPct: number;
+  };
   strategicTakeaway: string;
 }
 
@@ -717,8 +793,16 @@ export const api = {
   costLevers: () => get<CostLeverResult>("/ml/modalshift/levers"),
   surge: (body?: { peak_multiplier?: number; surge_capacity_factor?: number; allow_spillover?: boolean }) =>
     body ? post<SurgeResult>("/ml/sim/surge", body) : get<SurgeResult>("/ml/sim/surge"),
-  evBca: (body?: { units?: number; pertamax_override?: number; include_maintenance?: boolean }) =>
-    body ? post<EvBcaResult>("/ml/ev-bca", body) : get<EvBcaResult>("/ml/ev-bca"),
+  evBca: (body?: {
+    units?: number;
+    pertamax_override?: number;
+    include_maintenance?: boolean;
+    discount_rate?: number;
+    tariff_override?: number;
+    battery_lease_override?: number;
+    ev_price_override?: number;
+    ice_price_override?: number;
+  }) => (body ? post<EvBcaResult>("/ml/ev-bca", body) : get<EvBcaResult>("/ml/ev-bca")),
   codCash: (body: { cod_share_pct?: number; interventions?: string[] }) =>
     post<CodCashResult>("/ml/cod-cash/risk", body),
   codCashScenarios: () => get<Record<string, CodCashResult>>("/ml/cod-cash/scenarios"),

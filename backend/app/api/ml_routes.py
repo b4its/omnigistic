@@ -286,15 +286,29 @@ class EvBcaBody(BaseModel):
     units: float | None = None
     pertamax_override: float | None = None
     include_maintenance: bool = False
+    discount_rate: float | None = None
+    tariff_override: float | None = None
+    battery_lease_override: float | None = None
+    ev_price_override: float | None = None
+    ice_price_override: float | None = None
 
 
 @router.get("/ev-bca")
 def ev_bca_default():
-    """BCA armada EV default (200 unit, benchmark nasional, BaaS)."""
+    """BCA armada EV default (200 unit, benchmark nasional, BaaS, roadmap 3 fase)."""
     return ev_bca()
 
 
 @router.post("/ev-bca")
 def ev_bca_run(body: EvBcaBody):
-    """Versi interaktif: jumlah unit, harga BBM, & sertakan maintenance."""
-    return ev_bca(body.units, body.pertamax_override, body.include_maintenance)
+    """Versi interaktif: unit, harga BBM/listrik/baterai, harga EV/ICE, & diskon."""
+    return ev_bca(
+        body.units,
+        body.pertamax_override,
+        body.include_maintenance,
+        body.discount_rate,
+        body.tariff_override,
+        body.battery_lease_override,
+        body.ev_price_override,
+        body.ice_price_override,
+    )

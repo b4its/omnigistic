@@ -514,6 +514,46 @@ check("maintenance (opsional) naikkan net saving", _wm["scenarios"]["base"]["ann
 _evn = _ev(float("nan"))
 check("ev-bca NaN units -> default 200", _evn["inputs"]["units"] == 200.0, str(_evn["inputs"]["units"]))
 check("ev-bca NaN -> NPV terhingga", _m.isfinite(_evn["scenarios"]["base"]["kpi"]["npvIdr"]))
+# Arus kas Y0..Y5 konsisten dengan NPV yang dilaporkan.
+_cf = _evr["scenarios"]["base"]["cashflow"]
+check("arus kas 6 baris (Y0–Y5)", len(_cf["rows"]) == 6, str(len(_cf["rows"])))
+check("arus kas Y0 = −investasi awal", _cf["rows"][0]["netCashFlowIdr"] == -_evr["scenarios"]["base"]["capex"]["initialInvestmentIdr"])
+check("arus kas kumulatif Y5 = total net", _cf["rows"][-1]["cumulativeIdr"] == _cf["totalNetIdr"])
+check("NPV arus kas = NPV KPI", _cf["npvIdr"] == _evr["scenarios"]["base"]["kpi"]["npvIdr"])
+# Perbandingan 3 skenario berisi replacement & incremental berdampingan.
+_cmp = _evr["scenarioComparison"]
+check("comparison 3 baris", len(_cmp) == 3)
+check("comparison punya kolom incremental", all("incrementalNpvIdr" in c and "incrementalBcrDiscounted" in c for c in _cmp))
+# Breakeven incremental ada (ambang operasional) & replacement None (jujur).
+check("breakeven incremental ditemukan", isinstance(_evr["utilizationSensitivity"]["breakevenIncrementalKmPerUnitDay"], (int, float)))
+check("breakeven replacement None -> non-uji (jujur)", _evr["utilizationSensitivity"]["breakevenDistanceKmPerUnitDay"] is None)
+check("sensitivity punya baris incremental", len(_evr["utilizationSensitivity"]["incrementalRows"]) == len(_sens))
+# Sensitivitas discount rate: NPV turun saat rate naik.
+_drs = _evr["discountRateSensitivity"]["rows"]
+check("NPV turun saat discount rate naik", _drs[0]["npvIdr"] > _drs[-1]["npvIdr"], str((_drs[0]["npvIdr"], _drs[-1]["npvIdr"])))
+# Roadmap 3 fase dari basis motor kasus (12.500).
+_rm = _evr["roadmap"]
+check("roadmap 3 fase", len(_rm["phases"]) == 3, str(len(_rm["phases"])))
+check("roadmap basis motor = 12.500 (kasus)", _rm["basisMotorcycles"] == 12500, str(_rm["basisMotorcycles"]))
+check("roadmap unit kumulatif monoton", _rm["phases"][0]["cumulativeUnits"] < _rm["phases"][-1]["cumulativeUnits"])
+check("fleet basis diekspos", _evr["fleetBasis"]["motorcycles"] == 12500)
+# Tuas interaktif: discount/tarif/baterai/harga unit mengubah hasil.
+_lever = client.post("/ml/ev-bca", json={
+    "discount_rate": 0.15, "tariff_override": 2000, "battery_lease_override": 0,
+    "ev_price_override": 15000000, "ice_price_override": 20000000,
+}).json()
+check("lever discount dipakai", _lever["inputs"]["discountRatePct"] == 15.0)
+check("lever tarif dipakai", _lever["inputs"]["tariffIdrPerKwh"] == 2000.0)
+check("lever baterai=0 dipakai", _lever["inputs"]["batteryLeaseIdrPerYear"] == 0.0)
+check("lever harga EV/ICE dipakai", (_lever["inputs"]["evUnitPriceIdr"], _lever["inputs"]["iceUnitPriceIdr"]) == (15000000.0, 20000000.0))
+check("tarif naik → EV energy cost naik", _lever["scenarios"]["base"]["annual"]["evEnergyCostIdr"] > _evr["scenarios"]["base"]["annual"]["evEnergyCostIdr"])
+# Charging infra skala dengan kebutuhan energi.
+_cap = _evr["scenarios"]["base"]["capex"]
+check("charging: titik & energi harian diekspos", _cap["chargingPoints"] >= 1 and _cap["dailyKwhDemand"] > 0)
+check("charging: kW & jendela dari spesifikasi", _cap["chargerKw"] == 0.45 and _cap["chargingWindowHours"] == 12.0)
+# NaN-safe untuk tuas baru.
+_evb = _ev(discount_rate=float("inf"), tariff_override=float("nan"))
+check("ev-bca lever NaN/inf -> default terhingga", _m.isfinite(_evb["scenarios"]["base"]["kpi"]["npvIdr"]) and 8.0 <= _evb["inputs"]["discountRatePct"] <= 20.0)
 
 print(f"\n===== BACKEND {_passed}/{_passed + _failed} PASS =====")
 if _failed:
