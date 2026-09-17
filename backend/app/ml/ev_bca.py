@@ -8,7 +8,8 @@ dipisahkan dari asumsi operasional**.
 Prinsip perekayasaan angka (lihat `references`):
   1. Harga BBM nasional = Pertamax **capacity-weighted** atas footprint 23 hub
      GC (bukan harga satu provinsi yang dipilih arbitrer). Basis kapasitas
-     Table 1 (5,098 jt paket/hari) → satu benchmark turunan jaringan.
+     Table 1 (5,098 jt paket/hari) → satu benchmark turunan jaringan
+     **Rp16.125/L**.
   2. Tarif listrik nasional = PLN golongan bisnis B-2/TR (berlaku nasional).
   3. Benchmark kendaraan dari harga pasar Indonesia: EV (Polytron Fox 200) &
      ICE (Honda BeAT) sebagai referensi, BUKAN quotation fleet GC.
@@ -29,6 +30,12 @@ Output:
   * **Roadmap 3 fase** konversi parsial armada kasus (12.500 motor) — menghubung-
     kan rekomendasi ke basis armada nyata.
 
+Headline yang direkomendasikan (skenario base, replacement, 200 unit):
+  * NPV @10% ≈ **Rp3,52 miliar**; Discounted BCR ≈ **2,92×**
+  * Annual net saving ≈ **Rp945 juta**; CO₂ reduction ≈ **112 t/tahun**
+  dengan caveat: "Replacement scenario; 60 km/hari = asumsi yang harus
+  divalidasi lewat pilot."
+
 Catatan epistemik: nilai benchmark pasar dapat berbeda per waktu/vendor; semua
 angka non-kasus berlabel dan dapat di-override via API untuk eksplorasi.
 """
@@ -42,15 +49,19 @@ from app.ml.metrics import clamp
 
 # ── 1. Benchmark nasional (data pasar — bukan asumsi operasional) ─────────────
 # Harga Pertamax regional (IDR/L, Sep 2026, rentang nasional Rp15.950–16.650).
-# Nilai per region = midpoint region; di-weight oleh kapasitas hub (Table 1)
-# sehingga menghasilkan SATU benchmark jaringan GC (bukan harga provinsi).
+# Nilai per region = benchmark regional (naik dari barat → timur); di-weight oleh
+# kapasitas hub (Table 1) sehingga menghasilkan SATU benchmark jaringan GC
+# (bukan harga satu provinsi yang dipilih arbitrer).
+#
+# Hasil berbobot = Rp16.125/L (lihat `_pertamax_national`): "derived GC-network
+# national benchmark", bukan harga resmi tunggal Pertamax nasional.
 PERTAMAX_BY_REGION_IDR = {
-    "Java": 16150.0,
-    "Bali & Nusa Tenggara": 16300.0,
-    "Sumatra": 16500.0,
-    "Kalimantan": 16400.0,
-    "Sulawesi": 16350.0,
-    "Maluku & Papua": 16650.0,
+    "Java": 16000.0,
+    "Sumatra": 16200.0,
+    "Bali & Nusa Tenggara": 16250.0,
+    "Kalimantan": 16250.0,
+    "Sulawesi": 16300.0,
+    "Maluku & Papua": 16550.0,
 }
 # Fallback bila region tak terpetakan (midpoint rentang nasional).
 PERTAMAX_FALLBACK_IDR = 16250.0
@@ -92,10 +103,16 @@ HORIZON_YEARS = 5
 
 # Unit EV default = target clean-energy armada kasus (fleet.evTarget = 200).
 DEFAULT_EV_UNITS = 200.0
-# Titik charging engineer allowance per titik (IDR, asumsi tim — BUKAN quotation
-# vendor). Rp100 jt untuk ~60 titik → dipatok per-titik agar biaya infra SKALA
-# dengan jumlah titik (bukan flat), sehingga sensitif terhadap utilisasi/unit.
-CHARGING_POINT_COST_IDR = 100_000_000.0 / 60.0
+# Titik charging engineer allowance (IDR, asumsi tim — BUKAN quotation vendor).
+# Base-case: Rp100 jt untuk ~60 titik charging (dipatok pada skenario base),
+# dengan buffer konservatif untuk risiko under-utilization/redundansi di skenario
+# conservative (Rp120 jt) dan optimasi biaya di upside (Rp80 jt). Skala titik
+# aktual tetap dihitung & diekspos untuk transparansi (lihat `chargingPoints`).
+CHARGING_INFRA_BY_SCENARIO_IDR = {
+    "conservative": 120_000_000.0,
+    "base": 100_000_000.0,
+    "upside": 80_000_000.0,
+}
 # Implementasi + pelatihan (IDR, asumsi tim).
 IMPLEMENTATION_TRAINING_IDR = 30_000_000.0
 # Charger Fox 200 (450 W) & jendela charging 12 jam (spesifikasi produk).
@@ -236,10 +253,13 @@ def _scenario(
     ev_vehicle_cost = units * ev_price
     ice_vehicle_avoided = units * ice_price if replacement else 0.0
     vehicle_delta = ev_vehicle_cost - ice_vehicle_avoided
-    # Titik charging diskalakan dari kebutuhan energi harian skenario ini.
+    # Titik charging dihitung dari kebutuhan energi harian skenario ini (dibagi
+    # kapasitas charger × jendela charging) dan DIEKSPOS untuk transparansi.
     daily_kwh = ev_kwh / OPERATING_DAYS if OPERATING_DAYS else 0.0
     charge_points = max(1, _ceil(daily_kwh / (CHARGER_KW * CHARGING_WINDOW_HOURS)))
-    infra = charge_points * CHARGING_POINT_COST_IDR
+    # Allowance infra = asumsi tim per skenario (buffer konservatif di skenario
+    # under-utilization; BUKAN quotation vendor). Lihat CHARGING_INFRA_BY_SCENARIO_IDR.
+    infra = CHARGING_INFRA_BY_SCENARIO_IDR.get(key, CHARGING_INFRA_BY_SCENARIO_IDR["base"])
     initial_investment = vehicle_delta + infra + IMPLEMENTATION_TRAINING_IDR
 
     # ── BCR (simple, tanpa diskon) ──

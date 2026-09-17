@@ -485,12 +485,28 @@ print("== 9. EV Fleet Benefit-Cost Analysis ==")
 from app.ml.ev_bca import ev_bca as _ev, _pertamax_national as _pn
 _pnat = _pn()
 check("Pertamax dalam rentang nasional 15.950–16.650", 15950 <= _pnat["priceIdrPerL"] <= 16650, str(_pnat["priceIdrPerL"]))
+check("Pertamax capacity-weighted = 16.125/L", _pnat["priceIdrPerL"] == 16125, str(_pnat["priceIdrPerL"]))
 check("total kapasitas hub = 5,098 jt", _pnat["totalCapacityM"] == 5.098, str(_pnat["totalCapacityM"]))
 _evr = _get("/ml/ev-bca")
 check("3 skenario (conservative/base/upside)", set(_evr["scenarios"]) == {"conservative", "base", "upside"})
 check("battery lease = recurring (BaaS)", _evr["scenarios"]["base"]["annual"]["batteryLeaseIdr"] == 300_000_000, str(_evr["scenarios"]["base"]["annual"]["batteryLeaseIdr"]))
 check("headline = base replacement", _evr["headline"]["label"].startswith("Base"), _evr["headline"]["label"])
 check("CO2 base ≈ 112 t/th", abs(_evr["headline"]["co2ReductionTonsYear"] - 111.8) < 0.5, str(_evr["headline"]["co2ReductionTonsYear"]))
+# Angka kunci BCA base harus persis (replacement, 60 km/hari).
+_base = _evr["scenarios"]["base"]
+check("base fuel cost ≈ Rp1,413B", abs(_base["annual"]["iceFuelCostIdr"] - 1_412_550_000) < 2_000_000, str(_base["annual"]["iceFuelCostIdr"]))
+check("base EV kwh ≈ 115.851", abs(_base["annual"]["evKwh"] - 115_851) < 5, str(_base["annual"]["evKwh"]))
+check("base net saving ≈ Rp945,2M", abs(_base["annual"]["netAnnualSavingIdr"] - 945_180_000) < 2_000_000, str(_base["annual"]["netAnnualSavingIdr"]))
+check("base initial investment ≈ Rp59,6M", abs(_base["capex"]["initialInvestmentIdr"] - 59_600_000) < 1_000_000, str(_base["capex"]["initialInvestmentIdr"]))
+check("base discounted BCR ≈ 2,92×", abs(_base["kpi"]["bcrDiscounted"] - 2.92) < 0.02, str(_base["kpi"]["bcrDiscounted"]))
+check("base NPV ≈ Rp3,52B", abs(_base["kpi"]["npvIdr"] - 3_523_000_000) < 10_000_000, str(_base["kpi"]["npvIdr"]))
+# Allowance infra charging berbeda per skenario (buffer konservatif di conservative).
+_cii = [_evr["scenarios"][k]["capex"]["chargingInfraIdr"] for k in ("conservative", "base", "upside")]
+check("infra charging allowance 120/100/80 jt", _cii == [120_000_000, 100_000_000, 80_000_000], str(_cii))
+check("initial investment 79,6/59,6/39,6 jt", [
+    round(_evr["scenarios"][k]["capex"]["initialInvestmentIdr"]) for k in ("conservative", "base", "upside")
+] == [79_600_000, 59_600_000, 39_600_000])
+check("payback base ≈ 0,76 bulan", abs(_base["kpi"]["paybackMonths"] - 0.76) < 0.05, str(_base["kpi"]["paybackMonths"]))
 # Net saving naik monoton seiring utilisasi (conservative < base < upside).
 _ns = [_evr["scenarios"][k]["annual"]["netAnnualSavingIdr"] for k in ("conservative", "base", "upside")]
 check("net saving naik conservative<base<upside", _ns[0] < _ns[1] < _ns[2], str(_ns))
@@ -499,6 +515,12 @@ check("NPV base > 0 (replacement)", _evr["scenarios"]["base"]["kpi"]["npvIdr"] >
 check("maintenance default di luar headline (=0)", _evr["scenarios"]["base"]["annual"]["maintenanceSavingIdr"] == 0)
 # Stress-test fleet tambahan (incremental) → economics lebih lemah (NPV < replacement).
 check("incremental NPV < replacement NPV", _evr["incrementalFleetStressTest"]["base"]["kpi"]["npvIdr"] < _evr["scenarios"]["base"]["kpi"]["npvIdr"])
+# Stress-test incremental base ≈ NEGATIF (payback ~4,2 th, NPV ≈ −Rp392M, dBCR 0,93).
+_inc = _evr["incrementalFleetStressTest"]["base"]
+check("incremental base initInv ≈ Rp3,975B", abs(_inc["capex"]["initialInvestmentIdr"] - 3_975_000_000) < 5_000_000, str(_inc["capex"]["initialInvestmentIdr"]))
+check("incremental base NPV ≈ −Rp392M", abs(_inc["kpi"]["npvIdr"] - (-392_000_000)) < 5_000_000, str(_inc["kpi"]["npvIdr"]))
+check("incremental base dBCR ≈ 0,93×", abs(_inc["kpi"]["bcrDiscounted"] - 0.93) < 0.02, str(_inc["kpi"]["bcrDiscounted"]))
+check("incremental base payback ≈ 4,2 th", abs(_inc["kpi"]["paybackYears"] - 4.2) < 0.05, str(_inc["kpi"]["paybackYears"]))
 # Sensitivitas utilisasi monoton & punya titik positif.
 _sens = _evr["utilizationSensitivity"]["rows"]
 check("sensitivitas util monoton", _sens[0]["npvIdr"] < _sens[-1]["npvIdr"], str((_sens[0]["npvIdr"], _sens[-1]["npvIdr"])))
@@ -547,10 +569,15 @@ check("lever tarif dipakai", _lever["inputs"]["tariffIdrPerKwh"] == 2000.0)
 check("lever baterai=0 dipakai", _lever["inputs"]["batteryLeaseIdrPerYear"] == 0.0)
 check("lever harga EV/ICE dipakai", (_lever["inputs"]["evUnitPriceIdr"], _lever["inputs"]["iceUnitPriceIdr"]) == (15000000.0, 20000000.0))
 check("tarif naik → EV energy cost naik", _lever["scenarios"]["base"]["annual"]["evEnergyCostIdr"] > _evr["scenarios"]["base"]["annual"]["evEnergyCostIdr"])
-# Charging infra skala dengan kebutuhan energi.
+# Charging: titik aktual (dari kebutuhan energi) & spesifikasi charger diekspos.
 _cap = _evr["scenarios"]["base"]["capex"]
 check("charging: titik & energi harian diekspos", _cap["chargingPoints"] >= 1 and _cap["dailyKwhDemand"] > 0)
 check("charging: kW & jendela dari spesifikasi", _cap["chargerKw"] == 0.45 and _cap["chargingWindowHours"] == 12.0)
+check("charging: titik naik dgn utilisasi (cons<base<upside)", (
+    _evr["scenarios"]["conservative"]["capex"]["chargingPoints"]
+    < _evr["scenarios"]["base"]["capex"]["chargingPoints"]
+    < _evr["scenarios"]["upside"]["capex"]["chargingPoints"]
+))
 # NaN-safe untuk tuas baru.
 _evb = _ev(discount_rate=float("inf"), tariff_override=float("nan"))
 check("ev-bca lever NaN/inf -> default terhingga", _m.isfinite(_evb["scenarios"]["base"]["kpi"]["npvIdr"]) and 8.0 <= _evb["inputs"]["discountRatePct"] <= 20.0)
