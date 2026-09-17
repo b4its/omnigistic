@@ -3,6 +3,8 @@
   import { gsapReveal } from "$lib/actions/gsapReveal";
   import { resolveHref } from "$lib/utils";
   import { api, type OptimizeResult, type CodIntelResult, type AuditResult } from "$lib/api";
+  import EditorialNav from "$lib/components/EditorialNav.svelte";
+  import HeroTexture from "$lib/components/HeroTexture.svelte";
 
   const layers = [
     { l: "L1", n: "Framing", t: "Pertanyaan inti + 6 pertanyaan kasus", q: "Apa masalah sebenarnya?" },
@@ -68,14 +70,6 @@
     { f: "Fase 1", t: "2024-2025", w: "Baseline emisi, 50 EV pilot rute urban Jawa, Address Intelligence, reusable bag di 8 hub Jawa." },
     { f: "Fase 2", t: "2025-2026", w: "Kepenuhan 200 EV, infrastruktur charging data-driven, kemasan degradable, Predictive COD + PUDO." },
     { f: "Fase 3", t: "2026+", w: "Ekspansi van-truk listrik, Control Tower laut-udara, sertifikasi ESG, Regional Sponsor penuh untuk timur." }
-  ];
-  const groups = [
-    ["Kerangka", "#kerangka"],
-    ["Bisnis", "#bisnis"],
-    ["Data", "#data"],
-    ["Pertanyaan", "#pertanyaan"],
-    ["Solusi", "#solusi"],
-    ["Whitepaper", "/whitepaper"]
   ];
 
   /* ── Jawaban 6 pertanyaan juri, dengan angka LIVE dari backend ──────────── */
@@ -204,252 +198,291 @@
 
 <svelte:head><title>Kerangka &amp; Analisis · Omnigistic</title></svelte:head>
 
-<div class="landing min-h-screen antialiased" style="background: var(--lnd-bg); color: var(--lnd-ink)">
-  <header class="sticky top-0 z-40 border-b border-[var(--lnd-line)] backdrop-blur" style="background: color-mix(in srgb, var(--lnd-bg) 86%, transparent)">
-    <div class="mx-auto flex h-16 max-w-[1520px] items-center gap-3 px-[clamp(1rem,4vw,4.5rem)] sm:gap-6">
-      <a href={resolveHref("/")} class="flex shrink-0 items-baseline gap-1 font-heading text-[19px] font-semibold tracking-[0.02em]">
-        Omnigistic
-      </a>
-      <nav class="ml-auto hidden items-center gap-5 xl:flex" aria-label="Bagian analisis">
-        {#each groups as [label, href] (href)}
-          <a href={resolveHref(href)} class="text-[14px] font-medium uppercase tracking-[0.07em] text-[var(--lnd-soft)] transition-colors hover:text-[var(--lnd-accent-ink)]">{label}</a>
+<div class="wp min-h-screen antialiased">
+  <!-- ============================= NAV ============================= -->
+  <EditorialNav
+    section="ANALISIS"
+    links={[
+      { href: "#kerangka", label: "Kerangka" },
+      { href: "#bisnis", label: "Bisnis" },
+      { href: "#data", label: "Data" },
+      { href: "#pertanyaan", label: "Pertanyaan" },
+      { href: "#solusi", label: "Solusi" }
+    ]}
+    cta={{ href: "/whitepaper", label: "Whitepaper" }}
+  />
+
+  <!-- ============================= HERO ============================= -->
+  <section class="wp-hero">
+    <HeroTexture />
+    <div class="wp-wrap pt-[clamp(3rem,8vw,6rem)] pb-[clamp(2.5rem,5vw,4rem)]">
+      <span class="wp-pill">
+        <span class="wp-dot" aria-hidden="true">●</span>
+        Kerangka &amp; Analisis · v2.4 · June 2026
+      </span>
+      <h1 class="wp-hero-title mt-7">
+        Dari masalah ke solusi, <em class="wp-em">dengan dasar ilmu</em>.
+      </h1>
+      <p class="wp-deck mt-7">
+        Kerangka analisis, pemahaman bisnis, pemahaman data, dan solusi beserta dampak
+        serta KPI-nya — seluruh angka bersumber dari studi kasus, dan setiap asumsi tim diberi label.
+      </p>
+      <div class="wp-meta mt-12">
+        {#each [
+          { k: "Framing", v: "6 pertanyaan kasus" },
+          { k: "Metode", v: "MECE · 5 Whys" },
+          { k: "Kelengkapan", v: "13 gejala → 6 akar" },
+          { k: "Penutup", v: "BCA + roadmap 3 fase" }
+        ] as m (m.k)}
+          <div>
+            <p class="wp-label">{m.k}</p>
+            <p class="wp-meta-value mt-1.5">{m.v}</p>
+          </div>
         {/each}
-      </nav>
-      <div class="ml-auto flex shrink-0 items-center gap-2 xl:ml-6 xl:gap-3">
-        <a href={resolveHref("/")} class="hidden rounded-full border border-[var(--lnd-ink)] px-4 py-2 text-[13.5px] font-semibold uppercase tracking-[0.07em] transition-colors hover:border-[var(--lnd-accent-ink)] hover:text-[var(--lnd-accent-ink)] sm:inline-block">Beranda</a>
-        <a href={resolveHref("/login")} class="rounded-full bg-[var(--lnd-ink)] px-3.5 py-2 text-[13px] font-semibold uppercase tracking-[0.05em] text-[var(--lnd-bg)] transition-colors hover:bg-[var(--lnd-accent)] sm:px-4 sm:text-[13.5px] sm:tracking-[0.07em]">Masuk Portal</a>
       </div>
     </div>
-  </header>
+  </section>
 
-  <main class="mx-auto max-w-[1520px] px-[clamp(1.25rem,4vw,4.5rem)]">
-    <!-- HERO -->
-    <section class="pt-[clamp(3.5rem,8vw,6rem)] pb-[clamp(2.5rem,5vw,4rem)]">
-      <p class="eyebrow">Kerangka &amp; Analisis</p>
-      <h1 class="mt-6 max-w-4xl font-heading text-[clamp(2.4rem,6vw,5rem)] font-light leading-[1.02] tracking-[-0.02em]">
-        Dari masalah ke solusi, <em class="italic">dengan dasar ilmu</em><span class="text-[var(--lnd-accent)]">.</span>
-      </h1>
-      <p class="mt-6 max-w-[62ch] text-[1.02rem] leading-relaxed text-[var(--lnd-soft)]">
-        Halaman ini menampilkan kerangka analisis, pemahaman bisnis, pemahaman data, dan solusi beserta dampak serta KPI-nya. Seluruh angka bersumber dari studi kasus; asumsi tim diberi label.
+  <main class="wp-wrap">
+    <!-- =========================== KERANGKA =========================== -->
+    <section id="kerangka" use:gsapReveal class="wp-section scroll-mt-16">
+      <p class="wp-label">01 — Kerangka analisis</p>
+      <h2 class="wp-h2 mt-4 wp-prose">WHY, WHAT, HOW.</h2>
+      <p class="wp-deck mt-5">
+        WHY: GC Logistics tumbuh cepat, tetapi biaya tumbuh lebih cepat dan rentan guncangan
+        eksternal. HOW: diagnosis MECE dan akar masalah, lalu desain solusi berbasis teori, diuji
+        dengan BCA dan KPI. WHAT: enam akar masalah, masing-masing dengan solusi, dampak, dan KPI.
       </p>
-    </section>
 
-    <!-- KERANGKA -->
-    <section use:gsapReveal id="kerangka" class="scroll-mt-20 border-t border-[var(--lnd-line)] py-[clamp(3.5rem,7vw,6rem)]">
-      <div class="border-t border-[var(--lnd-ink)] pt-6">
-        <p class="eyebrow">Kerangka analisis</p>
-        <h2 class="mt-6 max-w-3xl font-heading text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">WHY, WHAT, HOW</h2>
-        <p class="mt-4 max-w-[64ch] text-sm leading-relaxed text-[var(--lnd-soft)]">WHY: GC Logistics tumbuh cepat tetapi biaya tumbuh lebih cepat dan rentan guncangan eksternal. HOW: diagnosis MECE dan akar masalah, lalu desain solusi berbasis teori, diuji dengan BCA dan KPI. WHAT: enam akar masalah, masing-masing dengan solusi, dampak, dan KPI.</p>
-      </div>
-
-      <div class="mt-10 overflow-x-auto rounded-2xl border border-[var(--lnd-line)]">
-        <table class="w-full min-w-[720px] text-left text-sm">
+      <div class="wp-table-wrap mt-8">
+        <table class="wp-table">
+          <caption>Enam lapis kerangka (L1–L6)</caption>
           <thead>
-            <tr class="border-b border-[var(--lnd-line)] bg-[var(--lnd-surface)] text-[13px] uppercase tracking-wider text-[var(--lnd-soft)]">
-              <th class="px-4 py-3">Lapis</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Alat</th><th class="px-4 py-3">Pertanyaan</th>
+            <tr>
+              <th scope="col">Lapis</th>
+              <th scope="col">Nama</th>
+              <th scope="col">Alat</th>
+              <th scope="col">Pertanyaan</th>
             </tr>
           </thead>
           <tbody>
             {#each layers as r (r.l)}
-              <tr class="border-b border-[var(--lnd-line)] last:border-0">
-                <td class="px-4 py-3 font-heading italic text-[var(--lnd-accent-ink)]">{r.l}</td>
-                <td class="px-4 py-3 font-semibold text-[var(--lnd-ink)]">{r.n}</td>
-                <td class="px-4 py-3 text-[var(--lnd-soft)]">{r.t}</td>
-                <td class="px-4 py-3 text-[var(--lnd-soft)]">{r.q}</td>
+              <tr>
+                <td>{r.l}</td>
+                <td>{r.n}</td>
+                <td>{r.t}</td>
+                <td>{r.q}</td>
               </tr>
             {/each}
           </tbody>
         </table>
       </div>
 
-      <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="wp-grid wp-grid-3 mt-8">
         {#each order as [n, t, d] (n)}
-          <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-5">
-            <p class="font-heading text-[15px] italic text-[var(--lnd-accent-ink)]">{n}</p>
-            <p class="mt-2 text-sm font-semibold text-[var(--lnd-ink)]">{t}</p>
-            <p class="mt-1 text-[15px] leading-relaxed text-[var(--lnd-soft)]">{d}</p>
+          <div class="wp-card-line">
+            <p class="wp-index">{n}</p>
+            <p class="wp-h3 mt-2">{t}</p>
+            <p class="wp-muted mt-1.5 text-[0.9375rem]">{d}</p>
           </div>
         {/each}
       </div>
     </section>
 
-    <!-- BISNIS -->
-    <section use:gsapReveal id="bisnis" class="scroll-mt-20 border-t border-[var(--lnd-line)] py-[clamp(3.5rem,7vw,6rem)]">
-      <div class="border-t border-[var(--lnd-ink)] pt-6">
-        <p class="eyebrow">Business understanding</p>
-        <h2 class="mt-6 max-w-3xl font-heading text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Konteks, model, dan tegangan</h2>
-      </div>
-      <div class="mt-10 grid gap-4 lg:grid-cols-3">
+    <!-- =========================== BISNIS =========================== -->
+    <section id="bisnis" use:gsapReveal class="wp-section scroll-mt-16">
+      <p class="wp-label">02 — Business understanding</p>
+      <h2 class="wp-h2 mt-4 wp-prose">Konteks, model, dan tegangan.</h2>
+
+      <div class="wp-grid wp-grid-3 mt-8">
         {#each biz as b (b.t)}
-          <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6">
-            <p class="text-sm font-semibold text-[var(--lnd-ink)]">{b.t}</p>
-            <p class="mt-2 text-[15px] leading-relaxed text-[var(--lnd-soft)]">{b.d}</p>
+          <div class="wp-card">
+            <p class="wp-h3">{b.t}</p>
+            <p class="wp-muted mt-2 text-[0.9375rem] leading-relaxed">{b.d}</p>
           </div>
         {/each}
       </div>
-      <div class="mt-6 overflow-x-auto rounded-2xl border border-[var(--lnd-line)]">
-        <table class="w-full min-w-[560px] text-left text-sm">
-          <caption class="sr-only">Kinerja keuangan GC Logistics 2020 dan 2023, Triliun IDR</caption>
+
+      <div class="wp-table-wrap mt-6">
+        <table class="wp-table">
+          <caption>Kinerja finansial, Triliun IDR (2020 → 2023)</caption>
           <thead>
-            <tr class="border-b border-[var(--lnd-line)] bg-[var(--lnd-surface)] text-[13px] uppercase tracking-wider text-[var(--lnd-soft)]">
-              <th class="px-4 py-3">Kategori (Triliun IDR)</th><th class="px-4 py-3 text-right">2020</th><th class="px-4 py-3 text-right">2023</th><th class="px-4 py-3 text-right">Perubahan</th>
+            <tr>
+              <th scope="col">Kategori (Triliun IDR)</th>
+              <th scope="col">2020</th>
+              <th scope="col">2023</th>
+              <th scope="col">Perubahan</th>
             </tr>
           </thead>
           <tbody>
             {#each fin as [k, a, b, c] (k)}
-              <tr class="border-b border-[var(--lnd-line)] last:border-0">
-                <td class="px-4 py-3 text-[var(--lnd-ink)]">{k}</td>
-                <td class="px-4 py-3 text-right tabular-nums text-[var(--lnd-soft)]">{a}</td>
-                <td class="px-4 py-3 text-right tabular-nums text-[var(--lnd-soft)]">{b}</td>
-                <td class="px-4 py-3 text-right font-semibold text-[var(--lnd-accent-ink)]">{c}</td>
+              <tr>
+                <td>{k}</td>
+                <td>{a}</td>
+                <td>{b}</td>
+                <td>{c}</td>
               </tr>
             {/each}
           </tbody>
         </table>
       </div>
-      <p class="mt-3 text-[14px] text-[var(--lnd-soft)]">Rugi 2023, lalu EBIT positif 2024. Rasio biaya terhadap penjualan relatif stabil (30,9% → 31,3%), jadi masalahnya adalah skala dan kompleksitas, bukan rasio yang memburuk.</p>
+      <p class="wp-muted mt-3 max-w-[68ch] text-[0.9375rem]">
+        Rugi 2023, lalu EBIT positif 2024. Rasio biaya terhadap penjualan relatif stabil
+        (30,9% → 31,3%), jadi masalahnya adalah skala dan kompleksitas, bukan rasio yang memburuk.
+      </p>
     </section>
 
-    <!-- DATA -->
-    <section use:gsapReveal id="data" class="scroll-mt-20 border-t border-[var(--lnd-line)] py-[clamp(3.5rem,7vw,6rem)]">
-      <div class="border-t border-[var(--lnd-ink)] pt-6">
-        <p class="eyebrow">Data understanding</p>
-        <h2 class="mt-6 max-w-3xl font-heading text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Bukan asumsi, tapi angka</h2>
-      </div>
-      <div class="mt-10 overflow-x-auto rounded-2xl border border-[var(--lnd-line)]">
-        <table class="w-full min-w-[720px] text-left text-sm">
-          <caption class="sr-only">Peta sumber data studi kasus</caption>
+    <!-- =========================== DATA =========================== -->
+    <section id="data" use:gsapReveal class="wp-section scroll-mt-16">
+      <p class="wp-label">03 — Data understanding</p>
+      <h2 class="wp-h2 mt-4 wp-prose">Bukan asumsi, tapi angka.</h2>
+
+      <div class="wp-table-wrap mt-8">
+        <table class="wp-table">
+          <caption>Peta sumber data studi kasus</caption>
           <thead>
-            <tr class="border-b border-[var(--lnd-line)] bg-[var(--lnd-surface)] text-[13px] uppercase tracking-wider text-[var(--lnd-soft)]">
-              <th class="px-4 py-3">Sumber</th><th class="px-4 py-3">Isi</th><th class="px-4 py-3">Angka kunci</th><th class="px-4 py-3">Akar</th>
+            <tr>
+              <th scope="col">Sumber</th>
+              <th scope="col">Isi</th>
+              <th scope="col">Angka kunci</th>
+              <th scope="col">Akar</th>
             </tr>
           </thead>
           <tbody>
             {#each dataMap as [s, i, k, a] (s)}
-              <tr class="border-b border-[var(--lnd-line)] last:border-0">
-                <td class="px-4 py-3 font-semibold text-[var(--lnd-ink)]">{s}</td>
-                <td class="px-4 py-3 text-[var(--lnd-soft)]">{i}</td>
-                <td class="px-4 py-3 text-[var(--lnd-soft)]">{k}</td>
-                <td class="px-4 py-3 text-[var(--lnd-accent-ink)]">{a}</td>
+              <tr>
+                <td>{s}</td>
+                <td>{i}</td>
+                <td>{k}</td>
+                <td>{a}</td>
               </tr>
             {/each}
           </tbody>
         </table>
       </div>
-      <div class="mt-6 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6">
-          <p class="text-sm font-semibold text-[var(--lnd-ink)]">Metrik turunan</p>
-          <ul class="mt-3 space-y-2 text-[15px] leading-relaxed text-[var(--lnd-soft)]">
-            {#each derivedMetrics as d (d)}<li>• {d}</li>{/each}
+
+      <div class="wp-grid wp-grid-2 mt-6" style="grid-template-columns: 1.2fr 1fr">
+        <div class="wp-card">
+          <p class="wp-label">Metrik turunan</p>
+          <ul class="wp-list mt-3 space-y-2">
+            {#each derivedMetrics as d (d)}<li>{d}</li>{/each}
           </ul>
         </div>
-        <div class="rounded-2xl border border-l-4 border-[var(--lnd-line)] border-l-[var(--lnd-late)] bg-[var(--lnd-surface)] p-6">
-          <p class="text-sm font-semibold text-[var(--lnd-ink)]">Keterbatasan data</p>
-          <ul class="mt-3 space-y-2 text-[15px] leading-relaxed text-[var(--lnd-soft)]">
-            {#each gaps as g (g)}<li>• {g}</li>{/each}
+        <div class="wp-card wp-flag">
+          <p class="wp-label">Keterbatasan data</p>
+          <ul class="wp-list mt-3 space-y-2">
+            {#each gaps as g (g)}<li>{g}</li>{/each}
           </ul>
         </div>
       </div>
     </section>
 
-    <!-- PERTANYAAN -->
-    <section use:gsapReveal id="pertanyaan" class="scroll-mt-20 border-t border-[var(--lnd-line)] py-[clamp(3.5rem,7vw,6rem)]">
-      <div class="border-t border-[var(--lnd-ink)] pt-6">
-        <p class="eyebrow">Enam pertanyaan strategis</p>
-        <h2 class="mt-6 max-w-3xl font-heading text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Jawaban, dengan angka yang bisa diaudit</h2>
-        <p class="mt-4 max-w-[68ch] text-sm leading-relaxed text-[var(--lnd-soft)]">
-          Setiap pertanyaan kasus dijawab dengan verdict, alasan, bukti kuantitatif dari mesin analitik, dan tautan ke karya interaktifnya.
+    <!-- =========================== PERTANYAAN =========================== -->
+    <section id="pertanyaan" use:gsapReveal class="wp-section scroll-mt-16">
+      <p class="wp-label">04 — Enam pertanyaan strategis</p>
+      <h2 class="wp-h2 mt-4 wp-prose">Jawaban, dengan angka yang bisa diaudit.</h2>
+      <p class="wp-deck mt-5">
+        Setiap pertanyaan kasus dijawab dengan verdict, alasan, bukti kuantitatif dari mesin
+        analitik, dan tautan ke karya interaktifnya.
+      </p>
+      {#if checked}
+        <p class="wp-muted mt-3 inline-flex items-center gap-2 text-[0.8125rem]">
+          <span class="wp-dot" aria-hidden="true">●</span>
+          {live ? "Angka live dari mesin backend" : "Backend offline — memakai angka dasar studi kasus"}
         </p>
-        {#if checked}
-          <p class="mt-3 inline-flex items-center gap-2 rounded-full border border-[var(--lnd-line)] px-3 py-1 text-[13px] font-medium text-[var(--lnd-soft)]">
-            <span class="h-1.5 w-1.5 rounded-full {live ? 'bg-[var(--lnd-accent)]' : 'bg-[var(--lnd-late)]'}"></span>
-            {live ? "Angka live dari mesin backend" : "Backend offline — memakai angka dasar studi kasus"}
-          </p>
-        {/if}
-      </div>
+      {/if}
 
-      <div class="mt-10 grid gap-4 lg:grid-cols-2">
+      <div class="wp-grid wp-grid-2 mt-8">
         {#each questions as q (q.no)}
-          <article class="flex flex-col rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6">
+          <article class="wp-card flex flex-col">
             <div class="flex items-start gap-3">
-              <span class="font-heading text-[15px] italic text-[var(--lnd-accent-ink)]">{q.no}</span>
-              <h3 class="text-[15px] font-semibold leading-snug text-[var(--lnd-ink)]">{q.q}</h3>
+              <span class="wp-index">{q.no}</span>
+              <h3 class="wp-h3 leading-snug">{q.q}</h3>
             </div>
-            <p class="mt-3 inline-flex w-fit rounded-full bg-[var(--lnd-accent)]/10 px-3 py-1 text-[13px] font-semibold text-[var(--lnd-accent-ink)]">{q.verdict}</p>
-            <p class="mt-3 text-[15px] leading-relaxed text-[var(--lnd-soft)]">{q.answer}</p>
-            <ul class="mt-4 space-y-2 border-t border-[var(--lnd-line)] pt-4 text-[14.5px] leading-relaxed text-[var(--lnd-soft)]">
+            <p class="wp-verdict mt-3">{q.verdict}</p>
+            <p class="wp-muted mt-3 text-[0.9375rem] leading-relaxed">{q.answer}</p>
+            <ul class="wp-list mt-4 space-y-2 border-t border-[var(--wp-line)] pt-4">
               {#each q.evidence as e (e)}
-                <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--lnd-accent)]"></span><span>{e}</span></li>
+                <li>{e}</li>
               {/each}
             </ul>
-            <a
-              href={resolveHref(q.link)}
-              class="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-[var(--lnd-ink)] px-4 py-2 text-[13px] font-semibold uppercase tracking-[0.07em] text-[var(--lnd-ink)] transition-colors hover:border-[var(--lnd-accent-ink)] hover:text-[var(--lnd-accent-ink)]"
-            >
-              {q.linkLabel}
-            </a>
+            <a href={resolveHref(q.link)} class="wp-cta mt-5">{q.linkLabel} <span aria-hidden="true">→</span></a>
           </article>
         {/each}
       </div>
     </section>
 
-    <!-- SOLUSI -->
-    <section use:gsapReveal id="solusi" class="scroll-mt-20 border-t border-[var(--lnd-line)] py-[clamp(3.5rem,7vw,6rem)]">
-      <div class="border-t border-[var(--lnd-ink)] pt-6">
-        <p class="eyebrow">Solusi &amp; dampak</p>
-        <h2 class="mt-6 max-w-3xl font-heading text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em]">Enam akar, enam dampak terukur</h2>
-      </div>
+    <!-- =========================== SOLUSI =========================== -->
+    <section id="solusi" use:gsapReveal class="wp-section scroll-mt-16">
+      <p class="wp-label">05 — Solusi &amp; dampak</p>
+      <h2 class="wp-h2 mt-4 wp-prose">Enam akar, enam dampak terukur.</h2>
 
-      <div class="mt-10 overflow-x-auto rounded-2xl border border-[var(--lnd-line)]">
-        <table class="w-full min-w-[820px] text-left text-sm">
-          <caption class="sr-only">Solusi, dampak bisnis, dan KPI per akar</caption>
+      <div class="wp-table-wrap mt-8">
+        <table class="wp-table">
+          <caption>Solusi, dampak bisnis, dan KPI per akar</caption>
           <thead>
-            <tr class="border-b border-[var(--lnd-line)] bg-[var(--lnd-surface)] text-[13px] uppercase tracking-wider text-[var(--lnd-soft)]">
-              <th class="px-4 py-3">Akar</th><th class="px-4 py-3">Solusi</th><th class="px-4 py-3">Dampak bisnis</th><th class="px-4 py-3">KPI</th>
+            <tr>
+              <th scope="col">Akar</th>
+              <th scope="col">Solusi</th>
+              <th scope="col">Dampak bisnis</th>
+              <th scope="col">KPI</th>
             </tr>
           </thead>
           <tbody>
             {#each sol as s (s.n)}
-              <tr class="border-b border-[var(--lnd-line)] last:border-0">
-                <td class="px-4 py-3"><span class="font-heading italic text-[var(--lnd-accent-ink)]">{s.n}</span> <span class="text-[var(--lnd-soft)]">{s.root}</span></td>
-                <td class="px-4 py-3 font-semibold text-[var(--lnd-ink)]">{s.name}</td>
-                <td class="px-4 py-3 text-[var(--lnd-soft)]">{s.impact}</td>
-                <td class="px-4 py-3 font-semibold text-[var(--lnd-accent-ink)]">{s.kpi}</td>
+              <tr>
+                <td>{s.n} · {s.root}</td>
+                <td>{s.name}</td>
+                <td>{s.impact}</td>
+                <td>{s.kpi}</td>
               </tr>
             {/each}
           </tbody>
         </table>
       </div>
 
-      <div class="mt-8 grid gap-4 sm:grid-cols-3">
+      <div class="wp-grid wp-grid-3 mt-8">
         {#each arch as a (a.l)}
-          <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-5">
-            <p class="font-heading text-lg font-semibold text-[var(--lnd-ink)]">{a.l}</p>
-            <p class="mt-1 text-sm font-medium text-[var(--lnd-ink)]">{a.t}</p>
-            <p class="mt-1 text-[15px] leading-relaxed text-[var(--lnd-soft)]">{a.d}</p>
+          <div class="wp-card">
+            <p class="wp-h3">{a.l}</p>
+            <p class="wp-muted mt-1 text-[0.9375rem]">{a.t}</p>
+            <p class="wp-muted mt-2 text-[0.9375rem] leading-relaxed">{a.d}</p>
           </div>
         {/each}
       </div>
 
-      <div class="mt-6 grid gap-4 md:grid-cols-3">
+      <div class="wp-grid wp-grid-3 mt-6">
         {#each phases as p (p.f)}
-          <div class="rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6">
-            <p class="text-[13.5px] font-semibold uppercase tracking-wider text-[var(--lnd-accent-ink)]">{p.f}, {p.t}</p>
-            <p class="mt-3 text-[15px] leading-relaxed text-[var(--lnd-ink)]">{p.w}</p>
+          <div class="wp-card-line">
+            <p class="wp-kicker">{p.f} · {p.t}</p>
+            <p class="wp-body mt-3 text-[0.9375rem] leading-relaxed">{p.w}</p>
           </div>
         {/each}
+      </div>
+
+      <div class="wp-note mt-8 max-w-[68ch]">
+        <span class="wp-label">Lanjutan</span>
+        <p class="mt-2" style="color: var(--wp-fg)">
+          Benefit-cost analysis penuh untuk inisiatif armada listrik tersedia di
+          <a href={resolveHref("/whitepaper")} class="wp-link">Whitepaper EV Fleet BCA</a> —
+          dengan benchmark nasional, skema Battery-as-a-Service, dan stress-test replacement vs
+          fleet tambahan.
+        </p>
       </div>
     </section>
   </main>
 
-  <footer class="border-t border-[var(--lnd-line)] px-[clamp(1.25rem,4vw,4.5rem)] py-10">
-    <div class="mx-auto flex max-w-[1520px] flex-wrap items-center justify-between gap-4 text-[14px] uppercase tracking-[0.08em] text-[var(--lnd-soft)]">
-      <span>Angka dari Table 1-4 dan Figure 1-2 · asumsi tim berlabel</span>
-      <span class="flex gap-4">
-        <a href={resolveHref("/")} class="text-[var(--lnd-accent-ink)] underline-offset-4 hover:underline">Beranda</a>
-        <a href={resolveHref("/dashboard/methodology")} class="text-[var(--lnd-accent-ink)] underline-offset-4 hover:underline">Methodology</a>
-        <a href={resolveHref("/login")} class="text-[var(--lnd-accent-ink)] underline-offset-4 hover:underline">Portal</a>
-      </span>
+  <!-- =========================== FOOTER =========================== -->
+  <footer class="border-t border-[var(--wp-line)]">
+    <div class="wp-wrap flex flex-col gap-3 py-8 sm:flex-row sm:items-center sm:justify-between">
+      <p class="wp-mono text-[0.75rem] tracking-[0.05em] wp-muted">
+        ANGKA DARI TABLE 1–4 &amp; FIGURE 1–2 · ASUMSI TIM BERLABEL
+      </p>
+      <div class="flex items-center gap-5">
+        <a href={resolveHref("/")} class="wp-nav-link">Beranda →</a>
+        <a href={resolveHref("/dashboard/methodology")} class="wp-nav-link">Methodology →</a>
+        <a href={resolveHref("/login")} class="wp-nav-link">Portal →</a>
+      </div>
     </div>
   </footer>
 </div>

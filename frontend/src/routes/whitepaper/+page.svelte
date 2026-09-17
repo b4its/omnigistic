@@ -6,6 +6,8 @@
   // selalu dapat dirender untuk perekaman video. Semua nilai = hasil BCA final.
   // ============================================================================
   import { resolveHref } from "$lib/utils";
+  import EditorialNav from "$lib/components/EditorialNav.svelte";
+  import HeroTexture from "$lib/components/HeroTexture.svelte";
 
   const navLinks = [
     { href: "#abstract", label: "Abstract" },
@@ -128,28 +130,15 @@
 
 <div class="wp min-h-screen antialiased">
   <!-- ============================= NAV ============================= -->
-  <header class="wp-nav sticky top-0 z-40" style="background: color-mix(in srgb, var(--wp-bg) 88%, transparent); backdrop-filter: blur(8px)">
-    <div class="wp-wrap flex h-14 items-center gap-4">
-      <a href={resolveHref("/")} class="flex items-center gap-2.5" aria-label="Omnigistic">
-        <span class="wp-diamond" aria-hidden="true"></span>
-        <span class="wp-mono text-[13px] tracking-[0.08em] text-[var(--wp-fg)]">OMNIGISTIC</span>
-        <span class="wp-mono text-[13px] tracking-[0.08em] text-[var(--wp-muted)]">/ WHITEPAPER</span>
-      </a>
-      <nav class="ml-auto hidden items-center gap-5 lg:flex" aria-label="Bagian whitepaper">
-        {#each navLinks as l (l.href)}
-          <a href={l.href} class="wp-nav-link">{l.label}<span class="wp-accent"> →</span></a>
-        {/each}
-      </nav>
-      <a href={resolveHref("/dashboard/pusat/ev-bca")} class="wp-mono ml-auto text-[13px] tracking-[0.03em] text-[var(--wp-muted)] transition-colors hover:text-[var(--wp-mint)] lg:ml-6">
-        Buka Model →
-      </a>
-    </div>
-  </header>
+  <EditorialNav
+    section="WHITEPAPER"
+    links={navLinks}
+    cta={{ href: "/dashboard/pusat/ev-bca", label: "Buka Model" }}
+  />
 
   <!-- ============================= HERO ============================= -->
   <section class="wp-hero">
-    <div class="wp-hero-bg" aria-hidden="true"></div>
-    <div class="wp-hero-grain" aria-hidden="true"></div>
+    <HeroTexture />
     <div class="wp-wrap pt-[clamp(3rem,8vw,6rem)] pb-[clamp(2.5rem,5vw,4rem)]">
       <span class="wp-pill">
         <span class="wp-dot" aria-hidden="true">●</span>

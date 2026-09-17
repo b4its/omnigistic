@@ -928,3 +928,109 @@
   font-size: clamp(2rem, 4.5vw, 3rem);
 }
 
+/* ── Kartu editorial (radius ≤8px, tanpa shadow/glow) ──────── */
+.wp-card {
+  border: 1px solid var(--wp-line);
+  border-radius: 8px;
+  background: var(--wp-bg-raise);
+  padding: 1.25rem;
+}
+.wp-grid {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .wp-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 900px) {
+  .wp-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .wp-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+/* Kartu dengan garis aksen atas tipis (bukan border penuh). */
+.wp-card-line {
+  border-top: 1px solid var(--wp-line);
+  padding-top: 1rem;
+}
+
+/* ── Verdict/kicker label kecil beraksen mint ──────────────── */
+.wp-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-jb-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--wp-mint);
+}
+.wp-kicker::before {
+  content: "";
+  width: 1.5rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--wp-mint) 60%, transparent);
+}
+.wp-verdict {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--wp-mint) 30%, transparent);
+  background: rgba(127, 255, 180, 0.06);
+  color: var(--wp-mint);
+  padding: 0.3rem 0.75rem;
+  font-family: var(--font-jb-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}
+/* Nomor seksi editorial (monospace kecil, muted). */
+.wp-index {
+  font-family: var(--font-jb-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  color: var(--wp-muted);
+}
+
+/* Daftar dengan bullet mint tipis. */
+.wp-list > li {
+  position: relative;
+  padding-left: 1.1rem;
+  color: var(--wp-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+.wp-list > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--wp-mint);
+}
+
+/* Nada peringatan halus (late/negative) — tanpa warna loud. */
+.wp-flag {
+  border-left: 2px solid color-mix(in srgb, var(--wp-copper) 70%, transparent);
+  padding-left: 1rem;
+  color: var(--wp-muted);
+}
+
+/* Tautan aksi editorial (garis bawah tipis + panah). */
+.wp-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-jb-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.03em;
+  color: var(--wp-fg);
+  border-bottom: 1px solid var(--wp-line-strong);
+  padding-bottom: 0.15rem;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.wp-cta:hover {
+  color: var(--wp-mint);
+  border-color: color-mix(in srgb, var(--wp-mint) 45%, transparent);
+}
+
+
