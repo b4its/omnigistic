@@ -88,17 +88,31 @@ export function liveSummary(orders: Order[]): LiveSummary {
 export function liveCustomers(orders: Order[]): CustomerRecord[] {
   const lines = liveOrders(orders);
   const byKey = new Map<string, CustomerRecord>();
+  // Akumulator: rata-rata sebenarnya skor COD (failedRate) + waktu pesanan terbaru.
+  const codAgg = new Map<string, { sum: number; n: number }>();
+  const lastAt = new Map<string, number>();
   const now = Date.now();
   for (const l of lines) {
     const key = `${l.recipient.toLowerCase()}|${l.city.toLowerCase()}`;
     const prev = byKey.get(key);
     const daysSinceLast = Math.max(0, Math.round((now - l.createdAt) / 86_400_000));
+    if (l.codScore !== null) {
+      const agg = codAgg.get(key) ?? { sum: 0, n: 0 };
+      agg.sum += l.codScore;
+      agg.n += 1;
+      codAgg.set(key, agg);
+    }
     if (prev) {
       prev.orders += 1;
       prev.spend += l.sellerValue;
       prev.daysSinceLast = Math.min(prev.daysSinceLast, daysSinceLast);
-      // rata-rata tingkat gagal dari skor COD bila ada
-      if (l.codScore !== null) prev.failedRate = (prev.failedRate + l.codScore) / 2;
+      // Metode bayar mengikuti pesanan TERBARU.
+      if (l.createdAt >= (lastAt.get(key) ?? 0)) {
+        prev.payMethod = l.payment;
+        lastAt.set(key, l.createdAt);
+      }
+      const agg = codAgg.get(key);
+      if (agg && agg.n > 0) prev.failedRate = agg.sum / agg.n;
     } else {
       byKey.set(key, {
         id: `LIVE-${byKey.size + 1}`,
@@ -110,6 +124,7 @@ export function liveCustomers(orders: Order[]): CustomerRecord[] {
         failedRate: l.codScore ?? 0.05,
         payMethod: l.payment,
       });
+      lastAt.set(key, l.createdAt);
     }
   }
   return [...byKey.values()];

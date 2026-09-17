@@ -362,9 +362,11 @@ function createShop() {
       const parts = parseSlot(clean);
       const err = validateSlot(parts.start, parts.end);
       if (err) return err;
+      let found = false;
       update((s) => {
         const orders = s.orders.map((o) => {
           if (o.id !== orderId) return o;
+          found = true;
           const now = Date.now();
           const note = `Slot pengantaran dikonfirmasi: ${clean}.`;
           return {
@@ -380,7 +382,7 @@ function createShop() {
         persist(next);
         return next;
       });
-      return null;
+      return found ? null : "Pesanan tidak ditemukan.";
     },
 
     /** Aksi kurir: tandai tunai COD sudah diterima (hanya bila payment COD). */

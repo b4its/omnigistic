@@ -13,7 +13,8 @@ Model:
   * EFEKTIVITAS jalur = kombinasi waktu tempuh + konsumsi bahan bakar + emisi +
     keandalan (variabilitas kepadatan), menghasilkan SKOR.
   * Jalur TERCEPAT = waktu tempuh minimum; jalur TEREFISIEN = skor tertinggi.
-  * Rekomendasi = jalur dengan waktu tercepat dgn mempertimbangkan efisiensi.
+  * Rekomendasi = jalur TERCEPAT (waktu minimum); jalur TEREFISIEN diekspos
+    terpisah sebagai `mostEfficientKey` untuk perbandingan.
 
 Semua angka kepadatan/kecepatan/konsumsi = ASUMSI TIM (dilabel), bukan data lalu
 lintas live. Jarak antar kota memakai `shared/data-kas.json` (koordinat hub) bila

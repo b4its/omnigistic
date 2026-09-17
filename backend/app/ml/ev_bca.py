@@ -91,7 +91,7 @@ GRID_CO2_KG_PER_KWH = 0.774
 # Hanya untuk blok `lifecycleEmissions`; semua angka = order-of-magnitude tim,
 # dilabel jelas. Produksi motor ICE (tanpa bbm) & produksi EV (rangka + baterai).
 ICE_MANUFACTURING_CO2_KG_PER_UNIT = 450.0   # produksi motor ICE (order-of-magnitude)
-EV_MANUFACTURING_CO2_KG_PER_UNIT = 700.0    # produksi motor EV + baterai Li-ion (perkiraan)
+EV_MANUFACTURING_CO2_KG_PER_UNIT = 700.0    # produksi rangka/motor EV — TANPA baterai (baterai dihitung terpisah)
 EV_BATTERY_MANUFACTURING_CO2_KG_PER_KWH = 90.0  # ~ kgCO2/kWh baterai (estimasi literatur)
 
 # ── 3. Asumsi operasional (ASUMSI TIM — di-skema-test, dilabel) ───────────────
@@ -727,8 +727,20 @@ def _breakevens(*, units: float, pertamax: float, include_maintenance: bool, dis
     rep = scen(True)
     inc = scen(False)
 
-    # Max sewa baterai (IDR/unit/tahun): net = fuel − elec − L (L = units × lease).
-    # NPV = −I + Σ (net)/(1+r)^t = 0 → L* = fuel − elec − I / pv  (karena growth=0 pada
+    # PV benefit maintenance (hanya bila include_maintenance): benefit tetap
+    # tahunan × eskalasi fuel_growth. Harus ikut di sisi benefit pada SEMUA
+    # reverse-solve agar ambang impas benar-benar menghasilkan NPV = 0.
+    def maint_pv() -> float:
+        if not include_maintenance:
+            return 0.0
+        per_year = units * MAINTENANCE_BENCHMARK_IDR_PER_UNIT_YEAR
+        return sum(per_year * (1.0 + fuel_growth) ** (t - 1) / (1.0 + discount) ** t
+                   for t in range(1, HORIZON_YEARS + 1))
+
+    mpv = maint_pv()
+
+    # Max sewa baterai (IDR/unit/tahun): net = fuel + maint − elec − L (L = units × lease).
+    # NPV = −I + Σ (net)/(1+r)^t = 0 → L* = fuel + maint − elec − I / pv  (growth=0 pada
     # komponen yang di-solve; bila ada growth, gunakan PV efektif per komponen).
     def max_battery_lease(s: dict[str, Any]) -> float | None:
         fuel_pv = sum(s["annual"]["iceFuelCostIdr"] * (1.0 + fuel_growth) ** (t - 1) / (1.0 + discount) ** t
@@ -739,15 +751,16 @@ def _breakevens(*, units: float, pertamax: float, include_maintenance: bool, dis
         # lease_pv = Σ L_year1×(1+bg)^(t-1)/(1+r)^t ; L_year1 = units × lease_year1
         lease_pv_per_unit = sum(units * (1.0 + battery_growth) ** (t - 1) / (1.0 + discount) ** t
                                 for t in range(1, HORIZON_YEARS + 1))
-        avail = fuel_pv - elec_pv - i
+        avail = fuel_pv + mpv - elec_pv - i
         if lease_pv_per_unit <= 0:
             return None
         return round(avail / lease_pv_per_unit, 0)
 
     # Min utilisasi (analitik). Perhatikan: fuel & listrik SEBANDING jarak, tetapi
-    # sewa baterai (BaaS) = biaya TETAP (tak bergantung jarak). Maka:
-    #   NPV(d) = −I + Σ [ (f_per_km − e_per_km)·d − battery_fixed ] / (1+r)^t = 0
-    #   d* = ( I + battery_fixed·Σ1/(1+r)^t ) / ( (f_per_km − e_per_km)·Σ1/(1+r)^t )
+    # sewa baterai (BaaS) = biaya TETAP (tak bergantung jarak), dan maintenance =
+    # BENEFIT tetap (tak bergantung jarak). Maka:
+    #   NPV(d) = −I + Σ [ (f_per_km − e_per_km)·d − battery_fixed + maint_fixed ] / (1+r)^t = 0
+    #   d* = ( I + battery_fixed·Σ1/(1+r)^t − maint_pv ) / ( (f_per_km − e_per_km)·Σ1/(1+r)^t )
     def min_distance(s: dict[str, Any]) -> float | None:
         km = s["annual"]["distanceKm"]
         if km <= 0:
@@ -764,19 +777,19 @@ def _breakevens(*, units: float, pertamax: float, include_maintenance: bool, dis
             return None
         # d_star dalam km TAHUNAN (karena per_km berbasis jarak tahunan); konversi
         # ke km/unit/hari dengan membagi (units × hari operasi).
-        annual_km_star = (i + battery_fixed * pv_batt) / denom
+        annual_km_star = (i + battery_fixed * pv_batt - mpv) / denom
         per_unit_day = annual_km_star / (units * OPERATING_DAYS) if units > 0 else 0.0
         return round(max(0.0, per_unit_day), 1)
 
     # Harga Pertamax impas (incremental base): NPV(P)=0.
-    # fuel_total = km/eff × P → P* = (I/pv + elec_pv + batt_pv) / (km/eff)_pv
+    # fuel_total = km/eff × P → P* = (I/pv + elec_pv + batt_pv − maint_pv) / (km/eff)_pv
     inc_i = inc["capex"]["initialInvestmentIdr"]
     ice_liters = inc["annual"]["iceLiters"]
     liters_pv = sum(ice_liters * (1.0 + fuel_growth) ** (t - 1) / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1))
     cost_pv_inc = sum((inc["annual"]["evEnergyCostIdr"] * (1.0 + elec_growth) ** (t - 1)
                        + inc["annual"]["batteryLeaseIdr"] * (1.0 + battery_growth) ** (t - 1)) / (1.0 + discount) ** t
                       for t in range(1, HORIZON_YEARS + 1))
-    breakeven_pertamax = round((inc_i + cost_pv_inc) / liters_pv, 0) if liters_pv > 0 else None
+    breakeven_pertamax = round(max(0.0, (inc_i + cost_pv_inc - mpv)) / liters_pv, 0) if liters_pv > 0 else None
 
     # Premium harga EV maksimum (replacement, NPV=0). vehicleDelta = units×(evP − iceP).
     # NPV = −(units×(evP − iceP) + infra + impl) + net×pv = 0
@@ -924,6 +937,11 @@ def _monte_carlo(*, units: float, pertamax: float, include_maintenance: bool, di
 
     npvs: list[float] = []
     bcrs: list[float] = []
+    # PV faktor per tahun (dipakai untuk arus kas bereskalasi, konsisten _scenario).
+    disc = [1.0 / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1)]
+    gf = [(1.0 + fuel_growth) ** (t - 1) for t in range(1, HORIZON_YEARS + 1)]
+    ge = [(1.0 + elec_growth) ** (t - 1) for t in range(1, HORIZON_YEARS + 1)]
+    gb = [(1.0 + battery_growth) ** (t - 1) for t in range(1, HORIZON_YEARS + 1)]
     for _ in range(runs):
         dist = sample("distanceKmDay")
         p = sample("pertamaxIdrPerL", pertamax)
@@ -936,13 +954,20 @@ def _monte_carlo(*, units: float, pertamax: float, include_maintenance: bool, di
         annual_km = units * dist * OPERATING_DAYS
         fuel = (annual_km / eff) * p
         kwh = annual_km * (wh / 1000.0) * 1.15  # loss 15% (base)
-        cost = kwh * t + units * b
-        net = fuel - cost
-        pvf = _pv_factor(discount)
+        lease = units * b
+        maint = units * MAINTENANCE_BENCHMARK_IDR_PER_UNIT_YEAR if include_maintenance else 0.0
+        # NPV = −I + Σ [ fuel_t + maint_t − elec_t − lease_t ] / (1+r)^t (arus bereskalasi).
+        pv_net = sum(
+            (fuel * gf[k] + maint * gf[k] - kwh * t * ge[k] - lease * gb[k]) * disc[k]
+            for k in range(HORIZON_YEARS)
+        )
         i = (units * ev_price - units * ice_price) + CHARGING_INFRA_BY_SCENARIO_IDR["base"] + IMPLEMENTATION_TRAINING_IDR
-        npv = -i + net * pvf
+        npv = -i + pv_net
         npvs.append(npv)
-        bcrs.append(_safe_div(fuel * HORIZON_YEARS, i + cost * HORIZON_YEARS))
+        # BCR simple (nominal) konsisten dgn definisi skenario: Σfuel / (I + Σelec+lease).
+        fuel_nom = fuel * sum(gf)
+        cost_nom = kwh * t * sum(ge) + lease * sum(gb)
+        bcrs.append(_safe_div(fuel_nom, i + cost_nom))
 
     npvs_sorted = sorted(npvs)
     bcrs_sorted = sorted(bcrs)

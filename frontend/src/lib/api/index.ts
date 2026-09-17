@@ -165,7 +165,12 @@ export interface AddressParseResult {
 
 export interface TwinResult {
   totalCapexSavingT: number;
+  /** Kenaikan (delta) utilisasi hub timur dalam poin persen — 0 bila adopsi 0%. */
   eastUtilisationGain: number;
+  /** Utilisasi hub timur setelah adopsi (level absolut, poin persen). */
+  eastUtilisationAfter: number;
+  /** Utilisasi hub timur saat ini (level absolut, poin persen). */
+  eastUtilisationNow: number;
   onTimeImpactPct: number;
   regionalSponsorPct: number;
   directOpVolFreedM: number;

@@ -270,7 +270,11 @@ dn, db = _dt(allneg), _dt(allbig)
 check("digital-twin: capex tak negatif", dn["totalCapexSavingT"] >= 0, str(dn["totalCapexSavingT"]))
 check("digital-twin: sponsorPct tak negatif", dn["regionalSponsorPct"] >= 0, str(dn["regionalSponsorPct"]))
 check("digital-twin: sponsorPct <=100", db["regionalSponsorPct"] <= 100.0, str(db["regionalSponsorPct"]))
-check("digital-twin: util gain wajar (<40pt)", db["eastUtilisationGain"] - dn["eastUtilisationGain"] < 120, str(db["eastUtilisationGain"]))
+# eastUtilisationGain = DELTA (kenaikan), bukan level absolut: 0% adopsi → 0,0 pt.
+zero = _dt({})
+check("digital-twin: gain=0 saat adopsi 0%", zero["eastUtilisationGain"] == 0.0, str(zero["eastUtilisationGain"]))
+check("digital-twin: gain wajar (0..15pt)", 0.0 <= db["eastUtilisationGain"] <= 15.0, str(db["eastUtilisationGain"]))
+check("digital-twin: after = now + gain", abs((zero["eastUtilisationNow"] + db["eastUtilisationGain"]) - db["eastUtilisationAfter"]) < 0.15, str((db["eastUtilisationNow"], db["eastUtilisationGain"], db["eastUtilisationAfter"])))
 # C1: dua mesin COD harus sepakat pada skenario murni-COD 8 paket.
 from app.ml.cod_intel import analyze_cod_impact as _aci
 check("COD sepakat simulations vs cod_intel", _cci(8, 0, 100)["currentTime"] == round(_aci(100.0, [], 8)["baseline"]["shiftDurationMin"]))
@@ -622,6 +626,31 @@ _mc_det = _ev(seed=42)
 check("MC deterministik (seed tetap → identik)", _mc_det["monteCarlo"]["npv"]["p50Idr"] == _mc["npv"]["p50Idr"])
 _mc_diff = _ev(seed=7)
 check("MC seed beda → hasil beda", _mc_diff["monteCarlo"]["npv"]["p50Idr"] != _mc["npv"]["p50Idr"])
+# REGRESI: MC harus menghormati growth & maintenance (dulu diabaikan → tak konsisten).
+_mc_g = _ev(fuel_growth=0.10, elec_growth=0.05)
+check("MC responsif thd growth (p50 naik)", _mc_g["monteCarlo"]["npv"]["p50Idr"] > _mc["npv"]["p50Idr"], str(_mc_g["monteCarlo"]["npv"]["p50Idr"]))
+_mc_m = _ev(include_maintenance=True)
+check("MC responsif thd maintenance (p50 naik)", _mc_m["monteCarlo"]["npv"]["p50Idr"] > _mc["npv"]["p50Idr"], str(_mc_m["monteCarlo"]["npv"]["p50Idr"]))
+# REGRESI: breakeven harus NPV ≈ 0 JUGA saat include_maintenance=True (dulu lupa
+# memasukkan maintenance → NPV membengkak ~Rp545 jt).
+_be_m = _ev(include_maintenance=True)["breakevens"]
+_mlr_m = _be_m["maxBatteryLeaseIdrPerUnitYear"]["replacement"]
+_sm = _evs("base", replacement=True, units=200, pertamax=16125, include_maintenance=True, discount=0.10,
+           tariff=1444.7, battery_lease_year=_mlr_m, ev_price=19_225_000, ice_price=19_577_000)
+check("breakeven max lease +maintenance → NPV ≈ 0", abs(_sm["kpi"]["npvIdr"]) < 5_000_000, str(_sm["kpi"]["npvIdr"]))
+_dr_m = _be_m["minDistanceKmPerUnitDay"]["replacement"]
+_sdm = _evs("base", replacement=True, units=200, pertamax=16125, include_maintenance=True, discount=0.10,
+            tariff=1444.7, battery_lease_year=1_500_000, ev_price=19_225_000, ice_price=19_577_000, distance_override=_dr_m)
+check("breakeven min-dist +maintenance → NPV ≈ 0", abs(_sdm["kpi"]["npvIdr"]) < 5_000_000, str(_sdm["kpi"]["npvIdr"]))
+_bp_m = _be_m["breakevenPertamaxIdrPerLIncremental"]
+_spm = _evs("base", replacement=False, units=200, pertamax=_bp_m, include_maintenance=True, discount=0.10,
+            tariff=1444.7, battery_lease_year=1_500_000, ev_price=19_225_000, ice_price=19_577_000)
+check("breakeven Pertamax +maintenance → NPV ≈ 0", abs(_spm["kpi"]["npvIdr"]) < 5_000_000, str(_spm["kpi"]["npvIdr"]))
+# REGRESI: eastUtilisationGain = DELTA (0 saat adopsi 0%), bukan level absolut.
+from app.ml.simulations import calculate_digital_twin as _cdt
+_tw = _cdt({})
+check("digital-twin gain=0 @ adopsi 0 (delta, bukan level)", _tw["eastUtilisationGain"] == 0.0, str(_tw["eastUtilisationGain"]))
+check("digital-twin after = now + gain", abs(_tw["eastUtilisationNow"] + _tw["eastUtilisationGain"] - _tw["eastUtilisationAfter"]) < 0.15)
 # Hub deployment: total = units, tiap region > 0, hub terurut.
 _hub = _evr["hubDeployment"]
 check("hub deployment total = 200 unit", _hub["totalUnits"] == 200, str(_hub["totalUnits"]))

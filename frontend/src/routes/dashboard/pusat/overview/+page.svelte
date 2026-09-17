@@ -39,9 +39,11 @@
       ? (() => {
           const latest = fin[fin.length - 1];
           const first = fin[0];
-          const salesG = numId((latest.netSalesT / first.netSalesT - 1) * 100, 1);
-          const fulfilG = numId((latest.fulfilmentT / first.fulfilmentT - 1) * 100, 1);
-          const ratio = ((latest.fulfilmentT + latest.shippingT) / latest.netSalesT) * 100;
+          // Guard pembagian nol (jaga-jaga bila backend mengirim nilai 0).
+          const pct = (a: number, b: number) => (b ? (a / b - 1) * 100 : 0);
+          const salesG = numId(pct(latest.netSalesT, first.netSalesT), 1);
+          const fulfilG = numId(pct(latest.fulfilmentT, first.fulfilmentT), 1);
+          const ratio = latest.netSalesT ? ((latest.fulfilmentT + latest.shippingT) / latest.netSalesT) * 100 : 0;
           return [
             { label: "Net Sales", value: `Rp${latest.netSalesT}T`, sub: `+${salesG}% vs 2020`, spark: fin.map((f) => f.netSalesT) },
             { label: "Fulfilment Expense", value: `Rp${latest.fulfilmentT}T`, sub: `+${fulfilG}% vs 2020`, accent: "var(--color-destructive-foreground)", spark: fin.map((f) => f.fulfilmentT) },

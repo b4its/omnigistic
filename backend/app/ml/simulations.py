@@ -56,7 +56,10 @@ def calculate_digital_twin(shares: dict[str, float]) -> dict:
 
     return {
         "totalCapexSavingT": round(capex_saving, 2),
-        "eastUtilisationGain": round(east_util_after, 1),
+        # Nama sesuai makna: GAIN = kenaikan (delta), bukan level absolut.
+        "eastUtilisationGain": round(east_util_after - east_util_now, 1),
+        "eastUtilisationAfter": round(east_util_after, 1),
+        "eastUtilisationNow": round(east_util_now, 1),
         "onTimeImpactPct": round(on_time, 1),
         "regionalSponsorPct": round(total_sponsor, 1),
         "directOpVolFreedM": round(freed, 3),

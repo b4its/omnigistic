@@ -141,7 +141,8 @@ def stress_test(
         "engine": "Peak-Surge Stress-Test (Table 1 kapasitas × amplifikasi puncak)",
         "note": (
             "Basis harian dari Table 4 (1.110jt/365). Puncak '>3 juta/hari' dari dokumen "
-            "(Double 12 2022). Pangsa beban per hub = pangsa kapasitas (proxy). "
+            "(Double 12 2022). Pangsa beban per hub = pangsa BEBAN NORMAL "
+            "(kapasitas × utilisasi kasus). "
             "Peak multiplier, faktor kapasitas surge, drain rate = ASUMSI TIM (dilabel)."
         ),
         "inputs": {
