@@ -22,12 +22,10 @@ export interface Address {
 
 export type PaymentMethod = "COD" | "Transfer";
 export type OrderStatus = "dikemas" | "dijemput" | "transit" | "dikirim" | "terkirim";
-/** Apakah penerima ada di rumah saat kurir tiba (diisi kurir pada tahap pengantaran). */
-export type ArrivalStatus = "di-rumah" | "tidak-di-rumah" | "tunggu-sebentar";
 /**
  * Pemberitahuan PENERIMA (customer) ke kurir: apakah ia ada di rumah saat paket
- * sedang diantar. Berbeda dari `ArrivalStatus` (yang dicatat kurir setelah tiba):
- * ini INISIATIF customer sebelum kurir tiba, agar kurir bisa menyesuaikan rute.
+ * sedang diantar. INISIATIF customer sebelum kurir tiba, agar kurir bisa
+ * menyesuaikan rute (langsung antar / tawarkan PUDO / jadwalkan ulang).
  */
 export type PresenceStatus = "di-rumah" | "tidak-di-rumah";
 
@@ -78,14 +76,6 @@ export interface Order {
   codCollected: boolean;
   /** Paket dialihkan ke PUDO (mitra ritel) alih-alih antar ke alamat? */
   routedToPudo: boolean;
-  /**
-   * Apakah penerima ada di rumah saat kurir tiba? (diisi kurir pada tahap
-   * "dikirim" = dalam pengantaran). null = belum dicek. Memberi tahu customer
-   * status kehadirannya agar tidak menunggu tanpa kepastian.
-   */
-  arrivalStatus: ArrivalStatus | null;
-  /** Waktu kurir mencatat status kehadiran (ms); null bila belum. */
-  arrivalAt: number | null;
   /**
    * Pemberitahuan CUSTOMER: apakah ia ada di rumah (diisi pembeli saat paket
    * "dalam pengantaran"). Dilihat kurir sebelum tiba agar bisa menyesuaikan rute.
@@ -159,8 +149,6 @@ function normalizeOrder(o: Partial<Order>): Order {
     slot: o.slot ?? null,
     codCollected: o.codCollected ?? false,
     routedToPudo: o.routedToPudo ?? false,
-    arrivalStatus: (o.arrivalStatus ?? null) as ArrivalStatus | null,
-    arrivalAt: o.arrivalAt ?? null,
     presenceStatus: (o.presenceStatus ?? null) as PresenceStatus | null,
     presenceAt: o.presenceAt ?? null,
   };
@@ -241,7 +229,7 @@ function createShop() {
       });
     },
     /** Simpan pesanan baru; kembalikan id pesanan. */
-    placeOrder(order: Omit<Order, "id" | "createdAt" | "status" | "statusNote" | "courier" | "updatedAt" | "events" | "slot" | "codCollected" | "routedToPudo" | "arrivalStatus" | "arrivalAt" | "presenceStatus" | "presenceAt">): string {
+    placeOrder(order: Omit<Order, "id" | "createdAt" | "status" | "statusNote" | "courier" | "updatedAt" | "events" | "slot" | "codCollected" | "routedToPudo" | "presenceStatus" | "presenceAt">): string {
       const id = newOrderId();
       const now = Date.now();
       update((s) => {
@@ -257,8 +245,6 @@ function createShop() {
           slot: null,
           codCollected: false,
           routedToPudo: false,
-          arrivalStatus: null,
-          arrivalAt: null,
           presenceStatus: null,
           presenceAt: null,
         };
@@ -299,42 +285,6 @@ function createShop() {
         return next;
       });
       return result;
-    },
-
-    /**
-     * Aksi kurir: catat apakah penerima ADA DI RUMAH saat kurir tiba (tahap
-     * "dikirim" = dalam pengantaran). Memberi tahu customer status kehadirannya
-     * agar tidak menunggu tanpa kepastian. Hanya berlaku saat status "dikirim".
-     * Kembalikan pesan error (string) bila tak diizinkan, atau null bila sukses.
-     */
-    setArrival(orderId: string, actor: string, arrival: ArrivalStatus): string | null {
-      if (!ARRIVAL_LABEL[arrival]) return "Status kehadiran tidak dikenal.";
-      let err: string | null = null;
-      update((s) => {
-        const orders = s.orders.map((o) => {
-          if (o.id !== orderId) return o;
-          if (o.status !== "dikirim") {
-            err = "Status kehadiran hanya bisa dicatat saat paket dalam pengantaran.";
-            return o;
-          }
-          const now = Date.now();
-          const note = `Status kehadiran penerima: ${ARRIVAL_LABEL[arrival]} ${ARRIVAL_HINT[arrival]}`;
-          return {
-            ...o,
-            arrivalStatus: arrival,
-            arrivalAt: now,
-            statusNote: note,
-            courier: actor,
-            updatedAt: now,
-            events: [{ at: now, status: o.status, note, actor }, ...o.events],
-          };
-        });
-        if (err) return s;
-        const next = { ...s, orders };
-        persist(next);
-        return next;
-      });
-      return err;
     },
 
     /**
@@ -538,20 +488,6 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   transit: "Transit hub",
   dikirim: "Dalam pengantaran",
   terkirim: "Terkirim",
-};
-
-/** Label status kehadiran penerima (dilihat customer & kurir). */
-export const ARRIVAL_LABEL: Record<ArrivalStatus, string> = {
-  "di-rumah": "Penerima ada di rumah",
-  "tidak-di-rumah": "Penerima tidak di rumah",
-  "tunggu-sebentar": "Penerima minta tunggu sebentar",
-};
-
-/** Petunjuk singkat tindak lanjut per status kehadiran (dipakai sebagai catatan). */
-export const ARRIVAL_HINT: Record<ArrivalStatus, string> = {
-  "di-rumah": "— lanjutkan serah terima paket.",
-  "tidak-di-rumah": "— kurir menunggu / tawarkan PUDO atau jadwalkan ulang.",
-  "tunggu-sebentar": "— kurir menunggu di lokasi (idle time).",
 };
 
 /** Label pemberitahuan kehadiran dari CUSTOMER (dilihat kurir sebelum tiba). */

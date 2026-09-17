@@ -6,7 +6,7 @@
   import type { IconName } from "$lib/icon-names";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, cartDetail, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, ARRIVAL_LABEL, PRESENCE_LABEL, COURIER_TASK, nextStatus, progressForStatus, lastOutForDeliveryOrder, type Order, type ArrivalStatus, type PresenceStatus } from "$lib/stores/shop";
+  import { shop, cartDetail, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, PRESENCE_LABEL, COURIER_TASK, nextStatus, progressForStatus, lastOutForDeliveryOrder, type Order, type PresenceStatus } from "$lib/stores/shop";
   import { HUB_LABEL, etaForCity, distanceForCity, remainingKm, remainingEtaMin } from "$lib/logistics";
   import { notify } from "$lib/toast";
 
@@ -91,13 +91,6 @@
 
   const steps = ORDER_STATUS_FLOW;
   const stepIndex = $derived(tracked ? steps.indexOf(tracked.status) : -1);
-
-  /** Presentasi (ikon/warna/tip) per status kehadiran penerima. */
-  const ARRIVAL_META: Record<ArrivalStatus, { icon: IconName; border: string; bg: string; chip: string; tip: string }> = {
-    "di-rumah": { icon: "check", border: "border-success/40", bg: "bg-success/5", chip: "bg-success text-success-foreground", tip: "Kurir bertemu kamu langsung. Tak perlu tindakan." },
-    "tunggu-sebentar": { icon: "clock", border: "border-warning/40", bg: "bg-warning/5", chip: "bg-warning text-warning-foreground", tip: "Kurir menunggu di lokasi — segera temui sebelum batas tunggu." },
-    "tidak-di-rumah": { icon: "warn", border: "border-destructive/40", bg: "bg-destructive/5", chip: "bg-destructive text-destructive-foreground", tip: "Paket bisa dialihkan ke PUDO terdekat atau dijadwalkan ulang." }
-  };
 
   /** Customer beri tahu kurir apakah ia ada di rumah (saat paket dalam pengantaran). */
   function tellPresence(presence: PresenceStatus) {
@@ -254,20 +247,6 @@
               </div>
             {/if}
 
-            <!-- Status kehadiran penerima (kurir sudah tiba) -->
-            {#if tracked.arrivalStatus}
-              {@const am = ARRIVAL_META[tracked.arrivalStatus]}
-              <div class="flex items-start gap-3 rounded-xl border {am.border} {am.bg} p-3">
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {am.chip}">
-                  <Icon name={am.icon as never} cls="h-4 w-4" weight={am.icon === "check" ? "bold" : "regular"} />
-                </span>
-                <div class="min-w-0">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Kurir sudah tiba</p>
-                  <p class="text-sm font-semibold text-foreground">{ARRIVAL_LABEL[tracked.arrivalStatus]}</p>
-                  <p class="mt-0.5 text-[11px] text-muted-foreground">{am.tip}</p>
-                </div>
-              </div>
-            {/if}
 
             <!-- Progres bar (dari status nyata) -->
             <div class="space-y-1">

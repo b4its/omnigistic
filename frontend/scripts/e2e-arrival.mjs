@@ -1,19 +1,14 @@
 /**
  * E2E: pemberitahuan kehadiran penerima saat paket DALAM PENGANTARAN.
  *
- * Dua arah:
- *  A. CUSTOMER → KURIR: pembeli memberi tahu apakah ia ADA DI RUMAH saat paket
- *     sedang diantar; kurir melihat pemberitahuan itu di tugasnya.
- *  B. KURIR → CUSTOMER: kurir mencatat status kehadiran saat tiba; pembeli melihat.
+ * Alur (customer → kurir): pembeli memberi tahu apakah ia ADA DI RUMAH saat
+ * paket sedang diantar; kurir melihat pemberitahuan itu di tugasnya.
  *
- * Alur (deterministik, seed store lewat localStorage):
  *  1. Seed 2 pesanan: satu "dikirim" (dalam pengantaran), satu "transit".
  *  2. CUSTOMER/orders → tombol "Saya ada di rumah / tidak di rumah" (hanya saat dikirim).
  *  3. CUSTOMER klik "Saya tidak di rumah".
  *  4. KURIR/tasks → melihat "Pemberitahuan pembeli: Tidak di rumah".
- *  5. KURIR klik "Tidak di rumah" (status kehadiran saat tiba).
- *  6. CUSTOMER/orders & dashboard → melihat status kehadiran dari kurir.
- *  7. Guard: kontrol kehadiran TIDAK muncul saat status bukan "dikirim".
+ *  5. Guard: kontrol pemberitahuan TIDAK muncul saat status bukan "dikirim".
  *
  * Prasyarat: frontend dev jalan di E2E_BASE (default http://127.0.0.1:3000).
  */
@@ -50,8 +45,8 @@ function order(id, status, note) {
     slot: null,
     codCollected: false,
     routedToPudo: false,
-    arrivalStatus: null,
-    arrivalAt: null,
+    presenceStatus: null,
+    presenceAt: null,
     events: [{ at: NOW, status, note, actor: "Sistem" }],
   };
 }
@@ -107,30 +102,17 @@ try {
   txt = await page.locator("body").innerText();
   R(/Terkirim ke kurir/i.test(txt) && /Tidak di rumah/i.test(txt), "customer: pemberitahuan 'tidak di rumah' terkirim");
 
-  // ── 2. KURIR: melihat pemberitahuan pembeli + mencatat status kehadiran ──
+  // ── 2. KURIR: melihat pemberitahuan pembeli ──
   await goto(page, "/dashboard/kurir/tasks");
   txt = await page.locator("body").innerText();
   R(/Pemberitahuan pembeli/i.test(txt) && /Tidak di rumah/i.test(txt), "kurir: melihat pemberitahuan pembeli 'tidak di rumah'");
-  R(/Status kehadiran penerima/i.test(txt), "kurir: panel status kehadiran tampil");
-  const kurirPanels = await page.locator('text=Status kehadiran penerima').count();
-  R(kurirPanels === 1, "kurir: panel kehadiran hanya utk paket 'dalam pengantaran' (guard)", `panels=${kurirPanels}`);
-
-  const row = page.locator("li", { hasText: DELIVERY_ID }).first();
-  await row.getByRole("button", { name: /Tidak di rumah/i }).click();
-  await page.waitForTimeout(900);
-  txt = await page.locator("body").innerText();
-  R(/Penerima tidak di rumah/i.test(txt), "kurir: status kehadiran 'tidak di rumah' tercatat");
-
-  // ── 3. CUSTOMER/orders: melihat status kehadiran dari kurir ──
-  await goto(page, "/dashboard/customer/orders");
-  txt = await page.locator("body").innerText();
-  R(/Kurir sudah tiba di lokasi/i.test(txt), "customer/orders: blok kehadiran (kurir) tampil");
-  R(/Penerima tidak di rumah/i.test(txt), "customer/orders: status kehadiran kurir terlihat");
-
-  // ── 4. CUSTOMER/dashboard: status kehadiran tampil ──
-  await goto(page, "/dashboard/customer/dashboard");
-  txt = await page.locator("body").innerText();
-  R(/Kurir sudah tiba/i.test(txt) && /Penerima tidak di rumah/i.test(txt), "customer/dashboard: status kehadiran tampil");
+  // Guard: panel pemberitahuan pembeli hanya tampil utk 1 pesanan ("dikirim"),
+  // bukan yg "transit". (Frasa "Pemberitahuan pembeli" juga muncul sbg awalan
+  // catatan kondisi pesanan, jadi cocokkan EXACT judul panel-nya, bukan substring.)
+  const kurirPanel = await page.getByText("Pemberitahuan pembeli", { exact: true }).count();
+  R(kurirPanel === 1, "kurir: pemberitahuan hanya utk paket 'dalam pengantaran' (guard)", `panels=${kurirPanel}`);
+  // TIDAK ada lagi panel status kehadiran yang dicatat kurir (dihilangkan).
+  R(!/Status kehadiran penerima/i.test(txt), "kurir: panel 'status kehadiran' (kurir→customer) sudah dihilangkan");
 
   R(errs.length === 0, "tanpa error JS", errs.join(" | "));
   await page.screenshot({ path: "/tmp/opencode/shots/e2e-arrival.png" });
