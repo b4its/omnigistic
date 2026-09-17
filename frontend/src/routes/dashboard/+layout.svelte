@@ -185,7 +185,7 @@
 </svelte:head>
 
 <div class="relative flex h-dvh w-full overflow-hidden bg-background">
-  <!-- Tekstur void: grid blockchain halus + ambient glow orange (global, 1 layer) -->
+  <!-- Tekstur editorial: grid halus + ambient glow mint (global, 1 layer) -->
   <div class="pointer-events-none absolute inset-0 z-0 bg-grid-sm opacity-[0.5] dark:opacity-100" aria-hidden="true"></div>
   <div class="pointer-events-none absolute -right-40 -top-48 z-0 hidden h-[42rem] w-[42rem] rounded-full ambient-glow md:block" aria-hidden="true"></div>
   <a

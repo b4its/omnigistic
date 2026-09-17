@@ -161,7 +161,7 @@
           )}
         >
           {#if isActive(item.href) && !railCollapsed}
-            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[var(--bitcoin)] to-[var(--gold)] shadow-[0_0_10px_-1px_var(--glow)]" aria-hidden="true"></span>
+            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[var(--primary)]" aria-hidden="true"></span>
           {/if}
           <Icon name={item.icon} cls={railCollapsed ? "h-5 w-5 shrink-0" : "h-4.5 w-4.5 shrink-0"} />
           {#if railCollapsed}
@@ -194,7 +194,7 @@
             )}
           >
             {#if isActive(item.href) && !railCollapsed}
-              <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[var(--bitcoin)] to-[var(--gold)] shadow-[0_0_10px_-1px_var(--glow)]" aria-hidden="true"></span>
+              <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[var(--primary)]" aria-hidden="true"></span>
             {/if}
             <Icon name={item.icon} cls={railCollapsed ? "h-5 w-5 shrink-0" : "h-4.5 w-4.5 shrink-0"} />
             {#if railCollapsed}

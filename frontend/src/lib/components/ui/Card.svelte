@@ -1,7 +1,7 @@
 <script lang="ts">
   /**
-   * Card — "block" di rantai. Permukaan Dark Matter, border ultra-tipis,
-   * lift + glow orange saat hover. Varian `glass` untuk panel mengambang.
+   * Card — permukaan editorial: border sangat halus, radius tenang, aksen mint
+   * saat hover (tanpa glow tebal). Varian `glass` untuk panel mengambang.
    */
   import type { Snippet } from "svelte";
   import { cn } from "$lib/utils";
@@ -32,11 +32,11 @@
 
   const classes = $derived(
     cn(
-      "rounded-2xl transition-all duration-300",
+      "rounded-xl transition-colors duration-300",
       variants[variant],
       pads[padding],
       hover &&
-        "hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:shadow-[0_0_30px_-10px_var(--glow)]",
+        "hover:border-[color-mix(in_oklab,var(--primary)_45%,transparent)]",
       cls
     )
   );

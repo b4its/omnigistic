@@ -75,9 +75,9 @@
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2">
         {#each roles as r (r.slug)}
-          <a href={resolveHref(routes[r.slug])} class="group flex h-full flex-col gap-3 rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--lnd-accent)] hover:shadow-[0_0_30px_-10px_rgba(247,147,26,0.35)]">
+          <a href={resolveHref(routes[r.slug])} class="group flex h-full flex-col gap-3 rounded-xl border border-[var(--lnd-line)] bg-[var(--lnd-surface)] p-6 transition-colors duration-300 hover:border-[var(--lnd-accent)]">
             <div class="flex items-center justify-between">
-              <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-4px_rgba(247,147,26,0.5)]">
+              <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--lnd-accent)] text-[var(--lnd-bg)]">
                 <Icon name={r.icon} cls="h-5 w-5" />
               </span>
               <span class="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--lnd-line)] transition-colors group-hover:border-[var(--lnd-accent-ink)]">

@@ -226,7 +226,7 @@
               dalam satu sumber kebenaran. Nigi AI menyapa tiap manajer dengan insight dari data studi kasus.
             </p>
             <div class="mt-8 flex flex-wrap gap-4">
-              <a href="#jawaban" class="rounded-full bg-gradient-to-r from-[var(--lnd-accent)] to-[#ffd600] px-8 py-4 font-mono text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[#030304] shadow-[0_0_28px_-6px_rgba(247,147,26,0.6)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_40px_-6px_rgba(247,147,26,0.75)] active:scale-[0.98]">
+              <a href="#jawaban" class="rounded-full bg-[var(--lnd-accent)] px-8 py-4 font-mono text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-bg)] transition-colors duration-300 hover:bg-[color-mix(in_oklab,var(--lnd-accent)_88%,black)] active:scale-[0.98]">
                 Enam Jawaban <Icon name="arrow-up-right" cls="ml-2 inline h-4 w-4" weight="bold" />
               </a>
               <a href="#arsitektur" class="rounded-full border border-[var(--lnd-ink)] px-8 py-4 text-[14.5px] font-semibold uppercase tracking-[0.08em] text-[var(--lnd-ink)] transition-all hover:border-[var(--lnd-accent-ink)] hover:text-[color:var(--lnd-accent-ink)] active:scale-[0.98]">Tentang Sistem</a>

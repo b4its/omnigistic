@@ -56,16 +56,16 @@
 
   const variants: Record<Variant, string> = {
     primary:
-      "bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white font-semibold uppercase tracking-wider " +
-      "shadow-[0_0_20px_-5px_var(--glow)] hover:scale-[1.03] hover:shadow-[0_0_30px_-5px_var(--glow)]",
+      "bg-[var(--primary)] text-[var(--primary-foreground)] font-semibold uppercase tracking-wider " +
+      "hover:bg-[color-mix(in_oklab,var(--primary)_88%,black)]",
     gold:
-      "bg-gradient-to-r from-[var(--bitcoin)] to-[var(--gold)] text-[#030304] font-semibold uppercase tracking-wider " +
-      "shadow-[0_0_20px_-5px_var(--glow-gold)] hover:scale-[1.03]",
+      "bg-[var(--gold)] text-[#16140f] font-semibold uppercase tracking-wider " +
+      "hover:bg-[color-mix(in_oklab,var(--gold)_88%,black)]",
     outline:
-      "border-2 border-[color-mix(in_oklab,var(--foreground)_20%,transparent)] text-foreground bg-transparent " +
-      "hover:border-[var(--bitcoin)] hover:bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)]",
-    ghost: "bg-transparent text-foreground hover:bg-[color-mix(in_oklab,var(--foreground)_8%,transparent)] hover:text-[var(--bitcoin)]",
-    link: "bg-transparent text-[var(--bitcoin)] hover:underline px-0 min-h-0 h-auto"
+      "border border-[color-mix(in_oklab,var(--foreground)_22%,transparent)] text-foreground bg-transparent " +
+      "hover:border-[var(--primary)] hover:bg-[color-mix(in_oklab,var(--primary)_10%,transparent)]",
+    ghost: "bg-transparent text-foreground hover:bg-[color-mix(in_oklab,var(--foreground)_8%,transparent)] hover:text-[var(--primary)]",
+    link: "bg-transparent text-[var(--primary)] hover:underline px-0 min-h-0 h-auto"
   };
 
   const classes = $derived(
