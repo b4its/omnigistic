@@ -109,7 +109,7 @@
   <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
     <p class="text-sm font-semibold text-foreground">Gagal memuat ringkasan kurir</p>
     <p class="mt-1 text-xs text-muted-foreground">Backend offline. Buat pesanan dari portal Customer atau coba lagi.</p>
-    <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-xs font-semibold text-white">Coba lagi</button>
+    <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
   </div>
 {:else}
   <div class="space-y-5">

@@ -52,7 +52,7 @@
     <span class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="grad" cls="h-8 w-8" /></span>
     <h1 class="font-heading text-xl font-semibold">Sertifikat belum tersedia</h1>
     <p class="text-sm text-muted-foreground">Selesaikan seluruh {prog.total} pelajaran <strong class="font-semibold text-foreground">{track.title}</strong> untuk membuka sertifikat. Progres saat ini {prog.done}/{prog.total} ({prog.pct}%).</p>
-    <a href={resolveHref(`/dashboard/academy/${track.slug}`)} class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
+    <a href={resolveHref(`/dashboard/academy/${track.slug}`)} class="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px">
       <Icon name="book" cls="h-4 w-4" /> Lanjut belajar
     </a>
   </div>
@@ -79,7 +79,7 @@
 
       <div class="relative space-y-8 text-center">
         <div class="flex items-center justify-center gap-3">
-          <span class="flex h-12 w-12 items-center justify-center rounded-2xl text-white" style="background:{track.accent}"><Icon name={track.icon as never} cls="h-6 w-6" weight="bold" /></span>
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl border" style="background: color-mix(in oklab, {track.accent} 16%, transparent); border-color: color-mix(in oklab, {track.accent} 34%, transparent); color: {track.accent}"><Icon name={track.icon as never} cls="h-6 w-6" weight="bold" /></span>
           <div class="text-left">
             <p class="font-heading text-lg font-semibold tracking-tight">Nigi Academy</p>
             <p class="text-xs text-muted-foreground">Omnigistic · ISCEA Global Case Competition 2026</p>

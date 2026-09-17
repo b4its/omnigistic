@@ -597,7 +597,7 @@
   >
     <div class="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
       <div class="flex min-w-0 items-center gap-2">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-4px_var(--glow)]">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)]">
           <Icon name="map" cls="h-4 w-4" />
         </span>
         <div class="min-w-0">

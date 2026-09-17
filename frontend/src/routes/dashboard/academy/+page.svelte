@@ -116,7 +116,7 @@
           class="group flex h-full flex-col gap-3 rounded-2xl border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/40"
         >
           <div class="flex items-start justify-between gap-3">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style="background:{track.accent}">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border" style="background: color-mix(in oklab, {track.accent} 16%, transparent); border-color: color-mix(in oklab, {track.accent} 34%, transparent); color: {track.accent}">
               <Icon name={track.icon as never} cls="h-5 w-5" weight="bold" />
             </span>
             <div class="flex flex-col items-end gap-1">

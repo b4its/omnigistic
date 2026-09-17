@@ -146,7 +146,7 @@
           type="button"
           onclick={applySim}
           disabled={simulating}
-          class="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-xs font-semibold text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:opacity-60"
+          class="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-xs font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px active:translate-y-0 disabled:opacity-60"
         >{simulating ? "Menghitung…" : "Terapkan skenario"}</button>
       </div>
     {/if}
@@ -181,7 +181,7 @@
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
       <p class="text-sm font-semibold text-foreground">Gagal memuat forecast demand</p>
       <p class="mt-1 text-xs text-muted-foreground">Backend offline. Coba lagi setelah backend aktif.</p>
-      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-xs font-semibold text-white">Coba lagi</button>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
     </div>
   {:else if loaded}
     <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">Data forecast tidak tersedia.</div>

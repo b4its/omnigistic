@@ -44,7 +44,7 @@
     <header class="overflow-hidden rounded-2xl border bg-card">
       <div class="h-1.5 w-full" style="background:{track.accent}"></div>
       <div class="flex flex-col gap-6 p-6 sm:flex-row sm:items-center">
-        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white" style="background:{track.accent}">
+        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border" style="background: color-mix(in oklab, {track.accent} 16%, transparent); border-color: color-mix(in oklab, {track.accent} 34%, transparent); color: {track.accent}">
           <Icon name={track.icon as never} cls="h-7 w-7" weight="bold" />
         </span>
         <div class="min-w-0 flex-1 space-y-2">
@@ -83,7 +83,7 @@
       {#each track.modules as mod, mi (mod.slug)}
         <div class="rounded-2xl border border-border bg-card">
           <div class="flex items-center gap-3 border-b border-border px-5 py-4">
-            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] text-xs font-bold text-white">{mi + 1}</span>
+            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--primary)] text-xs font-bold text-[var(--primary-foreground)]">{mi + 1}</span>
             <div class="min-w-0">
               <h3 class="text-sm font-semibold text-foreground">Modul {mi + 1} · {mod.title}</h3>
               <p class="text-xs text-muted-foreground">{mod.summary}</p>
@@ -129,7 +129,7 @@
         </div>
         <a
           href={resolveHref(`/dashboard/academy/${track.slug}/sertifikat`)}
-          class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px"
+          class="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px"
         >
           <Icon name="grad" cls="h-4 w-4" /> Lihat sertifikat
         </a>

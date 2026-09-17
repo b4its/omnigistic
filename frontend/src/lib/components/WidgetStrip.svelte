@@ -38,7 +38,7 @@
     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {#each active as w (w.id)}
         <div class="group relative flex items-start gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-primary/40">
-          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style="background: {w.hue}" aria-hidden="true">
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border" style="background: color-mix(in oklab, {w.hue} 16%, transparent); border-color: color-mix(in oklab, {w.hue} 34%, transparent); color: {w.hue}" aria-hidden="true">
             <span class="text-sm font-bold">{w.title[0]}</span>
           </span>
           <a href={resolveHref(HREF[w.id] ?? "/dashboard")} class="min-w-0 flex-1">

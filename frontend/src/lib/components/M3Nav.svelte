@@ -106,7 +106,7 @@
   >
     {#if mode === "expanded"}
       <div class={cn("flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border", railCollapsed ? "justify-center px-2" : "px-5")}>
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] font-heading text-[13px] font-bold text-white shadow-[0_0_14px_-3px_var(--glow)]">GC</span>
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] font-heading text-[13px] font-bold text-[var(--primary-foreground)]">GC</span>
         {#if !railCollapsed}
           <div class="min-w-0 flex-1">
             <p class="truncate font-heading text-sm font-semibold tracking-tight text-foreground">Omnigistic <sup class="text-[13px] text-[var(--bitcoin)]">2.0</sup></p>
@@ -169,7 +169,7 @@
           {:else}
             <span class="truncate">{item.label}</span>
             {#if isActive(item.href)}
-              <span class="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--gold)] shadow-[0_0_8px_var(--glow-gold)]" aria-hidden="true"></span>
+              <span class="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--primary)]" aria-hidden="true"></span>
             {/if}
           {/if}
         </a>

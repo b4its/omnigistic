@@ -116,7 +116,7 @@
 <div
   class={cn(
     "group relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all duration-300",
-    "hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:shadow-[0_0_30px_-10px_var(--glow)]",
+    "hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)]",
     accent && "border-[color-mix(in_oklab,var(--bitcoin)_35%,transparent)]"
   )}
 >
@@ -139,6 +139,4 @@
   {#if sub}
     <p class="relative mt-1.5 text-xs text-muted-foreground">{sub}</p>
   {/if}
-  <!-- sheen dekoratif kiri (glow) saat hover -->
-  <span class="pointer-events-none absolute -left-16 top-0 h-full w-16 -skew-x-12 bg-gradient-to-r from-transparent via-[color-mix(in_oklab,var(--bitcoin)_18%,transparent)] to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
 </div>

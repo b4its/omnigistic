@@ -65,7 +65,7 @@
       <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="map" cls="h-7 w-7" /></span>
       <p class="mt-4 text-base font-semibold text-foreground">Belum ada pesanan</p>
       <p class="mt-1 text-sm text-muted-foreground">Pesanan yang kamu buat akan muncul di sini untuk dilacak.</p>
-      <a href={resolveHref("/dashboard/customer/overview")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
+      <a href={resolveHref("/dashboard/customer/overview")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px">
         <Icon name="search" cls="h-4 w-4" /> Mulai belanja
       </a>
     </div>
@@ -130,7 +130,7 @@
                     type="button"
                     onclick={() => tellPresence(o, "di-rumah")}
                     aria-pressed={o.presenceStatus === "di-rumah"}
-                    class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-colors {o.presenceStatus === 'di-rumah' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_18px_-5px_var(--glow)]' : 'border-success/50 text-success-foreground hover:bg-success/10'}"
+                    class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-colors {o.presenceStatus === 'di-rumah' ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-success/50 text-success-foreground hover:bg-success/10'}"
                   >
                     <Icon name="check" cls="h-3.5 w-3.5" weight="bold" /> Saya ada di rumah
                   </button>
@@ -138,7 +138,7 @@
                     type="button"
                     onclick={() => tellPresence(o, "tidak-di-rumah")}
                     aria-pressed={o.presenceStatus === "tidak-di-rumah"}
-                    class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-colors {o.presenceStatus === 'tidak-di-rumah' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_18px_-5px_var(--glow)]' : 'border-warning/50 text-warning-foreground hover:bg-warning/10'}"
+                    class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-colors {o.presenceStatus === 'tidak-di-rumah' ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-warning/50 text-warning-foreground hover:bg-warning/10'}"
                   >
                     <Icon name="warn" cls="h-3.5 w-3.5" /> Saya tidak di rumah
                   </button>

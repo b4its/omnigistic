@@ -100,7 +100,7 @@
 
   <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
     <div class="flex items-start gap-3">
-      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-white">
+      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)]">
         <Icon name="chat" cls="h-5 w-5" weight="fill" />
       </span>
       <div class="min-w-0">
@@ -108,7 +108,7 @@
         <p class="mt-1.5 text-sm font-medium leading-relaxed text-foreground">
           Paket COD di Cibinong (alamat benar terverifikasi geotag): hubungi penerima dulu untuk slot. Jika belum siap, pindahkan ke PUDO terdekat. Kurir diarahkan mengikuti rute jalan + ETA, agar tidak mencari-cari.
         </p>
-        <button type="button" onclick={openChat} class="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-xs font-semibold text-white transition-transform hover:-translate-y-px active:translate-y-0">
+        <button type="button" onclick={openChat} class="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-xs font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px active:translate-y-0">
           Buka Nigi Chat <Icon name="arrow-up-right" cls="h-3.5 w-3.5" weight="bold" />
         </button>
       </div>
@@ -170,7 +170,7 @@
   {#if parsed}
     <div class="rounded-2xl border border-border bg-card p-5">
       <div class="flex items-center gap-2.5">
-        <span class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-white">
+        <span class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)]">
           {#if analyzing}<span class="absolute inset-0 animate-ping rounded-xl bg-primary/40"></span>{/if}
           <Icon name="chat" cls="h-4 w-4" weight="fill" />
         </span>
@@ -205,7 +205,7 @@
 
       {#if decided && parsed.best}
         <p class="mt-4 flex items-center gap-2 text-[15px]">
-          <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-chart-3 text-white"><Icon name="check" cls="h-3.5 w-3.5" weight="bold" /></span>
+          <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)]"><Icon name="check" cls="h-3.5 w-3.5" weight="bold" /></span>
           <span><strong>Keputusan:</strong> target = {parsed.best.city} · {parsed.best.district} · ETA {parsed.etaMin ?? "—"} menit{parsed.distanceKm != null ? ` · ${parsed.distanceKm} km` : ""}.</span>
         </p>
       {:else if decided && !parsed.best}

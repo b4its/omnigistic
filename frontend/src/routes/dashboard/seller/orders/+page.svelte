@@ -63,7 +63,7 @@
       <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="globe" cls="h-7 w-7" /></span>
       <p class="mt-4 text-base font-semibold text-foreground">Belum ada pesanan masuk</p>
       <p class="mt-1 text-sm text-muted-foreground">Pesanan dari pembeli (portal Customer) yang memuat produkmu akan tampil di sini.</p>
-      <a href={resolveHref("/dashboard/seller/products")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
+      <a href={resolveHref("/dashboard/seller/products")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px">
         <Icon name="stack" cls="h-4 w-4" /> Lihat produk saya
       </a>
     </div>

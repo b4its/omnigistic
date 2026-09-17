@@ -121,7 +121,7 @@
         <Icon name="stack" cls="h-4 w-4" /> Keranjang
         {#if cartCount > 0}<span class="rounded-full bg-muted px-1.5 text-xs tabular-nums">{cartCount}</span>{/if}
       </a>
-      <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
+      <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px">
         <Icon name="map" cls="h-4 w-4" /> Semua pesanan
       </a>
     </div>
@@ -172,7 +172,7 @@
         <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="map" cls="h-7 w-7" /></span>
         <p class="mt-4 text-base font-semibold text-foreground">Belum ada pesanan untuk dilacak</p>
         <p class="mt-1 text-sm text-muted-foreground">Buat pesanan dulu, lalu pantau kurir bergerak menuju alamatmu di sini.</p>
-        <a href={resolveHref("/dashboard/customer/overview")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
+        <a href={resolveHref("/dashboard/customer/overview")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px">
           <Icon name="search" cls="h-4 w-4" /> Mulai belanja
         </a>
       </div>
@@ -228,7 +228,7 @@
                     type="button"
                     onclick={() => tellPresence("di-rumah")}
                     aria-pressed={tracked.presenceStatus === "di-rumah"}
-                    class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {tracked.presenceStatus === 'di-rumah' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_18px_-5px_var(--glow)]' : 'border-success/50 text-success-foreground hover:bg-success/10'}"
+                    class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {tracked.presenceStatus === 'di-rumah' ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-success/50 text-success-foreground hover:bg-success/10'}"
                   >
                     <Icon name="check" cls="h-3.5 w-3.5" weight="bold" /> Ada di rumah
                   </button>
@@ -236,7 +236,7 @@
                     type="button"
                     onclick={() => tellPresence("tidak-di-rumah")}
                     aria-pressed={tracked.presenceStatus === "tidak-di-rumah"}
-                    class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {tracked.presenceStatus === 'tidak-di-rumah' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_18px_-5px_var(--glow)]' : 'border-warning/50 text-warning-foreground hover:bg-warning/10'}"
+                    class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {tracked.presenceStatus === 'tidak-di-rumah' ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-warning/50 text-warning-foreground hover:bg-warning/10'}"
                   >
                     <Icon name="warn" cls="h-3.5 w-3.5" /> Tidak di rumah
                   </button>
@@ -255,7 +255,7 @@
                 <span class="tabular-nums">{Math.round(progress * 100)}%</span>
               </div>
               <div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label="Progres pengantaran">
-                <div class="h-full rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] transition-all" style="width:{Math.round(progress * 100)}%"></div>
+                <div class="h-full rounded-full bg-[var(--primary)] transition-all" style="width:{Math.round(progress * 100)}%"></div>
               </div>
               <p class="text-[11px] text-muted-foreground">
                 {#if reached}Paket sudah tiba di {tracked.address.city}.{:else}± {kmLeft} km · sisa ETA ± {etaLeft} menit menuju {tracked.address.city} (total {tripKm} km).{/if}

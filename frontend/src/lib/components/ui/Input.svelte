@@ -57,7 +57,7 @@
       class={cn(
         "h-12 w-full rounded-lg border-0 border-b-2 border-[var(--input)] bg-[color-mix(in_oklab,var(--foreground)_5%,transparent)] px-4 text-sm text-foreground",
         "placeholder:text-muted-foreground transition-all duration-200",
-        "focus:border-b-[var(--bitcoin)] focus:shadow-[0_10px_20px_-10px_var(--glow)] focus:outline-none",
+        "focus:border-b-[var(--bitcoin)] focus:outline-none",
         "disabled:cursor-not-allowed disabled:opacity-50",
         icon && "pl-10"
       )}

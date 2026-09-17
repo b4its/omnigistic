@@ -61,7 +61,7 @@
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
       <p class="text-sm font-semibold text-foreground">Gagal memuat metrik komplain</p>
       <p class="mt-1 text-xs text-muted-foreground">Backend offline. Muat ulang setelah backend aktif.</p>
-      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-xs font-semibold text-white">Coba lagi</button>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
     </div>
   {:else if loaded}
     <div class="grid gap-4 sm:grid-cols-3">
@@ -105,9 +105,9 @@
     <div class="rounded-2xl border bg-card p-5">
       <p class="mb-2 text-sm font-medium">Penyebab utama (akar → solusi)</p>
       <ul class="space-y-2 text-sm text-muted-foreground">
-        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]"></span><span><span class="font-medium text-foreground">Alamat tidak terstandarisasi</span> → Address Intelligence + geotag wajib saat checkout.</span></li>
-        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]"></span><span><span class="font-medium text-foreground">Routing error (alamat ambigu)</span> → fuzzy matching + 3 kandidat koordinat terskor.</span></li>
-        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)]"></span><span><span class="font-medium text-foreground">Delivery failure (geotag tidak akurat)</span> → konfirmasi slot + ETA presisi.</span></li>
+        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]"></span><span><span class="font-medium text-foreground">Alamat tidak terstandarisasi</span> → Address Intelligence + geotag wajib saat checkout.</span></li>
+        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]"></span><span><span class="font-medium text-foreground">Routing error (alamat ambigu)</span> → fuzzy matching + 3 kandidat koordinat terskor.</span></li>
+        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]"></span><span><span class="font-medium text-foreground">Delivery failure (geotag tidak akurat)</span> → konfirmasi slot + ETA presisi.</span></li>
       </ul>
     </div>
 

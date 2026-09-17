@@ -187,7 +187,7 @@
       type="button"
       onclick={exportCsv}
       disabled={exporting}
-      class="relative flex items-center gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_-5px_var(--glow)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_30px_-5px_var(--glow)] active:scale-100 disabled:opacity-80"
+      class="relative flex items-center gap-1.5 overflow-hidden rounded-full bg-[var(--primary)] px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)] transition-all duration-300 hover:scale-[1.03] hover: active:scale-100 disabled:opacity-80"
     >
       <span class="relative z-10 flex items-center gap-1.5">
         <Icon name="download" cls="h-3.5 w-3.5" weight="bold" />
@@ -235,7 +235,7 @@
         aria-label="Account menu"
         aria-expanded={openPop === "profile"}
         onclick={() => (openPop = openPop === "profile" ? null : "profile")}
-        class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] font-heading text-sm font-bold text-white shadow-[0_0_16px_-4px_var(--glow)]"
+        class="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--primary)] font-heading text-sm font-bold text-[var(--primary-foreground)]"
       >
         {meta.letter}
       </button>

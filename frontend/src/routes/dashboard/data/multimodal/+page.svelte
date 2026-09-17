@@ -155,7 +155,7 @@
             <div class="rounded-xl border border-border bg-background/40 p-3">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <span class="flex items-center gap-2 text-sm font-medium">
-                  <span class="rounded-md px-2 py-0.5 text-[11px] font-semibold text-white" style="background:{modeColor[r.chosen.mode]}">{modalLabel(r.chosen.mode)}</span>
+                  <span class="rounded-md border px-2 py-0.5 text-[11px] font-semibold" style="background: color-mix(in oklab, {modeColor[r.chosen.mode]} 16%, transparent); border-color: color-mix(in oklab, {modeColor[r.chosen.mode]} 34%, transparent); color: {modeColor[r.chosen.mode]}">{modalLabel(r.chosen.mode)}</span>
                   {r.dest} <span class="text-xs text-muted-foreground">· {r.toRegion} · {r.distanceKm} km</span>
                 </span>
                 <span class="text-xs text-muted-foreground">{r.chosen.etaHours} jam {r.chosen.withinSla ? "" : "(di luar SLA→dipaksa)"}</span>
@@ -226,7 +226,7 @@
       <Icon name="warn" cls="mx-auto h-6 w-6" />
       <p class="mt-2 text-sm font-semibold text-foreground">Gagal memuat optimizer</p>
       <p class="mt-1 text-xs text-muted-foreground">Backend offline. Coba lagi setelah backend aktif.</p>
-      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-xs font-semibold text-white">Coba lagi</button>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
     </div>
   {:else}
     <div class="grid gap-4 sm:grid-cols-4">{#each Array(4) as _, i (i)}<div class="h-28 animate-pulse rounded-2xl border border-border bg-card/60"></div>{/each}</div>

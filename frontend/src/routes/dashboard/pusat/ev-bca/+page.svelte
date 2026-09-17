@@ -394,7 +394,7 @@
           <button type="button" onclick={() => applyGrowth(p)} class="rounded-full border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:text-foreground">{p.label}</button>
         {/each}
       </div>
-      <button type="button" onclick={run} disabled={busy} class="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-5 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_-5px_var(--glow)] transition-all duration-300 hover:scale-[1.03] disabled:opacity-60">
+      <button type="button" onclick={run} disabled={busy} class="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)] transition-all duration-300 hover:scale-[1.03] disabled:opacity-60">
         <Icon name="activity" cls="h-3.5 w-3.5" weight="bold" /> Hitung BCA
       </button>
     </div>
@@ -403,12 +403,12 @@
     <div class="flex flex-wrap items-center gap-3">
       <div class="inline-flex rounded-full border border-border bg-card p-1">
         {#each (["conservative", "base", "upside"] as const) as k (k)}
-          <button type="button" onclick={() => (scenarioKey = k)} class="rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors {scenarioKey === k ? 'bg-[var(--bitcoin)] text-white' : 'text-muted-foreground hover:text-foreground'}">{SCEN_LABEL[k]}</button>
+          <button type="button" onclick={() => (scenarioKey = k)} class="rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors {scenarioKey === k ? 'bg-[var(--bitcoin)] text-[var(--primary-foreground)]' : 'text-muted-foreground hover:text-foreground'}">{SCEN_LABEL[k]}</button>
         {/each}
       </div>
       <div class="inline-flex rounded-full border border-border bg-card p-1">
-        <button type="button" onclick={() => (view = "replacement")} class="rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors {view === 'replacement' ? 'bg-[var(--bitcoin)] text-white' : 'text-muted-foreground hover:text-foreground'}">Replacement</button>
-        <button type="button" onclick={() => (view = "incremental")} class="rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors {view === 'incremental' ? 'bg-[var(--bitcoin)] text-white' : 'text-muted-foreground hover:text-foreground'}">Fleet tambahan</button>
+        <button type="button" onclick={() => (view = "replacement")} class="rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors {view === 'replacement' ? 'bg-[var(--bitcoin)] text-[var(--primary-foreground)]' : 'text-muted-foreground hover:text-foreground'}">Replacement</button>
+        <button type="button" onclick={() => (view = "incremental")} class="rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors {view === 'incremental' ? 'bg-[var(--bitcoin)] text-[var(--primary-foreground)]' : 'text-muted-foreground hover:text-foreground'}">Fleet tambahan</button>
       </div>
       <span class="text-xs text-muted-foreground">{SCEN_NOTE[scenarioKey]}</span>
     </div>
@@ -449,7 +449,7 @@
       <!-- Tab: KPI / Arus kas / Roadmap / Simulasi lanjut -->
       <div class="inline-flex flex-wrap rounded-full border border-border bg-card p-1">
         {#each ([["kpi", "Analisis KPI"], ["cashflow", "Arus Kas"], ["roadmap", "Roadmap Rollout"], ["advanced", "Simulasi Lanjutan"]] as const) as [k, label] (k)}
-          <button type="button" onclick={() => (tab = k)} class="rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors {tab === k ? 'bg-[var(--bitcoin)] text-white' : 'text-muted-foreground hover:text-foreground'}">{label}</button>
+          <button type="button" onclick={() => (tab = k)} class="rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors {tab === k ? 'bg-[var(--bitcoin)] text-[var(--primary-foreground)]' : 'text-muted-foreground hover:text-foreground'}">{label}</button>
         {/each}
       </div>
 

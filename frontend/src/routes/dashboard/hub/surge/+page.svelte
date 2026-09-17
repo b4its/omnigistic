@@ -104,7 +104,7 @@
           <button type="button" onclick={() => applyPreset(p)} class="rounded-full border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:text-foreground" title={p.note}>{p.label}</button>
         {/each}
       </div>
-      <button type="button" onclick={run} disabled={busy} class="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-5 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_-5px_var(--glow)] transition-all duration-300 hover:scale-[1.03] disabled:opacity-60">
+      <button type="button" onclick={run} disabled={busy} class="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)] transition-all duration-300 hover:scale-[1.03] disabled:opacity-60">
         <Icon name="activity" cls="h-3.5 w-3.5" weight="bold" /> Jalankan stress-test
       </button>
     </div>

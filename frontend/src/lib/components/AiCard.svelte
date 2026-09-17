@@ -63,7 +63,7 @@
 
 <article class="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-card">
   <header class="flex items-center gap-2.5">
-    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-4px_var(--glow)]">
+    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)]">
       <Icon name="sparkles" cls="h-4 w-4" weight="bold" />
     </span>
     <div class="min-w-0 leading-tight">
@@ -131,7 +131,7 @@
       type="submit"
       disabled={busy || !input.trim()}
       aria-label="Kirim"
-      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-4px_var(--glow)] transition-transform hover:scale-105 disabled:scale-100 disabled:opacity-40"
+      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] transition-transform hover:scale-105 disabled:scale-100 disabled:opacity-40"
     >
       <Icon name="send" cls="h-4 w-4" weight="fill" />
     </button>

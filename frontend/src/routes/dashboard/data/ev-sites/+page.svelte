@@ -105,7 +105,7 @@
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
       <p class="text-sm font-semibold text-foreground">Gagal memuat data hub</p>
       <p class="mt-1 text-xs text-muted-foreground">Backend offline. Muat ulang setelah backend aktif.</p>
-      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-xs font-semibold text-white">Coba lagi</button>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
     </div>
   {:else if loaded}
     <div class="grid gap-4 sm:grid-cols-3">
@@ -116,7 +116,7 @@
 
     <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
       <div class="flex items-start gap-3">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-white"><Icon name="chat" cls="h-5 w-5" weight="fill" /></span>
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)]"><Icon name="chat" cls="h-5 w-5" weight="fill" /></span>
         <div class="min-w-0">
           <p class="text-[13.5px] font-semibold uppercase tracking-wider text-primary">Saran Nigi AI</p>
           <p class="mt-1.5 text-sm font-medium leading-relaxed text-foreground">

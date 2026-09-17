@@ -84,7 +84,7 @@
       <div class="mt-4 grid gap-2 sm:grid-cols-2">
         {#each res.interventionCatalog as it (it.key)}
           <button type="button" onclick={() => toggle(it.key)} aria-pressed={active.has(it.key)} class="flex items-start gap-2.5 rounded-xl border p-3 text-left transition-all {active.has(it.key) ? 'border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_12%,transparent)]' : 'border-border hover:border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)]'}">
-            <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border {active.has(it.key) ? 'border-transparent bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white' : 'border-border'}">
+            <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border {active.has(it.key) ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-border'}">
               {#if active.has(it.key)}<Icon name="check" cls="h-3 w-3" weight="bold" />{/if}
             </span>
             <span class="min-w-0">

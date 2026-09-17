@@ -21,9 +21,9 @@
   <p class="text-sm text-muted-foreground">Enam sudut pandang atas satu sumber kebenaran kasus GC Logistics.</p>
   <div class="grid gap-4 sm:grid-cols-2">
     {#each roles as r (r.slug)}
-      <a href={resolveHref(`/dashboard/${r.slug}/overview`)} class="group flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:shadow-[0_0_30px_-10px_var(--glow)]">
+      <a href={resolveHref(`/dashboard/${r.slug}/overview`)} class="group flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)]">
         <div class="flex items-center gap-2">
-          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] font-heading text-sm font-bold text-white shadow-[0_0_14px_-3px_var(--glow)]">{r.initials}</span>
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)] font-heading text-sm font-bold text-[var(--primary-foreground)]">{r.initials}</span>
           <span class="font-mono text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{r.slug}</span>
         </div>
         <p class="font-heading text-sm font-semibold text-foreground">{r.name} · <span class="font-normal text-muted-foreground">{r.role}</span></p>

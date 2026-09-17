@@ -66,7 +66,7 @@
     {#if loaded && failed}
       <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/5 p-4">
         <p class="text-sm text-foreground">Gagal memuat data armada &amp; hub. Angka di bawah bisa kosong/nol.</p>
-        <button type="button" onclick={load} class="rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-4 py-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_18px_-5px_var(--glow)]">Coba lagi</button>
+        <button type="button" onclick={load} class="rounded-full bg-[var(--primary)] px-4 py-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)]">Coba lagi</button>
       </div>
     {/if}
     <p class="mb-2 text-sm font-semibold text-muted-foreground">Armada last-mile: motor dominan {numId(motorSharePct, 1)}%</p>

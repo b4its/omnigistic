@@ -90,7 +90,7 @@
       <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
         <Icon name="map" cls="h-4 w-4" /> Pesanan<span class="rounded-full bg-muted px-1.5 text-xs tabular-nums">{orders}</span>
       </a>
-      <a href={resolveHref("/dashboard/customer/cart")} class="relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-px">
+      <a href={resolveHref("/dashboard/customer/cart")} class="relative inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px">
         <Icon name="stack" cls="h-4 w-4" /> Keranjang
         {#if cart > 0}<span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--background)] px-1 text-xs font-bold tabular-nums text-[var(--bitcoin)]">{cart}</span>{/if}
       </a>
@@ -116,7 +116,7 @@
             type="button"
             onclick={() => setPersona(p.id)}
             aria-pressed={buyerId === p.id}
-            class="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors {buyerId === p.id ? 'bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-5px_var(--glow)]' : 'text-muted-foreground hover:text-foreground'}"
+            class="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors {buyerId === p.id ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-muted-foreground hover:text-foreground'}"
           >{p.id === "BUY-GOOD" ? "Demo: baik" : "Demo: buruk"}</button>
         {/each}
       </div>
@@ -175,7 +175,7 @@
           type="button"
           onclick={() => setCategory(c)}
           aria-pressed={category === c}
-          class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {category === c ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-5px_var(--glow)]' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
+          class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {category === c ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
         >
           {c}
         </button>

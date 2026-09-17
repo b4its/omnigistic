@@ -109,7 +109,7 @@
 
   <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
     <div class="flex items-start gap-3">
-      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-white">
+      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)]">
         <Icon name="chat" cls="h-5 w-5" weight="fill" />
       </span>
       <div class="min-w-0">
@@ -136,7 +136,7 @@
     <ol class="space-y-4">
       {#each steps as s (s.n)}
         <li class="flex gap-3">
-          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] text-xs font-bold text-white">{s.n}</span>
+          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-xs font-bold text-[var(--primary-foreground)]">{s.n}</span>
           <div>
             <p class="text-sm font-semibold">{s.t}</p>
             <p class="mt-0.5 text-[15px] text-muted-foreground">{s.d}</p>

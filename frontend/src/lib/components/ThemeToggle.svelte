@@ -38,7 +38,7 @@
     <Icon name="moon" cls="h-3.5 w-3.5" />
   </span>
   <span
-    class="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_12px_-2px_var(--glow)] transition-transform duration-300"
+    class="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] transition-transform duration-300"
     style="transform: translateX({cur === 'dark' ? '26px' : '0px'})"
   >
     <Icon name={cur === "dark" ? "moon" : "sun"} cls="h-3.5 w-3.5" weight="bold" />

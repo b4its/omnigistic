@@ -97,7 +97,7 @@
   <div class="flex-1 space-y-2.5 overflow-y-auto px-5 py-3">
     {#each filtered as w (w.id)}
       <div class={cn("flex gap-3 rounded-2xl border p-3 transition-colors", sel.has(w.id) ? "border-primary bg-accent" : "border-border")}>
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style="background: {w.hue}" aria-hidden="true">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border" style="background: color-mix(in oklab, {w.hue} 16%, transparent); border-color: color-mix(in oklab, {w.hue} 34%, transparent); color: {w.hue}" aria-hidden="true">
           <span class="text-sm font-bold">{w.title[0]}</span>
         </span>
         <div class="min-w-0 flex-1">
@@ -108,7 +108,7 @@
             <button
               type="button"
               onclick={() => toggle(w.id)}
-              class={cn("rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all", sel.has(w.id) ? "border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-5px_var(--glow)]" : "border-border text-foreground hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)]")}
+              class={cn("rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all", sel.has(w.id) ? "border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]" : "border-border text-foreground hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)]")}
             >
               {sel.has(w.id) ? "Dipilih" : "Pilih"}
             </button>
@@ -124,7 +124,7 @@
     <span class="text-xs text-muted-foreground">{sel.size} dipilih</span>
     <button
       type="button"
-      class="rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-5 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_-5px_var(--glow)] transition-all duration-300 hover:scale-[1.03] active:scale-100"
+      class="rounded-full bg-[var(--primary)] px-5 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)] transition-all duration-300 hover:scale-[1.03] active:scale-100"
       onclick={apply}
     >
       Tambah ke dashboard

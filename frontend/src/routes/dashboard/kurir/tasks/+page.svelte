@@ -213,7 +213,7 @@
             <div class="space-y-4">
               <!-- Tugas kurir saat ini -->
               <div class="flex items-start gap-3 rounded-xl border border-primary/30 bg-accent/40 p-4">
-                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-white">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)]">
                   <Icon name={task.icon as never} cls="h-5 w-5" />
                 </span>
                 <div class="min-w-0">
@@ -279,7 +279,7 @@
                     <button
                       type="button"
                       onclick={() => advance(o)}
-                      class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_20px_-5px_var(--glow)] px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-px"
+                      class="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px"
                     >
                       <Icon name="arrow-up-right" cls="h-4 w-4" weight="bold" /> {task.title}
                     </button>

@@ -266,7 +266,7 @@
       <button
         type="button"
         onclick={newConversation}
-        class="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-3 py-2 text-[13px] font-semibold text-white shadow-[0_0_16px_-4px_var(--glow)] transition-transform hover:scale-[1.01] active:scale-[0.99]"
+        class="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[var(--primary)] px-3 py-2 text-[13px] font-semibold text-[var(--primary-foreground)] transition-transform hover:scale-[1.01] active:scale-[0.99]"
       >
         <Icon name="plus" cls="h-4 w-4" weight="bold" />
         Percakapan baru
@@ -385,7 +385,7 @@
       >
         <Icon name="chat" cls="h-5 w-5" />
       </button>
-      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-sm font-extrabold text-white">Nigi</span>
+      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary)] text-sm font-extrabold text-[var(--primary-foreground)]">Nigi</span>
       <div class="min-w-0">
         <h1 class="font-heading text-2xl font-light tracking-tight">{activeConv()?.title ?? "Nigi AI"}</h1>
         <p class="text-[13px] text-muted-foreground">Asisten Omnigistic · {roleName[role] ?? role} · data studi kasus GC Logistics</p>
@@ -401,7 +401,7 @@
         </button>
         <a
           href="#composer"
-          class="rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_-5px_var(--glow)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]"
+          class="rounded-full bg-[var(--primary)] px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]"
         >
           Tanya Nigi
         </a>
@@ -412,7 +412,7 @@
       <div bind:this={logEl} class="overscroll-isolate min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5" role="log" aria-live="polite" aria-label="Percakapan Nigi AI">
         {#if introLoading}
           <div class="flex gap-2.5">
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-[10px] font-bold text-white">Nigi</span>
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">Nigi</span>
             <div class="h-16 w-2/3 animate-pulse rounded-2xl border border-border bg-muted/50"></div>
           </div>
         {:else if introError}
@@ -422,7 +422,7 @@
         {:else}
           <div class="space-y-3">
             <div class="flex gap-2.5">
-              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-[10px] font-bold text-white">Nigi</span>
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">Nigi</span>
               <div class="rounded-2xl rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-[15px] leading-relaxed text-foreground">
                 {intro.greeting}
               </div>
@@ -464,7 +464,7 @@
         {#each msgs as m, i (i)}
           <div class={cn("flex gap-2.5", m.role === "user" && "justify-end")}>
             {#if m.role === "assistant"}
-              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-[10px] font-bold text-white">Nigi</span>
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">Nigi</span>
             {/if}
             <div class={cn("max-w-[82%] rounded-2xl px-3.5 py-2.5 text-[15px] leading-relaxed", m.role === "user" ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm border border-border bg-card text-foreground")}>
               {#if m.role === "assistant"}
@@ -491,7 +491,7 @@
 
         {#if busy}
           <div class="flex gap-2.5">
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] shadow-[0_0_16px_-4px_var(--glow)] text-[10px] font-bold text-white">Nigi</span>
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">Nigi</span>
             <div class="rounded-2xl rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-[15px] text-muted-foreground">mengetik…</div>
           </div>
         {/if}
@@ -517,7 +517,7 @@
             type="submit"
             disabled={busy || !input.trim()}
             aria-label="Kirim pesan"
-            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-4px_var(--glow)] transition-transform hover:scale-105 disabled:scale-100 disabled:opacity-40"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] transition-transform hover:scale-105 disabled:scale-100 disabled:opacity-40"
           >
             <Icon name="send" cls="h-4 w-4" weight="fill" />
           </button>

@@ -86,14 +86,14 @@
       type="button"
       onclick={() => setFilter("Semua")}
       aria-pressed={filter === "Semua"}
-      class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {filter === 'Semua' ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-5px_var(--glow)]' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
+      class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {filter === 'Semua' ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
     >Semua ({customers.length})</button>
     {#each SEGMENTS as s (s)}
       <button
         type="button"
         onclick={() => setFilter(s)}
         aria-pressed={filter === s}
-        class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {filter === s ? 'border-transparent bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-5px_var(--glow)]' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
+        class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {filter === s ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
       >{s} ({segments[s]})</button>
     {/each}
   </div>
