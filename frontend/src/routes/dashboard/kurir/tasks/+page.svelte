@@ -21,18 +21,26 @@
     DEFAULT_COURIER_NOTE,
     COURIER_TASK,
     PRESENCE_LABEL,
+    isOutForDelivery,
     nextStatus,
     progressForStatus,
     type Order
   } from "$lib/stores/shop";
-  import { COURIER, HUB_LABEL, etaForCity, buildSlot, COD_DECISION_LABEL } from "$lib/logistics";
+  import { COURIER, HUB_LABEL, etaForCity, distanceForCity, buildSlot, COD_DECISION_LABEL } from "$lib/logistics";
   import { notify, type ToastType as TxType } from "$lib/toast";
 
   /** Identitas kurir — satu sumber (logistics.ts) agar konsisten dgn Topbar. */
   const actor = (): string => COURIER.actor;
 
   let orders = $state<Order[]>([]);
+  /**
+   * Pesanan yang petanya sedang dibuka. Default: pesanan yang sedang DIANTAR
+   * (status `dikirim`) agar kurir langsung melihat peta rute lengkap tanpa klik —
+   * mengikuti perilaku dashboard pembeli. Bisa dibuka/tutup manual per pesanan.
+   */
   let openMapId = $state<string | null>(null);
+  /** true bila peta pesanan ini pernah di-auto-buka (agar tidak menimpa aksi manual). */
+  let mapAutoOpened = $state(false);
   /** Draf keterangan kondisi per pesanan (dipetakan ke id pesanan). */
   let noteDraft = $state<Record<string, string>>({});
   /** Draf slot pengantaran per pesanan (jam mulai & selesai terpisah). */
@@ -43,9 +51,22 @@
     const unsub = shop.subscribe((s) => {
       orders = s.orders;
       ensureSlotDrafts(s.orders);
+      autoOpenMap(s.orders);
     });
     return unsub;
   });
+
+  /**
+   * Buka peta pesanan yang sedang diantar secara otomatis SEKALI saat data pertama
+   * tiba, sehingga kurir langsung melihat rute lengkap. Setelah itu aksi manual
+   * kurir (buka/tutup) tidak ditimpa.
+   */
+  function autoOpenMap(list: Order[]) {
+    if (mapAutoOpened || list.length === 0) return;
+    const out = list.find((o) => isOutForDelivery(o.status)) ?? list.find((o) => o.status !== "terkirim") ?? list[0];
+    openMapId = out.id;
+    mapAutoOpened = true;
+  }
 
   /** Pastikan tiap pesanan punya draf slot {start,end} agar bind:value aman. */
   function ensureSlotDrafts(list: Order[]) {
@@ -135,7 +156,7 @@
 
   function toggleMap(id: string) {
     openMapId = openMapId === id ? null : id;
-    toast(openMapId ? `Rute pengantaran ${id} ditampilkan` : `Rute ${id} disembunyikan`, "info");
+    toast(openMapId ? `Peta lengkap rute ${id} ditampilkan` : `Peta rute ${id} disembunyikan`, "info");
   }
 
   const decisionTone: Record<string, string> = {
@@ -367,9 +388,10 @@
               <button
                 type="button"
                 onclick={() => toggleMap(o.id)}
+                aria-expanded={openMapId === o.id}
                 class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-accent"
               >
-                <Icon name="map" cls="h-3.5 w-3.5" /> {openMapId === o.id ? "Sembunyikan rute" : "Lihat rute pengantaran"}
+                <Icon name="map" cls="h-3.5 w-3.5" /> {openMapId === o.id ? "Sembunyikan peta lengkap" : "Lihat peta lengkap"}
               </button>
               {#if openMapId === o.id}
                 <DeliveryMap
@@ -378,10 +400,16 @@
                   originLabel={HUB_LABEL}
                   destLabel={`${o.address.city} · ${o.address.recipient}`}
                   etaMin={etaForCity(o.address.city)}
-                  height={220}
+                  height={360}
                   role="KURIR"
                   routeIntel
                 />
+                <p class="text-[11px] leading-snug text-muted-foreground">
+                  Peta lengkap: titik awal {HUB_LABEL} → posisi kurir → tujuan {o.address.city}
+                  ({distanceForCity(o.address.city)} km · ETA {etaForCity(o.address.city)} mnt).
+                  Garis hijau = jalur sudah ditempuh; panel kanan = jalur tercepat; titik ungu = PUDO rekomendasi drop.
+                  Data peta © OpenStreetMap.
+                </p>
               {/if}
             </aside>
           </div>
