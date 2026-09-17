@@ -15,7 +15,7 @@
   import { themeStore } from "$lib/stores/theme";
   import Icon from "$lib/components/Icon.svelte";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
-  import { coordsForCity, HUB_LABEL, etaForCity, distanceForCity, pudosForCity, pudoDropRecommendation, PUDO_POINTS } from "$lib/logistics";
+  import { coordsForCity, HUB_LABEL, etaForCity, distanceForCity, pudosForCity, pudoDropRecommendation, PUDO_POINTS, PUDO_KIND_META, pudoCountByKind, pudoCityCount, type PudoKind } from "$lib/logistics";
   import { api, type RoutePlanResult } from "$lib/api";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
 
@@ -96,6 +96,14 @@
   /** Titik PUDO di kota ini + rekomendasi drop terdekat dari tujuan. */
   const pudos = $derived(showPudo ? pudosForCity(city) : []);
   const dropRec = $derived(showPudo ? pudoDropRecommendation(city) : null);
+
+  /** Warna PUDO per KATEGORI mitra (minimarket/pos/agen/komunitas). */
+  function pudoKindStyle(kind: PudoKind): { color: string; fill: string } {
+    const m = PUDO_KIND_META[kind] ?? PUDO_KIND_META.minimarket;
+    return { color: m.color, fill: m.fill };
+  }
+  /** Ringkasan jumlah titik per kategori (untuk legenda). */
+  const kindCounts = pudoCountByKind;
 
   // ── Route Intelligence: jalur tercepat berbasis kepadatan & efisiensi ──
   let plan = $state<RoutePlanResult | null>(null);
@@ -287,23 +295,27 @@
       const recId = dropRec?.pudo.id;
       for (const p of pudos) {
         const isRec = p.id === recId;
+        const ks = pudoKindStyle(p.kind);
         const mk = L.circleMarker(p.coord as unknown as LeafletNS.LatLngExpression, {
           radius: isRec ? 11 : 7,
-          color: isRec ? "#7c3aed" : "#8b5cf6",
+          // Rekomendasi selalu ungu pekat (aksen aksi); lainnya diwarnai per kategori.
+          color: isRec ? "#7c3aed" : ks.color,
           weight: isRec ? 4 : 2,
-          fillColor: isRec ? "#ede9fe" : "#ddd6fe",
+          fillColor: isRec ? "#ede9fe" : ks.fill,
           fillOpacity: isRec ? 1 : 0.85,
           dashArray: isRec ? undefined : "2 3",
         }).addTo(map);
-        const tag = isRec ? (isCourier ? "Titik drop rekomendasi (kurir)" : "PUDO terdekat (rekomendasi)") : "PUDO mitra";
+        const kindLabel = PUDO_KIND_META[p.kind]?.label ?? "Mitra";
+        const tag = isRec ? (isCourier ? "Titik drop rekomendasi (kurir)" : "PUDO terdekat (rekomendasi)") : `PUDO · ${kindLabel}`;
         mk.bindTooltip(`${tag} · ${p.name} (${p.partner})`, { direction: "top" });
-        const srcNote = p.source === "osm" ? "Koordinat & alamat: OpenStreetMap" : "Koordinat: asumsi tim";
+        const srcNote = p.source === "osm" ? "Koordinat & alamat: OpenStreetMap (ODbL)" : "Koordinat: asumsi tim";
         mk.bindPopup(
           `<strong>${p.name}</strong> · ${p.partner}<br/>` +
+            `<span style="opacity:.85">${kindLabel}</span><br/>` +
             `${isCourier ? "Titik drop paket rekomendasi" : "Titik ambil/bayar paket"}<br/>` +
             `<span style="opacity:.8">${p.address}</span><br/>` +
             `Jam layanan ${p.hours} · kapasitas ${p.capacityPerDay} paket/hari<br/>` +
-            `<span style="opacity:.7;font-size:11px">${srcNote}</span>` +
+            `<span style="opacity:.7;font-size:11px">${p.city} · ${p.region} · ${srcNote}</span>` +
             (isRec && dropRec ? `<br/>Jarak dari tujuan ± ${dropRec.distanceKm} km · ETA ± ${dropRec.etaMin} menit` : "")
         );
       }
@@ -422,6 +434,16 @@
           {/if}
         </ul>
 
+        <!-- Kategori mitra PUDO (warna marker non-rekomendasi) -->
+        {#if showPudo && pudos.length > 0}
+          <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Kategori mitra (warna)</p>
+          <ul class="space-y-1.5">
+            {#each kindCounts() as kc (kc.kind)}
+              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2" style="border-color:{kc.color};background:{kc.fill}"></span> <span class="text-muted-foreground">{kc.label} <b class="text-foreground">· {kc.count}</b></span></li>
+            {/each}
+          </ul>
+        {/if}
+
         <!-- Garis rute -->
         <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis rute</p>
         <ul class="space-y-1.5">
@@ -444,7 +466,7 @@
 
         <!-- Sumber & catatan -->
         <p class="border-t border-border pt-2 text-[10px] italic leading-snug text-muted-foreground">
-          Jaringan PUDO nasional: {PUDO_POINTS.length} titik mitra di 6 region. Ubin peta © OpenStreetMap;
+          Jaringan PUDO nasional: {PUDO_POINTS.length} titik mitra · {pudoCityCount()} kota di 6 region. Ubin peta © OpenStreetMap;
           koordinat & alamat PUDO diverifikasi dari OpenStreetMap (ODbL); jam/kapasitas & kepadatan = asumsi tim (prototipe).
         </p>
       </div>

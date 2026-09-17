@@ -3,7 +3,7 @@
   import type * as LeafletNS from "leaflet";
   import type { Hub } from "$lib/api";
   import { OSM_TILE } from "$lib/map/tiles";
-  import { PUDO_POINTS, pudoCountByRegion, UTIL_THRESHOLD } from "$lib/logistics";
+  import { PUDO_POINTS, pudoCountByRegion, pudoCountByKind, pudoCityCount, UTIL_THRESHOLD } from "$lib/logistics";
   import Icon from "$lib/components/Icon.svelte";
 
   interface Props {
