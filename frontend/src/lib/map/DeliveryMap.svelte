@@ -11,8 +11,10 @@
   import { onMount } from "svelte";
   import type * as LeafletNS from "leaflet";
   import { get } from "svelte/store";
+  import { browser } from "$app/environment";
   import { themeStore } from "$lib/stores/theme";
   import Icon from "$lib/components/Icon.svelte";
+  import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { coordsForCity, HUB_LABEL, etaForCity, distanceForCity, pudosForCity, pudoDropRecommendation, PUDO_POINTS } from "$lib/logistics";
   import { api, type RoutePlanResult } from "$lib/api";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
@@ -33,9 +35,25 @@
     showPudo?: boolean;
     /** Aktifkan Route Intelligence (jalur tercepat: kepadatan + efisiensi). */
     routeIntel?: boolean;
+    /**
+     * Tampilkan tombol "perbesar" untuk membuka peta modal layar-penuh.
+     * Instance di dalam modal memakai `expandable={false}` agar tak rekursif.
+     */
+    expandable?: boolean;
+    /**
+     * Tampilkan legenda bawaan (collapsible) di atas peta. Dimatikan pada
+     * instance di dalam modal karena legenda dikelola panel modal.
+     */
+    showLegend?: boolean;
+    /**
+     * Mode ringkas untuk peta kecil (mis. sidebar ~300px): sembunyikan panel
+     * besar "Jalur tercepat" agar tak menumpuk legenda & peta tetap terbaca.
+     * Pewarnaan rute tetap aktif; panel lengkap tersedia lewat peta layar penuh.
+     */
+    compact?: boolean;
   }
 
-  let { progress = 0, city = "Bogor", originLabel = HUB_LABEL, destLabel = "Alamat penerima", etaMin, height = 360, role = "", showPudo = true, routeIntel = false }: Props = $props();
+  let { progress = 0, city = "Bogor", originLabel = HUB_LABEL, destLabel = "Alamat penerima", etaMin, height = 360, role = "", showPudo = true, routeIntel = false, expandable = true, showLegend = true, compact = false }: Props = $props();
 
   /** true bila pengguna adalah kurir (PUDO = titik aksi, bukan sekadar info). */
   const isCourier = $derived(role.toUpperCase() === "KURIR");
@@ -43,6 +61,23 @@
   let mapEl = $state<HTMLElement | undefined>();
   /** Legenda peta: terbuka default (collapsible). */
   let legendOpen = $state(true);
+  /** Legenda pada instance modal (layar penuh) — bisa dibuka/tutup sendiri. */
+  let legendOpenFs = $state(true);
+
+  /** Modal layar-penuh: status buka + fokus terakhir (untuk dikembalikan). */
+  let fullscreen = $state(false);
+  let fsTrigger: HTMLElement | null = null;
+
+  /** Buka peta layar penuh (ingat pemicu agar fokus kembali saat ditutup). */
+  function openFullscreen(e: MouseEvent) {
+    fsTrigger = e.currentTarget as HTMLElement;
+    fullscreen = true;
+  }
+  /** Tutup modal & kembalikan fokus ke tombol pemicu. */
+  function closeFullscreen() {
+    fullscreen = false;
+    fsTrigger?.focus();
+  }
 
   type LL = [number, number];
 
@@ -302,10 +337,25 @@
   }
 
   onMount(() => {
+    // Tutup modal dengan Escape.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && fullscreen) closeFullscreen();
+    };
+    window.addEventListener("keydown", onKey);
     // disposed dikelola di luar agar $effect rebuild tak dianggap unmount.
     return () => {
+      window.removeEventListener("keydown", onKey);
       disposed = true;
       teardownMap();
+    };
+  });
+
+  // Kunci scroll body saat modal terbuka (tanpa mengganggu instance inline).
+  $effect(() => {
+    if (!browser) return;
+    document.body.style.overflow = fullscreen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
     };
   });
 
@@ -343,16 +393,18 @@
     class="absolute inset-0"
   ></div>
   <!-- Legenda peta lengkap & rinci (collapsible) -->
+  {#if showLegend}
   <div class="absolute left-2 top-2 z-[1000] max-w-[min(17rem,calc(100%-1rem))] rounded-lg border border-border bg-background/92 text-[12px] shadow-pop backdrop-blur">
     <button
       type="button"
       onclick={() => (legendOpen = !legendOpen)}
       aria-expanded={legendOpen}
       aria-controls="map-legend"
+      aria-label={legendOpen ? "Tutup legenda peta" : "Buka legenda peta"}
       class="flex w-full items-center justify-between gap-2 px-3 py-2 font-semibold text-foreground"
     >
       <span class="flex items-center gap-1.5"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</span>
-      <Icon name={legendOpen ? "caret-down" : "arrow-right"} cls="h-3 w-3 shrink-0 text-muted-foreground" weight="bold" />
+      <Icon name={legendOpen ? "x" : "arrow-right"} cls="h-3 w-3 shrink-0 text-muted-foreground" weight="bold" />
     </button>
     {#if legendOpen}
       <div id="map-legend" class="max-h-[60%] space-y-2 overflow-y-auto border-t border-border px-3 py-2.5">
@@ -396,8 +448,9 @@
       </div>
     {/if}
   </div>
+  {/if}
 
-  {#if routeIntel}
+  {#if routeIntel && !compact}
     <!-- Panel Route Intelligence: jalur tercepat (kepadatan + efisiensi) -->
     <div class="absolute right-2 top-2 z-[1000] w-[min(20rem,calc(100%-1rem))] rounded-xl border border-border bg-background/95 p-3 text-[12px] shadow-pop">
       <div class="mb-2 flex items-center justify-between gap-2">
@@ -481,4 +534,103 @@
       </p>
     </div>
   {/if}
+
+  {#if expandable}
+    <!-- Tombol perbesar → peta modal layar-penuh -->
+    <button
+      type="button"
+      onclick={openFullscreen}
+      aria-label="Perbesar peta ke layar penuh"
+      title="Perbesar peta (layar penuh)"
+      class="absolute bottom-2 right-2 z-[1000] inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/95 px-3 py-2 text-[12px] font-semibold text-foreground shadow-pop backdrop-blur transition-colors hover:bg-accent"
+    >
+      <Icon name="layers" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Perbesar
+    </button>
+  {/if}
 </div>
+
+{#if expandable && fullscreen}
+  <!-- Modal peta layar penuh: peta penuh tanpa gangguan + legenda collapsible -->
+  <div
+    class="fixed inset-0 z-[10000] flex flex-col bg-background/98 backdrop-blur-sm"
+    role="dialog"
+    aria-modal="true"
+    aria-label={`Peta layar penuh: ${originLabel} ke ${destLabel}`}
+    tabindex="-1"
+  >
+    <div class="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+      <div class="flex min-w-0 items-center gap-2">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--bitcoin-deep)] to-[var(--bitcoin)] text-white shadow-[0_0_16px_-4px_var(--glow)]">
+          <Icon name="map" cls="h-4 w-4" />
+        </span>
+        <div class="min-w-0">
+          <p class="truncate text-sm font-semibold text-foreground">Peta pengantaran — layar penuh</p>
+          <p class="truncate text-[11px] text-muted-foreground">{originLabel} → {destLabel}{role ? ` · ${role}` : ""}</p>
+        </div>
+      </div>
+      <div class="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onclick={() => (legendOpenFs = !legendOpenFs)}
+          aria-expanded={legendOpenFs}
+          class="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-[12px] font-semibold text-foreground transition-colors hover:bg-accent"
+        >
+          <Icon name="map" cls="h-3.5 w-3.5" /> {legendOpenFs ? "Sembunyikan legenda" : "Tampilkan legenda"}
+        </button>
+        <button
+          type="button"
+          onclick={closeFullscreen}
+          aria-label="Tutup peta layar penuh"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <Icon name="x" cls="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+
+    <div class="flex min-h-0 flex-1">
+      <div class="min-w-0 flex-1">
+        {#key fullscreen}
+          <DeliveryMap
+            {progress}
+            {city}
+            {originLabel}
+            {destLabel}
+            {etaMin}
+            height={420}
+            {role}
+            {showPudo}
+            {routeIntel}
+            expandable={false}
+            showLegend={false}
+          />
+        {/key}
+      </div>
+      {#if legendOpenFs}
+        <aside class="w-[18rem] max-w-[40vw] shrink-0 overflow-y-auto border-l border-border bg-card p-4 text-[12px]">
+          <p class="mb-2 flex items-center gap-1.5 font-semibold text-foreground"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</p>
+          <ul class="space-y-1.5">
+            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span> <span><b class="text-foreground">Hub asal</b> — {originLabel}</span></li>
+            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#2563eb] bg-[#dbeafe]"></span> <span><b class="text-foreground">Kurir</b> — posisi saat ini</span></li>
+            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#fde4d8]"></span> <span><b class="text-foreground">Tujuan</b> — {destLabel}</span></li>
+            {#if showPudo && pudos.length > 0}
+              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span> <span><b class="text-foreground">PUDO mitra</b> — titik ambil/bayar</span></li>
+              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#7c3aed] bg-[#ede9fe]"></span> <span><b class="text-foreground">{isCourier ? "Drop rekomendasi" : "PUDO terdekat"}</b> — tujuan alternatif</span></li>
+            {/if}
+          </ul>
+          <p class="mt-3 border-t border-border pt-2 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis rute</p>
+          <ul class="mt-2 space-y-1.5">
+            <li class="flex items-center gap-2"><span class="h-0.5 w-6 shrink-0 rounded bg-[#94a3b8]"></span> <span>Rencana rute (penuh)</span></li>
+            <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>Sudah ditempuh</span></li>
+            {#if routeIntel}
+              <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[var(--bitcoin)]"></span> <span>Jalur terpilih (tebal)</span></li>
+            {/if}
+          </ul>
+          <p class="mt-3 border-t border-border pt-2 text-[10px] italic leading-snug text-muted-foreground">
+            Ubin peta © OpenStreetMap (ODbL). Jam/kapasitas & kepadatan = asumsi tim (prototipe).
+          </p>
+        </aside>
+      {/if}
+    </div>
+  </div>
+{/if}

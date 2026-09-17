@@ -202,6 +202,9 @@ PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node script
 # Uji konsistensi triase COD lintas halaman kurir (predikat & ambang tunggal) (13)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-cod-triage.mjs
 
+# Uji peta modal layar-penuh + legenda collapsible (open/close) (15)
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-map-modal.mjs
+
 # Uji state error saat backend offline — 8 halaman (8)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-offline.mjs
 ```

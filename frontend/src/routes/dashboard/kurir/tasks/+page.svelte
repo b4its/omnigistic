@@ -396,11 +396,12 @@
                   height={360}
                   role="KURIR"
                   routeIntel
+                  compact
                 />
                 <p class="text-[11px] leading-snug text-muted-foreground">
                   Peta lengkap: titik awal {HUB_LABEL} → posisi kurir → tujuan {o.address.city}
                   ({distanceForCity(o.address.city)} km · ETA {etaForCity(o.address.city)} mnt).
-                  Garis hijau = jalur sudah ditempuh; panel kanan = jalur tercepat; titik ungu = PUDO rekomendasi drop.
+                  Klik <span class="font-medium text-foreground">Perbesar</span> untuk peta layar penuh (legenda &amp; jalur tercepat).
                   Data peta © OpenStreetMap.
                 </p>
               {/if}
