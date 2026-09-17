@@ -3,6 +3,7 @@
   import { SvelteSet } from "svelte/reactivity";
   import MetricCard from "$lib/components/MetricCard.svelte";
   import EChart from "$lib/components/EChart.svelte";
+  import CodRealOrdersBridge from "$lib/components/CodRealOrdersBridge.svelte";
   import { barChart } from "$lib/charts/options";
   import { api, type CodIntelResult } from "$lib/api";
   import { notify } from "$lib/toast";
@@ -268,4 +269,7 @@
   {:else}
     <div class="grid gap-4 sm:grid-cols-4">{#each Array(4) as _, i (i)}<div class="h-28 animate-pulse rounded-2xl border border-border bg-card/60"></div>{/each}</div>
   {/if}
+
+  <!-- Jembatan ke pesanan COD NYATA (agar simulasi tidak terpisah dari alur kurir) -->
+  <CodRealOrdersBridge />
 </div>

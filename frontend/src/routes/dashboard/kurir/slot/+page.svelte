@@ -2,8 +2,8 @@
   import { onMount } from "svelte";
   import { resolveHref } from "$lib/utils";
   import { api } from "$lib/api";
-  import { shop, ORDER_STATUS_LABEL, type Order } from "$lib/stores/shop";
-  import { COURIER, etaForCity, buildSlot } from "$lib/logistics";
+  import { shop, ORDER_STATUS_LABEL, progressForStatus, type Order } from "$lib/stores/shop";
+  import { COURIER, remainingEtaMin, buildSlot } from "$lib/logistics";
   import { notify, type ToastType as TxType } from "$lib/toast";
 
   const stages = [
@@ -57,7 +57,10 @@
     orders.filter((o) => o.status !== "terkirim" && o.slot).sort((a, b) => (a.slot ?? "").localeCompare(b.slot ?? ""))
   );
 
-  // Pastikan tiap pesanan punya draf slot {start,end} agar bind:value aman.
+  /** Sisa ETA (menit) yang jujur: memperhitungkan progres kurir dari status. */
+  function etaLeft(o: Order): number {
+    return remainingEtaMin(o.address.city, progressForStatus(o.status));
+  }
 
   function toast(message: string, type: TxType = "success") {
     notify({ message, type, title: "Slot Pengantaran" });
@@ -114,7 +117,7 @@
           {#each pending as o (o.id)}
             <li class="flex flex-wrap items-center gap-3 rounded-xl border border-warning/40 bg-warning/5 px-4 py-3">
               <span class="font-mono text-xs text-muted-foreground">{o.id}</span>
-              <span class="min-w-0 flex-1 truncate text-sm text-foreground">{o.address.recipient} · {o.address.city} · ETA ± {etaForCity(o.address.city)} mnt</span>
+              <span class="min-w-0 flex-1 truncate text-sm text-foreground">{o.address.recipient} · {o.address.city} · ETA sisa ± {etaLeft(o)} mnt</span>
               <div class="flex items-center gap-2">
                 <label class="flex items-center gap-1.5 text-xs text-muted-foreground">
                   Mulai

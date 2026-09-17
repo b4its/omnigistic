@@ -6,8 +6,8 @@
   import { donutChart } from "$lib/charts/options";
   import { resolveHref, numId } from "$lib/utils";
   import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, type Order } from "$lib/stores/shop";
-  import { COURIER, COD_DECISION_LABEL } from "$lib/logistics";
+  import { shop, codTriageOrders, type Order } from "$lib/stores/shop";
+  import { COURIER, COD_DECISION_LABEL, COD_THRESHOLDS, codDecisionTone } from "$lib/logistics";
   import { notify } from "$lib/toast";
 
   let packages = $state<CodRiskPkg[]>([]);
@@ -41,43 +41,39 @@
     loaded = true;
   }
 
-  /** Pesanan COD nyata, diurutkan dari skor risiko tertinggi. */
-  const realCod = $derived(
-    orders
-      .filter((o) => o.payment === "COD")
-      .sort((a, b) => (b.codScore ?? 0) - (a.codScore ?? 0))
-  );
+  /** Pesanan COD nyata dalam triase, diurutkan dari skor risiko tertinggi. */
+  const realCod = $derived(codTriageOrders(orders));
 
   function reroute(o: Order) {
     shop.routeToPudo(o.id, COURIER.actor);
     notify({ message: `Paket ${o.id} dialihkan ke PUDO`, type: "info", title: "Predictive COD" });
   }
 
-  const decisionCls: Record<string, string> = {
-    "antar-normal": "bg-success text-success-foreground",
-    pudo: "bg-warning text-warning-foreground",
-    "pre-payment": "bg-destructive text-destructive-foreground"
-  };
-  const clusterCls: Record<string, string> = {
-    hijau: "bg-success text-success-foreground",
-    kuning: "bg-warning text-warning-foreground",
-    merah: "bg-destructive text-destructive-foreground"
-  };
+  /** Ambang & tier dari satu sumber (logistics) — bukan hardcode. */
+  const T_NORMAL = COD_THRESHOLDS.normal;
+  const T_PUDO = COD_THRESHOLDS.pudo;
 
   const TIERS = [
     { key: "hijau", label: "Hijau · Cepat", color: "var(--color-chart-3)",
-      crit: "Skor < 0,35. Penerima siap bayar, ambil paket cepat (≈ 2-6 menit).",
+      crit: `Skor < ${numId(T_NORMAL, 2)}. Penerima siap bayar, ambil paket cepat (≈ 2-6 menit).`,
       action: "Antar normal." },
     { key: "kuning", label: "Kuning · Sedang", color: "var(--color-chart-2)",
-      crit: "Skor 0,35-0,65. Kadang belum siap, ekspektasi tunggu ≈ 6-10 menit.",
+      crit: `Skor ${numId(T_NORMAL, 2)}-${numId(T_PUDO, 2)}. Kadang belum siap, ekspektasi tunggu ≈ 6-10 menit.`,
       action: "Konfirmasi slot atau tawarkan PUDO." },
     { key: "merah", label: "Merah · Lambat", color: "var(--color-chart-5)",
-      crit: "Skor ≥ 0,65. Uang belum siap atau alamat sulit, tunggu > 10 menit.",
+      crit: `Skor ≥ ${numId(T_PUDO, 2)}. Uang belum siap atau alamat sulit, tunggu > 10 menit.`,
       action: "PUDO atau pre-payment." }
   ];
 
   const counts = $derived(TIERS.map((t) => ({ ...t, n: packages.filter((p) => p.cluster === t.key).length })));
   const donut = $derived(counts.filter((c) => c.n > 0).map((c) => ({ name: c.label, value: c.n, color: c.color })));
+
+  /** Warna badge klaster risiko (hijau/kuning/merah) — konsisten dgn tier. */
+  const clusterTone: Record<string, string> = {
+    hijau: "bg-success text-success-foreground",
+    kuning: "bg-warning text-warning-foreground",
+    merah: "bg-destructive text-destructive-foreground"
+  };
 
   function sortedFactors(p: CodRiskPkg): CodFactor[] {
     return [...(p.factors ?? [])].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
@@ -140,11 +136,11 @@
                   <span class="inline-block w-16 rounded-full bg-muted px-2 py-0.5 text-[13px] font-semibold tabular-nums">{(score * 100).toFixed(0)}%</span>
                 </td>
                 <td class="px-3 py-2">
-                  <span class="inline-block rounded-md px-2 py-0.5 text-[13px] font-semibold {decisionCls[o.codDecision ?? 'antar-normal']}">{COD_DECISION_LABEL[o.codDecision ?? ""] ?? o.codDecision ?? "-"}</span>
+                  <span class="inline-block rounded-md px-2 py-0.5 text-[13px] font-semibold {codDecisionTone(o.codDecision)}">{COD_DECISION_LABEL[o.codDecision ?? ""] ?? o.codDecision ?? "-"}</span>
                 </td>
                 <td class="px-3 py-2 text-[13px] text-muted-foreground">{o.codCollected ? "Tunai diterima" : o.routedToPudo ? "Ke PUDO" : "Belum dibayar"}</td>
                 <td class="px-3 py-2 text-right">
-                  {#if !o.routedToPudo && score >= 0.35}
+                  {#if !o.routedToPudo && score >= T_NORMAL}
                     <button type="button" onclick={() => reroute(o)} class="rounded-lg border border-warning/50 px-3 py-1.5 text-[13px] font-semibold text-warning-foreground transition-colors hover:bg-warning/10">Alihkan PUDO</button>
                   {:else}
                     <span class="text-[13px] text-muted-foreground">—</span>
@@ -256,8 +252,8 @@
                 <td class="px-3 py-2 text-center">
                   <span class="inline-block w-16 rounded-full bg-muted px-2 py-0.5 text-[13px] font-semibold tabular-nums">{(p.score * 100).toFixed(0)}%</span>
                 </td>
-                <td class="px-3 py-2"><span class="inline-block rounded-md px-2 py-0.5 text-[13px] font-semibold {clusterCls[p.cluster ?? 'kuning']}">{p.clusterLabel ?? "-"}</span></td>
-                <td class="px-3 py-2"><span class="inline-block rounded-md px-2 py-0.5 text-[13px] font-semibold {decisionCls[p.decision]}">{p.decision}</span></td>
+                <td class="px-3 py-2"><span class="inline-block rounded-md px-2 py-0.5 text-[13px] font-semibold {clusterTone[p.cluster ?? 'kuning']}">{p.clusterLabel ?? "-"}</span></td>
+                <td class="px-3 py-2"><span class="inline-block rounded-md px-2 py-0.5 text-[13px] font-semibold {codDecisionTone(p.decision)}">{p.decision}</span></td>
                 <td class="px-3 py-2 text-right">
                   <button
                     type="button"
@@ -298,7 +294,7 @@
                           <p>Model: <span class="text-foreground">{p.model ?? "Logistic Regression"}</span>{p.accuracy != null ? ` · akurasi uji ${(p.accuracy * 100).toFixed(0)}%` : ""}</p>
                           <p>logit = intercept ({p.intercept != null ? numId(p.intercept, 2) : "-"}) + Σ (koef × fitur) = <span class="text-foreground">{p.logit != null ? numId(p.logit, 2) : "-"}</span></p>
                           <p>P(gagal COD) = 1 / (1 + e^−logit) = <span class="font-semibold text-foreground">{(p.score * 100).toFixed(0)}%</span></p>
-                          <p>Ambang: &lt; 35% antar-normal · 35-65% PUDO · ≥ 65% pre-payment.</p>
+                          <p>Ambang: &lt; {(T_NORMAL * 100).toFixed(0)}% antar-normal · {(T_NORMAL * 100).toFixed(0)}-{(T_PUDO * 100).toFixed(0)}% PUDO · ≥ {(T_PUDO * 100).toFixed(0)}% pre-payment.</p>
                         </div>
                         <div class="mt-3 rounded-lg bg-muted/50 p-3 text-[14.5px]">
                           <p>Klaster: <strong class="text-foreground">{p.clusterLabel}</strong> · ekspektasi penerima ambil paket ≈ <strong class="text-foreground">{p.pickupWaitMin} menit</strong></p>

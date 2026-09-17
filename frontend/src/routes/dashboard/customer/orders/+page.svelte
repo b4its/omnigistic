@@ -6,7 +6,7 @@
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, PRESENCE_LABEL, progressForStatus, type Order, type OrderStatus, type PresenceStatus } from "$lib/stores/shop";
-  import { HUB_LABEL, etaForCity, COD_DECISION_LABEL } from "$lib/logistics";
+  import { HUB_LABEL, etaForCity, COD_DECISION_LABEL, codDecisionTone } from "$lib/logistics";
   import { notify } from "$lib/toast";
 
   let orders = $state<Order[]>([]);
@@ -22,15 +22,9 @@
   /** Fraksi perjalanan kurir (0..1) diturunkan dari status pengantaran nyata. */
   const progressFor = progressForStatus;
 
-  const decisionTone: Record<string, string> = {
-    "antar-normal": "bg-success/15 text-success-foreground",
-    pudo: "bg-warning/15 text-warning-foreground",
-    "pre-payment": "bg-destructive/15 text-destructive-foreground"
-  };
-
   function clearOrders() {
     shop.reset();
-    notify({ message: "Riwayat pesanan dihapus", type: "warn", title: "Pesanan" });
+    notify({ message: "Riwayat pesanan dihapus (termasuk tugas kurir)", type: "warn", title: "Pesanan" });
   }
 
   function toggleMap(id: string) {
@@ -61,7 +55,7 @@
     </div>
     {#if orders.length > 0}
       <button type="button" onclick={clearOrders} class="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-destructive/50 hover:text-destructive-foreground">
-        <Icon name="trash" cls="h-3.5 w-3.5" /> Hapus riwayat
+        <Icon name="trash" cls="h-3.5 w-3.5" /> Hapus riwayat (demo)
       </button>
     {/if}
   </header>
@@ -205,7 +199,7 @@
               <ul class="space-y-2">
                 {#each o.items as it (it.productId)}
                   <li class="flex items-center gap-3 text-sm">
-                    <Icon name={it.icon as IconName} cls="h-4.5 w-4.5 text-[var(--bitcoin)]" />
+                    <Icon name={(it.icon ?? "box") as IconName} cls="h-4.5 w-4.5 text-[var(--bitcoin)]" />
                     <span class="min-w-0 flex-1 truncate text-muted-foreground">{it.name} × {it.qty}</span>
                     <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(it.price * it.qty)}</span>
                   </li>
@@ -218,8 +212,7 @@
                   <p class="mt-1">{o.address.street}, {o.address.city}</p>
                 </div>
                 {#if o.payment === "COD" && o.codScore !== null}
-                  {@const tone = decisionTone[o.codDecision ?? ""] ?? "bg-muted text-foreground"}
-                  <div class="rounded-lg {tone} px-3 py-2 text-xs">
+                  <div class="rounded-lg {codDecisionTone(o.codDecision)} px-3 py-2 text-xs">
                     <p class="font-semibold">Kesiapan bayar COD {(o.codScore * 100).toFixed(0)}%</p>
                     <p class="opacity-90">{o.codCollected ? "Tunai sudah diterima kurir" : COD_DECISION_LABEL[o.codDecision ?? ""] ?? o.codDecision}</p>
                   </div>

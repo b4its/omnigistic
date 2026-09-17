@@ -584,6 +584,35 @@ export function nextStatus(status: OrderStatus): OrderStatus | null {
   return i >= 0 && i < ORDER_STATUS_FLOW.length - 1 ? ORDER_STATUS_FLOW[i + 1] : null;
 }
 
+/* ── COD berisiko (PUDO) — SATU definisi lintas halaman ─────────────────── */
+
+/**
+ * Apakah pesanan COD ini "berisiko" → sebaiknya dialihkan ke PUDO alih-alih
+ * diantar normal. Definisi TUNGGAL yang dipakai semua halaman kurir
+ * (overview, pudo, tasks, cod-risk) agar triase konsisten.
+ *
+ * Berisiko bila: pesanan COD, keputusan model bukan "antar-normal", dan belum
+ * dialihkan. Keputusan `null` (mis. scoring gagal) TIDAK dianggap berisiko di
+ * sini, tetapi tetap muncul di daftar triase lewat `codTriageOrders`.
+ */
+export function isCodAtRisk(o: Order): boolean {
+  return o.payment === "COD" && o.codDecision !== null && o.codDecision !== "antar-normal" && !o.routedToPudo;
+}
+
+/** Pesanan COD berisiko yang belum dialihkan (kandidat PUDO). */
+export function codAtRiskCandidates(orders: Order[]): Order[] {
+  return orders.filter(isCodAtRisk);
+}
+
+/**
+ * Semua pesanan COD yang perlu ditriase kurir — termasuk yang belum ternilai
+ * (codDecision null, mis. scoring gagal saat checkout) agar tak "menghilang"
+ * dari triase. Diurutkan dari skor risiko tertinggi.
+ */
+export function codTriageOrders(orders: Order[]): Order[] {
+  return orders.filter((o) => o.payment === "COD").sort((a, b) => (b.codScore ?? 0) - (a.codScore ?? 0));
+}
+
 /**
  * Pesanan yang "sedang dalam pengantaran" (status `dikirim`, kurir menuju alamat).
  * Dipakai dashboard pembeli untuk membuka otomatis pelacakan yang relevan.

@@ -321,6 +321,31 @@ export const COD_DECISION_LABEL: Record<string, string> = {
   "pre-payment": "Pre-payment",
 };
 
+/**
+ * Kelas warna Tailwind untuk badge keputusan COD (antar-normal/pudo/pre-payment).
+ * SATU sumber agar badge triase sama di semua halaman (tasks, cod-risk, orders).
+ */
+export const COD_DECISION_TONE: Record<string, string> = {
+  "antar-normal": "bg-success/15 text-success-foreground",
+  pudo: "bg-warning/15 text-warning-foreground",
+  "pre-payment": "bg-destructive/15 text-destructive-foreground",
+};
+
+/** Kelas warna badge untuk sebuah keputusan COD (fallback netral). */
+export function codDecisionTone(decision: string | null | undefined): string {
+  return COD_DECISION_TONE[decision ?? ""] ?? "bg-muted text-foreground";
+}
+
+/**
+ * Tier risiko COD dari skor (0..1) berdasar ambang model (COD_THRESHOLDS):
+ * "hijau" (< normal), "kuning" (< pudo), "merah" (≥ pudo).
+ */
+export function codTierFor(score: number): "hijau" | "kuning" | "merah" {
+  if (score < COD_THRESHOLDS.normal) return "hijau";
+  if (score < COD_THRESHOLDS.pudo) return "kuning";
+  return "merah";
+}
+
 /** Label klaster risiko COD. */
 export const COD_CLUSTER_LABEL: Record<string, string> = {
   hijau: "Hijau · Cepat",

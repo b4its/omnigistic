@@ -6,6 +6,7 @@
   import Icon from "$lib/components/Icon.svelte";
   import PageState from "$lib/components/PageState.svelte";
   import EChart from "$lib/components/EChart.svelte";
+  import CodRealOrdersBridge from "$lib/components/CodRealOrdersBridge.svelte";
   import { barChart } from "$lib/charts/options";
   import { numId } from "$lib/utils";
 
@@ -129,4 +130,7 @@
   {:else}
     <PageState loading={true} skeletonCards={4} skeletonHeight={260} />
   {/if}
+
+  <!-- Jembatan ke pesanan COD NYATA (agar simulasi tidak terpisah dari alur kurir) -->
+  <CodRealOrdersBridge />
 </div>

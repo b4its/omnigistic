@@ -4,8 +4,8 @@
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { resolveHref } from "$lib/utils";
   import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, type Order } from "$lib/stores/shop";
-  import { COURIER, COD_DECISION_LABEL, PUDO_POINTS, pudosForCity } from "$lib/logistics";
+  import { shop, codAtRiskCandidates, progressForStatus, type Order } from "$lib/stores/shop";
+  import { COURIER, HUB_LABEL, COD_DECISION_LABEL, PUDO_POINTS, pudosForCity } from "$lib/logistics";
   import { notify } from "$lib/toast";
 
   const network = [
@@ -35,12 +35,14 @@
   });
 
   const routed = $derived(orders.filter((o) => o.routedToPudo));
-  const candidates = $derived(
-    orders.filter((o) => !o.routedToPudo && o.payment === "COD" && (o.codDecision === "pudo" || o.codDecision === "pre-payment"))
-  );
+  /** Kandidat PUDO: COD berisiko belum dialihkan (predikat bersama di store). */
+  const candidates = $derived(codAtRiskCandidates(orders));
 
-  /** Kota contoh untuk peta: pesanan PUDO pertama, atau Jakarta bila belum ada. */
-  const mapCity = $derived((routed[0] ?? candidates[0])?.address.city ?? "Jakarta");
+  /** Kota contoh untuk peta: pesanan PUDO/kandidat pertama, atau Jakarta bila belum ada. */
+  const focusOrder = $derived(routed[0] ?? candidates[0] ?? null);
+  const mapCity = $derived(focusOrder?.address.city ?? "Jakarta");
+  /** Progres kurir di peta diturunkan dari status pesanan fokus (bukan hardcode). */
+  const mapProgress = $derived(focusOrder ? progressForStatus(focusOrder.status) : 0.75);
 
   function reroute(o: Order) {
     shop.routeToPudo(o.id, COURIER.actor);
@@ -65,7 +67,7 @@
       </div>
       <span class="rounded-full bg-muted px-3 py-1 text-[13px] font-semibold text-muted-foreground">{PUDO_POINTS.length} titik mitra</span>
     </div>
-    <DeliveryMap progress={0.75} city={mapCity} originLabel="Hub Jakarta" destLabel={`Alamat penerima · ${mapCity}`} height={380} role="KURIR" routeIntel />
+    <DeliveryMap progress={mapProgress} city={mapCity} originLabel={HUB_LABEL} destLabel={`Alamat penerima · ${mapCity}`} height={380} role="KURIR" routeIntel />
     <p class="text-[11px] text-muted-foreground">Contoh kota: {mapCity} ({pudosForCity(mapCity).length} PUDO). Angka &amp; koordinat bersifat simulasi presentasi.</p>
   </section>
 

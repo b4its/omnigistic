@@ -5,6 +5,7 @@
   import EChart from "$lib/components/EChart.svelte";
   import { barChart } from "$lib/charts/options";
   import { shop, ORDER_STATUS_LABEL, type Order } from "$lib/stores/shop";
+  import { COURIER } from "$lib/logistics";
   import { notify } from "$lib/toast";
 
   let route = $state<Array<{ type: string; packages: number; distanceKm: number; durationMin: number; productivity: number }>>([]);
@@ -53,7 +54,7 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <h1 class="font-heading text-xl font-semibold tracking-tight">Route Clustering</h1>
-    <span class="hub-label text-muted-foreground">KURIR · Baits</span>
+    <span class="hub-label text-muted-foreground">KURIR · {COURIER.name}</span>
   </div>
 
   <!-- Cluster pengantaran nyata -->

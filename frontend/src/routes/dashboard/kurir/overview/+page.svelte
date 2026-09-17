@@ -5,7 +5,7 @@
   import RoleOverview from "$lib/components/RoleOverview.svelte";
   import EChart from "$lib/components/EChart.svelte";
   import { barChart } from "$lib/charts/options";
-  import { shop, type Order } from "$lib/stores/shop";
+  import { shop, codAtRiskCandidates, type Order } from "$lib/stores/shop";
   import { formatRupiah } from "$lib/shop/catalog";
   import { numId } from "$lib/utils";
 
@@ -49,7 +49,7 @@
   const delivered = $derived(orders.filter((o) => o.status === "terkirim").length);
   const pendingSlots = $derived(orders.filter((o) => o.status !== "terkirim" && !o.slot).length);
   const cashDue = $derived(orders.filter((o) => o.payment === "COD" && !o.codCollected).reduce((s, o) => s + o.total, 0));
-  const toPudo = $derived(orders.filter((o) => !o.routedToPudo && o.payment === "COD" && o.codDecision !== null && o.codDecision !== "antar-normal").length);
+  const toPudo = $derived(codAtRiskCandidates(orders).length);
   const hasReal = $derived(orders.length > 0);
 
   const kpi = $derived(

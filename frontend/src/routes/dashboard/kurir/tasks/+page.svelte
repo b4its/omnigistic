@@ -26,7 +26,7 @@
     progressForStatus,
     type Order
   } from "$lib/stores/shop";
-  import { COURIER, HUB_LABEL, etaForCity, distanceForCity, buildSlot, COD_DECISION_LABEL } from "$lib/logistics";
+  import { COURIER, HUB_LABEL, etaForCity, distanceForCity, buildSlot, COD_DECISION_LABEL, codDecisionTone } from "$lib/logistics";
   import { notify, type ToastType as TxType } from "$lib/toast";
 
   /** Identitas kurir — satu sumber (logistics.ts) agar konsisten dgn Topbar. */
@@ -158,12 +158,6 @@
     openMapId = openMapId === id ? null : id;
     toast(openMapId ? `Peta lengkap rute ${id} ditampilkan` : `Peta rute ${id} disembunyikan`, "info");
   }
-
-  const decisionTone: Record<string, string> = {
-    "antar-normal": "bg-success/15 text-success-foreground",
-    pudo: "bg-warning/15 text-warning-foreground",
-    "pre-payment": "bg-destructive/15 text-destructive-foreground"
-  };
 </script>
 
 <div class="space-y-6">
@@ -366,8 +360,7 @@
                   <span class="font-bold tabular-nums text-foreground">{formatRupiah(o.total)}</span>
                 </div>
                 {#if o.payment === "COD" && o.codScore !== null}
-                  {@const tone = decisionTone[o.codDecision ?? ""] ?? "bg-muted text-foreground"}
-                  <div class="rounded-lg {tone} px-3 py-2 text-xs">
+                  <div class="rounded-lg {codDecisionTone(o.codDecision)} px-3 py-2 text-xs">
                     <p class="font-semibold">Kesiapan bayar COD {(o.codScore * 100).toFixed(0)}%</p>
                     <p class="opacity-90">{COD_DECISION_LABEL[o.codDecision ?? ""] ?? o.codDecision}</p>
                   </div>
