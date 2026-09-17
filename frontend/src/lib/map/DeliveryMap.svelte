@@ -392,22 +392,24 @@
     role="application"
     class="absolute inset-0"
   ></div>
-  <!-- Legenda peta lengkap & rinci (collapsible) -->
+  <!-- Legenda peta lengkap & rinci (collapsible: tombol buka/tutup terpisah) -->
   {#if showLegend}
-  <div class="absolute left-2 top-2 z-[1000] max-w-[min(17rem,calc(100%-1rem))] rounded-lg border border-border bg-background/92 text-[12px] shadow-pop backdrop-blur">
-    <button
-      type="button"
-      onclick={() => (legendOpen = !legendOpen)}
-      aria-expanded={legendOpen}
-      aria-controls="map-legend"
-      aria-label={legendOpen ? "Tutup legenda peta" : "Buka legenda peta"}
-      class="flex w-full items-center justify-between gap-2 px-3 py-2 font-semibold text-foreground"
-    >
-      <span class="flex items-center gap-1.5"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</span>
-      <Icon name={legendOpen ? "x" : "arrow-right"} cls="h-3 w-3 shrink-0 text-muted-foreground" weight="bold" />
-    </button>
     {#if legendOpen}
-      <div id="map-legend" class="max-h-[60%] space-y-2 overflow-y-auto border-t border-border px-3 py-2.5">
+      <!-- Legenda terbuka: judul + tombol tutup eksplisit (✕) -->
+      <div class="absolute left-2 top-2 z-[1000] max-w-[min(17rem,calc(100%-1rem))] rounded-lg border border-border bg-background/92 text-[12px] shadow-pop backdrop-blur">
+        <div class="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+          <p class="flex items-center gap-1.5 font-semibold text-foreground"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</p>
+          <button
+            type="button"
+            onclick={() => (legendOpen = false)}
+            aria-label="Tutup legenda peta"
+            title="Tutup legenda"
+            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Icon name="x" cls="h-3.5 w-3.5" weight="bold" />
+          </button>
+        </div>
+        <div id="map-legend" class="max-h-[60%] space-y-2 overflow-y-auto px-3 py-2.5">
         <!-- Penanda titik -->
         <p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Penanda titik</p>
         <ul class="space-y-1.5">
@@ -446,8 +448,21 @@
           koordinat & alamat PUDO diverifikasi dari OpenStreetMap (ODbL); jam/kapasitas & kepadatan = asumsi tim (prototipe).
         </p>
       </div>
+      </div>
+    {:else}
+      <!-- Legenda tertutup: pil ringkas untuk membuka kembali -->
+      <button
+        type="button"
+        onclick={() => (legendOpen = true)}
+        aria-expanded="false"
+        aria-controls="map-legend"
+        aria-label="Buka legenda peta"
+        title="Buka legenda"
+        class="absolute left-2 top-2 z-[1000] inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/92 px-3 py-2 text-[12px] font-semibold text-foreground shadow-pop backdrop-blur transition-colors hover:bg-accent"
+      >
+        <Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda
+      </button>
     {/if}
-  </div>
   {/if}
 
   {#if routeIntel && !compact}
@@ -608,7 +623,18 @@
       </div>
       {#if legendOpenFs}
         <aside class="w-[18rem] max-w-[40vw] shrink-0 overflow-y-auto border-l border-border bg-card p-4 text-[12px]">
-          <p class="mb-2 flex items-center gap-1.5 font-semibold text-foreground"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</p>
+          <div class="mb-2 flex items-center justify-between gap-2">
+            <p class="flex items-center gap-1.5 font-semibold text-foreground"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</p>
+            <button
+              type="button"
+              onclick={() => (legendOpenFs = false)}
+              aria-label="Tutup legenda peta"
+              title="Tutup legenda"
+              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Icon name="x" cls="h-3.5 w-3.5" weight="bold" />
+            </button>
+          </div>
           <ul class="space-y-1.5">
             <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span> <span><b class="text-foreground">Hub asal</b> — {originLabel}</span></li>
             <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#2563eb] bg-[#dbeafe]"></span> <span><b class="text-foreground">Kurir</b> — posisi saat ini</span></li>

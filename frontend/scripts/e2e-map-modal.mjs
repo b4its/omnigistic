@@ -80,15 +80,15 @@ try {
   // Gulir agar legenda peta masuk viewport (peta ada di bawah daftar tugas).
   await page.locator(".leaflet-container").first().scrollIntoViewIfNeeded();
   await page.waitForTimeout(500);
-  const legendToggle = page.locator('button:has-text("Legenda peta")').first();
-  R((await legendToggle.count()) > 0, "modal: tombol legenda inline tersedia");
-  const legendBefore = await legendToggle.getAttribute("aria-expanded");
-  await legendToggle.click();
+  const legendClose = page.getByRole("button", { name: "Tutup legenda peta" }).first();
+  R((await legendClose.count()) > 0, "modal: tombol tutup legenda inline tersedia");
+  await legendClose.click();
   await page.waitForTimeout(300);
-  const legendAfter = await legendToggle.getAttribute("aria-expanded");
-  R(legendBefore !== legendAfter, "modal: legenda inline bisa ditutup (aria-expanded berubah)", `${legendBefore}->${legendAfter}`);
-  await legendToggle.click();
+  const legendOpenBtn = page.getByRole("button", { name: "Buka legenda peta" }).first();
+  R((await legendOpenBtn.count()) > 0, "modal: legenda inline tertutup → tombol buka muncul");
+  await legendOpenBtn.click();
   await page.waitForTimeout(300);
+  R((await page.getByRole("button", { name: "Tutup legenda peta" }).count()) > 0, "modal: legenda inline bisa dibuka kembali");
   await page.locator(".leaflet-container").first().scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
 
