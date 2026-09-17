@@ -74,7 +74,8 @@
     ["Bisnis", "#bisnis"],
     ["Data", "#data"],
     ["Pertanyaan", "#pertanyaan"],
-    ["Solusi", "#solusi"]
+    ["Solusi", "#solusi"],
+    ["Whitepaper", "/whitepaper"]
   ];
 
   /* ── Jawaban 6 pertanyaan juri, dengan angka LIVE dari backend ──────────── */

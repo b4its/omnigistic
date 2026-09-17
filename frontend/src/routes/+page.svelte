@@ -9,7 +9,8 @@
     { href: "#diagnosis", label: "Diagnosis" },
     { href: "#solusi", label: "Solusi" },
     { href: "#arsitektur", label: "Sistem" },
-    { href: "/analisis", label: "Analisis" }
+    { href: "/analisis", label: "Analisis" },
+    { href: "/whitepaper", label: "Whitepaper" }
   ];
 
   const rootCauses: Array<{ code: string; title: string; titleId: string; icon: import("$lib/icon-names").IconName; symptoms: string; solution: string; kpi: string }> = [

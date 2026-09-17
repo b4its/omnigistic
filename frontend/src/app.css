@@ -573,3 +573,358 @@
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
 }
+
+/* ============================================================
+   WHITEPAPER EDITORIAL — "Dark editorial × technical documentation".
+   Sistem desain mandiri (selalu gelap, tak bergantung tema). Semua aturan
+   di-scope ke `.wp` agar tak mengubah identitas "Bitcoin DeFi" halaman lain.
+   Palet: bg #0a0d0b · fg #e8e6df · muted #9a9890 · accent mint #7fffb4.
+   Tipografi: Fraunces (serif display) · Inter (body) · JetBrains Mono (label).
+   ============================================================ */
+.wp {
+  --wp-bg: #0a0d0b;
+  --wp-bg-raise: #0d1110;
+  --wp-fg: #e8e6df;
+  --wp-muted: #9a9890;
+  --wp-mint: #7fffb4;
+  --wp-mint-2: #6ee7a0;
+  --wp-line: rgba(232, 230, 223, 0.1);
+  --wp-line-strong: rgba(232, 230, 223, 0.2);
+  --wp-copper: #c98a5e;
+  background: var(--wp-bg);
+  color: var(--wp-fg);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.0625rem; /* 17px body */
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.wp ::selection {
+  background: color-mix(in srgb, var(--wp-mint) 30%, transparent);
+  color: var(--wp-fg);
+}
+
+/* ── Tipografi ─────────────────────────────────────────────── */
+.wp-serif {
+  font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+.wp-mono {
+  font-family: var(--font-jb-mono), ui-monospace, "SFMono-Regular", monospace;
+  font-variant-numeric: tabular-nums;
+}
+.wp-hero-title {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-size: clamp(2.6rem, 7.2vw, 5.5rem); /* ≈ 72–88px */
+  text-wrap: balance;
+  max-width: 17ch;
+}
+.wp-em {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--wp-mint);
+  /* `swash` bila tersedia (Fraunces variable); aman bila tidak. */
+  font-feature-settings: "swsh" 1, "salt" 1;
+  letter-spacing: -0.01em;
+}
+.wp-deck {
+  /* Sub-headline/deck: 20–22px (sans, muted) sesuai spesifikasi editorial. */
+  font-size: clamp(1.25rem, 1.5vw, 1.375rem);
+  line-height: 1.6;
+  color: var(--wp-muted);
+  max-width: 60ch;
+}
+.wp-label {
+  font-family: var(--font-jb-mono), ui-monospace, monospace;
+  font-size: 0.75rem; /* 12–13px */
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--wp-muted);
+}
+.wp-rule {
+  border: 0;
+  border-top: 1px solid var(--wp-line);
+}
+
+/* ── Badge pill ────────────────────────────────────────────── */
+.wp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background: rgba(127, 255, 180, 0.08);
+  border: 1px solid color-mix(in srgb, var(--wp-mint) 38%, transparent);
+  color: var(--wp-mint);
+  padding: 0.4rem 0.85rem;
+  font-family: var(--font-jb-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+.wp-dot {
+  color: var(--wp-mint);
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+/* ── Hero texture (placeholder organik: marbling hijau + copper) ── */
+.wp-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-bottom: 1px solid var(--wp-line);
+}
+.wp-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  /* Tekstur marbling prosedural (layered gradients) — bukan SVG kompleks. */
+  background:
+    radial-gradient(120% 90% at 12% 8%, #123a2c 0%, transparent 46%),
+    radial-gradient(90% 80% at 88% 12%, #0f4d3a 0%, transparent 48%),
+    radial-gradient(120% 120% at 70% 100%, #1c5a44 0%, transparent 55%),
+    radial-gradient(60% 50% at 30% 60%, #2b8f68 0%, transparent 60%),
+    radial-gradient(38% 30% at 62% 30%, rgba(201, 138, 94, 0.5) 0%, transparent 60%),
+    radial-gradient(24% 20% at 82% 66%, rgba(201, 138, 94, 0.38) 0%, transparent 60%),
+    linear-gradient(135deg, #08110d 0%, #0a1410 40%, #08120e 100%);
+  filter: saturate(1.05);
+}
+.wp-hero-bg::after {
+  /* overlay gelap agar teks terbaca */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 13, 11, 0.55);
+}
+.wp-hero-grain {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}
+
+/* Nav tipis di atas hero */
+.wp-nav {
+  border-bottom: 1px solid var(--wp-line);
+}
+.wp-nav-link {
+  font-family: var(--font-jb-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.03em;
+  color: var(--wp-muted);
+  transition: color 0.2s ease;
+}
+.wp-nav-link:hover,
+.wp-nav-link[data-active="true"] {
+  color: var(--wp-fg);
+}
+.wp-nav-link[data-active="true"] {
+  color: var(--wp-mint);
+}
+
+/* Diamond logo kecil */
+.wp-diamond {
+  width: 9px;
+  height: 9px;
+  background: var(--wp-mint);
+  transform: rotate(45deg);
+  border-radius: 1px;
+  box-shadow: none;
+}
+
+/* ── Meta bar (grid 4 kolom) ───────────────────────────────── */
+.wp-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem 2rem;
+  border-top: 1px solid var(--wp-line);
+  padding-top: 1.75rem;
+}
+@media (min-width: 720px) {
+  .wp-meta {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.wp-meta-value {
+  font-family: var(--font-jb-mono), ui-monospace, monospace;
+  color: var(--wp-fg);
+  font-size: 0.9375rem;
+}
+
+/* ── Layout konten ─────────────────────────────────────────── */
+.wp-wrap {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem); /* 32–40px desktop */
+}
+.wp-prose {
+  max-width: 68ch;
+}
+.wp-section {
+  border-top: 1px solid var(--wp-line);
+  padding-block: clamp(3rem, 6vw, 5rem);
+}
+.wp-h2 {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  font-size: clamp(1.6rem, 3.4vw, 2.5rem);
+}
+.wp-h3 {
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 500;
+  font-size: 1.0625rem;
+  letter-spacing: 0.01em;
+  color: var(--wp-fg);
+}
+.wp-body {
+  color: color-mix(in srgb, var(--wp-fg) 82%, var(--wp-bg));
+}
+.wp-muted {
+  color: var(--wp-muted);
+}
+.wp-accent {
+  color: var(--wp-mint);
+}
+.wp-link {
+  color: var(--wp-muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--wp-line-strong);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.wp-link:hover {
+  color: var(--wp-mint);
+  border-color: color-mix(in srgb, var(--wp-mint) 45%, transparent);
+}
+
+/* ── Pull-quote / callout (tanpa shadow/glow) ──────────────── */
+.wp-quote {
+  border-left: 2px solid color-mix(in srgb, var(--wp-mint) 55%, transparent);
+  padding: 0.25rem 0 0.25rem 1.25rem;
+  color: var(--wp-fg);
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-style: italic;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+.wp-note {
+  border: 1px solid var(--wp-line);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  background: var(--wp-bg-raise);
+  font-size: 0.9375rem;
+  color: var(--wp-muted);
+}
+
+/* ── Tabel teknis (monospace, tabular) ─────────────────────── */
+.wp-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--wp-line);
+  border-radius: 8px;
+}
+.wp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-jb-mono), ui-monospace, monospace;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+.wp-table caption {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  color: var(--wp-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--wp-line);
+}
+.wp-table th,
+.wp-table td {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--wp-line);
+  text-align: right;
+  white-space: nowrap;
+}
+.wp-table th:first-child,
+.wp-table td:first-child {
+  text-align: left;
+  color: var(--wp-muted);
+  font-family: var(--font-inter), sans-serif;
+  white-space: normal;
+}
+.wp-table thead th {
+  color: var(--wp-fg);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.wp-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.wp-table tr[data-emph="true"] td {
+  color: var(--wp-mint);
+}
+
+/* ── Placeholder ilustrasi arsitektur (tanpa SVG kompleks) ─── */
+.wp-arch {
+  border: 1px dashed var(--wp-line-strong);
+  border-radius: 8px;
+  padding: clamp(2rem, 6vw, 4rem) 1.5rem;
+  text-align: center;
+  color: var(--wp-muted);
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 11px,
+      color-mix(in srgb, var(--wp-line) 60%, transparent) 11px 12px
+    );
+}
+.wp-arch-label {
+  font-family: var(--font-jb-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Footnote / referensi ──────────────────────────────────── */
+.wp-ref {
+  font-size: 0.875rem;
+  color: var(--wp-muted);
+  line-height: 1.6;
+}
+.wp-ref a {
+  color: var(--wp-muted);
+  text-decoration: none;
+}
+.wp-ref a:hover {
+  color: var(--wp-mint);
+}
+.wp-sup {
+  font-family: var(--font-jb-mono), ui-monospace, monospace;
+  font-size: 0.7em;
+  color: var(--wp-mint);
+  vertical-align: super;
+  text-decoration: none;
+}
+
+/* ── Angka besar (stat editorial) ──────────────────────────── */
+.wp-stat {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-size: clamp(2rem, 4.5vw, 3rem);
+}
+

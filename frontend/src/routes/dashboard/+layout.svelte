@@ -48,6 +48,7 @@
   const sharedNavFor = (r: Role | null): NavItem[] => {
     const base: NavItem[] = [
       { label: "Kerangka & Analisis", href: "/analisis", icon: "book" },
+      { label: "Whitepaper", href: "/whitepaper", icon: "book" },
       { label: "Methodology", href: "/dashboard/methodology", icon: "book" },
       { label: "KPI Tracker", href: "/dashboard/kpi", icon: "chart" },
       { label: "Nigi Academy", href: "/dashboard/academy", icon: "grad" }
