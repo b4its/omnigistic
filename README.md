@@ -66,6 +66,35 @@ docker compose down -v     # (-v = hapus volume db + data)
 
 First time / on changes: `cd frontend && npm run build` (uses vite).
 
+## Cara pakai via Makefile (paling ringkas)
+
+Semua perintah umum dibungkus di `Makefile` (lihat daftar lengkap: `make` atau `make help`).
+Tidak butuh dependensi tambahan — cukup `make` + python/node (Docker hanya untuk target `docker:*`).
+
+```bash
+make install        # install deps backend (venv+pip) + frontend (npm ci)
+make check          # GERBANG HIJAU: uji backend (307 assert) + typecheck frontend
+make verify         # check + validasi shared/data-kas.json
+make dev            # info menjalankan dev lokal (2 terminal)
+make backend-dev    # FastAPI --reload          → http://127.0.0.1:8000  (/docs)
+make frontend-dev   # SvelteKit vite HMR        → http://127.0.0.1:3100
+
+make up             # Docker DEV + hot reload   → FE :3000 · API :8000
+make up-db          # Docker + Postgres lokal (auto-seed)
+make up-prod        # Docker PROD (image build)
+make down           # hentikan container
+make down-v         # hentikan + hapus volume (bersih)
+
+make test           # uji backend + typecheck
+make lint           # lint backend (ruff) + frontend (eslint)
+make e2e            # uji e2e (butuh FE+BE jalan; lihat `make e2e-help`)
+make clean          # bersihkan cache & artefak build
+make version        # versi python/node/npm/ruff/docker
+```
+
+Semua target didokumentasikan lewat komentar `##`; `make help` mencetaknya. Override port/host tanpa
+mengubah file, mis. `make backend-dev BACKEND_PORT=9000` atau `make e2e E2E_BASE=http://127.0.0.1:3000`.
+
 ## Project structure (monorepo)
 
 ```
@@ -91,6 +120,7 @@ omnigistic/
 │   └── tsconfig, svelte.config, vite
 ├── docs/                        ← audit laporan (angka + audit codebase 2026-09-08)
 ├── scripts/                     ← harness lokal: e2e.mjs, shot-audit/chat-evidence, redteam, ai-security-test
+├── Makefile                     ← perintah umum (install/dev/test/lint/e2e/docker/clean) — `make help`
 ├── docker-compose.yml + .dockerignore   ← dev container lokal (fe :3000, be :8000, profil db opsional)
 └── .gitignore                   ← + venv, node_modules, build, __pycache__
 ```
