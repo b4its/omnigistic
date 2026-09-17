@@ -582,6 +582,76 @@ check("charging: titik naik dgn utilisasi (cons<base<upside)", (
 _evb = _ev(discount_rate=float("inf"), tariff_override=float("nan"))
 check("ev-bca lever NaN/inf -> default terhingga", _m.isfinite(_evb["scenarios"]["base"]["kpi"]["npvIdr"]) and 8.0 <= _evb["inputs"]["discountRatePct"] <= 20.0)
 
+print("== 9b. EV BCA — simulasi lanjut (breakeven, tornado, Monte Carlo, TCO, hub, lifecycle) ==")
+from app.ml.ev_bca import _scenario as _evs
+# Breakeven reverse-solve: NPV ≈ 0 pada nilai impas.
+_be = _evr["breakevens"]
+_ml_rep = _be["maxBatteryLeaseIdrPerUnitYear"]["replacement"]
+_mls = _evs("base", replacement=True, units=200, pertamax=16125, include_maintenance=False, discount=0.10,
+            tariff=1444.7, battery_lease_year=_ml_rep, ev_price=19_225_000, ice_price=19_577_000)
+check("breakeven max lease replacement → NPV ≈ 0", abs(_mls["kpi"]["npvIdr"]) < 5_000_000, str(_mls["kpi"]["npvIdr"]))
+_ml_inc = _be["maxBatteryLeaseIdrPerUnitYear"]["incremental"]
+_mlis = _evs("base", replacement=False, units=200, pertamax=16125, include_maintenance=False, discount=0.10,
+             tariff=1444.7, battery_lease_year=_ml_inc, ev_price=19_225_000, ice_price=19_577_000)
+check("breakeven max lease incremental → NPV ≈ 0", abs(_mlis["kpi"]["npvIdr"]) < 5_000_000, str(_mlis["kpi"]["npvIdr"]))
+check("max lease replacement > sewa aktual (Rp1,5 jt)", _ml_rep > 1_500_000, str(_ml_rep))
+check("max lease incremental < replacement (fleet tambahan lebih ketat)", _ml_inc < _ml_rep, str((_ml_inc, _ml_rep)))
+_ds_rep = _be["minDistanceKmPerUnitDay"]["replacement"]
+_ds_inc = _be["minDistanceKmPerUnitDay"]["incremental"]
+check("breakeven min-distance replacement < incremental", _ds_rep < _ds_inc, str((_ds_rep, _ds_inc)))
+check("breakeven min-distance terisi & masuk akal (0<d<200)", 0 < _ds_rep < 200 and 0 < _ds_inc < 200, str((_ds_rep, _ds_inc)))
+check("breakeven Pertamax incremental terisi", _be["breakevenPertamaxIdrPerLIncremental"] is not None and _be["breakevenPertamaxIdrPerLIncremental"] > 0)
+check("max harga EV replacement → headroom terisi", _be["maxEvUnitPriceIdrReplacement"]["headroomIdr"] is not None)
+# TCO/km: EV lebih murah dari ICE (per km) pada base.
+_tco = _evr["tcoPerKm"]
+check("TCO EV/km < ICE/km (base)", _tco["ev"]["totalIdrPerKm"] < _tco["ice"]["totalIdrPerKm"], str((_tco["ev"]["totalIdrPerKm"], _tco["ice"]["totalIdrPerKm"])))
+check("TCO saving per km positif", _tco["savingIdrPerKm"] > 0 and _tco["savingPct"] > 0, str(_tco["savingIdrPerKm"]))
+# Tornado: baris terurut menurun menurut ayunan; baseline = NPV base.
+_tor = _evr["tornadoSensitivity"]
+check("tornado punya ≥5 lever", len(_tor["rows"]) >= 5, str(len(_tor["rows"])))
+check("tornado terurut menurun (ayunan)", all(_tor["rows"][i]["swingIdr"] >= _tor["rows"][i + 1]["swingIdr"] for i in range(len(_tor["rows"]) - 1)))
+check("tornado baseline = NPV base", _tor["baselineNpvIdr"] == _evr["scenarios"]["base"]["kpi"]["npvIdr"])
+# Monte Carlo: deterministik (seed sama → hasil sama), P10<P50<P90, prob ∈ [0,100].
+_mc = _evr["monteCarlo"]
+check("MC runs = default 2000", _mc["runs"] == 2000, str(_mc["runs"]))
+check("MC P10 < P50 < P90", _mc["npv"]["p10Idr"] < _mc["npv"]["p50Idr"] < _mc["npv"]["p90Idr"], str(_mc["npv"]))
+check("MC prob NPV>0 ∈ [0,100]", 0.0 <= _mc["npv"]["probPositivePct"] <= 100.0, str(_mc["npv"]["probPositivePct"]))
+check("MC histogram 20 bin", len(_mc["histogram"]) == 20, str(len(_mc["histogram"])))
+check("MC BCR P10<P50<P90", _mc["bcr"]["p10"] < _mc["bcr"]["p50"] < _mc["bcr"]["p90"], str(_mc["bcr"]))
+_mc_det = _ev(seed=42)
+check("MC deterministik (seed tetap → identik)", _mc_det["monteCarlo"]["npv"]["p50Idr"] == _mc["npv"]["p50Idr"])
+_mc_diff = _ev(seed=7)
+check("MC seed beda → hasil beda", _mc_diff["monteCarlo"]["npv"]["p50Idr"] != _mc["npv"]["p50Idr"])
+# Hub deployment: total = units, tiap region > 0, hub terurut.
+_hub = _evr["hubDeployment"]
+check("hub deployment total = 200 unit", _hub["totalUnits"] == 200, str(_hub["totalUnits"]))
+check("hub deployment by-region jumlah = 200", sum(r["units"] for r in _hub["byRegion"]) == 200)
+check("hub terurut menurun (unit)", all(_hub["hubs"][i]["allocatedUnits"] >= _hub["hubs"][i + 1]["allocatedUnits"] for i in range(len(_hub["hubs"]) - 1)))
+# Lifecycle emissions (SIMULASI): produksi + operasional, delta 5-th terisi.
+_lc = _evr["lifecycleEmissions"]
+check("lifecycle dilabel SIMULASI", _lc["label"].startswith("SIMULASI"), _lc["label"])
+check("lifecycle manufacturing EV > ICE (baterai)", _lc["manufacturing"]["evTotalKg"] > _lc["manufacturing"]["iceTotalKg"])
+check("lifecycle delta 5-th positif (EV lebih bersih)", _lc["cumulative5y"]["deltaKg"] > 0, str(_lc["cumulative5y"]["deltaKg"]))
+check("lifecycle carbon payback terisi", _lc["carbonPaybackYears"] is not None and _lc["carbonPaybackYears"] > 0)
+# Eskalasi harga: default flat = headline; eskalasi menaikkan NPV (BBM naik).
+_esc = _evr["escalationPreview"]
+check("eskalasi flat = NPV base (default)", _esc["flatNpvIdr"] == _evr["scenarios"]["base"]["kpi"]["npvIdr"])
+check("eskalasi moderat menaikkan NPV (BBM naik)", _esc["moderateNpvIdr"] > _esc["flatNpvIdr"], str((_esc["flatNpvIdr"], _esc["moderateNpvIdr"])))
+check("eskalasi agresif > moderat", _esc["aggressiveNpvIdr"] > _esc["moderateNpvIdr"])
+# Tuas eskalasi via API mengubah arus kas (net tahun-1 vs tahun-terakhir berbeda).
+_esc_api = client.post("/ml/ev-bca", json={"fuel_growth": 0.03, "elec_growth": 0.02}).json()
+_an = _esc_api["scenarios"]["base"]["annual"]
+check("API eskalasi: Y1 ≠ Y-last (arus kas tumbuh)", _an["netCashFlowY1Idr"] != _an["netCashFlowYLastIdr"], str((_an["netCashFlowY1Idr"], _an["netCashFlowYLastIdr"])))
+check("API eskalasi tercatat di inputs", _esc_api["inputs"]["fuelGrowthPct"] == 3.0 and _esc_api["inputs"]["elecGrowthPct"] == 2.0)
+# Arus kas program roadmap: 6 baris (Y0..Y5), capex disebar (Y0=0).
+_pcf = _evr["roadmapProgramCashflow"]
+check("program cashflow 6 baris", len(_pcf["rows"]) == 6, str(len(_pcf["rows"])))
+check("program cashflow Y0 tanpa capex", _pcf["rows"][0]["capexIdr"] == 0)
+check("program cashflow final units = roadmap akhir", _pcf["finalDeployedUnits"] == _evr["roadmap"]["totalCumulativeUnits"])
+# NaN-safe tuas simulasi baru.
+_evc = _ev(monte_carlo_runs=float("nan"), fuel_growth=float("inf"), seed=float("nan"))
+check("ev-bca simulasi NaN/inf -> default terhingga", _m.isfinite(_evc["monteCarlo"]["npv"]["p50Idr"]) and 100 <= _evc["inputs"]["monteCarloRuns"] <= 20000)
+
 print(f"\n===== BACKEND {_passed}/{_passed + _failed} PASS =====")
 if _failed:
     print(f"  {_failed} GAGAL")

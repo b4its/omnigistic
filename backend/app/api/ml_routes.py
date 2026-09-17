@@ -291,6 +291,11 @@ class EvBcaBody(BaseModel):
     battery_lease_override: float | None = None
     ev_price_override: float | None = None
     ice_price_override: float | None = None
+    fuel_growth: float | None = None
+    elec_growth: float | None = None
+    battery_growth: float | None = None
+    monte_carlo_runs: int | None = None
+    seed: int | None = None
 
 
 @router.get("/ev-bca")
@@ -301,7 +306,8 @@ def ev_bca_default():
 
 @router.post("/ev-bca")
 def ev_bca_run(body: EvBcaBody):
-    """Versi interaktif: unit, harga BBM/listrik/baterai, harga EV/ICE, & diskon."""
+    """Versi interaktif: unit, harga BBM/listrik/baterai, harga EV/ICE, diskon,
+    eskalasi harga tahunan, & kontrol Monte Carlo (runs/seed)."""
     return ev_bca(
         body.units,
         body.pertamax_override,
@@ -311,4 +317,9 @@ def ev_bca_run(body: EvBcaBody):
         body.battery_lease_override,
         body.ev_price_override,
         body.ice_price_override,
+        body.fuel_growth,
+        body.elec_growth,
+        body.battery_growth,
+        body.monte_carlo_runs,
+        body.seed,
     )

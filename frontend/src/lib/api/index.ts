@@ -456,6 +456,9 @@ export interface EvBcaAssumptions {
   evWhPerKm: number;
   chargingLossPct: number;
   discountRatePct: number;
+  fuelGrowthPct?: number;
+  elecGrowthPct?: number;
+  batteryGrowthPct?: number;
 }
 export interface EvBcaCashflowRow {
   year: number;
@@ -482,6 +485,8 @@ export interface EvBcaScenario {
     batteryLeaseIdr: number;
     maintenanceSavingIdr: number;
     netAnnualSavingIdr: number;
+    netCashFlowY1Idr?: number;
+    netCashFlowYLastIdr?: number;
   };
   capex: {
     evVehicleCostIdr: number;
@@ -552,6 +557,74 @@ export interface EvBcaRoadmapPhase {
   co2ReductionTonsYear: number;
   note: string;
 }
+export interface EvBcaBreakevens {
+  note: string;
+  maxBatteryLeaseIdrPerUnitYear: { replacement: number | null; incremental: number | null; currentIdrPerUnitYear: number };
+  minDistanceKmPerUnitDay: { replacement: number | null; incremental: number | null };
+  breakevenPertamaxIdrPerLIncremental: number | null;
+  maxEvUnitPriceIdrReplacement: { value: number | null; iceBenchmarkIdr: number; currentEvBenchmarkIdr: number; headroomIdr: number | null };
+}
+export interface EvBcaTcoPerKm {
+  note: string;
+  distanceKmYear: number;
+  ice: { energyIdrPerKm: number; maintenanceIdrPerKm: number; totalIdrPerKm: number };
+  ev: { energyIdrPerKm: number; batteryLeaseIdrPerKm: number; vehicleDeltaIdrPerKm: number; totalIdrPerKm: number };
+  savingIdrPerKm: number;
+  savingPct: number;
+}
+export interface EvBcaTornadoRow {
+  lever: string;
+  npvLowIdr: number;
+  npvHighIdr: number;
+  swingIdr: number;
+}
+export interface EvBcaTornado {
+  metric: string;
+  baselineNpvIdr: number;
+  note: string;
+  rows: EvBcaTornadoRow[];
+}
+export interface EvBcaMonteCarlo {
+  note: string;
+  runs: number;
+  seed: number;
+  assumptionNote: string;
+  npv: { p10Idr: number; p50Idr: number; p90Idr: number; meanIdr: number; minIdr: number; maxIdr: number; probPositivePct: number };
+  bcr: { p10: number; p50: number; p90: number };
+  histogram: { binStartIdr: number; binEndIdr: number; count: number }[];
+}
+export interface EvBcaHubDeployment {
+  note: string;
+  totalUnits: number;
+  hubs: { name: string; code: string; region: string; capacityM: number; allocatedUnits: number; netAnnualSavingIdr: number; npvIdr: number; co2ReductionTonsYear: number }[];
+  byRegion: { region: string; units: number; netSavingIdr: number; npvIdr: number; co2TonsYear: number; capacityM: number }[];
+}
+export interface EvBcaLifecycle {
+  label: string;
+  note: string;
+  assumptions: { iceManufacturingKgPerUnit: number; evManufacturingKgPerUnit: number; evBatteryManufacturingKgPerKwh: number };
+  manufacturing: { iceTotalKg: number; evTotalKg: number; evBatteryKg: number; extraKg: number };
+  operational: { iceKgYear: number; evKgYear: number; savingKgYear: number };
+  carbonPaybackYears: number | null;
+  cumulative5y: { iceKg: number; evKg: number; deltaKg: number; deltaTons: number };
+}
+export interface EvBcaEscalationPreview {
+  note: string;
+  fuelGrowthPct: number;
+  elecGrowthPct: number;
+  flatNpvIdr: number;
+  moderateNpvIdr: number;
+  aggressiveNpvIdr: number;
+  moderateDeltaIdr: number;
+  aggressiveDeltaIdr: number;
+}
+export interface EvBcaProgramCashflow {
+  note: string;
+  rows: { year: number; capexIdr: number; benefitIdr: number; netCashFlowIdr: number; cumulativeIdr: number; deployedUnits: number }[];
+  totalNetIdr: number;
+  npvIdr: number;
+  finalDeployedUnits: number;
+}
 export interface EvBcaResult {
   engine: string;
   note: string;
@@ -580,6 +653,11 @@ export interface EvBcaResult {
     evUnitPriceIdr: number;
     iceUnitPriceIdr: number;
     horizonYears: number;
+    fuelGrowthPct?: number;
+    elecGrowthPct?: number;
+    batteryGrowthPct?: number;
+    monteCarloRuns?: number;
+    seed?: number;
   };
   fleetBasis: { motorcycles: number; totalArmada: number; evTarget: number; evTargetPctOfMotor: number; lastMileMotorPct: number };
   headline: {
@@ -603,6 +681,13 @@ export interface EvBcaResult {
     incrementalRows: EvBcaSensitivityRow[];
   };
   discountRateSensitivity: { metric: string; note: string; rows: { discountRatePct: number; npvIdr: number; bcrDiscounted: number }[] };
+  breakevens: EvBcaBreakevens;
+  tcoPerKm: EvBcaTcoPerKm;
+  tornadoSensitivity: EvBcaTornado;
+  monteCarlo: EvBcaMonteCarlo;
+  hubDeployment: EvBcaHubDeployment;
+  lifecycleEmissions: EvBcaLifecycle;
+  escalationPreview: EvBcaEscalationPreview;
   roadmap: {
     basisMotorcycles: number;
     note: string;
@@ -610,6 +695,7 @@ export interface EvBcaResult {
     totalCumulativeUnits: number;
     totalCumulativeUnitsPct: number;
   };
+  roadmapProgramCashflow: EvBcaProgramCashflow;
   strategicTakeaway: string;
 }
 
@@ -802,6 +888,11 @@ export const api = {
     battery_lease_override?: number;
     ev_price_override?: number;
     ice_price_override?: number;
+    fuel_growth?: number;
+    elec_growth?: number;
+    battery_growth?: number;
+    monte_carlo_runs?: number;
+    seed?: number;
   }) => (body ? post<EvBcaResult>("/ml/ev-bca", body) : get<EvBcaResult>("/ml/ev-bca")),
   codCash: (body: { cod_share_pct?: number; interventions?: string[] }) =>
     post<CodCashResult>("/ml/cod-cash/risk", body),

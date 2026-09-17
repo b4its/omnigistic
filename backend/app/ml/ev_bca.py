@@ -87,6 +87,13 @@ GASOLINE_CO2_KG_PER_L = 2.30
 # Intensitas emisi pembangkitan listrik PLN 2024 ≈ 0,774 tCO2e/MWh = 0,774 kg/kWh.
 GRID_CO2_KG_PER_KWH = 0.774
 
+# ── 2b. Asumsi emisi SIKLUS HIDUP (SIMULASI — bukan LCA tersertifikasi) ───────
+# Hanya untuk blok `lifecycleEmissions`; semua angka = order-of-magnitude tim,
+# dilabel jelas. Produksi motor ICE (tanpa bbm) & produksi EV (rangka + baterai).
+ICE_MANUFACTURING_CO2_KG_PER_UNIT = 450.0   # produksi motor ICE (order-of-magnitude)
+EV_MANUFACTURING_CO2_KG_PER_UNIT = 700.0    # produksi motor EV + baterai Li-ion (perkiraan)
+EV_BATTERY_MANUFACTURING_CO2_KG_PER_KWH = 90.0  # ~ kgCO2/kWh baterai (estimasi literatur)
+
 # ── 3. Asumsi operasional (ASUMSI TIM — di-skema-test, dilabel) ───────────────
 # Tiap skenario: jarak/unit/hari, efisiensi ICE (km/L), konsumsi EV (Wh/km),
 # charging loss (fraksi). Discount rate & hari operasi sama lintas skenario.
@@ -122,6 +129,21 @@ CHARGING_WINDOW_HOURS = 12.0
 # Optional upside maintenance (benchmark publik, DI LUAR headline karena data
 # maintenance aktual fleet GC tidak tersedia). Rp720.000/unit/tahun.
 MAINTENANCE_BENCHMARK_IDR_PER_UNIT_YEAR = 720_000.0
+# Benchmark maintenance sepeda motor ICE (publik, order-of-magnitude) — dipakai
+# HANYA untuk TCO/km & blok lifecycle (dilabel asumsi), bukan headline.
+ICE_MAINTENANCE_BENCHMARK_IDR_PER_UNIT_YEAR = 1_200_000.0
+
+# ── 3b. Konfigurasi Monte Carlo (SIMULASI) ───────────────────────────────────
+# Distribusi tiap variabel acak (deterministik via seed). (mean, sd, lo, hi).
+# Base-case dipakai sebagai mean; sd = ketidakpastian tim.
+MONTE_CARLO_SPECS: dict[str, dict[str, float]] = {
+    "distanceKmDay": {"mean": 60.0, "sd": 8.0, "lo": 30.0, "hi": 90.0},
+    "pertamaxIdrPerL": {"mean": 16125.0, "sd": 250.0, "lo": 15950.0, "hi": 16650.0},
+    "tariffIdrPerKwh": {"mean": 1444.7, "sd": 90.0, "lo": 1200.0, "hi": 1800.0},
+    "batteryLeaseYearIdr": {"mean": 1_500_000.0, "sd": 250_000.0, "lo": 1_000_000.0, "hi": 1_800_000.0},
+    "evWhPerKm": {"mean": 23.0, "sd": 2.5, "lo": 18.0, "hi": 30.0},
+    "iceEfficiencyKmPerL": {"mean": 50.0, "sd": 3.0, "lo": 42.0, "hi": 58.0},
+}
 
 # ── 4. Roadmap 3 fase (basis armada kasus) ───────────────────────────────────
 # Kasus: kpiTargets "Armada bersih 0% → roadmap 3 fase"; fleet.motorcycles=12.500.
@@ -174,11 +196,15 @@ def _fleet_basis() -> dict[str, Any]:
     }
 
 
-def _cashflow_series(initial_investment: float, net_annual: float, discount: float) -> dict[str, Any]:
+def _cashflow_series(initial_investment: float, net_annual: float, discount: float,
+                     net_by_year: list[float] | None = None) -> dict[str, Any]:
     """Arus kas per tahun Y0..Yn (nominal + diskon) & kumulatif.
 
     Y0 = −initialInvestment (murni capex, operasi belum berjalan); Y1..n =
-    netAnnualSaving. Mengembalikan baris per tahun untuk tabel/grafik frontend.
+    netAnnualSaving. `net_by_year` (opsional) mengizinkan arus kas yang
+    **bereskalasi** (mis. harga BBM/listrik tumbuh tiap tahun); bila None, arus
+    kas seragam = net_annual (perilaku default/headline). Mengembalikan baris per
+    tahun untuk tabel/grafik frontend.
     """
     rows: list[dict[str, Any]] = [
         {"year": 0, "netCashFlowIdr": round(-initial_investment, 0), "discountedIdr": round(-initial_investment, 0), "cumulativeIdr": round(-initial_investment, 0)}
@@ -186,13 +212,14 @@ def _cashflow_series(initial_investment: float, net_annual: float, discount: flo
     cum_nominal = -initial_investment
     cum_disc = -initial_investment
     for y in range(1, HORIZON_YEARS + 1):
-        disc = net_annual / (1.0 + discount) ** y
-        cum_nominal += net_annual
+        net_y = net_by_year[y - 1] if net_by_year is not None else net_annual
+        disc = net_y / (1.0 + discount) ** y
+        cum_nominal += net_y
         cum_disc += disc
         rows.append(
             {
                 "year": y,
-                "netCashFlowIdr": round(net_annual, 0),
+                "netCashFlowIdr": round(net_y, 0),
                 "discountedIdr": round(disc, 0),
                 "cumulativeIdr": round(cum_nominal, 0),
                 "cumulativeDiscountedIdr": round(cum_disc, 0),
@@ -218,8 +245,16 @@ def _scenario(
     battery_lease_year: float = BATTERY_LEASE_IDR_PER_YEAR,
     ev_price: float = EV_UNIT_PRICE_IDR,
     ice_price: float = ICE_UNIT_PRICE_IDR,
+    fuel_growth: float = 0.0,
+    elec_growth: float = 0.0,
+    battery_growth: float = 0.0,
 ) -> dict[str, Any]:
-    """Hitung satu skenario operasional penuh (annual → 5-tahun → KPI)."""
+    """Hitung satu skenario operasional penuh (annual → 5-tahun → KPI).
+
+    `fuel_growth`/`elec_growth`/`battery_growth` = laju eskalasi harga tahunan
+    (fraksi). Default 0 → arus kas seragam (headline). Bila >0, benefit/biaya
+    tumbuh tiap tahun sehingga NPV/BCR memakai arus kas bereskalasi.
+    """
     a = SCENARIO_ASSUMPTIONS[key]
     dist_day = distance_override if distance_override is not None else a["distanceKmDay"]
     ice_kmpl = a["iceEfficiencyKmPerL"]
@@ -245,6 +280,21 @@ def _scenario(
 
     net_annual_saving = ice_fuel_cost - ev_energy_cost - battery_lease + maintenance_saving
 
+    # ── Arus kas per tahun Y1..Yn (bereskalasi bila growth > 0) ──
+    # Basis: tahun-1 = nilai tanpa eskalasi; tahun t = nilai × (1+g)^(t-1).
+    net_by_year: list[float] = []
+    fuel_by_year: list[float] = []
+    cost_by_year: list[float] = []
+    for t in range(1, HORIZON_YEARS + 1):
+        gf = (1.0 + fuel_growth) ** (t - 1)
+        ge = (1.0 + elec_growth) ** (t - 1)
+        gb = (1.0 + battery_growth) ** (t - 1)
+        f_t = ice_fuel_cost * gf
+        c_t = ev_energy_cost * ge + battery_lease * gb
+        fuel_by_year.append(f_t)
+        cost_by_year.append(c_t)
+        net_by_year.append(f_t - c_t + maintenance_saving * gf)
+
     # ── Initial investment ──
     # Replacement counterfactual: EV menggantikan ICE yang memang akan dibeli →
     # selisih harga kendaraan = exposure inkremental (bisa negatif bila EV
@@ -262,28 +312,30 @@ def _scenario(
     infra = CHARGING_INFRA_BY_SCENARIO_IDR.get(key, CHARGING_INFRA_BY_SCENARIO_IDR["base"])
     initial_investment = vehicle_delta + infra + IMPLEMENTATION_TRAINING_IDR
 
-    # ── BCR (simple, tanpa diskon) ──
-    fuel_benefit_5y = ice_fuel_cost * HORIZON_YEARS
-    total_cost_5y = initial_investment + (ev_energy_cost + battery_lease) * HORIZON_YEARS
+    # ── BCR (simple, tanpa diskon) — jumlah nominal arus kas 5 tahun ──
+    fuel_benefit_5y = sum(fuel_by_year)
+    total_cost_5y = initial_investment + sum(cost_by_year)
     bcr_simple = _safe_div(fuel_benefit_5y, total_cost_5y)
 
-    # ── Discounted BCR & NPV ──
-    pv_factor = sum(1.0 / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1))
-    pv_recurring_cost = (ev_energy_cost + battery_lease) * pv_factor
-    pv_fuel_benefit = ice_fuel_cost * pv_factor
+    # ── Discounted BCR & NPV (arus kas bereskalasi didiskon) ──
+    pv_fuel_benefit = sum(fuel_by_year[t - 1] / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1))
+    pv_recurring_cost = sum(cost_by_year[t - 1] / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1))
     pv_cost = initial_investment + pv_recurring_cost
     bcr_discounted = _safe_div(pv_fuel_benefit, pv_cost)
-    npv = -initial_investment + net_annual_saving * pv_factor
+    pv_net = sum(net_by_year[t - 1] / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1))
+    npv = -initial_investment + pv_net
 
     # ── ROI 5-tahun ──
-    total_benefit_5y = fuel_benefit_5y + maintenance_saving * HORIZON_YEARS
+    total_benefit_5y = fuel_benefit_5y + maintenance_saving * sum((1.0 + fuel_growth) ** (t - 1) for t in range(1, HORIZON_YEARS + 1))
     roi_5y = _safe_div(total_benefit_5y - total_cost_5y, total_cost_5y) * 100.0
 
     # ── Payback (tahun; bulan = ×12) ──
     # Bila initial investment ≤ 0 (benchmark EV lebih murah dari ICE yang
     # dihindari → tak ada exposure awal) payback = 0 (langsung menguntungkan).
-    if net_annual_saving > 0:
-        payback_years = max(0.0, initial_investment / net_annual_saving)
+    # Memakai net tahun-1 (paling konservatif bila arus kas tumbuh).
+    net_y1 = net_by_year[0] if net_by_year else net_annual_saving
+    if net_y1 > 0:
+        payback_years = max(0.0, initial_investment / net_y1)
     else:
         payback_years = None
 
@@ -303,6 +355,9 @@ def _scenario(
             "evWhPerKm": ev_wh_km,
             "chargingLossPct": round(loss * 100, 1),
             "discountRatePct": round(discount * 100, 1),
+            "fuelGrowthPct": round(fuel_growth * 100, 2),
+            "elecGrowthPct": round(elec_growth * 100, 2),
+            "batteryGrowthPct": round(battery_growth * 100, 2),
         },
         "annual": {
             "distanceKm": round(annual_km, 0),
@@ -313,6 +368,8 @@ def _scenario(
             "batteryLeaseIdr": round(battery_lease, 0),
             "maintenanceSavingIdr": round(maintenance_saving, 0),
             "netAnnualSavingIdr": round(net_annual_saving, 0),
+            "netCashFlowY1Idr": round(net_y1, 0),
+            "netCashFlowYLastIdr": round(net_by_year[-1] if net_by_year else net_annual_saving, 0),
         },
         "capex": {
             "evVehicleCostIdr": round(ev_vehicle_cost, 0),
@@ -343,7 +400,7 @@ def _scenario(
             "reductionTonsYear": round(co2_saved_kg / 1000.0, 1),
             "reductionTons5y": round(co2_saved_kg * HORIZON_YEARS / 1000.0, 1),
         },
-        "cashflow": _cashflow_series(initial_investment, net_annual_saving, discount),
+        "cashflow": _cashflow_series(initial_investment, net_annual_saving, discount, net_by_year),
     }
 
 
@@ -356,8 +413,13 @@ def ev_bca(
     battery_lease_override: float | None = None,
     ev_price_override: float | None = None,
     ice_price_override: float | None = None,
+    fuel_growth: float | None = None,
+    elec_growth: float | None = None,
+    battery_growth: float | None = None,
+    monte_carlo_runs: int | None = None,
+    seed: int | None = None,
 ) -> dict[str, Any]:
-    """BCA armada EV — 3 skenario + KPI finansial & emisi + stress-test + roadmap.
+    """BCA armada EV — 3 skenario + KPI + stress-test + roadmap + simulasi lanjut.
 
     Args:
         units: jumlah unit EV (default = target kasus 200).
@@ -369,6 +431,11 @@ def ev_bca(
         battery_lease_override: override sewa baterai (IDR/unit/tahun).
         ev_price_override: override harga unit EV benchmark (IDR).
         ice_price_override: override harga unit ICE benchmark (IDR).
+        fuel_growth: eskalasi harga BBM tahunan (fraksi; default 0 = datar).
+        elec_growth: eskalasi tarif listrik tahunan (fraksi; default 0).
+        battery_growth: eskalasi sewa baterai tahunan (fraksi; default 0).
+        monte_carlo_runs: jumlah iterasi Monte Carlo (default 2000; max 20000).
+        seed: seed RNG Monte Carlo (default 42; deterministik & reproducible).
     """
     u = clamp(units if units is not None else DEFAULT_EV_UNITS, 1.0, 100_000.0, DEFAULT_EV_UNITS)
     nat = _pertamax_national()
@@ -384,11 +451,18 @@ def ev_bca(
     )
     ev_price = clamp(ev_price_override if ev_price_override is not None else EV_UNIT_PRICE_IDR, 1_000_000.0, 5_000_000_000.0, EV_UNIT_PRICE_IDR)
     ice_price = clamp(ice_price_override if ice_price_override is not None else ICE_UNIT_PRICE_IDR, 1_000_000.0, 5_000_000_000.0, ICE_UNIT_PRICE_IDR)
+    # Eskalasi harga tahunan (fraksi; dibatasi ±30%/th agar masuk akal).
+    fg = clamp(fuel_growth if fuel_growth is not None else 0.0, -0.30, 0.30, 0.0)
+    eg = clamp(elec_growth if elec_growth is not None else 0.0, -0.30, 0.30, 0.0)
+    bg = clamp(battery_growth if battery_growth is not None else 0.0, -0.30, 0.30, 0.0)
+    mc_runs = int(clamp(monte_carlo_runs if monte_carlo_runs is not None else 2000, 100, 20000, 2000))
+    mc_seed = int(clamp(seed if seed is not None else 42, 0, 2_147_483_647, 42))
 
     common = dict(
         units=u, pertamax=pertamax, include_maintenance=include_maintenance,
         discount=disc, tariff=tariff, battery_lease_year=battery_lease,
         ev_price=ev_price, ice_price=ice_price,
+        fuel_growth=fg, elec_growth=eg, battery_growth=bg,
     )
 
     # Headline = skenario REPLACEMENT (200 EV menggantikan 200 ICE).
@@ -429,6 +503,11 @@ def ev_bca(
             "evUnitPriceIdr": round(ev_price, 0),
             "iceUnitPriceIdr": round(ice_price, 0),
             "horizonYears": HORIZON_YEARS,
+            "fuelGrowthPct": round(fg * 100, 2),
+            "elecGrowthPct": round(eg * 100, 2),
+            "batteryGrowthPct": round(bg * 100, 2),
+            "monteCarloRuns": mc_runs,
+            "seed": mc_seed,
         },
         "fleetBasis": _fleet_basis(),
         "headline": _headline(scenarios["base"]),
@@ -437,7 +516,17 @@ def ev_bca(
         "scenarioComparison": _scenario_comparison(scenarios, incremental),
         "utilizationSensitivity": _utilization_sensitivity(**common),
         "discountRateSensitivity": _discount_rate_sensitivity(**common),
+        "breakevens": _breakevens(**common),
+        "tcoPerKm": _tco_per_km(**common),
+        "tornadoSensitivity": _tornado_sensitivity(**common),
+        "monteCarlo": _monte_carlo(runs=mc_runs, seed=mc_seed, **common),
+        "hubDeployment": _hub_deployment(**common),
+        "lifecycleEmissions": _lifecycle_emissions(**common),
+        "escalationPreview": _escalation_preview(u=u, pertamax=pertamax, include_maintenance=include_maintenance,
+                                                 discount=disc, tariff=tariff, battery_lease_year=battery_lease,
+                                                 ev_price=ev_price, ice_price=ice_price),
         "roadmap": _roadmap(**common),
+        "roadmapProgramCashflow": _roadmap_program_cashflow(**common),
         "strategicTakeaway": (
             "Pertanyaan utama bukan 'apakah EV lebih hemat?' (energi EV jauh "
             "lebih murah di seluruh skenario), melainkan 'KAPAN & DI MANA GC "
@@ -487,7 +576,8 @@ def _scenario_comparison(replacement: dict[str, Any], incremental: dict[str, Any
 
 
 def _utilization_sensitivity(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
-                            tariff: float, battery_lease_year: float, ev_price: float, ice_price: float) -> dict[str, Any]:
+                            tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
+                            fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
     """Tabel sensitivitas utilisasi (km/unit/hari) untuk replacement & incremental.
 
     Menjawab langsung "seberapa sensitif ekonomi terhadap utilisasi?" — sekaligus
@@ -498,7 +588,8 @@ def _utilization_sensitivity(*, units: float, pertamax: float, include_maintenan
     """
     common = dict(units=units, pertamax=pertamax, include_maintenance=include_maintenance,
                   discount=discount, tariff=tariff, battery_lease_year=battery_lease_year,
-                  ev_price=ev_price, ice_price=ice_price)
+                  ev_price=ev_price, ice_price=ice_price,
+                  fuel_growth=fuel_growth, elec_growth=elec_growth, battery_growth=battery_growth)
     dists = (20.0, 30.0, 40.0, 50.0, 60.0, 80.0, 100.0)
 
     def _sweep(replacement: bool) -> tuple[list[dict[str, Any]], float | None]:
@@ -545,18 +636,21 @@ def _utilization_sensitivity(*, units: float, pertamax: float, include_maintenan
 
 
 def _discount_rate_sensitivity(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
-                               tariff: float, battery_lease_year: float, ev_price: float, ice_price: float) -> dict[str, Any]:
+                               tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
+                               fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
     """Sensitivitas NPV terhadap discount rate (8%..20%) — skenario base replacement."""
     rows: list[dict[str, Any]] = []
     for dr in (0.08, 0.10, 0.12, 0.15, 0.18, 0.20):
         r = _scenario("base", replacement=True, units=units, pertamax=pertamax, include_maintenance=include_maintenance,
-                      discount=dr, tariff=tariff, battery_lease_year=battery_lease_year, ev_price=ev_price, ice_price=ice_price)
+                      discount=dr, tariff=tariff, battery_lease_year=battery_lease_year, ev_price=ev_price, ice_price=ice_price,
+                      fuel_growth=fuel_growth, elec_growth=elec_growth, battery_growth=battery_growth)
         rows.append({"discountRatePct": round(dr * 100, 1), "npvIdr": r["kpi"]["npvIdr"], "bcrDiscounted": r["kpi"]["bcrDiscounted"]})
     return {"metric": "discount rate (%)", "note": "Base replacement; hanya discount rate divariasikan.", "rows": rows}
 
 
 def _roadmap(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
-             tariff: float, battery_lease_year: float, ev_price: float, ice_price: float) -> dict[str, Any]:
+             tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
+             fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
     """Roadmap 3 fase konversi parsial armada kasus (12.500 motor) — simulasi.
 
     Tiap fase memakai skenario base untuk ekonomi unit, tetapi jumlah unit =
@@ -567,7 +661,8 @@ def _roadmap(*, units: float, pertamax: float, include_maintenance: bool, discou
     moto = fleet["motorcycles"] or int(DEFAULT_EV_UNITS)
     common = dict(pertamax=pertamax, include_maintenance=include_maintenance,
                   discount=discount, tariff=tariff, battery_lease_year=battery_lease_year,
-                  ev_price=ev_price, ice_price=ice_price)
+                  ev_price=ev_price, ice_price=ice_price,
+                  fuel_growth=fuel_growth, elec_growth=elec_growth, battery_growth=battery_growth)
     phases: list[dict[str, Any]] = []
     prev_units = 0
     for p in ROADMAP_PHASES:
@@ -605,10 +700,518 @@ def _roadmap(*, units: float, pertamax: float, include_maintenance: bool, discou
     }
 
 
+# ── Simulasi lanjut (breakeven, tornado, Monte Carlo, TCO, hub, lifecycle) ───
+def _pv_factor(discount: float) -> float:
+    """Faktor anuitas PV untuk horizon 5 tahun (dipakai reverse-solve)."""
+    return sum(1.0 / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1))
+
+
+def _breakevens(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
+                tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
+                fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
+    """Reverse-solve ambang impas (NPV = 0) — "seberapa jauh bisa meleset?".
+
+    Semua dihitung pada skenario BASE dengan mode yang paling relevan:
+      * Max sewa baterai (BaaS) yang membuat NPV = 0 (replacement & incremental).
+      * Min utilisasi (km/hari) agar NPV = 0 (replacement & incremental, analitik).
+      * Harga Pertamax impas pada fleet tambahan (titik di mana EV baru mulai layak).
+      * Harga unit EV maksimum agar replacement tetap NPV = 0 (premium yang bisa ditoleransi).
+    """
+    def scen(replacement: bool, **over: Any) -> dict[str, Any]:
+        kw = dict(units=units, pertamax=pertamax, include_maintenance=include_maintenance, discount=discount,
+                  tariff=tariff, battery_lease_year=battery_lease_year, ev_price=ev_price, ice_price=ice_price,
+                  fuel_growth=fuel_growth, elec_growth=elec_growth, battery_growth=battery_growth)
+        kw.update(over)
+        return _scenario("base", replacement=replacement, **kw)
+
+    rep = scen(True)
+    inc = scen(False)
+
+    # Max sewa baterai (IDR/unit/tahun): net = fuel − elec − L (L = units × lease).
+    # NPV = −I + Σ (net)/(1+r)^t = 0 → L* = fuel − elec − I / pv  (karena growth=0 pada
+    # komponen yang di-solve; bila ada growth, gunakan PV efektif per komponen).
+    def max_battery_lease(s: dict[str, Any]) -> float | None:
+        fuel_pv = sum(s["annual"]["iceFuelCostIdr"] * (1.0 + fuel_growth) ** (t - 1) / (1.0 + discount) ** t
+                      for t in range(1, HORIZON_YEARS + 1))
+        elec_pv = sum(s["annual"]["evEnergyCostIdr"] * (1.0 + elec_growth) ** (t - 1) / (1.0 + discount) ** t
+                      for t in range(1, HORIZON_YEARS + 1))
+        i = s["capex"]["initialInvestmentIdr"]
+        # lease_pv = Σ L_year1×(1+bg)^(t-1)/(1+r)^t ; L_year1 = units × lease_year1
+        lease_pv_per_unit = sum(units * (1.0 + battery_growth) ** (t - 1) / (1.0 + discount) ** t
+                                for t in range(1, HORIZON_YEARS + 1))
+        avail = fuel_pv - elec_pv - i
+        if lease_pv_per_unit <= 0:
+            return None
+        return round(avail / lease_pv_per_unit, 0)
+
+    # Min utilisasi (analitik). Perhatikan: fuel & listrik SEBANDING jarak, tetapi
+    # sewa baterai (BaaS) = biaya TETAP (tak bergantung jarak). Maka:
+    #   NPV(d) = −I + Σ [ (f_per_km − e_per_km)·d − battery_fixed ] / (1+r)^t = 0
+    #   d* = ( I + battery_fixed·Σ1/(1+r)^t ) / ( (f_per_km − e_per_km)·Σ1/(1+r)^t )
+    def min_distance(s: dict[str, Any]) -> float | None:
+        km = s["annual"]["distanceKm"]
+        if km <= 0:
+            return None
+        pv_eff = sum((1.0 + fuel_growth) ** (t - 1) / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1))
+        pv_elec = sum((1.0 + elec_growth) ** (t - 1) / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1))
+        pv_batt = sum((1.0 + battery_growth) ** (t - 1) / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1))
+        fuel_per_km = s["annual"]["iceFuelCostIdr"] / km
+        elec_per_km = s["annual"]["evEnergyCostIdr"] / km
+        battery_fixed = s["annual"]["batteryLeaseIdr"]
+        i = s["capex"]["initialInvestmentIdr"]
+        denom = fuel_per_km * pv_eff - elec_per_km * pv_elec
+        if denom <= 0:
+            return None
+        # d_star dalam km TAHUNAN (karena per_km berbasis jarak tahunan); konversi
+        # ke km/unit/hari dengan membagi (units × hari operasi).
+        annual_km_star = (i + battery_fixed * pv_batt) / denom
+        per_unit_day = annual_km_star / (units * OPERATING_DAYS) if units > 0 else 0.0
+        return round(max(0.0, per_unit_day), 1)
+
+    # Harga Pertamax impas (incremental base): NPV(P)=0.
+    # fuel_total = km/eff × P → P* = (I/pv + elec_pv + batt_pv) / (km/eff)_pv
+    inc_i = inc["capex"]["initialInvestmentIdr"]
+    ice_liters = inc["annual"]["iceLiters"]
+    liters_pv = sum(ice_liters * (1.0 + fuel_growth) ** (t - 1) / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1))
+    cost_pv_inc = sum((inc["annual"]["evEnergyCostIdr"] * (1.0 + elec_growth) ** (t - 1)
+                       + inc["annual"]["batteryLeaseIdr"] * (1.0 + battery_growth) ** (t - 1)) / (1.0 + discount) ** t
+                      for t in range(1, HORIZON_YEARS + 1))
+    breakeven_pertamax = round((inc_i + cost_pv_inc) / liters_pv, 0) if liters_pv > 0 else None
+
+    # Premium harga EV maksimum (replacement, NPV=0). vehicleDelta = units×(evP − iceP).
+    # NPV = −(units×(evP − iceP) + infra + impl) + net×pv = 0
+    net_pv_rep = sum(rep["annual"]["netAnnualSavingIdr"] * (1.0 + fuel_growth) ** (t - 1) / (1.0 + discount) ** t
+                     for t in range(1, HORIZON_YEARS + 1))
+    infra_rep = rep["capex"]["chargingInfraIdr"] + rep["capex"]["implementationTrainingIdr"]
+    max_ev_price = round(ice_price + (net_pv_rep - infra_rep) / units, 0) if units > 0 else None
+
+    return {
+        "note": (
+            "Ambang impas (NPV = 0) menyelesaikan tiap variabel secara terbalik pada "
+            "skenario base. Menunjukkan seberapa besar ruang aman sebelum investasi "
+            "kehilangan nilai — semua simulasi, bukan jaminan."
+        ),
+        "maxBatteryLeaseIdrPerUnitYear": {
+            "replacement": max_battery_lease(rep),
+            "incremental": max_battery_lease(inc),
+            "currentIdrPerUnitYear": round(battery_lease_year, 0),
+        },
+        "minDistanceKmPerUnitDay": {
+            "replacement": min_distance(rep),
+            "incremental": min_distance(inc),
+        },
+        "breakevenPertamaxIdrPerLIncremental": breakeven_pertamax,
+        "maxEvUnitPriceIdrReplacement": {
+            "value": max_ev_price,
+            "iceBenchmarkIdr": round(ice_price, 0),
+            "currentEvBenchmarkIdr": round(ev_price, 0),
+            "headroomIdr": round(max_ev_price - ev_price, 0) if max_ev_price is not None else None,
+        },
+    }
+
+
+def _tco_per_km(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
+                tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
+                fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
+    """Total cost of ownership per km (5 th) ICE vs EV — base, replacement.
+
+    ICE TCO/km = energi (BBM) + maintenance benchmark ICE (asumsi publik).
+    EV TCO/km  = listrik + sewa baterai (BaaS) + maintenance EV (≈0, Polytron: tanpa
+    oli mesin) + amortisasi selisih harga kendaraan (bila ada). Blok ini dilabel
+    asumsi; headline tetap pada net operating saving (tanpa maintenance).
+    """
+    base = _scenario("base", replacement=True, units=units, pertamax=pertamax, include_maintenance=include_maintenance,
+                     discount=discount, tariff=tariff, battery_lease_year=battery_lease_year,
+                     ev_price=ev_price, ice_price=ice_price, fuel_growth=fuel_growth,
+                     elec_growth=elec_growth, battery_growth=battery_growth)
+    km = base["annual"]["distanceKm"] or 1.0
+    ice_energy_km = base["annual"]["iceFuelCostIdr"] / km
+    ice_maint_km = (units * ICE_MAINTENANCE_BENCHMARK_IDR_PER_UNIT_YEAR) / km
+    ev_energy_km = base["annual"]["evEnergyCostIdr"] / km
+    ev_battery_km = base["annual"]["batteryLeaseIdr"] / km
+    # Amortisasi selisih harga kendaraan per km (selisih bisa negatif → mengurangi).
+    veh_delta_per_km = base["capex"]["vehicleDeltaIdr"] / (km * HORIZON_YEARS)
+    ice_tco = ice_energy_km + ice_maint_km
+    ev_tco = ev_energy_km + ev_battery_km + veh_delta_per_km
+    return {
+        "note": (
+            "TCO/km 5-tahun (base, replacement). ICE memakai benchmark maintenance "
+            "publik (asumsi); EV memakai BaaS + maintenance ≈0 dan amortisasi selisih "
+            "harga kendaraan. Simulasi — bukan data aktual fleet."
+        ),
+        "distanceKmYear": round(km, 0),
+        "ice": {
+            "energyIdrPerKm": round(ice_energy_km, 0),
+            "maintenanceIdrPerKm": round(ice_maint_km, 0),
+            "totalIdrPerKm": round(ice_tco, 0),
+        },
+        "ev": {
+            "energyIdrPerKm": round(ev_energy_km, 0),
+            "batteryLeaseIdrPerKm": round(ev_battery_km, 0),
+            "vehicleDeltaIdrPerKm": round(veh_delta_per_km, 0),
+            "totalIdrPerKm": round(ev_tco, 0),
+        },
+        "savingIdrPerKm": round(ice_tco - ev_tco, 0),
+        "savingPct": round(_safe_div(ice_tco - ev_tco, ice_tco) * 100.0, 1),
+    }
+
+
+def _tornado_sensitivity(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
+                         tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
+                         fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
+    """Sensitivitas one-way (tornado): ±rentang tiap lever → sebaran NPV.
+
+    Baseline = NPV base replacement. Tiap lever diberi rentang khas (mis. harga BBM
+    ±20%). Selisih NPV (high − low) = ayunan; diurut dari terbesar → menunjukkan
+    asumsi mana yang paling menentukan nilai.
+    """
+    def npv(**over: Any) -> float:
+        kw = dict(units=units, pertamax=pertamax, include_maintenance=include_maintenance, discount=discount,
+                  tariff=tariff, battery_lease_year=battery_lease_year, ev_price=ev_price, ice_price=ice_price,
+                  fuel_growth=fuel_growth, elec_growth=elec_growth, battery_growth=battery_growth)
+        kw.update(over)
+        return _scenario("base", replacement=True, **kw)["kpi"]["npvIdr"]
+
+    baseline = npv()
+    levers = [
+        ("Harga Pertamax", {"pertamax": pertamax * 0.8}, {"pertamax": pertamax * 1.2}),
+        ("Tarif listrik", {"tariff": tariff * 0.7}, {"tariff": tariff * 1.3}),
+        ("Sewa baterai (BaaS)", {"battery_lease_year": battery_lease_year * 0.6}, {"battery_lease_year": battery_lease_year * 1.4}),
+        ("Jumlah unit EV", {"units": units * 0.5}, {"units": units * 1.5}),
+        ("Discount rate", {"discount": max(0.01, discount * 0.6)}, {"discount": min(0.5, discount * 1.6)}),
+        ("Harga unit EV", {"ev_price": ev_price * 0.9}, {"ev_price": ev_price * 1.1}),
+        ("Harga unit ICE", {"ice_price": ice_price * 0.9}, {"ice_price": ice_price * 1.1}),
+    ]
+    rows: list[dict[str, Any]] = []
+    for label, lo, hi in levers:
+        n_lo = npv(**lo)
+        n_hi = npv(**hi)
+        rows.append({
+            "lever": label,
+            "npvLowIdr": round(n_lo, 0),
+            "npvHighIdr": round(n_hi, 0),
+            "swingIdr": round(abs(n_hi - n_lo), 0),
+        })
+    rows.sort(key=lambda r: r["swingIdr"], reverse=True)
+    return {
+        "metric": "NPV base replacement (Rp)",
+        "baselineNpvIdr": round(baseline, 0),
+        "note": "One-way sensitivity: tiap lever divariasikan sendiri (ceteris paribus). Ayunan = |NPV high − NPV low|.",
+        "rows": rows,
+    }
+
+
+def _monte_carlo(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
+                 tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
+                 fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0,
+                 runs: int = 2000, seed: int = 42) -> dict[str, Any]:
+    """Monte Carlo (deterministik via seed) atas utilisasi, harga, efisiensi.
+
+    Sampel tiap variabel dari normal terpangkas (clamp ke rentang fisik), hitung NPV
+    & BCR base replacement. Mengembalikan distribusi (P10/P50/P90), probabilitas
+    NPV>0, dan histogram untuk chart. Simulasi — bukan prakiraan.
+    """
+    import random
+
+    rng = random.Random(seed)
+
+    def sample(name: str, override: float | None = None) -> float:
+        s = MONTE_CARLO_SPECS[name]
+        if override is not None:
+            return override
+        v = rng.gauss(s["mean"], s["sd"])
+        return min(s["hi"], max(s["lo"], v))
+
+    npvs: list[float] = []
+    bcrs: list[float] = []
+    for _ in range(runs):
+        dist = sample("distanceKmDay")
+        p = sample("pertamaxIdrPerL", pertamax)
+        t = sample("tariffIdrPerKwh", tariff)
+        b = sample("batteryLeaseYearIdr", battery_lease_year)
+        wh = sample("evWhPerKm")
+        eff = sample("iceEfficiencyKmPerL")
+        # Override efisiensi/konsumsi: hitung manual via _scenario tak menerima wh/eff
+        # per-run; gunakan implementasi ringkas konsisten dengan _scenario base.
+        annual_km = units * dist * OPERATING_DAYS
+        fuel = (annual_km / eff) * p
+        kwh = annual_km * (wh / 1000.0) * 1.15  # loss 15% (base)
+        cost = kwh * t + units * b
+        net = fuel - cost
+        pvf = _pv_factor(discount)
+        i = (units * ev_price - units * ice_price) + CHARGING_INFRA_BY_SCENARIO_IDR["base"] + IMPLEMENTATION_TRAINING_IDR
+        npv = -i + net * pvf
+        npvs.append(npv)
+        bcrs.append(_safe_div(fuel * HORIZON_YEARS, i + cost * HORIZON_YEARS))
+
+    npvs_sorted = sorted(npvs)
+    bcrs_sorted = sorted(bcrs)
+
+    def pct(arr: list[float], q: float) -> float:
+        if not arr:
+            return 0.0
+        idx = min(len(arr) - 1, max(0, int(round(q * (len(arr) - 1)))))
+        return arr[idx]
+
+    prob_positive = sum(1 for x in npvs if x > 0) / len(npvs) if npvs else 0.0
+
+    # Histogram NPV (20 bin) untuk chart distribusi.
+    lo, hi = min(npvs_sorted), max(npvs_sorted)
+    bins_n = 20
+    step = (hi - lo) / bins_n if hi > lo else 1.0
+    hist = [0] * bins_n
+    for x in npvs:
+        bi = min(bins_n - 1, int((x - lo) / step)) if step else 0
+        hist[bi] += 1
+    histogram = [
+        {"binStartIdr": round(lo + i * step, 0), "binEndIdr": round(lo + (i + 1) * step, 0), "count": hist[i]}
+        for i in range(bins_n)
+    ]
+
+    return {
+        "note": (
+            "Monte Carlo deterministik (seed tetap) atas utilisasi, harga BBM/listrik, "
+            "sewa baterai, konsumsi EV, efisiensi ICE. Simulasi ketidakpastian — bukan "
+            "prakiraan; ganti seed untuk melihat variasi sampel."
+        ),
+        "runs": runs,
+        "seed": seed,
+        "assumptionNote": "Normal terpangkas (truncated normal) ke rentang fisik; base-case = mean.",
+        "npv": {
+            "p10Idr": round(pct(npvs_sorted, 0.10), 0),
+            "p50Idr": round(pct(npvs_sorted, 0.50), 0),
+            "p90Idr": round(pct(npvs_sorted, 0.90), 0),
+            "meanIdr": round(sum(npvs) / len(npvs), 0) if npvs else 0.0,
+            "minIdr": round(lo, 0),
+            "maxIdr": round(hi, 0),
+            "probPositivePct": round(prob_positive * 100.0, 1),
+        },
+        "bcr": {
+            "p10": round(pct(bcrs_sorted, 0.10), 2),
+            "p50": round(pct(bcrs_sorted, 0.50), 2),
+            "p90": round(pct(bcrs_sorted, 0.90), 2),
+        },
+        "histogram": histogram,
+    }
+
+
+def _hub_deployment(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
+                    tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
+                    fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
+    """Prioritisasi "DI MANA" deploy EV — alokasi `units` ke 23 hub menurut kapasitas.
+
+    Bobot = kapasitas hub (Table 1). Ekonomi per hub dihitung pada skenario base
+    replacement (unit dialokasikan ke hub). Menghasilkan daftar hub terprioritas
+    (unit, km, net saving, CO₂) + rollup per region. Simulasi alokasi, bukan surat
+    pesan penugasan.
+    """
+    hubs = load()["hubs"]
+    total_cap = sum(float(h.get("capacityM", 0.0)) for h in hubs) or 1.0
+    # Alokasi proporsional kapasitas lalu dibulatkan ke 10 unit dengan penyesuaian
+    # sisa (largest-remainder) agar TOTAL tepat = units (menghindari drift pembulatan).
+    raw = [float(units) * float(h.get("capacityM", 0.0)) / total_cap for h in hubs]
+    alloc = [int(round(v / 10.0) * 10) for v in raw]
+    deficit = int(round(units)) - sum(alloc)
+    if deficit != 0:
+        # urutkan menurut sisa pecahan terbesar untuk menambah/kurangi kelipatan 10.
+        order = sorted(range(len(hubs)), key=lambda i: (raw[i] - alloc[i]), reverse=deficit > 0)
+        step = 10 if deficit > 0 else -10
+        need = abs(deficit) // 10
+        for i in order[:need]:
+            alloc[i] += step
+    rows: list[dict[str, Any]] = []
+    by_region: dict[str, dict[str, float]] = {}
+    for h, hub_units in zip(hubs, alloc):
+        cap = float(h.get("capacityM", 0.0))
+        if hub_units <= 0:
+            continue
+        r = _scenario("base", replacement=True, units=float(hub_units), pertamax=pertamax,
+                      include_maintenance=include_maintenance, discount=discount, tariff=tariff,
+                      battery_lease_year=battery_lease_year, ev_price=ev_price, ice_price=ice_price,
+                      fuel_growth=fuel_growth, elec_growth=elec_growth, battery_growth=battery_growth)
+        reg = h.get("region", "—")
+        agg = by_region.setdefault(reg, {"units": 0.0, "netSavingIdr": 0.0, "npvIdr": 0.0, "co2TonsYear": 0.0, "capacityM": 0.0})
+        agg["units"] += hub_units
+        agg["netSavingIdr"] += r["annual"]["netAnnualSavingIdr"]
+        agg["npvIdr"] += r["kpi"]["npvIdr"]
+        agg["co2TonsYear"] += r["co2"]["reductionTonsYear"]
+        agg["capacityM"] += cap
+        rows.append({
+            "name": h.get("name", "—"),
+            "code": h.get("code", "—"),
+            "region": reg,
+            "capacityM": round(cap, 3),
+            "allocatedUnits": hub_units,
+            "netAnnualSavingIdr": r["annual"]["netAnnualSavingIdr"],
+            "npvIdr": r["kpi"]["npvIdr"],
+            "co2ReductionTonsYear": r["co2"]["reductionTonsYear"],
+        })
+    rows.sort(key=lambda x: x["allocatedUnits"], reverse=True)
+    regions = [
+        {"region": k, "units": int(v["units"]), "netSavingIdr": round(v["netSavingIdr"], 0),
+         "npvIdr": round(v["npvIdr"], 0), "co2TonsYear": round(v["co2TonsYear"], 1),
+         "capacityM": round(v["capacityM"], 3)}
+        for k, v in sorted(by_region.items(), key=lambda kv: kv[1]["units"], reverse=True)
+    ]
+    return {
+        "note": (
+            "Alokasi unit EV ke 23 hub berbobot KAPASITAS (Table 1) — hub terbesar "
+            "dilayani lebih dulu. Ekonomi per hub = skenario base replacement. "
+            "Simulasi prioritisasi, bukan penugasan aktual."
+        ),
+        "totalUnits": int(sum(r["allocatedUnits"] for r in rows)),
+        "hubs": rows,
+        "byRegion": regions,
+    }
+
+
+def _lifecycle_emissions(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
+                        tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
+                        fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
+    """Emisi SIKLUS HIDUP (SIMULASI) — operasional + produksi kendaraan/baterai.
+
+    Estimasi order-of-magnitude: produksi motor ICE vs motor EV (+ baterai Li-ion),
+    ditambah operasional 5 tahun. Dilabel jelas sebagai SIMULASI, bukan LCA
+    tersertifikasi. Bila EV diproduksi lebih intensif karbon tetapi beroperasi
+    lebih bersih, blok ini menunjukkan tahun ketika manfaat karbon mulai positif.
+    """
+    base = _scenario("base", replacement=True, units=units, pertamax=pertamax, include_maintenance=include_maintenance,
+                     discount=discount, tariff=tariff, battery_lease_year=battery_lease_year,
+                     ev_price=ev_price, ice_price=ice_price, fuel_growth=fuel_growth,
+                     elec_growth=elec_growth, battery_growth=battery_growth)
+    # Produksi satu kali (kg CO2e).
+    ice_mfg = units * ICE_MANUFACTURING_CO2_KG_PER_UNIT
+    ev_battery_mfg = units * EV_BATTERY_KWH * EV_BATTERY_MANUFACTURING_CO2_KG_PER_KWH
+    ev_mfg = units * EV_MANUFACTURING_CO2_KG_PER_UNIT + ev_battery_mfg
+    mfg_extra = ev_mfg - ice_mfg  # bisa positif (EV lebih intensif di awal)
+    # Operasional tahunan (reuse operasional tahun-1).
+    ice_op_year = base["co2"]["iceCo2KgYear"]
+    ev_op_year = base["co2"]["evCo2KgYear"]
+    op_saving_year = ice_op_year - ev_op_year
+    # Titik impas karbon (tahun): mfg_extra / op_saving_year.
+    carbon_payback = round(mfg_extra / op_saving_year, 1) if op_saving_year > 0 else None
+    # Kumulatif 5 tahun.
+    ice_5y = ice_mfg + ice_op_year * HORIZON_YEARS
+    ev_5y = ev_mfg + ev_op_year * HORIZON_YEARS
+    return {
+        "label": "SIMULASI (bukan LCA tersertifikasi)",
+        "note": (
+            "Estimasi siklus hidup order-of-magnitude: produksi kendaraan + baterai "
+            "(satu kali) + operasional 5 tahun. Angka produksi = asumsi tim (dilabel), "
+            "bukan hasil LCA tersertifikasi. Tujuan: menunjukkan apakah/waktu manfaat "
+            "karbon EV mulai positif setelah memperhitungkan produksi."
+        ),
+        "assumptions": {
+            "iceManufacturingKgPerUnit": ICE_MANUFACTURING_CO2_KG_PER_UNIT,
+            "evManufacturingKgPerUnit": EV_MANUFACTURING_CO2_KG_PER_UNIT,
+            "evBatteryManufacturingKgPerKwh": EV_BATTERY_MANUFACTURING_CO2_KG_PER_KWH,
+        },
+        "manufacturing": {
+            "iceTotalKg": round(ice_mfg, 0),
+            "evTotalKg": round(ev_mfg, 0),
+            "evBatteryKg": round(ev_battery_mfg, 0),
+            "extraKg": round(mfg_extra, 0),
+        },
+        "operational": {
+            "iceKgYear": round(ice_op_year, 0),
+            "evKgYear": round(ev_op_year, 0),
+            "savingKgYear": round(op_saving_year, 0),
+        },
+        "carbonPaybackYears": carbon_payback,
+        "cumulative5y": {
+            "iceKg": round(ice_5y, 0),
+            "evKg": round(ev_5y, 0),
+            "deltaKg": round(ice_5y - ev_5y, 0),
+            "deltaTons": round((ice_5y - ev_5y) / 1000.0, 1),
+        },
+    }
+
+
+def _escalation_preview(*, u: float, pertamax: float, include_maintenance: bool, discount: float,
+                        tariff: float, battery_lease_year: float, ev_price: float, ice_price: float) -> dict[str, Any]:
+    """Pratinjau efek eskalasi harga (fuel +3%/th, listrik +2%/th) pada NPV base.
+
+    Memperlihatkan bagaimana NPV bergeser bila harga BBM/listrik naik tiap tahun —
+    arus kas bereskalasi, bukan datar. Simulasi sensitivitas lintas-waktu.
+    """
+    common = dict(units=u, pertamax=pertamax, include_maintenance=include_maintenance, discount=discount,
+                  tariff=tariff, battery_lease_year=battery_lease_year, ev_price=ev_price, ice_price=ice_price)
+    flat = _scenario("base", replacement=True, **common)["kpi"]["npvIdr"]
+    esc = _scenario("base", replacement=True, fuel_growth=0.03, elec_growth=0.02, **common)["kpi"]["npvIdr"]
+    aggressive = _scenario("base", replacement=True, fuel_growth=0.06, elec_growth=0.03, **common)["kpi"]["npvIdr"]
+    return {
+        "note": "Efek eskalasi harga tahunan pada NPV base (replacement). Arus kas tumbuh, NPV dihitung ulang.",
+        "fuelGrowthPct": 3.0,
+        "elecGrowthPct": 2.0,
+        "flatNpvIdr": round(flat, 0),
+        "moderateNpvIdr": round(esc, 0),
+        "aggressiveNpvIdr": round(aggressive, 0),
+        "moderateDeltaIdr": round(esc - flat, 0),
+        "aggressiveDeltaIdr": round(aggressive - flat, 0),
+    }
+
+
+def _roadmap_program_cashflow(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
+                             tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
+                             fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
+    """Arus kas PROGRAM 5-tahun untuk rollout 3 fase (capex disebar, bukan Y0).
+
+    Berbeda dari tab arus kas per-fase (yang menaruh capex di Y0 tiap fase), di sini
+    capex tiap fase jatuh pada tahun kalender proyek (fase 1 → Y1, fase 2 → Y2,
+    fase 3 → Y3) dan benefit berjalan setelah unit terpasang. Memberi gambaran
+    arus kas program agregat. Simulasi perencanaan.
+    """
+    roadmap = _roadmap(units=units, pertamax=pertamax, include_maintenance=include_maintenance, discount=discount,
+                       tariff=tariff, battery_lease_year=battery_lease_year, ev_price=ev_price,
+                       ice_price=ice_price, fuel_growth=fuel_growth, elec_growth=elec_growth,
+                       battery_growth=battery_growth)
+    # Tahun mulai proyek: fase1 Y1, fase2 Y2, fase3 Y3.
+    added_by_year = {1: 0.0, 2: 0.0, 3: 0.0}
+    for p in roadmap["phases"]:
+        year = {1: 1, 2: 2, 3: 3}.get(p["phase"], 3)
+        added_by_year[year] += p["addedUnits"]
+    # Capex & benefit program tiap tahun.
+    rows: list[dict[str, Any]] = []
+    deployed = 0.0
+    cum = 0.0
+    for y in range(0, HORIZON_YEARS + 1):
+        if y == 0:
+            rows.append({"year": 0, "capexIdr": 0.0, "benefitIdr": 0.0, "netCashFlowIdr": 0.0, "cumulativeIdr": 0.0, "deployedUnits": 0})
+            continue
+        add = added_by_year.get(y, 0.0)
+        # Capex = ekonomi unit baru (replacement) untuk unit yang ditambah tahun ini.
+        r_add = _scenario("base", replacement=True, units=add, pertamax=pertamax, include_maintenance=include_maintenance,
+                          discount=discount, tariff=tariff, battery_lease_year=battery_lease_year,
+                          ev_price=ev_price, ice_price=ice_price, fuel_growth=fuel_growth,
+                          elec_growth=elec_growth, battery_growth=battery_growth) if add > 0 else None
+        capex = r_add["capex"]["initialInvestmentIdr"] if r_add else 0.0
+        deployed += add
+        # Benefit = net saving semua unit terpasang (ekonomi unit yang sama).
+        r_deployed = _scenario("base", replacement=True, units=deployed, pertamax=pertamax,
+                               include_maintenance=include_maintenance, discount=discount, tariff=tariff,
+                               battery_lease_year=battery_lease_year, ev_price=ev_price, ice_price=ice_price,
+                               fuel_growth=fuel_growth, elec_growth=elec_growth, battery_growth=battery_growth)
+        benefit = r_deployed["annual"]["netAnnualSavingIdr"]
+        net = benefit - capex
+        cum += net
+        rows.append({"year": y, "capexIdr": round(capex, 0), "benefitIdr": round(benefit, 0),
+                     "netCashFlowIdr": round(net, 0), "cumulativeIdr": round(cum, 0), "deployedUnits": deployed})
+    npv = sum(rows[y]["netCashFlowIdr"] / (1.0 + discount) ** y for y in range(1, HORIZON_YEARS + 1))
+    return {
+        "note": (
+            "Arus kas PROGRAM (capex fase jatuh Y1/Y2/Y3, benefit setelah unit terpasang) "
+            "— berbeda dari arus kas per-fase. Simulasi perencanaan rollout bertahap."
+        ),
+        "rows": rows,
+        "totalNetIdr": round(cum, 0),
+        "npvIdr": round(npv, 0),
+        "finalDeployedUnits": int(deployed),
+    }
+
+
 # ── util numerik kecil ────────────────────────────────────────────────────────
 def _safe_div(a: float, b: float) -> float:
     return (a / b) if b else 0.0
-
 
 def _ceil(x: float) -> int:
     return int(math.ceil(x))

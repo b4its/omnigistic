@@ -24,7 +24,13 @@
   let icePrice = $state<number | null>(null); // IDR/unit
   let scenarioKey = $state<"conservative" | "base" | "upside">("base");
   let view = $state<"replacement" | "incremental">("replacement");
-  let tab = $state<"kpi" | "cashflow" | "roadmap">("kpi");
+  let tab = $state<"kpi" | "cashflow" | "roadmap" | "advanced">("kpi");
+  // Eskalasi harga tahunan (%) & kontrol Monte Carlo.
+  let fuelGrowth = $state(0); // %/th
+  let elecGrowth = $state(0); // %/th
+  let batteryGrowth = $state(0); // %/th
+  let mcRuns = $state(2000);
+  let mcSeed = $state(42);
 
   async function load(userTriggered = false) {
     failed = false;
@@ -38,7 +44,12 @@
         tariff_override: tariff ?? undefined,
         battery_lease_override: batteryLease ?? undefined,
         ev_price_override: evPrice ?? undefined,
-        ice_price_override: icePrice ?? undefined
+        ice_price_override: icePrice ?? undefined,
+        fuel_growth: fuelGrowth / 100,
+        elec_growth: elecGrowth / 100,
+        battery_growth: batteryGrowth / 100,
+        monte_carlo_runs: mcRuns,
+        seed: mcSeed
       });
     } catch {
       res = null;
@@ -159,6 +170,64 @@
       : null
   );
 
+  // Monte Carlo: distribusi NPV (histogram 20 bin).
+  const mcChart = $derived(
+    res
+      ? barChart(
+          res.monteCarlo.histogram.map((h) => (h.binStartIdr / 1e9).toFixed(1)),
+          [
+            {
+              name: "Frekuensi",
+              data: res.monteCarlo.histogram.map((h) => h.count),
+              color: "var(--color-primary)"
+            }
+          ],
+          { maxBarWidth: 26, rotate: 45 }
+        )
+      : null
+  );
+
+  // Tornado: ayunan NPV per lever (Rp M).
+  const tornadoChart = $derived(
+    res
+      ? barChart(
+          res.tornadoSensitivity.rows.map((r) => r.lever),
+          [
+            {
+              name: "Ayunan NPV (Rp M)",
+              data: res.tornadoSensitivity.rows.map((r) => Math.round(r.swingIdr / 1e6)),
+              color: "var(--bitcoin)"
+            }
+          ],
+          { maxBarWidth: 40, rotate: 30 }
+        )
+      : null
+  );
+
+  // Arus kas program roadmap (capex disebar Y1..Y3) — kumulatif.
+  const programChart = $derived(
+    res
+      ? lineChart(
+          res.roadmapProgramCashflow.rows.map((r) => `Y${r.year}`),
+          [
+            {
+              name: "Kumulatif program (Rp M)",
+              data: res.roadmapProgramCashflow.rows.map((r) => Math.round(r.cumulativeIdr / 1e6)),
+              color: "var(--bitcoin)",
+              smooth: true,
+              area: true
+            },
+            {
+              name: "Unit terpasang",
+              data: res.roadmapProgramCashflow.rows.map((r) => r.deployedUnits),
+              color: "var(--color-primary)",
+              smooth: true
+            }
+          ]
+        )
+      : null
+  );
+
   const PRESETS = [
     { label: "Target kasus · 200 unit", u: 200, p: null, m: false, dr: 10, t: null, b: null, ev: null, ice: null },
     { label: "Skala 500 unit", u: 500, p: null, m: false, dr: 10, t: null, b: null, ev: null, ice: null },
@@ -189,6 +258,24 @@
     batteryLease = null;
     evPrice = null;
     icePrice = null;
+    fuelGrowth = 0;
+    elecGrowth = 0;
+    batteryGrowth = 0;
+    mcRuns = 2000;
+    mcSeed = 42;
+    void run();
+  }
+
+  // Preset laju eskalasi harga (fraksi → dikonversi ke % di kontrol).
+  const GROWTH_PRESETS = [
+    { label: "Datar (0%/th)", f: 0, e: 0, b: 0 },
+    { label: "Moderat (BBM+3% · listrik+2%)", f: 3, e: 2, b: 0 },
+    { label: "Agresif (BBM+6% · listrik+3%)", f: 6, e: 3, b: 1 }
+  ];
+  function applyGrowth(p: (typeof GROWTH_PRESETS)[number]) {
+    fuelGrowth = p.f;
+    elecGrowth = p.e;
+    batteryGrowth = p.b;
     void run();
   }
 </script>
@@ -279,10 +366,32 @@
           <input type="checkbox" bind:checked={includeMaintenance} class="h-4 w-4 accent-[var(--bitcoin)]" />
           <span class="text-xs text-muted-foreground">Sertakan maintenance saving (opsional, Rp720 rb/unit/th)</span>
         </label>
+        <label class="block">
+          <span class="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground"><span>Eskalasi BBM %/th</span><span class="kpi-value text-foreground">{numId(fuelGrowth, 1)}%</span></span>
+          <input type="range" min="0" max="10" step="0.5" bind:value={fuelGrowth} aria-label="Eskalasi BBM" class="mt-2 w-full accent-[var(--bitcoin)]" />
+        </label>
+        <label class="block">
+          <span class="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground"><span>Eskalasi listrik %/th</span><span class="kpi-value text-foreground">{numId(elecGrowth, 1)}%</span></span>
+          <input type="range" min="0" max="10" step="0.5" bind:value={elecGrowth} aria-label="Eskalasi listrik" class="mt-2 w-full accent-[var(--bitcoin)]" />
+        </label>
+        <label class="block">
+          <span class="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground"><span>Monte Carlo runs</span><span class="kpi-value text-foreground">{numId(mcRuns, 0)}</span></span>
+          <input type="range" min="200" max="10000" step="200" bind:value={mcRuns} aria-label="Monte Carlo runs" class="mt-2 w-full accent-[var(--bitcoin)]" />
+        </label>
+        <label class="block">
+          <span class="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground"><span>Seed Monte Carlo</span><span class="kpi-value text-foreground">{numId(mcSeed, 0)}</span></span>
+          <input type="range" min="0" max="100" step="1" bind:value={mcSeed} aria-label="Seed Monte Carlo" class="mt-2 w-full accent-[var(--bitcoin)]" />
+        </label>
       </div>
       <div class="mt-4 flex flex-wrap gap-2">
         {#each PRESETS as p (p.label)}
           <button type="button" onclick={() => applyPreset(p)} class="rounded-full border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:text-foreground">{p.label}</button>
+        {/each}
+      </div>
+      <p class="mt-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Preset eskalasi harga</p>
+      <div class="mt-2 flex flex-wrap gap-2">
+        {#each GROWTH_PRESETS as p (p.label)}
+          <button type="button" onclick={() => applyGrowth(p)} class="rounded-full border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:text-foreground">{p.label}</button>
         {/each}
       </div>
       <button type="button" onclick={run} disabled={busy} class="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--bitcoin-deep)] to-[var(--bitcoin)] px-5 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_-5px_var(--glow)] transition-all duration-300 hover:scale-[1.03] disabled:opacity-60">
@@ -337,9 +446,9 @@
         </div>
       </div>
 
-      <!-- Tab: KPI / Arus kas / Roadmap -->
-      <div class="inline-flex rounded-full border border-border bg-card p-1">
-        {#each ([["kpi", "Analisis KPI"], ["cashflow", "Arus Kas"], ["roadmap", "Roadmap Rollout"]] as const) as [k, label] (k)}
+      <!-- Tab: KPI / Arus kas / Roadmap / Simulasi lanjut -->
+      <div class="inline-flex flex-wrap rounded-full border border-border bg-card p-1">
+        {#each ([["kpi", "Analisis KPI"], ["cashflow", "Arus Kas"], ["roadmap", "Roadmap Rollout"], ["advanced", "Simulasi Lanjutan"]] as const) as [k, label] (k)}
           <button type="button" onclick={() => (tab = k)} class="rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors {tab === k ? 'bg-[var(--bitcoin)] text-white' : 'text-muted-foreground hover:text-foreground'}">{label}</button>
         {/each}
       </div>
@@ -519,7 +628,7 @@
           (benchmark EV lebih murah dari ICE yang dihindari pada skenario replacement), payback menjadi sangat pendek dan TIDAK boleh dijadikan headline tunggal
           tanpa konteks counterfactual — lihat tab Roadmap & stress-test fleet tambahan.
         </div>
-      {:else}
+      {:else if tab === "roadmap"}
         <!-- Roadmap rollout -->
         <div class="rounded-2xl border border-[color-mix(in_oklab,var(--bitcoin)_30%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_6%,transparent)] p-5">
           <p class="text-sm font-semibold">Roadmap 3 fase — basis armada {numId(res.roadmap.basisMotorcycles, 0)} motor (kasus)</p>
@@ -548,6 +657,205 @@
         <div class="rounded-xl border-l-4 border-[var(--bitcoin)] bg-muted/30 p-4 text-sm">
           <span class="font-medium">Rekomendasi:</span> mulai dari pilot 1 kota padat (Fase 1) untuk memvalidasi utilisasi nyata, titik charging, dan skema BaaS;
           scale bertahap hanya pada hub ber-utilisasi tinggi; perluasan luas menunggu data pilot. Jangan komit capex 5.000 unit serentak tanpa validasi.
+        </div>
+      {:else}
+        <!-- ===== Simulasi Lanjutan (Monte Carlo, tornado, breakeven, TCO, hub, lifecycle) ===== -->
+        <div class="rounded-2xl border-l-4 border-[var(--bitcoin)] bg-muted/30 p-4 text-sm">
+          <span class="font-medium">Semua blok di tab ini adalah SIMULASI.</span> Tujuannya menguji seberapa kokoh kesimpulan BCA terhadap ketidakpastian
+          (utilisasi, harga, biaya baterai) dan memandu KAPAN & DI MANA deploy — bukan prakiraan atau jaminan.
+        </div>
+
+        <!-- Monte Carlo -->
+        <div class="grid gap-6 lg:grid-cols-2">
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <p class="mb-1 text-sm font-medium">Monte Carlo — sebaran NPV (Rp M)</p>
+            <p class="mb-3 text-xs text-muted-foreground">{numId(res.monteCarlo.runs, 0)} iterasi · seed {res.monteCarlo.seed} · {res.monteCarlo.assumptionNote}</p>
+            {#if mcChart}<EChart option={mcChart} height={280} label="Distribusi NPV Monte Carlo" />{/if}
+          </div>
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <p class="mb-3 text-sm font-medium">Ringkasan probabilistik</p>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="rounded-xl bg-muted/40 p-3 text-center">
+                <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">P10 (pesimis)</p>
+                <p class="kpi-value mt-1 font-heading text-lg">{idr(res.monteCarlo.npv.p10Idr)}</p>
+              </div>
+              <div class="rounded-xl bg-[color-mix(in_oklab,var(--bitcoin)_12%,transparent)] p-3 text-center">
+                <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">P50 (median)</p>
+                <p class="kpi-value mt-1 font-heading text-lg">{idr(res.monteCarlo.npv.p50Idr)}</p>
+              </div>
+              <div class="rounded-xl bg-muted/40 p-3 text-center">
+                <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">P90 (optimis)</p>
+                <p class="kpi-value mt-1 font-heading text-lg">{idr(res.monteCarlo.npv.p90Idr)}</p>
+              </div>
+            </div>
+            <div class="mt-3 space-y-1.5 text-xs">
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">Probabilitas NPV &gt; 0</span><span class="kpi-value font-semibold text-success-foreground">{numId(res.monteCarlo.npv.probPositivePct, 1)}%</span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">Rata-rata NPV</span><span class="kpi-value">{idr(res.monteCarlo.npv.meanIdr)}</span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">Rentang (min–max)</span><span class="kpi-value">{idr(res.monteCarlo.npv.minIdr)} – {idr(res.monteCarlo.npv.maxIdr)}</span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">BCR diskon (P10 · P50 · P90)</span><span class="kpi-value">{numId(res.monteCarlo.bcr.p10, 2)}× · {numId(res.monteCarlo.bcr.p50, 2)}× · {numId(res.monteCarlo.bcr.p90, 2)}×</span></p>
+            </div>
+            <p class="mt-3 text-[11px] text-muted-foreground">{res.monteCarlo.note}</p>
+          </div>
+        </div>
+
+        <!-- Tornado + Breakeven -->
+        <div class="grid gap-6 lg:grid-cols-2">
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <p class="mb-1 text-sm font-medium">Tornado — lever paling menentukan NPV</p>
+            <p class="mb-3 text-xs text-muted-foreground">Baseline {idr(res.tornadoSensitivity.baselineNpvIdr)} · {res.tornadoSensitivity.note}</p>
+            {#if tornadoChart}<EChart option={tornadoChart} height={300} label="Tornado sensitivitas" />{/if}
+          </div>
+          <div class="overflow-x-auto rounded-2xl border border-border bg-card">
+            <table class="w-full text-sm">
+              <caption class="sr-only">Ambang impas (breakeven)</caption>
+              <thead>
+                <tr class="border-b border-border bg-muted/50 text-left font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <th class="px-4 py-2.5">Ambang impas (NPV = 0)</th>
+                  <th class="px-4 py-2.5 text-right">Replacement</th>
+                  <th class="px-4 py-2.5 text-right">Fleet tambahan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-border/60"><td class="px-4 py-2">Sewa baterai maks (Rp/unit/th)</td>
+                  <td class="px-4 py-2 text-right tabular-nums">{res.breakevens.maxBatteryLeaseIdrPerUnitYear.replacement == null ? "—" : idr(res.breakevens.maxBatteryLeaseIdrPerUnitYear.replacement)}</td>
+                  <td class="px-4 py-2 text-right tabular-nums">{res.breakevens.maxBatteryLeaseIdrPerUnitYear.incremental == null ? "—" : idr(res.breakevens.maxBatteryLeaseIdrPerUnitYear.incremental)}</td>
+                </tr>
+                <tr class="border-b border-border/60"><td class="px-4 py-2 text-muted-foreground">— sewa aktual</td>
+                  <td class="px-4 py-2 text-right tabular-nums" colspan="2">{idr(res.breakevens.maxBatteryLeaseIdrPerUnitYear.currentIdrPerUnitYear)}</td>
+                </tr>
+                <tr class="border-b border-border/60"><td class="px-4 py-2">Utilisasi minimum (km/unit/hari)</td>
+                  <td class="px-4 py-2 text-right tabular-nums">{res.breakevens.minDistanceKmPerUnitDay.replacement == null ? "—" : numId(res.breakevens.minDistanceKmPerUnitDay.replacement, 1)}</td>
+                  <td class="px-4 py-2 text-right tabular-nums">{res.breakevens.minDistanceKmPerUnitDay.incremental == null ? "—" : numId(res.breakevens.minDistanceKmPerUnitDay.incremental, 1)}</td>
+                </tr>
+                <tr class="border-b border-border/60"><td class="px-4 py-2">Harga Pertamax impas fleet tambahan</td>
+                  <td class="px-4 py-2 text-right tabular-nums" colspan="2">{res.breakevens.breakevenPertamaxIdrPerLIncremental == null ? "—" : "Rp" + numId(res.breakevens.breakevenPertamaxIdrPerLIncremental, 0) + "/L"}</td>
+                </tr>
+                <tr><td class="px-4 py-2">Harga EV maks (replacement)</td>
+                  <td class="px-4 py-2 text-right tabular-nums" colspan="2">{res.breakevens.maxEvUnitPriceIdrReplacement.value == null ? "—" : idr(res.breakevens.maxEvUnitPriceIdrReplacement.value)} <span class="text-muted-foreground">(headroom {res.breakevens.maxEvUnitPriceIdrReplacement.headroomIdr == null ? "—" : idr(res.breakevens.maxEvUnitPriceIdrReplacement.headroomIdr)})</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="px-4 py-3 text-[11px] text-muted-foreground">{res.breakevens.note}</p>
+          </div>
+        </div>
+
+        <!-- TCO + Eskalasi + Lifecycle -->
+        <div class="grid gap-6 lg:grid-cols-3">
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <p class="mb-3 text-sm font-medium">TCO per km (5 th, base)</p>
+            <div class="space-y-1.5 text-xs">
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">ICE energi</span><span class="kpi-value">Rp{numId(res.tcoPerKm.ice.energyIdrPerKm, 0)}/km</span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">ICE maintenance</span><span class="kpi-value">Rp{numId(res.tcoPerKm.ice.maintenanceIdrPerKm, 0)}/km</span></p>
+              <p class="flex justify-between gap-3 border-t border-border pt-1.5 font-medium"><span>ICE total</span><span class="kpi-value">Rp{numId(res.tcoPerKm.ice.totalIdrPerKm, 0)}/km</span></p>
+              <p class="flex justify-between gap-3 pt-1.5"><span class="text-muted-foreground">EV energi</span><span class="kpi-value">Rp{numId(res.tcoPerKm.ev.energyIdrPerKm, 0)}/km</span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">EV sewa baterai</span><span class="kpi-value">Rp{numId(res.tcoPerKm.ev.batteryLeaseIdrPerKm, 0)}/km</span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">EV amortisasi kend.</span><span class="kpi-value">Rp{numId(res.tcoPerKm.ev.vehicleDeltaIdrPerKm, 0)}/km</span></p>
+              <p class="flex justify-between gap-3 border-t border-border pt-1.5 font-medium"><span>EV total</span><span class="kpi-value">Rp{numId(res.tcoPerKm.ev.totalIdrPerKm, 0)}/km</span></p>
+              <p class="flex justify-between gap-3 pt-1.5 text-success-foreground font-medium"><span>Hemat per km</span><span class="kpi-value">Rp{numId(res.tcoPerKm.savingIdrPerKm, 0)}/km ({numId(res.tcoPerKm.savingPct, 0)}%)</span></p>
+            </div>
+            <p class="mt-3 text-[11px] text-muted-foreground">{res.tcoPerKm.note}</p>
+          </div>
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <p class="mb-3 text-sm font-medium">Efek eskalasi harga tahunan</p>
+            <div class="space-y-1.5 text-xs">
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">Datar (0%/th)</span><span class="kpi-value">{idr(res.escalationPreview.flatNpvIdr)}</span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">Moderat (BBM+3% · listrik+2%)</span><span class="kpi-value">{idr(res.escalationPreview.moderateNpvIdr)} <span class="text-success-foreground">(+{idr(res.escalationPreview.moderateDeltaIdr)})</span></span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">Agresif (BBM+6% · listrik+3%)</span><span class="kpi-value">{idr(res.escalationPreview.aggressiveNpvIdr)} <span class="text-success-foreground">(+{idr(res.escalationPreview.aggressiveDeltaIdr)})</span></span></p>
+            </div>
+            <p class="mt-3 text-[11px] text-muted-foreground">{res.escalationPreview.note}</p>
+            <p class="mt-2 text-[11px] text-muted-foreground">Eskalasi aktif (dari kontrol): BBM {numId(res.inputs.fuelGrowthPct ?? 0, 1)}% · listrik {numId(res.inputs.elecGrowthPct ?? 0, 1)}% · baterai {numId(res.inputs.batteryGrowthPct ?? 0, 1)}%.</p>
+          </div>
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <p class="mb-1 text-sm font-medium">Emisi siklus hidup <span class="rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground">{res.lifecycleEmissions.label}</span></p>
+            <div class="mt-2 space-y-1.5 text-xs">
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">Produksi ICE</span><span class="kpi-value">{numId(res.lifecycleEmissions.manufacturing.iceTotalKg / 1000, 1)} t</span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">Produksi EV + baterai</span><span class="kpi-value">{numId(res.lifecycleEmissions.manufacturing.evTotalKg / 1000, 1)} t</span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">Δ produksi (EV − ICE)</span><span class="kpi-value {res.lifecycleEmissions.manufacturing.extraKg > 0 ? 'text-destructive-foreground' : ''}">{numId(res.lifecycleEmissions.manufacturing.extraKg / 1000, 1)} t</span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">Operasional turun/th</span><span class="kpi-value text-success-foreground">{numId(res.lifecycleEmissions.operational.savingKgYear / 1000, 1)} t</span></p>
+              <p class="flex justify-between gap-3"><span class="text-muted-foreground">Titik impas karbon</span><span class="kpi-value">{res.lifecycleEmissions.carbonPaybackYears == null ? "—" : numId(res.lifecycleEmissions.carbonPaybackYears, 1) + " th"}</span></p>
+              <p class="flex justify-between gap-3 border-t border-border pt-1.5 font-medium"><span>Δ kumulatif 5 th</span><span class="kpi-value text-success-foreground">{numId(res.lifecycleEmissions.cumulative5y.deltaTons, 1)} t CO₂e</span></p>
+            </div>
+            <p class="mt-3 text-[11px] text-muted-foreground">{res.lifecycleEmissions.note}</p>
+          </div>
+        </div>
+
+        <!-- Hub deployment -->
+        <div class="grid gap-6 lg:grid-cols-2">
+          <div class="rounded-2xl border border-[color-mix(in_oklab,var(--bitcoin)_30%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_6%,transparent)] p-5">
+            <p class="text-sm font-semibold">Prioritisasi deploy — DI MANA</p>
+            <p class="mt-1 text-xs text-muted-foreground">{res.hubDeployment.note}</p>
+            <p class="mt-2 text-xs">Total dialokasikan: <strong>{numId(res.hubDeployment.totalUnits, 0)} unit</strong> ke {res.hubDeployment.hubs.length} hub.</p>
+            <div class="mt-3 space-y-1.5 text-xs">
+              {#each res.hubDeployment.byRegion as r (r.region)}
+                <p class="flex justify-between gap-3"><span class="text-muted-foreground">{r.region}</span><span class="kpi-value">{numId(r.units, 0)} unit · {idr(r.netSavingIdr)}/th · {numId(r.co2TonsYear, 0)} t</span></p>
+              {/each}
+            </div>
+          </div>
+          <div class="overflow-x-auto rounded-2xl border border-border bg-card">
+            <table class="w-full text-sm">
+              <caption class="sr-only">Alokasi unit EV per hub terprioritas</caption>
+              <thead>
+                <tr class="border-b border-border bg-muted/50 text-left font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <th class="px-4 py-2.5">Hub</th>
+                  <th class="px-4 py-2.5 text-right">Kapasitas</th>
+                  <th class="px-4 py-2.5 text-right">Unit</th>
+                  <th class="px-4 py-2.5 text-right">Net saving/th</th>
+                  <th class="px-4 py-2.5 text-right">CO₂ t/th</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each res.hubDeployment.hubs.slice(0, 12) as h (h.code)}
+                  <tr class="border-b border-border/60 last:border-0">
+                    <td class="px-4 py-2">{h.name} <span class="font-mono text-[10px] text-muted-foreground">{h.code}</span></td>
+                    <td class="px-4 py-2 text-right tabular-nums">{numId(h.capacityM, 3)}</td>
+                    <td class="px-4 py-2 text-right tabular-nums font-medium">{numId(h.allocatedUnits, 0)}</td>
+                    <td class="px-4 py-2 text-right tabular-nums">{idr(h.netAnnualSavingIdr)}</td>
+                    <td class="px-4 py-2 text-right tabular-nums">{numId(h.co2ReductionTonsYear, 0)}</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Arus kas program roadmap -->
+        <div class="grid gap-6 lg:grid-cols-2">
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <p class="mb-1 text-sm font-medium">Arus kas PROGRAM rollout 3 fase (capex disebar)</p>
+            <p class="mb-3 text-xs text-muted-foreground">{res.roadmapProgramCashflow.note}</p>
+            {#if programChart}<EChart option={programChart} height={280} label="Arus kas program rollout" />{/if}
+          </div>
+          <div class="overflow-x-auto rounded-2xl border border-border bg-card">
+            <table class="w-full text-sm">
+              <caption class="sr-only">Arus kas program rollout per tahun</caption>
+              <thead>
+                <tr class="border-b border-border bg-muted/50 text-left font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <th class="px-4 py-2.5">Tahun</th>
+                  <th class="px-4 py-2.5 text-right">Unit</th>
+                  <th class="px-4 py-2.5 text-right">Capex</th>
+                  <th class="px-4 py-2.5 text-right">Benefit</th>
+                  <th class="px-4 py-2.5 text-right">Kumulatif</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each res.roadmapProgramCashflow.rows as r (r.year)}
+                  <tr class="border-b border-border/60 last:border-0">
+                    <td class="px-4 py-2 font-mono text-xs">Y{r.year}</td>
+                    <td class="px-4 py-2 text-right tabular-nums">{numId(r.deployedUnits, 0)}</td>
+                    <td class="px-4 py-2 text-right tabular-nums {r.capexIdr > 0 ? 'text-destructive-foreground' : 'text-muted-foreground'}">{r.capexIdr === 0 ? "—" : idr(r.capexIdr)}</td>
+                    <td class="px-4 py-2 text-right tabular-nums">{idr(r.benefitIdr)}</td>
+                    <td class="px-4 py-2 text-right tabular-nums font-medium {r.cumulativeIdr >= 0 ? 'text-success-foreground' : 'text-destructive-foreground'}">{idr(r.cumulativeIdr)}</td>
+                  </tr>
+                {/each}
+                <tr class="bg-muted/30 font-medium">
+                  <td class="px-4 py-2">NPV program</td>
+                  <td class="px-4 py-2 text-right tabular-nums">{numId(res.roadmapProgramCashflow.finalDeployedUnits, 0)} unit</td>
+                  <td colspan="2"></td>
+                  <td class="px-4 py-2 text-right tabular-nums {res.roadmapProgramCashflow.npvIdr >= 0 ? 'text-success-foreground' : 'text-destructive-foreground'}">{idr(res.roadmapProgramCashflow.npvIdr)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       {/if}
     {/if}
