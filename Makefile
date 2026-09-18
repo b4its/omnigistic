@@ -221,6 +221,13 @@ up: ## Docker DEV + hot reload (FE :3000 · API :8000 · tanpa DB)
 up-db: ## Docker DEV + Postgres lokal (profile db) + auto-seed
 	@$(DC) --profile db up -d --build
 
+.PHONY: up-refresh
+up-refresh: ## Rebuild & recreate dgn volume anon FRESH (pakai setelah ubah package.json/lock)
+	@# `up -d --build` saja TIDAK me-refresh volume anonim /app/node_modules (dibuat image lama),
+	@# sehingga dependency baru (mis. @fortawesome/fontawesome-free) tak terpasang di container
+	@# → error "Cannot find module ...". --renew-anon-volumes memakai node_modules dari image baru.
+	@$(DC) up -d --build --force-recreate --renew-anon-volumes
+
 .PHONY: up-prod
 up-prod: ## Docker PROD (image build, tanpa bind mount) + Postgres
 	@$(DC) --profile prod up -d --build

@@ -81,6 +81,7 @@ make frontend-dev   # SvelteKit vite HMR        → http://127.0.0.1:3100
 
 make up             # Docker DEV + hot reload   → FE :3000 · API :8000
 make up-db          # Docker + Postgres lokal (auto-seed)
+make up-refresh     # rebuild + recreate dgn volume anon fresh (setelah ubah package.json/lock)
 make up-prod        # Docker PROD (image build)
 make down           # hentikan container
 make down-v         # hentikan + hapus volume (bersih)
@@ -94,6 +95,14 @@ make version        # versi python/node/npm/ruff/docker
 
 Semua target didokumentasikan lewat komentar `##`; `make help` mencetaknya. Override port/host tanpa
 mengubah file, mis. `make backend-dev BACKEND_PORT=9000` atau `make e2e E2E_BASE=http://127.0.0.1:3000`.
+
+### Troubleshooting Docker
+
+- **`Cannot find module '<pkg>' ... imported from '/app/src/...'` setelah menambah dependency.**
+  Container DEV menyimpan `node_modules` di *volume anonim* yang dibuat dari image lama; `make up`
+  (atau `docker compose up -d --build`) hanya me-rebuild image **tanpa** me-refresh volume tsb,
+  sehingga dependency baru tak terpasang. Perbaikan: jalankan `make up-refresh`
+  (setara `docker compose up -d --build --force-recreate --renew-anon-volumes`).
 
 ## Project structure (monorepo)
 
