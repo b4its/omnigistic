@@ -168,3 +168,159 @@ def plan_route(
         },
         "candidates": sorted_candidates,
     }
+
+
+# ── Simulasi Pengantaran Riil (Telemetry, Weather, Traffic, EV Fleet) ────
+_WEATHER_FACTORS: dict[str, dict[str, Any]] = {
+    "cerah": {"speed": 1.00, "delayPct": 0, "label": "Cerah"},
+    "hujan": {"speed": 0.80, "delayPct": 25, "label": "Hujan"},
+    "badai": {"speed": 0.60, "delayPct": 50, "label": "Hujan lebat / badai"},
+}
+
+_TRAFFIC_DENSITIES: dict[str, float] = {
+    "lancar": 0.28,
+    "sedang": 0.52,
+    "macet": 0.84,
+}
+
+_EV_KWH_PER_KM = 0.042       # Motor EV last-mile (~24 km/kWh)
+_EV_BATTERY_KWH = 2.8        # Kapasitas baterai motor EV (~67 km)
+_ICE_ML_PER_KM = 23.8        # Konsumsi bensin motor (~42 km/liter)
+
+
+def simulate_delivery(
+    distance_km: float = 38.4,
+    city: str = "Bogor",
+    weather: str = "cerah",
+    traffic: str = "lancar",
+    vehicle: str = "ev_motor",
+    pudo_divert: bool = False,
+    steps_count: int = 20,
+) -> dict[str, Any]:
+    """Simulasi pengantaran riil pada rute kurir dengan telemetri & kondisi lapangan.
+
+    Menghasilkan serangkaian titik telemetri (waypoints), fluktuasi kecepatan alami,
+    estimasi ETA dinamis, konsumsi baterai/BBM, emisi CO2, serta respons cuaca & macet.
+    """
+    base_km = clamp(distance_km, 0.5, 1_000.0, 38.4)
+    steps = int(clamp(steps_count, 5, 50, 20))
+    clean_city = str(city).strip() or "Bogor"
+
+    w_key = str(weather).lower().strip()
+    if w_key not in _WEATHER_FACTORS:
+        w_key = "cerah"
+    w_meta = _WEATHER_FACTORS[w_key]
+
+    t_key = str(traffic).lower().strip()
+    if t_key not in _TRAFFIC_DENSITIES:
+        t_key = "lancar"
+    density = _TRAFFIC_DENSITIES[t_key]
+
+    v_key = "ice_motor" if "ice" in str(vehicle).lower() else "ev_motor"
+
+    # Pengalihan ke PUDO menghemat jarak last-mile (±15% atau min 1.5 km)
+    diverted = bool(pudo_divert)
+    effective_km = round(max(0.4, base_km * 0.85 if diverted else base_km), 2)
+    saved_distance_km = round(base_km - effective_km, 2) if diverted else 0.0
+
+    bpr_factor = _bpr_speed_factor(density)
+    weather_factor = float(w_meta["speed"])
+
+    cruising_speed = _BASE_SPEED_KMH * 1.55  # ~34 km/jam
+    eff_speed = max(8.0, cruising_speed * bpr_factor * weather_factor)
+    total_duration_min = round((effective_km / eff_speed) * 60.0, 1)
+
+    co2_saved_g = round(effective_km * _CO2_G_PER_KM, 1) if v_key == "ev_motor" else 0.0
+    energy_kwh = round(effective_km * _EV_KWH_PER_KM, 3) if v_key == "ev_motor" else 0.0
+    fuel_l = round((effective_km * _ICE_ML_PER_KM) / 1000.0, 3) if v_key == "ice_motor" else 0.0
+
+    start_battery = 96.0
+    total_battery_drop = (effective_km * _EV_KWH_PER_KM / _EV_BATTERY_KWH) * 100.0
+
+    waypoints: list[dict[str, Any]] = []
+    for i in range(steps):
+        frac = i / (steps - 1) if steps > 1 else 1.0
+        dist_covered = round(effective_km * frac, 2)
+        dist_remaining = round(max(0.0, effective_km - dist_covered), 2)
+        elapsed_min = round(total_duration_min * frac, 1)
+        eta_left_min = round(max(0.0, total_duration_min - elapsed_min), 1)
+
+        # Fluktuasi kecepatan realistis per segmen jalan
+        if frac < 0.12:
+            speed_mult = 0.75  # keluar area hub
+            phase = f"Keberangkatan dari Hub Jakarta ({clean_city})"
+        elif frac < 0.35:
+            speed_mult = 1.05  # arteri
+            phase = "Jalur Arteri Utama & Penghubung Tol"
+        elif frac < 0.70:
+            speed_mult = 1.15  # koridor cepat
+            phase = "Koridor Cepat Tol / Jalur Bebas Hambatan"
+        elif frac < 0.90:
+            speed_mult = 0.90  # masuk kota tujuan
+            phase = f"Memasuki Wilayah {clean_city}"
+        elif frac < 1.0:
+            speed_mult = 0.70  # jalan perumahan/kolektor
+            phase = "Jalan Kolektor & Area Permukiman"
+        else:
+            speed_mult = 0.0
+            phase = f"Tiba di Gerai Mitra PUDO ({clean_city})" if diverted else f"Tiba di Alamat Penerima ({clean_city})"
+
+        curr_speed = round(max(0.0, eff_speed * speed_mult), 1) if frac < 1.0 else 0.0
+        batt_pct = round(max(5.0, start_battery - (total_battery_drop * frac)), 1)
+
+        event: str | None = None
+        if i == 0:
+            event = "Kurir memulai perjalanan dari Hub Jakarta. Paket dalam pemantauan realtime."
+        elif 0.30 <= frac <= 0.40 and w_key != "cerah":
+            event = f"Kondisi cuaca {w_meta['label']}: kurir menjaga batas aman kecepatan."
+        elif 0.45 <= frac <= 0.55 and t_key == "macet":
+            event = "Kepadatan lalu lintas meningkat; rute otomatis diarahkan ke jalur paling efisien."
+        elif diverted and 0.55 <= frac <= 0.65:
+            event = "Penerima tidak di tempat: rute dialihkan otomatis ke gerai PUDO terdekat."
+        elif i == steps - 1:
+            event = "Kurir telah tiba di titik tujuan! Siap serah terima paket." if not diverted else "Kurir tiba di gerai PUDO. Paket siap dititipkan."
+
+        waypoints.append({
+            "step": i,
+            "progress": round(frac, 3),
+            "distanceCoveredKm": dist_covered,
+            "distanceRemainingKm": dist_remaining,
+            "speedKmh": curr_speed,
+            "elapsedMin": elapsed_min,
+            "etaRemainingMin": eta_left_min,
+            "batteryPct": batt_pct if v_key == "ev_motor" else None,
+            "phase": phase,
+            "event": event,
+        })
+
+    return {
+        "engine": "Courier Real Delivery Simulator (telemetry + weather + traffic + EV fleet)",
+        "note": (
+            "Simulasi telemetri kurir realistis berdasarkan kurva BPR, model cuaca, "
+            "dan profil konsumsi energi kendaraan listrik (EV) / BBM last-mile."
+        ),
+        "inputs": {
+            "city": clean_city,
+            "distanceKm": base_km,
+            "effectiveKm": effective_km,
+            "savedDistanceKm": saved_distance_km,
+            "weather": w_key,
+            "traffic": t_key,
+            "vehicle": v_key,
+            "pudoDiverted": diverted,
+            "stepsCount": steps,
+        },
+        "summary": {
+            "totalDistanceKm": effective_km,
+            "totalDurationMin": total_duration_min,
+            "effectiveSpeedKmh": round(eff_speed, 1),
+            "energyKwhUsed": energy_kwh,
+            "fuelLitersUsed": fuel_l,
+            "co2SavedG": co2_saved_g,
+            "weatherLabel": w_meta["label"],
+            "trafficDensity": density,
+            "pudoDiverted": diverted,
+        },
+        "waypoints": waypoints,
+    }
+

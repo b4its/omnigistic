@@ -17,7 +17,7 @@ from app.ml.forecast import demand_actual_tiktok, forecast_next_12
 from app.ml.modalshift import cost_levers, optimize_corridors
 from app.ml.optimize import optimize_load_balance
 from app.ml.pnl import cost_waterfall
-from app.ml.route_intel import plan_route
+from app.ml.route_intel import plan_route, simulate_delivery
 from app.ml.simulations import DIGITAL_TWIN_SCENARIOS, calculate_cod_impact, calculate_digital_twin
 from app.ml.sponsor import compare_models, sensitivity
 from app.ml.surge import stress_test
@@ -203,6 +203,44 @@ def route_plan(distance_km: float = 10.0, density_override: float | None = None,
 def route_plan_custom(body: RoutePlanBody):
     """Versi interaktif: jarak, kepadatan (jam sibuk), & kecepatan dasar."""
     return plan_route(body.distance_km, body.density_override, body.base_speed_kmh)
+
+
+class DeliverySimBody(BaseModel):
+    distance_km: float = 38.4
+    city: str = "Bogor"
+    weather: str = "cerah"
+    traffic: str = "lancar"
+    vehicle: str = "ev_motor"
+    pudo_divert: bool = False
+    steps_count: int = 20
+
+
+@router.get("/route/simulate")
+def route_simulate(
+    distance_km: float = 38.4,
+    city: str = "Bogor",
+    weather: str = "cerah",
+    traffic: str = "lancar",
+    vehicle: str = "ev_motor",
+    pudo_divert: bool = False,
+    steps_count: int = 20,
+):
+    """Simulasi pengantaran riil kurir: telemetri, cuaca, macet, baterai EV."""
+    return simulate_delivery(distance_km, city, weather, traffic, vehicle, pudo_divert, steps_count)
+
+
+@router.post("/route/simulate")
+def route_simulate_custom(body: DeliverySimBody):
+    """Versi interaktif simulasi pengantaran riil kurir."""
+    return simulate_delivery(
+        body.distance_km,
+        body.city,
+        body.weather,
+        body.traffic,
+        body.vehicle,
+        body.pudo_divert,
+        body.steps_count,
+    )
 
 
 # ── Metrik turunan & rekonsiliasi angka ───────────────────────────────────

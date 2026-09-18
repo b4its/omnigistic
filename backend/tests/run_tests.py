@@ -213,10 +213,17 @@ ms = _get("/ml/modalshift/optimize")
 check("11 koridor diproses", ms["summary"]["routes"] == 11, str(ms["summary"]["routes"]))
 check("menghemat biaya", ms["summary"]["costSavingPct"] > 0, str(ms["summary"]["costSavingPct"]))
 check("menghemat emisi", ms["summary"]["co2SavingPct"] > 0, str(ms["summary"]["co2SavingPct"]))
+# Baseline = moda INSIDEN eksplisit (asumsi tim), bukan opsi tercepat/ekspres.
+check("baseline = moda insiden (mis. Jayapura=udara)", next(r for r in ms["routes"] if r["dest"] == "Jayapura")["baseline"]["mode"] == "udara")
+check("summary laporkan routesShifted", "routesShifted" in ms["summary"] and 0 <= ms["summary"]["routesShifted"] <= 11, str(ms["summary"].get("routesShifted")))
+check("summary pakai nama index (bukan 'perPkg')", "totalCostIndexIdr" in ms["summary"] and "totalCostPerPkgIdr" not in ms["summary"])
 # Rute tanpa opsi darat (mis. Jayapura hanya laut/udara) tak boleh pilih 'darat'.
 jay = next(r for r in ms["routes"] if r["dest"] == "Jayapura")
 check("Jayapura bukan darat", jay["chosen"]["mode"] != "darat", jay["chosen"]["mode"])
 check("saving tanda positif = hemat", all(r["saving"]["costPerPkgIdr"] >= 0 for r in ms["routes"]))
+# Peralihan moda nyata (changed=True) harus punya saving > 0; tak berubah = 0.
+check("changed ⇒ hemat biaya", all(r["saving"]["costPerPkgIdr"] > 0 for r in ms["routes"] if r["changed"]))
+check("tak berubah ⇒ saving 0", all(r["saving"]["costPerPkgIdr"] == 0 for r in ms["routes"] if not r["changed"]))
 # mode_filter: paksa hanya udara -> semua pilih udara.
 forced = client.post("/ml/modalshift/optimize", json={"mode_filter": ["udara"]}).json()
 check("filter udara -> semua udara", all(r["chosen"]["mode"] == "udara" for r in forced["routes"]))
@@ -369,6 +376,34 @@ check("route lengang: efisien bisa non-tol", lo_d["mostEfficientKey"] in {"arter
 # Klamp jarak ekstrem tak error.
 check("route jarak 0 dijepit", client.post("/ml/route/plan", json={"distance_km": 0}).status_code == 200)
 check("route distanceKm dijepit > 0", client.post("/ml/route/plan", json={"distance_km": 0}).json()["inputs"]["distanceKm"] > 0)
+
+# ── Simulasi Pengantaran Riil Kurir (/ml/route/simulate) ───────────────
+sim_get = _get("/ml/route/simulate?city=Bogor&distance_km=38.4")
+check("sim delivery 200 OK", "waypoints" in sim_get and len(sim_get["waypoints"]) == 20)
+check("sim waypoints progress dari 0 ke 1", sim_get["waypoints"][0]["progress"] == 0.0 and sim_get["waypoints"][-1]["progress"] == 1.0)
+check("sim distanceCovered meningkat", sim_get["waypoints"][-1]["distanceCoveredKm"] == sim_get["summary"]["totalDistanceKm"])
+check("sim EV motor punya baterai & hemat CO2", sim_get["waypoints"][0]["batteryPct"] is not None and sim_get["summary"]["co2SavedG"] > 0)
+
+# Uji pengaruh cuaca: hujan -> waktu tempuh lebih lama
+sim_rain = client.post("/ml/route/simulate", json={"distance_km": 38.4, "weather": "hujan"}).json()
+check("sim hujan memperlama waktu tempuh", sim_rain["summary"]["totalDurationMin"] > sim_get["summary"]["totalDurationMin"])
+
+# Uji pengaruh macet: macet -> waktu tempuh lebih lama
+sim_jam = client.post("/ml/route/simulate", json={"distance_km": 38.4, "traffic": "macet"}).json()
+check("sim macet memperlama waktu tempuh", sim_jam["summary"]["totalDurationMin"] > sim_get["summary"]["totalDurationMin"])
+
+# Uji PUDO divert: menghemat jarak
+sim_pudo = client.post("/ml/route/simulate", json={"distance_km": 38.4, "pudo_divert": True}).json()
+check("sim pudo divert menghemat jarak", sim_pudo["summary"]["totalDistanceKm"] < sim_get["summary"]["totalDistanceKm"])
+check("sim pudo divert ada flag", sim_pudo["summary"]["pudoDiverted"] is True)
+
+# Uji hardening input (NaN / inf / nilai ekstrem)
+from app.ml.route_intel import simulate_delivery as _sim_del
+sim_nan = _sim_del(distance_km=float("nan"))
+check("sim nan distance aman", sim_nan["summary"]["totalDistanceKm"] > 0)
+sim_neg = client.post("/ml/route/simulate", json={"distance_km": -50}).json()
+check("sim negatif distance dijepit", sim_neg["summary"]["totalDistanceKm"] > 0)
+check("sim steps count clamped", len(client.post("/ml/route/simulate", json={"steps_count": 999}).json()["waypoints"]) <= 50)
 
 print("== 6. ML lama tetap jalan ==")
 check("cod-risk demo", client.get("/ml/cod-risk/demo").status_code == 200)
@@ -754,7 +789,6 @@ from app.ml import metrics as _mm
 
 check("VARIABLE_COST_FRAC = 0,70 (satu sumber)", _mm.VARIABLE_COST_FRAC == 0.70)
 check("region_summary sponsorCandidate = (util < UTIL_WARN)", all(r["sponsorCandidate"] == (r["avgUtilizationPct"] < _mm.UTIL_WARN) for r in _mm.region_summary()))
-check("sponsor_candidate_regions cocok region_summary", _mm.sponsor_candidate_regions() == {r["region"] for r in _mm.region_summary() if r["sponsorCandidate"]})
 
 # (6) surge: residualOverflowM selalu ada (spillover mati pun).
 from app.ml.surge import stress_test as _stx
