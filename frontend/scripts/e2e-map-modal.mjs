@@ -95,10 +95,24 @@ try {
   // ── 2. Buka modal → peta kedua muncul, inline tetap ada ──
   await expandBtn.click();
   await page.waitForTimeout(2200);
-  R((await mapDialog(page).count()) === 1, "modal: peta layar penuh terbuka (role=dialog)");
+  const dialog = mapDialog(page);
+  R((await dialog.count()) === 1, "modal: peta layar penuh terbuka (role=dialog)");
   R((await containers(page).count()) >= 2, "modal: peta kedua (layar penuh) tergambar", `containers=${await containers(page).count()}`);
   const txt = await page.locator("body").innerText();
   R(/Peta pengantaran — layar penuh/i.test(txt), "modal: judul modal tampil");
+
+  // ── 3. Simulasi hadir di dalam peta modal layar penuh ──
+  const modalSimBtn = dialog.getByRole("button", { name: /Mulai simulasi pengantaran|Jeda simulasi/i }).first();
+  R((await modalSimBtn.count()) > 0, "modal: kontrol simulasi pengantaran hadir di peta layar penuh");
+  const modalSlider = dialog.locator('input[type="range"][aria-label*="Scrubber"]').first();
+  R((await modalSlider.count()) > 0, "modal: scrubber slider hadir di peta layar penuh");
+  const dialogTxt = await dialog.innerText();
+  R(/km\/j/i.test(dialogTxt), "modal: speedometer live hadir di peta layar penuh");
+  R(/LIVE TELEMETRI/i.test(dialogTxt), "modal: badge live telemetri hadir di header modal");
+  await modalSimBtn.click();
+  await page.waitForTimeout(1200);
+  const playTxt = await dialog.innerText();
+  R(/Jeda/i.test(playTxt), "modal: simulasi di peta layar penuh dapat dijalankan (beralih ke Jeda)");
 
   // ── 4. Di modal: toggle legenda modal (panel aside) ──
   const fsLegend = page.getByRole("button", { name: /Sembunyikan legenda|Tampilkan legenda/i }).first();

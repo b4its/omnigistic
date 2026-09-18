@@ -1092,13 +1092,19 @@
           <Icon name="map" cls="h-4 w-4" />
         </span>
         <div class="min-w-0">
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <h2 class="truncate text-sm font-bold text-foreground">Peta pengantaran — layar penuh</h2>
-            <span class="hidden rounded-full bg-success/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-success-foreground sm:inline">
+            <span class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary">
+              Klaster {city}
+            </span>
+            <span class="rounded-full bg-success/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-success-foreground">
+              LIVE TELEMETRI
+            </span>
+            <span class="hidden rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground sm:inline">
               Mode Penuh
             </span>
           </div>
-          <p class="truncate text-xs text-muted-foreground">{originLabel} → {destLabel}{role ? ` · ${role}` : ""}</p>
+          <p class="truncate text-xs text-muted-foreground">{originLabel} → {destLabel}{role ? ` · ${role}` : ""} · Simulasi pergerakan rute &amp; telemetri langsung</p>
         </div>
       </div>
 
@@ -1128,17 +1134,17 @@
 
     <!-- Body Modal: Peta Layar Penuh + Panel Samping Legenda -->
     <div class="relative flex min-h-0 flex-1 overflow-hidden">
-      <!-- Area Peta Full Screen -->
-      <div class="relative h-full min-w-0 flex-1">
+      <!-- Area Peta Full Screen + Kontrol Simulasi & Intel Rute -->
+      <div class="relative h-full min-w-0 flex-1 overflow-y-auto p-4 space-y-4">
         {#key fullscreen}
           <DeliveryMap
-            {progress}
+            progress={simProgress}
             {city}
             {originLabel}
             {destLabel}
             {destCoord}
             {etaMin}
-            height="100%"
+            height="min(60vh, 520px)"
             {role}
             {showPudo}
             {routeIntel}
@@ -1146,6 +1152,12 @@
             showLegend={false}
             showSimulation={showSimulation}
             compact={false}
+            onProgressChange={(p) => {
+              simProgress = p;
+              onProgressChange?.(p);
+            }}
+            onSimulationComplete={onSimulationComplete}
+            onSimulationDivertPudo={toggleDivertPudo}
           />
         {/key}
       </div>
