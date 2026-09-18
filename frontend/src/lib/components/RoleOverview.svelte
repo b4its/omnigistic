@@ -3,7 +3,7 @@
   import { api, type Insights } from "$lib/api";
   import { greetingByTime, cn, priorityCls } from "$lib/utils";
   import { notify } from "$lib/toast";
-  import Icon from "./Icon.svelte";
+  import GlitterIcon from "./ui/GlitterIcon.svelte";
   import MetricCard from "./MetricCard.svelte";
 
   interface Kpi { label: string; value: string; sub?: string; accent?: string; spark?: number[] }
@@ -61,11 +61,11 @@
   <h1 class="sr-only">Portal {role} — Omnigistic</h1>
   <div class="flex items-center gap-3 overflow-hidden rounded-2xl border border-border p-5 [background:var(--banner-bg)] text-[color:var(--banner-fg)] shadow-sm">
     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-black/10">
-      <Icon name="chat" cls="h-5 w-5"  />
+      <GlitterIcon cls="h-5 w-5" />
     </span>
     <div class="min-w-0">
       <p class="flex items-center gap-1.5 text-[14px] font-medium uppercase tracking-wide opacity-90">
-        <Icon name="chat" cls="h-3 w-3" weight="fill" />
+        <GlitterIcon cls="h-3 w-3" />
         {greetingByTime(roleName[role] ?? "")} · Nigi AI
       </p>
       <p class="mt-1 text-sm font-semibold leading-snug sm:text-base">{grt}</p>

@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { gsapReveal } from "$lib/actions/gsapReveal";
   import Icon from "$lib/components/Icon.svelte";
+  import GlitterIcon from "$lib/components/ui/GlitterIcon.svelte";
   import { cn, resolveHref } from "$lib/utils";
 
   /** Potong di batas kata; hanya tambah `…` bila teks BENAR-BENAR terpotong. */
@@ -487,7 +488,7 @@
         </ol>
         <div class="mt-6 flex flex-col gap-6 rounded-2xl border border-[var(--lnd-line)] bg-[var(--lnd-ink)] p-8 text-[var(--lnd-bg)] sm:flex-row sm:items-center">
           <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--lnd-accent)]">
-            <Icon name="chat" cls="h-6 w-6" weight="duotone" />
+            <GlitterIcon cls="h-6 w-6" />
           </span>
           <div class="min-w-0">
             <h3 class="font-heading text-2xl font-light tracking-tight">Nigi AI, lapisan AI lintas tiga lapis</h3>

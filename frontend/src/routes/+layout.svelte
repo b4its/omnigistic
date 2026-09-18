@@ -8,6 +8,9 @@
   import "@fontsource-variable/fraunces";
   import "@fontsource-variable/jetbrains-mono";
 
+  // Ikon Font Awesome (glitter / wand-magic-sparkles) untuk Nigi AI di seluruh halaman.
+  import "@fortawesome/fontawesome-free/css/all.min.css";
+
   import { onMount } from "svelte";
   import { themeStore } from "$lib/stores/theme";
 

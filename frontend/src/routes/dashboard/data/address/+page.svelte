@@ -4,6 +4,7 @@
   import { notify } from "$lib/toast";
   import AddressMap from "$lib/map/AddressMap.svelte";
   import Icon from "$lib/components/Icon.svelte";
+  import GlitterIcon from "$lib/components/ui/GlitterIcon.svelte";
   interface Cand { city: string; district: string; coordinate: string; score: number }
   type Parsed = { best: Cand | null; candidates: Cand[]; etaMin: number | null; distanceKm?: number | null; matched?: boolean };
   let addrs = $state<Array<{ street: string; city: string; district: string; coordinate: string }>>([]);
@@ -101,7 +102,7 @@
   <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
     <div class="flex items-start gap-3">
       <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)]">
-        <Icon name="chat" cls="h-5 w-5" weight="fill" />
+        <GlitterIcon cls="h-5 w-5" />
       </span>
       <div class="min-w-0">
         <p class="text-[13.5px] font-semibold uppercase tracking-wider text-primary">Saran Nigi AI</p>
@@ -172,7 +173,7 @@
       <div class="flex items-center gap-2.5">
         <span class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)]">
           {#if analyzing}<span class="absolute inset-0 animate-ping rounded-xl bg-primary/40"></span>{/if}
-          <Icon name="chat" cls="h-4 w-4" weight="fill" />
+          <GlitterIcon cls="h-4 w-4" />
         </span>
         <div class="min-w-0">
           <p class="text-sm font-semibold">Nigi AI</p>

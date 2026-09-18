@@ -68,7 +68,7 @@
       { label: "EV Fleet BCA", href: "/dashboard/pusat/ev-bca", icon: "chart" },
       { label: "ROI & BCA", href: "/dashboard/pusat/roi", icon: "currency" },
       { label: "Cost-Waterfall P&L", href: "/dashboard/pusat/pnl", icon: "coins" },
-      { label: "Nigi AI", href: "/dashboard/pusat/assistant", icon: "chat" },
+      { label: "Nigi AI", href: "/dashboard/pusat/assistant", icon: "chat", fa: "glitter" },
     ],
     HUB: [
       { label: "Overview", href: "/dashboard/hub/overview", icon: "circle" },
@@ -77,7 +77,7 @@
       { label: "Load Balancing", href: "/dashboard/hub/load-balance", icon: "compass" },
       { label: "Capacity Alert", href: "/dashboard/hub/capacity", icon: "bell" },
       { label: "Peak-Surge Test", href: "/dashboard/hub/surge", icon: "activity" },
-      { label: "Nigi AI", href: "/dashboard/hub/assistant", icon: "chat" },
+      { label: "Nigi AI", href: "/dashboard/hub/assistant", icon: "chat", fa: "glitter" },
     ],
     KURIR: [
       { label: "Overview", href: "/dashboard/kurir/overview", icon: "circle" },
@@ -89,7 +89,7 @@
       { label: "Slot Confirmation", href: "/dashboard/kurir/slot", icon: "bell" },
       { label: "Digital Payment", href: "/dashboard/kurir/payment", icon: "shield" },
       { label: "PUDO Network", href: "/dashboard/kurir/pudo", icon: "map" },
-      { label: "Nigi AI", href: "/dashboard/kurir/assistant", icon: "chat" },
+      { label: "Nigi AI", href: "/dashboard/kurir/assistant", icon: "chat", fa: "glitter" },
     ],
     DATA: [
       { label: "Overview", href: "/dashboard/data/overview", icon: "circle" },
@@ -98,21 +98,21 @@
       { label: "Control Tower", href: "/dashboard/data/multimodal", icon: "compass" },
       { label: "Fleet & Emissions", href: "/dashboard/data/fleet", icon: "stack" },
       { label: "EV Site Selection", href: "/dashboard/data/ev-sites", icon: "grad" },
-      { label: "Nigi AI", href: "/dashboard/data/assistant", icon: "chat" },
+      { label: "Nigi AI", href: "/dashboard/data/assistant", icon: "chat", fa: "glitter" },
     ],
     CUSTOMER: [
       { label: "Dashboard", href: "/dashboard/customer/dashboard", icon: "chart", short: "Dashboard" },
       { label: "Belanja", href: "/dashboard/customer/overview", icon: "grid", short: "Belanja" },
       { label: "Keranjang", href: "/dashboard/customer/cart", icon: "stack", short: "Keranjang" },
       { label: "Pesanan Saya", href: "/dashboard/customer/orders", icon: "map", short: "Pesanan" },
-      { label: "Nigi AI", href: "/dashboard/customer/assistant", icon: "chat", short: "Nigi AI" }
+      { label: "Nigi AI", href: "/dashboard/customer/assistant", icon: "chat", short: "Nigi AI", fa: "glitter" }
     ],
     SELLER: [
       { label: "Analitik", href: "/dashboard/seller/overview", icon: "chart", short: "Analitik" },
       { label: "Produk Saya", href: "/dashboard/seller/products", icon: "stack", short: "Produk" },
       { label: "Pelanggan", href: "/dashboard/seller/customers", icon: "users", short: "Pelanggan" },
       { label: "Pesanan Masuk", href: "/dashboard/seller/orders", icon: "globe", short: "Pesanan" },
-      { label: "Nigi AI", href: "/dashboard/seller/assistant", icon: "chat", short: "Nigi AI" }
+      { label: "Nigi AI", href: "/dashboard/seller/assistant", icon: "chat", short: "Nigi AI", fa: "glitter" }
     ]
   };
 

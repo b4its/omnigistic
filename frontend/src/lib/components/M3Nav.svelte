@@ -3,9 +3,17 @@
   import { windowClass } from "$lib/stores/window-class";
   import { cn, resolveHref } from "$lib/utils";
   import Icon from "./Icon.svelte";
+  import GlitterIcon from "./ui/GlitterIcon.svelte";
   import type { IconName } from "$lib/icon-names";
 
-  export type NavItem = { label: string; short?: string; href: string; icon: IconName };
+  /** `fa: "glitter"` → pakai ikon Font Awesome (glitter) alih-alih IconName SVG. */
+  export type NavItem = {
+    label: string;
+    short?: string;
+    href: string;
+    icon: IconName;
+    fa?: "glitter";
+  };
 
   let { items = [], sharedItems = [], userName = "Guest", open = true, ontoggle }: {
     items?: NavItem[];
@@ -58,7 +66,7 @@
         class="relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5"
       >
         <span class="flex h-8 w-14 items-center justify-center rounded-full transition-colors {isActive(item.href) ? 'bg-[color-mix(in_oklab,var(--bitcoin)_18%,transparent)] text-[var(--bitcoin)]' : ''}">
-          <Icon name={item.icon} cls="h-5 w-5" weight="regular" />
+          {#if item.fa === "glitter"}<GlitterIcon cls="h-5 w-5" />{:else}<Icon name={item.icon} cls="h-5 w-5" weight="regular" />{/if}
         </span>
         <span class="w-full truncate text-center font-mono text-[11px] font-medium tracking-wide {isActive(item.href) ? "text-[var(--bitcoin)]" : "text-sidebar-foreground/70"}">
           {labelOf(item)}
@@ -85,7 +93,7 @@
                 onclick={() => (overflowOpen = false)}
                 class={cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors", isActive(item.href) ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}
               >
-                <Icon name={item.icon} cls="h-4 w-4 shrink-0" />
+                {#if item.fa === "glitter"}<GlitterIcon cls="h-4 w-4 shrink-0" />{:else}<Icon name={item.icon} cls="h-4 w-4 shrink-0" />{/if}
                 <span class="truncate">{item.label}</span>
               </a>
             {/each}
@@ -163,7 +171,7 @@
           {#if isActive(item.href) && !railCollapsed}
             <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[var(--primary)]" aria-hidden="true"></span>
           {/if}
-          <Icon name={item.icon} cls={railCollapsed ? "h-5 w-5 shrink-0" : "h-4.5 w-4.5 shrink-0"} />
+          {#if item.fa === "glitter"}<GlitterIcon cls={railCollapsed ? "h-5 w-5 shrink-0" : "h-4.5 w-4.5 shrink-0"} />{:else}<Icon name={item.icon} cls={railCollapsed ? "h-5 w-5 shrink-0" : "h-4.5 w-4.5 shrink-0"} />{/if}
           {#if railCollapsed}
             <span class="max-w-full truncate text-center font-medium leading-tight">{labelOf(item)}</span>
           {:else}
@@ -196,7 +204,7 @@
             {#if isActive(item.href) && !railCollapsed}
               <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[var(--primary)]" aria-hidden="true"></span>
             {/if}
-            <Icon name={item.icon} cls={railCollapsed ? "h-5 w-5 shrink-0" : "h-4.5 w-4.5 shrink-0"} />
+            {#if item.fa === "glitter"}<GlitterIcon cls={railCollapsed ? "h-5 w-5 shrink-0" : "h-4.5 w-4.5 shrink-0"} />{:else}<Icon name={item.icon} cls={railCollapsed ? "h-5 w-5 shrink-0" : "h-4.5 w-4.5 shrink-0"} />{/if}
             {#if railCollapsed}
               <span class="max-w-full truncate text-center font-medium leading-tight">{labelOf(item)}</span>
             {:else}

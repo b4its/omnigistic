@@ -3,6 +3,7 @@
   import { api, type ChatResp, type Insights } from "$lib/api";
   import ChatMarkdown from "./ChatMarkdown.svelte";
   import Icon from "./Icon.svelte";
+  import GlitterIcon from "./ui/GlitterIcon.svelte";
 
   let { role = "PUSAT" }: { role?: string } = $props();
 
@@ -64,7 +65,7 @@
 <article class="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-card">
   <header class="flex items-center gap-2.5">
     <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)]">
-      <Icon name="sparkles" cls="h-4 w-4" weight="bold" />
+      <GlitterIcon cls="h-4 w-4" />
     </span>
     <div class="min-w-0 leading-tight">
       <p class="font-heading text-sm font-semibold tracking-tight">Nigi AI</p>

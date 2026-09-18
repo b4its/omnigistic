@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { api, type CodImpact, type CodRiskPkg, type CodFactor } from "$lib/api";
   import Icon from "$lib/components/Icon.svelte";
+  import GlitterIcon from "$lib/components/ui/GlitterIcon.svelte";
   import EChart from "$lib/components/EChart.svelte";
   import { donutChart } from "$lib/charts/options";
   import { resolveHref, numId } from "$lib/utils";
@@ -164,7 +165,7 @@
     <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
       <div class="flex items-start gap-3">
         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)]">
-          <Icon name="chat" cls="h-5 w-5" weight="fill" />
+          <GlitterIcon cls="h-5 w-5" />
         </span>
         <div class="min-w-0">
           <p class="text-[13.5px] font-semibold uppercase tracking-wider text-primary">Saran Nigi AI untuk kurir</p>
