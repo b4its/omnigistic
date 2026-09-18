@@ -42,7 +42,7 @@
     destLabel?: string;
     /** Estimasi waktu tempuh total (menit). Default dari data kota. */
     etaMin?: number;
-    height?: number;
+    height?: number | string;
     /** Role pengguna — menentukan nada label PUDO (KURIR = aksi, lain = info). */
     role?: string;
     /** Tampilkan titik PUDO + rekomendasi drop (default true). */
@@ -55,7 +55,7 @@
      */
     expandable?: boolean;
     /**
-     * Tampilkan legenda bawaan (collapsible) di atas peta. Dimatikan pada
+     * Tampilkan legenda bawaan (collapsible) di luar peta. Dimatikan pada
      * instance di dalam modal karena legenda dikelola panel modal.
      */
     showLegend?: boolean;
@@ -93,6 +93,8 @@
     onSimulationComplete,
     onSimulationDivertPudo
   }: Props = $props();
+
+  const heightStyle = $derived(typeof height === "number" ? `${height}px` : height);
 
   /** true bila pengguna adalah kurir (PUDO = titik aksi, bukan sekadar info). */
   const isCourier = $derived(role.toUpperCase() === "KURIR");
@@ -355,8 +357,8 @@
     try {
       courierMk.setTooltipContent(
         frac >= 1
-          ? `Tiba · ${targetLabel}`
-          : `Kurir · ${pct}% · ~${km} km · ${simTelemetry.speedKmh} km/j · ETA ~${etaLeft} mnt`
+          ? `🏁 Tiba · ${targetLabel}`
+          : `🛵 Kurir (${pct}%) · ~${km} km · ${simTelemetry.speedKmh} km/j · ETA ~${etaLeft} mnt`
       );
     } catch {
       /* noop */
@@ -423,45 +425,105 @@
       traveled = L.polyline([rgeo.origin] as unknown as LeafletNS.LatLngExpression[], { color: "#16a34a", weight: 5, opacity: 0.95 }).addTo(map);
 
       // Titik awal (hub).
-      L.circleMarker(rgeo.origin as unknown as LeafletNS.LatLngExpression, { radius: 9, color: "#16a34a", fillColor: "#dcfce7", fillOpacity: 0.9, weight: 3 })
-        .addTo(map)
-        .bindTooltip(`Awal · ${originLabel}`, { direction: "top" });
+      const originMk = L.circleMarker(rgeo.origin as unknown as LeafletNS.LatLngExpression, {
+        radius: 9,
+        color: "#16a34a",
+        fillColor: "#dcfce7",
+        fillOpacity: 0.95,
+        weight: 3
+      }).addTo(map);
+      originMk.bindTooltip(`🏢 Hub: ${originLabel}`, {
+        direction: "top",
+        permanent: true,
+        className: "map-label-hub",
+        offset: [0, -8]
+      });
 
       // Titik tujuan (pembeli).
-      L.circleMarker(rgeo.dest as unknown as LeafletNS.LatLngExpression, { radius: 10, color: "#f7931a", fillColor: "#fde4d8", fillOpacity: 0.95, weight: 3 })
-        .addTo(map)
-        .bindTooltip(`Tujuan · ${destLabel}`, { direction: "top" });
+      const destMk = L.circleMarker(rgeo.dest as unknown as LeafletNS.LatLngExpression, {
+        radius: 10,
+        color: "#f7931a",
+        fillColor: "#fde4d8",
+        fillOpacity: 0.95,
+        weight: 3
+      }).addTo(map);
+      destMk.bindTooltip(`🎯 Tujuan: ${destLabel}`, {
+        direction: "top",
+        permanent: true,
+        className: "map-label-dest",
+        offset: [0, -8]
+      });
 
       // Titik saat ini (kurir).
-      courierMk = L.circleMarker(rgeo.origin as unknown as LeafletNS.LatLngExpression, { radius: 8, color: "#2563eb", fillColor: "#dbeafe", fillOpacity: 1, weight: 3 }).addTo(map);
-      courierMk.bindTooltip("Kurir", { direction: "top", permanent: true }).openTooltip();
+      courierMk = L.circleMarker(rgeo.origin as unknown as LeafletNS.LatLngExpression, {
+        radius: 8,
+        color: "#2563eb",
+        fillColor: "#dbeafe",
+        fillOpacity: 1,
+        weight: 3
+      }).addTo(map);
+      courierMk.bindTooltip("🛵 Kurir", {
+        direction: "top",
+        permanent: true,
+        className: "map-label-courier",
+        offset: [0, -8]
+      }).openTooltip();
 
       // ── PUDO: semua titik mitra + rekomendasi drop terdekat ──
       const recId = dropRec?.pudo.id;
-      for (const p of pudos) {
-        const isRec = p.id === recId;
-        const ks = pudoKindStyle(p.kind);
-        const mk = L.circleMarker(p.coord as unknown as LeafletNS.LatLngExpression, {
-          radius: isRec ? 11 : 7,
-          // Rekomendasi selalu ungu pekat (aksen aksi); lainnya diwarnai per kategori.
-          color: isRec ? "#7c3aed" : ks.color,
-          weight: isRec ? 4 : 2,
-          fillColor: isRec ? "#ede9fe" : ks.fill,
-          fillOpacity: isRec ? 1 : 0.85,
-          dashArray: isRec ? undefined : "2 3",
+      if (dropRec) {
+        const p = dropRec.pudo;
+        const recMk = L.circleMarker(p.coord as unknown as LeafletNS.LatLngExpression, {
+          radius: 11,
+          color: "#7c3aed",
+          weight: 4,
+          fillColor: "#ede9fe",
+          fillOpacity: 1,
         }).addTo(map);
-        const kindLabel = PUDO_KIND_META[p.kind]?.label ?? "Mitra";
-        const tag = isRec ? (isCourier ? "Titik drop rekomendasi (kurir)" : "PUDO terdekat (rekomendasi)") : `PUDO · ${kindLabel}`;
-        mk.bindTooltip(`${tag} · ${p.name} (${p.partner})`, { direction: "top" });
+        const recLabel = isCourier ? `📦 Drop: ${p.name}` : `📦 PUDO: ${p.name}`;
+        recMk.bindTooltip(recLabel, {
+          direction: "bottom",
+          permanent: true,
+          className: "map-label-pudo-rec",
+          offset: [0, 8]
+        });
         const srcNote = p.source === "osm" ? "Koordinat & alamat: OpenStreetMap (ODbL)" : "Koordinat: asumsi tim";
-        mk.bindPopup(
+        recMk.bindPopup(
           `<strong>${p.name}</strong> · ${p.partner}<br/>` +
-            `<span style="opacity:.85">${kindLabel}</span><br/>` +
+            `<span style="opacity:.85">${PUDO_KIND_META[p.kind]?.label ?? "Mitra"}</span><br/>` +
             `${isCourier ? "Titik drop paket rekomendasi" : "Titik ambil/bayar paket"}<br/>` +
             `<span style="opacity:.8">${p.address}</span><br/>` +
             `Jam layanan ${p.hours} · kapasitas ${p.capacityPerDay} paket/hari<br/>` +
             `<span style="opacity:.7;font-size:11px">${p.city} · ${p.region} · ${srcNote}</span>` +
-            (isRec && dropRec ? `<br/>Jarak dari tujuan ± ${dropRec.distanceKm} km · ETA ± ${dropRec.etaMin} menit` : "")
+            `<br/>Jarak dari tujuan ± ${dropRec.distanceKm} km · ETA ± ${dropRec.etaMin} menit`
+        );
+      }
+
+      for (const p of pudos) {
+        if (recId && p.id === recId) continue;
+        const ks = pudoKindStyle(p.kind);
+        const mk = L.circleMarker(p.coord as unknown as LeafletNS.LatLngExpression, {
+          radius: 7,
+          color: ks.color,
+          weight: 2,
+          fillColor: ks.fill,
+          fillOpacity: 0.85,
+          dashArray: "2 3",
+        }).addTo(map);
+        const kindLabel = PUDO_KIND_META[p.kind]?.label ?? "Mitra";
+        mk.bindTooltip(`🏪 ${p.name} (${kindLabel})`, {
+          direction: "top",
+          permanent: false,
+          className: "map-label-pudo"
+        });
+        const srcNote = p.source === "osm" ? "Koordinat & alamat: OpenStreetMap (ODbL)" : "Koordinat: asumsi tim";
+        mk.bindPopup(
+          `<strong>${p.name}</strong> · ${p.partner}<br/>` +
+            `<span style="opacity:.85">${kindLabel}</span><br/>` +
+            `Titik ambil/bayar paket<br/>` +
+            `<span style="opacity:.8">${p.address}</span><br/>` +
+            `Jam layanan ${p.hours} · kapasitas ${p.capacityPerDay} paket/hari<br/>` +
+            `<span style="opacity:.7;font-size:11px">${p.city} · ${p.region} · ${srcNote}</span>`
         );
       }
 
@@ -471,6 +533,12 @@
       }
 
       map.fitBounds(rgeo.route as unknown as LeafletNS.LatLngBoundsExpression, { padding: [48, 48] });
+
+      setTimeout(() => {
+        if (map && !disposed) {
+          map.invalidateSize();
+        }
+      }, 150);
 
       paint(progress);
 
@@ -549,99 +617,31 @@
 
 </script>
 
-<div class="relative isolate z-0 w-full overflow-hidden rounded-2xl border border-border" style="height:{height}px">
+<div class="relative isolate z-0 w-full overflow-hidden rounded-2xl border border-border {typeof height === 'string' && height.includes('%') ? 'h-full' : ''}" style="height:{heightStyle}">
   <div
     bind:this={mapEl}
     aria-label={`Peta pengantaran: titik awal ${originLabel}, titik tujuan ${destLabel}, posisi kurir bergerak mengikuti jalan${showPudo ? ", serta titik PUDO mitra dan rekomendasi drop terdekat" : ""}`}
     role="application"
     class="absolute inset-0"
   ></div>
-  <!-- Legenda peta lengkap & rinci (collapsible: tombol buka/tutup terpisah) -->
-  {#if showLegend}
-    {#if legendOpen}
-      <!-- Legenda terbuka: judul + tombol tutup eksplisit (✕) -->
-      <div class="absolute left-2 top-2 z-[1000] max-w-[min(17rem,calc(100%-1rem))] rounded-lg border border-border bg-background/92 text-[12px] shadow-pop backdrop-blur">
-        <div class="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
-          <p class="flex items-center gap-1.5 font-semibold text-foreground"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</p>
-          <button
-            type="button"
-            onclick={() => (legendOpen = false)}
-            aria-label="Tutup legenda peta"
-            title="Tutup legenda"
-            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <Icon name="x" cls="h-3.5 w-3.5" weight="bold" />
-          </button>
-        </div>
-        <div id="map-legend" class="max-h-[60%] space-y-2 overflow-y-auto px-3 py-2.5">
-        <!-- Penanda titik -->
-        <p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Penanda titik</p>
-        <ul class="space-y-1.5">
-          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span> <span><b class="text-foreground">Hub asal</b> — {originLabel}</span></li>
-          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#2563eb] bg-[#dbeafe]"></span> <span><b class="text-foreground">Kurir</b> — posisi saat ini</span></li>
-          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#fde4d8]"></span> <span><b class="text-foreground">Tujuan</b> — {destLabel}</span></li>
-          {#if showPudo && pudos.length > 0}
-            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span> <span><b class="text-foreground">PUDO mitra</b> — titik ambil/bayar</span></li>
-            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#7c3aed] bg-[#ede9fe]"></span> <span><b class="text-foreground">{isCourier ? "Drop rekomendasi" : "PUDO terdekat"}</b> — tujuan alternatif</span></li>
-          {/if}
-        </ul>
 
-        <!-- Kategori mitra PUDO (warna marker non-rekomendasi) -->
-        {#if showPudo && pudos.length > 0}
-          <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Kategori mitra (warna)</p>
-          <ul class="space-y-1.5">
-            {#each kindCounts() as kc (kc.kind)}
-              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2" style="border-color:{kc.color};background:{kc.fill}"></span> <span class="text-muted-foreground">{kc.label} <b class="text-foreground">· {kc.count}</b></span></li>
-            {/each}
-          </ul>
-        {/if}
-
-        <!-- Garis rute -->
-        <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis rute</p>
-        <ul class="space-y-1.5">
-          <li class="flex items-center gap-2"><span class="h-0.5 w-6 shrink-0 rounded bg-[#94a3b8]"></span> <span>Rencana rute (penuh)</span></li>
-          <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>Sudah ditempuh</span></li>
-          {#if routeIntel}
-            <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[var(--bitcoin)]"></span> <span>Jalur terpilih (tebal)</span></li>
-          {/if}
-        </ul>
-
-        <!-- Kepadatan (hanya saat Route Intelligence aktif) -->
-        {#if routeIntel}
-          <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Warna jalur = kepadatan</p>
-          <ul class="space-y-1.5">
-            <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>Lengang (&lt;40%)</span></li>
-            <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#eab308]"></span> <span>Sedang (40–65%)</span></li>
-            <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#dc2626]"></span> <span>Padat (&gt;65%)</span></li>
-          </ul>
-        {/if}
-
-        <!-- Sumber & catatan -->
-        <p class="border-t border-border pt-2 text-[10px] italic leading-snug text-muted-foreground">
-          Jaringan PUDO nasional: {PUDO_POINTS.length} titik mitra · {pudoCityCount()} kota di 6 region. Ubin peta © OpenStreetMap;
-          koordinat & alamat PUDO diverifikasi dari OpenStreetMap (ODbL); jam/kapasitas & kepadatan = asumsi tim (prototipe).
-        </p>
-      </div>
-      </div>
-    {:else}
-      <!-- Legenda tertutup: pil ringkas untuk membuka kembali -->
-      <button
-        type="button"
-        onclick={() => (legendOpen = true)}
-        aria-expanded="false"
-        aria-controls="map-legend"
-        aria-label="Buka legenda peta"
-        title="Buka legenda"
-        class="absolute left-2 top-2 z-[1000] inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/92 px-3 py-2 text-[12px] font-semibold text-foreground shadow-pop backdrop-blur transition-colors hover:bg-accent"
-      >
-        <Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda
-      </button>
-    {/if}
+  {#if expandable}
+    <!-- Tombol perbesar → peta modal layar-penuh -->
+    <button
+      type="button"
+      onclick={openFullscreen}
+      aria-label="Perbesar peta ke layar penuh"
+      title="Perbesar peta (layar penuh)"
+      class="absolute right-2.5 top-2.5 z-[1000] inline-flex items-center gap-1.5 rounded-xl border border-border bg-background/90 px-3 py-1.5 text-[12px] font-semibold text-foreground shadow-pop backdrop-blur transition-all hover:bg-accent hover:scale-[1.02]"
+    >
+      <Icon name="layers" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" />
+      <span>Perbesar</span>
+    </button>
   {/if}
 
   {#if routeIntel && !compact}
     <!-- Panel Route Intelligence: jalur tercepat (kepadatan + efisiensi) -->
-    <div class="absolute right-2 top-2 z-[1000] w-[min(20rem,calc(100%-1rem))] rounded-xl border border-border bg-background/95 p-3 text-[12px] shadow-pop">
+    <div class="absolute right-2.5 top-12 z-[1000] w-[min(20rem,calc(100%-1rem))] rounded-xl border border-border bg-background/95 p-3 text-[12px] shadow-pop backdrop-blur">
       <div class="mb-2 flex items-center justify-between gap-2">
         <p class="flex items-center gap-1.5 font-semibold text-foreground">
           <Icon name="route" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Jalur tercepat
@@ -710,31 +710,6 @@
         <p class="mt-1.5 text-[10px] italic text-muted-foreground">Kepadatan/kecepatan/biaya = asumsi tim; bukan data lalu lintas live.</p>
       {/if}
     </div>
-  {/if}
-
-  {#if showPudo && dropRec}
-    <div class="pointer-events-none absolute {showSimulation ? (simPanelExpanded ? 'bottom-40' : 'bottom-16') : 'bottom-2'} left-2 z-[1000] max-w-[calc(100%-1rem)] rounded-lg border border-[#7c3aed]/40 bg-background/95 px-3 py-2 text-[12px] shadow-pop transition-all">
-      <p class="font-semibold text-foreground">
-        {#if isCourier}Titik drop paket rekomendasi{:else}PUDO terdekat untuk penerima{/if}
-      </p>
-      <p class="text-muted-foreground">{dropRec.pudo.name} · {dropRec.pudo.partner} · ± {dropRec.distanceKm} km · ETA ± {dropRec.etaMin} mnt · {dropRec.pudo.hours}</p>
-      <p class="mt-0.5 text-[11px] text-muted-foreground">
-        {#if isCourier}Arahkan paket berisiko COD ke titik ini alih-alih menunggu di alamat.{:else}Penerima dapat mengambil/membayar paket di gerai mitra ini.{/if}
-      </p>
-    </div>
-  {/if}
-
-  {#if expandable}
-    <!-- Tombol perbesar → peta modal layar-penuh -->
-    <button
-      type="button"
-      onclick={openFullscreen}
-      aria-label="Perbesar peta ke layar penuh"
-      title="Perbesar peta (layar penuh)"
-      class="absolute {showSimulation ? (simPanelExpanded ? 'bottom-40' : 'bottom-16') : 'bottom-2'} right-2 z-[1000] inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/95 px-3 py-2 text-[12px] font-semibold text-foreground shadow-pop backdrop-blur transition-all hover:bg-accent"
-    >
-      <Icon name="layers" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Perbesar
-    </button>
   {/if}
 
   <!-- ── Bilah & Panel Kontrol Simulasi Pengantaran Riil ── -->
@@ -899,48 +874,188 @@
   {/if}
 </div>
 
+<!-- ── Informasi Legenda di Luar Peta (Clean Map Architecture) ── -->
+{#if showLegend}
+  <div class="mt-2.5 rounded-xl border border-border bg-card/80 p-3 text-[12px] shadow-sm backdrop-blur">
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" />
+        </span>
+        <div>
+          <span class="font-bold text-foreground">Legenda peta</span>
+          <span class="ml-2 hidden rounded-full bg-muted px-2 py-0.5 font-mono text-[9.5px] text-muted-foreground sm:inline">
+            Semua penanda terlabel langsung di peta
+          </span>
+        </div>
+      </div>
+      <button
+        type="button"
+        onclick={() => (legendOpen = !legendOpen)}
+        aria-expanded={legendOpen}
+        aria-controls="map-legend-panel"
+        aria-label={legendOpen ? "Tutup legenda peta" : "Buka legenda peta"}
+        class="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        {#if legendOpen}
+          <Icon name="x" cls="h-3 w-3" weight="bold" /> Tutup legenda peta
+        {:else}
+          <Icon name="map" cls="h-3 w-3 text-[var(--bitcoin)]" /> Buka legenda peta
+        {/if}
+      </button>
+    </div>
+
+    {#if legendOpen}
+      <div id="map-legend-panel" class="mt-2.5 space-y-2.5 border-t border-border pt-2.5">
+        <!-- Penanda Titik -->
+        <div>
+          <p class="mb-1.5 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Penanda Titik pada Peta</p>
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
+              <span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span>
+              <div class="min-w-0">
+                <p class="truncate text-[11.5px] font-semibold text-foreground">Hub asal</p>
+                <p class="truncate text-[10.5px] text-muted-foreground">{originLabel}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
+              <span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#2563eb] bg-[#dbeafe]"></span>
+              <div class="min-w-0">
+                <p class="truncate text-[11.5px] font-semibold text-foreground">Kurir</p>
+                <p class="truncate text-[10.5px] text-muted-foreground">Posisi saat ini &amp; telemetri bergerak</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
+              <span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#fde4d8]"></span>
+              <div class="min-w-0">
+                <p class="truncate text-[11.5px] font-semibold text-foreground">Tujuan</p>
+                <p class="truncate text-[10.5px] text-muted-foreground">{destLabel}</p>
+              </div>
+            </div>
+
+            {#if showPudo && pudos.length > 0}
+              <div class="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
+                <span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span>
+                <div class="min-w-0">
+                  <p class="truncate text-[11.5px] font-semibold text-foreground">PUDO mitra</p>
+                  <p class="truncate text-[10.5px] text-muted-foreground">Titik ambil/bayar alternatif</p>
+                </div>
+              </div>
+
+              {#if dropRec}
+                <div class="flex items-center gap-2 rounded-lg border border-[#7c3aed]/30 bg-[#ede9fe]/30 px-2.5 py-1.5 dark:bg-[#ede9fe]/10">
+                  <span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#7c3aed] bg-[#ede9fe]"></span>
+                  <div class="min-w-0">
+                    <p class="truncate text-[11.5px] font-semibold text-foreground">
+                      {isCourier ? "Titik drop paket rekomendasi" : "PUDO terdekat"}
+                    </p>
+                    <p class="truncate text-[10.5px] text-muted-foreground">{dropRec.pudo.name} (±{dropRec.distanceKm} km · ETA ±{dropRec.etaMin} mnt)</p>
+                  </div>
+                </div>
+              {/if}
+            {/if}
+          </div>
+        </div>
+
+        <!-- Garis Rute & Kategori Mitra -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-2 text-[11px]">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis Rute:</span>
+            <span class="inline-flex items-center gap-1.5">
+              <span class="h-0.5 w-5 rounded bg-[#94a3b8]"></span>
+              <span class="text-muted-foreground">Rencana rute (penuh)</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span class="h-1 w-5 rounded bg-[#16a34a]"></span>
+              <span class="text-muted-foreground">Sudah ditempuh</span>
+            </span>
+            {#if routeIntel}
+              <span class="inline-flex items-center gap-1.5">
+                <span class="h-1 w-5 rounded bg-[var(--bitcoin)]"></span>
+                <span class="text-muted-foreground">Jalur terpilih (tebal)</span>
+              </span>
+            {/if}
+          </div>
+
+          {#if showPudo && pudos.length > 0}
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Kategori Mitra:</span>
+              {#each kindCounts() as kc (kc.kind)}
+                <span class="inline-flex items-center gap-1 text-[10.5px] text-muted-foreground">
+                  <span class="h-2.5 w-2.5 rounded-full border" style="border-color:{kc.color};background:{kc.fill}"></span>
+                  <span>{kc.label} <b>· {kc.count}</b></span>
+                </span>
+              {/each}
+            </div>
+          {/if}
+        </div>
+
+        <!-- Atribusi Sumber & Catatan -->
+        <p class="border-t border-border pt-1.5 text-[10px] italic leading-snug text-muted-foreground">
+          Jaringan PUDO nasional: {PUDO_POINTS.length} titik mitra · {pudoCityCount()} kota di 6 region. Ubin peta © OpenStreetMap (ODbL);
+          koordinat &amp; alamat diverifikasi dari OpenStreetMap; jam layanan &amp; kapasitas = asumsi operasional.
+        </p>
+      </div>
+    {/if}
+  </div>
+{/if}
 
 {#if expandable && fullscreen}
-  <!-- Modal peta layar penuh: peta penuh tanpa gangguan + legenda collapsible -->
+  <!-- Modal peta layar penuh: pop up modal dengan kontrol open/close -->
   <div
-    class="fixed inset-0 z-[10000] flex flex-col bg-background/98 backdrop-blur-sm"
+    class="fixed inset-0 z-[10000] flex flex-col bg-background/98 backdrop-blur-md animate-in fade-in duration-200"
     role="dialog"
     aria-modal="true"
     aria-label={`Peta layar penuh: ${originLabel} ke ${destLabel}`}
     tabindex="-1"
   >
-    <div class="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-      <div class="flex min-w-0 items-center gap-2">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)]">
+    <!-- Header Modal -->
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-card/90 px-4 py-3 shadow-sm backdrop-blur">
+      <div class="flex min-w-0 items-center gap-3">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
           <Icon name="map" cls="h-4 w-4" />
         </span>
         <div class="min-w-0">
-          <p class="truncate text-sm font-semibold text-foreground">Peta pengantaran — layar penuh</p>
-          <p class="truncate text-[11px] text-muted-foreground">{originLabel} → {destLabel}{role ? ` · ${role}` : ""}</p>
+          <div class="flex items-center gap-2">
+            <h2 class="truncate text-sm font-bold text-foreground">Peta pengantaran — layar penuh</h2>
+            <span class="hidden rounded-full bg-success/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-success-foreground sm:inline">
+              Mode Penuh
+            </span>
+          </div>
+          <p class="truncate text-xs text-muted-foreground">{originLabel} → {destLabel}{role ? ` · ${role}` : ""}</p>
         </div>
       </div>
+
       <div class="flex shrink-0 items-center gap-2">
         <button
           type="button"
           onclick={() => (legendOpenFs = !legendOpenFs)}
           aria-expanded={legendOpenFs}
-          class="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-[12px] font-semibold text-foreground transition-colors hover:bg-accent"
+          aria-controls="modal-legend-aside"
+          class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-accent"
         >
-          <Icon name="map" cls="h-3.5 w-3.5" /> {legendOpenFs ? "Sembunyikan legenda" : "Tampilkan legenda"}
+          <Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" />
+          <span>{legendOpenFs ? "Sembunyikan legenda" : "Tampilkan legenda"}</span>
         </button>
+
         <button
           type="button"
           onclick={closeFullscreen}
           aria-label="Tutup peta layar penuh"
-          class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          title="Tutup peta layar penuh (Esc)"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive-foreground"
         >
           <Icon name="x" cls="h-4 w-4" />
         </button>
       </div>
     </div>
 
-    <div class="flex min-h-0 flex-1">
-      <div class="min-w-0 flex-1">
+    <!-- Body Modal: Peta Layar Penuh + Panel Samping Legenda -->
+    <div class="relative flex min-h-0 flex-1 overflow-hidden">
+      <!-- Area Peta Full Screen -->
+      <div class="relative h-full min-w-0 flex-1">
         {#key fullscreen}
           <DeliveryMap
             {progress}
@@ -948,7 +1063,7 @@
             {originLabel}
             {destLabel}
             {etaMin}
-            height={500}
+            height="100%"
             {role}
             {showPudo}
             {routeIntel}
@@ -958,44 +1073,172 @@
             compact={false}
           />
         {/key}
-
       </div>
+
+      <!-- Panel Samping Legenda Modal (bisa dibuka / ditutup) -->
       {#if legendOpenFs}
-        <aside class="w-[18rem] max-w-[40vw] shrink-0 overflow-y-auto border-l border-border bg-card p-4 text-[12px]">
-          <div class="mb-2 flex items-center justify-between gap-2">
-            <p class="flex items-center gap-1.5 font-semibold text-foreground"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</p>
+        <aside
+          id="modal-legend-aside"
+          class="w-[20rem] max-w-[40vw] shrink-0 overflow-y-auto border-l border-border bg-card p-4 text-[12px] shadow-xl"
+        >
+          <div class="mb-3 flex items-center justify-between gap-2 border-b border-border pb-2.5">
+            <p class="flex items-center gap-1.5 font-bold text-foreground">
+              <Icon name="map" cls="h-4 w-4 text-[var(--bitcoin)]" weight="bold" />
+              Legenda peta
+            </p>
             <button
               type="button"
               onclick={() => (legendOpenFs = false)}
               aria-label="Tutup legenda peta"
-              title="Tutup legenda"
-              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              title="Tutup panel legenda"
+              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <Icon name="x" cls="h-3.5 w-3.5" weight="bold" />
             </button>
           </div>
-          <ul class="space-y-1.5">
-            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span> <span><b class="text-foreground">Hub asal</b> — {originLabel}</span></li>
-            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#2563eb] bg-[#dbeafe]"></span> <span><b class="text-foreground">Kurir</b> — posisi saat ini</span></li>
-            <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#fde4d8]"></span> <span><b class="text-foreground">Tujuan</b> — {destLabel}</span></li>
-            {#if showPudo && pudos.length > 0}
-              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span> <span><b class="text-foreground">PUDO mitra</b> — titik ambil/bayar</span></li>
-              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#7c3aed] bg-[#ede9fe]"></span> <span><b class="text-foreground">{isCourier ? "Drop rekomendasi" : "PUDO terdekat"}</b> — tujuan alternatif</span></li>
-            {/if}
-          </ul>
-          <p class="mt-3 border-t border-border pt-2 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis rute</p>
-          <ul class="mt-2 space-y-1.5">
-            <li class="flex items-center gap-2"><span class="h-0.5 w-6 shrink-0 rounded bg-[#94a3b8]"></span> <span>Rencana rute (penuh)</span></li>
-            <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>Sudah ditempuh</span></li>
-            {#if routeIntel}
-              <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[var(--bitcoin)]"></span> <span>Jalur terpilih (tebal)</span></li>
-            {/if}
-          </ul>
-          <p class="mt-3 border-t border-border pt-2 text-[10px] italic leading-snug text-muted-foreground">
-            Ubin peta © OpenStreetMap (ODbL). Jam/kapasitas & kepadatan = asumsi tim (prototipe).
-          </p>
+
+          <div class="space-y-3">
+            <div>
+              <p class="mb-1.5 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Penanda Titik</p>
+              <ul class="space-y-2">
+                <li class="flex items-start gap-2">
+                  <span class="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span>
+                  <div>
+                    <b class="text-foreground">Hub asal</b>
+                    <p class="text-[11px] text-muted-foreground">{originLabel}</p>
+                  </div>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#2563eb] bg-[#dbeafe]"></span>
+                  <div>
+                    <b class="text-foreground">Kurir</b>
+                    <p class="text-[11px] text-muted-foreground">Posisi saat ini &amp; telemetri bergerak</p>
+                  </div>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#fde4d8]"></span>
+                  <div>
+                    <b class="text-foreground">Tujuan</b>
+                    <p class="text-[11px] text-muted-foreground">{destLabel}</p>
+                  </div>
+                </li>
+                {#if showPudo && pudos.length > 0}
+                  <li class="flex items-start gap-2">
+                    <span class="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span>
+                    <div>
+                      <b class="text-foreground">PUDO mitra</b>
+                      <p class="text-[11px] text-muted-foreground">Titik ambil/bayar alternatif</p>
+                    </div>
+                  </li>
+                  {#if dropRec}
+                    <li class="flex items-start gap-2">
+                      <span class="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#7c3aed] bg-[#ede9fe]"></span>
+                      <div>
+                        <b class="text-foreground">{isCourier ? "Drop rekomendasi" : "PUDO terdekat"}</b>
+                        <p class="text-[11px] text-muted-foreground">{dropRec.pudo.name} · ±{dropRec.distanceKm} km</p>
+                      </div>
+                    </li>
+                  {/if}
+                {/if}
+              </ul>
+            </div>
+
+            <div class="border-t border-border pt-2.5">
+              <p class="mb-1.5 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis rute</p>
+              <ul class="space-y-1.5">
+                <li class="flex items-center gap-2"><span class="h-0.5 w-6 shrink-0 rounded bg-[#94a3b8]"></span> <span>Rencana rute (penuh)</span></li>
+                <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>Sudah ditempuh</span></li>
+                {#if routeIntel}
+                  <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[var(--bitcoin)]"></span> <span>Jalur terpilih (tebal)</span></li>
+                {/if}
+              </ul>
+            </div>
+
+            <p class="border-t border-border pt-2.5 text-[10px] italic leading-snug text-muted-foreground">
+              Ubin peta © OpenStreetMap (ODbL). Jam/kapasitas & kepadatan = asumsi tim (prototipe).
+            </p>
+          </div>
         </aside>
       {/if}
     </div>
   </div>
 {/if}
+
+<style>
+  :global(.leaflet-tooltip.map-label-hub),
+  :global(.leaflet-tooltip.map-label-courier),
+  :global(.leaflet-tooltip.map-label-dest),
+  :global(.leaflet-tooltip.map-label-pudo-rec),
+  :global(.leaflet-tooltip.map-label-pudo) {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 4px 10px -1px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 6px !important;
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+  }
+
+  :global(.dark .leaflet-tooltip.map-label-hub),
+  :global(.dark .leaflet-tooltip.map-label-courier),
+  :global(.dark .leaflet-tooltip.map-label-dest),
+  :global(.dark .leaflet-tooltip.map-label-pudo-rec),
+  :global(.dark .leaflet-tooltip.map-label-pudo) {
+    background: #18181b !important;
+    color: #f4f4f5 !important;
+    border: 1px solid #3f3f46 !important;
+    box-shadow: 0 4px 12px -1px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  :global(.leaflet-tooltip.map-label-hub) {
+    border-color: #16a34a !important;
+    color: #15803d !important;
+  }
+  :global(.dark .leaflet-tooltip.map-label-hub) {
+    border-color: #22c55e !important;
+    color: #4ade80 !important;
+  }
+
+  :global(.leaflet-tooltip.map-label-courier) {
+    border-color: #2563eb !important;
+    color: #1d4ed8 !important;
+  }
+  :global(.dark .leaflet-tooltip.map-label-courier) {
+    border-color: #3b82f6 !important;
+    color: #60a5fa !important;
+  }
+
+  :global(.leaflet-tooltip.map-label-dest) {
+    border-color: #f97316 !important;
+    color: #c2410c !important;
+  }
+  :global(.dark .leaflet-tooltip.map-label-dest) {
+    border-color: #f97316 !important;
+    color: #fb923c !important;
+  }
+
+  :global(.leaflet-tooltip.map-label-pudo-rec) {
+    border-color: #7c3aed !important;
+    color: #6d28d9 !important;
+  }
+  :global(.dark .leaflet-tooltip.map-label-pudo-rec) {
+    border-color: #8b5cf6 !important;
+    color: #c4b5fd !important;
+  }
+
+  :global(.leaflet-tooltip-top:before) {
+    border-top-color: #cbd5e1 !important;
+  }
+  :global(.dark .leaflet-tooltip-top:before) {
+    border-top-color: #3f3f46 !important;
+  }
+  :global(.leaflet-tooltip-bottom:before) {
+    border-bottom-color: #cbd5e1 !important;
+  }
+  :global(.dark .leaflet-tooltip-bottom:before) {
+    border-bottom-color: #3f3f46 !important;
+  }
+</style>
