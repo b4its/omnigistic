@@ -5,13 +5,16 @@
   import EChart from "$lib/components/EChart.svelte";
   import { barChart } from "$lib/charts/options";
   import { shop, ORDER_STATUS_LABEL, type Order } from "$lib/stores/shop";
-  import { COURIER } from "$lib/logistics";
+  import { COURIER, CITIES, HUB_LABEL, etaForCity, distanceForCity, type City } from "$lib/logistics";
+  import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { notify } from "$lib/toast";
 
   let route = $state<Array<{ type: string; packages: number; distanceKm: number; durationMin: number; productivity: number }>>([]);
   let quotes = $state<Array<{ city: string; quote: string }>>([]);
   let loaded = $state(false);
   let failed = $state(false);
+  let selectedCity = $state<City>("Bogor");
+
 
   /** Aktivitas pengantaran nyata (cluster kurir dari pesanan aktual). */
   let orders = $state<Order[]>([]);
@@ -73,6 +76,50 @@
       </div>
     </section>
   {/if}
+
+  <!-- Peta Rute Lapangan & Simulasi Pengantaran Kurir -->
+  <section class="space-y-4 rounded-2xl border border-border bg-card p-5">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <p class="text-base font-semibold">Peta Rute &amp; Simulasi Pengantaran Kurir</p>
+        <p class="text-[13.5px] text-muted-foreground">
+          Eksplorasi koridor pengantaran last-mile per wilayah. Jalankan simulasi untuk menganalisis waktu tempuh, kepadatan jalan, dan titik PUDO.
+        </p>
+      </div>
+
+      <!-- Tab Kota Klaster -->
+      <div class="flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/40 p-1">
+        {#each CITIES as c}
+          <button
+            type="button"
+            onclick={() => (selectedCity = c)}
+            aria-pressed={selectedCity === c}
+            class="rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors {selectedCity === c ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+          >
+            {c}
+          </button>
+        {/each}
+      </div>
+    </div>
+
+    <!-- Peta DeliveryMap dengan Simulasi Aktif -->
+    <DeliveryMap
+      progress={0.35}
+      city={selectedCity}
+      originLabel={HUB_LABEL}
+      destLabel={`Klaster ${selectedCity}`}
+      etaMin={etaForCity(selectedCity)}
+      height={380}
+      role="KURIR"
+      routeIntel
+      showSimulation={true}
+      compact={false}
+    />
+    <p class="text-[11px] text-muted-foreground">
+      Rute {HUB_LABEL} → {selectedCity} ({distanceForCity(selectedCity)} km · perkiraan waktu tempuh normal {etaForCity(selectedCity)} menit).
+      Gunakan tombol <b>Simulasi</b> di bilah bawah peta untuk menjalankan telemetri riil.
+    </p>
+  </section>
 
   {#if failed && !route.length}
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">

@@ -94,16 +94,36 @@
   );
   const activeCount = $derived(orders.filter((o) => o.status !== "terkirim").length);
   const doneCount = $derived(orders.filter((o) => o.status === "terkirim").length);
+  const activeTasks = $derived(orders.filter((o) => o.status !== "terkirim"));
   /** Total tunai COD yang harus ditagih (belum terkumpul). */
   const cashDue = $derived(orders.filter((o) => o.payment === "COD" && !o.codCollected).reduce((s, o) => s + o.total, 0));
+
+  /** Pesanan yang sedang menjadi fokus simulasi pengantaran riil kurir. */
+  let focusedOrderId = $state<string | null>(null);
+  $effect(() => {
+    if (!focusedOrderId && activeTasks.length > 0) {
+      const out = activeTasks.find((o) => isOutForDelivery(o.status)) ?? activeTasks[0];
+      focusedOrderId = out.id;
+    }
+  });
+  const focusedOrder = $derived(
+    orders.find((o) => o.id === focusedOrderId) ?? activeTasks[0] ?? null
+  );
 
   /** Notifikasi aksi kurir (dengan jenis: sukses/info/peringatan). */
   function toast(message: string, type: TxType = "success") {
     notify({ message, type, title: "Tugas Pengantaran" });
   }
 
+  function handleOrderSimArrival(o: Order) {
+    if (o.status !== "terkirim") {
+      toast(`Kurir tiba di lokasi ${o.address.recipient} (${o.address.city}). Paket siap diserahterimakan.`, "info");
+    }
+  }
+
   /** Kurir memajukan paket ke tahap berikutnya, memakai draf keterangan bila ada. */
   function advance(o: Order) {
+
     const next = nextStatus(o.status);
     if (!next) return;
     const draft = noteDraft[o.id]?.trim();
@@ -192,6 +212,128 @@
       </p>
     </div>
   {:else}
+    <!-- ── Simulator Pengantaran Lapangan (Live Fleet Cockpit) ── -->
+    {#if activeTasks.length > 0 && focusedOrder}
+      <section class="space-y-4 rounded-2xl border border-primary/30 bg-card p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2">
+              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                <Icon name="compass" cls="h-4 w-4" />
+              </span>
+              <h2 class="font-heading text-base font-semibold text-foreground">Cockpit Simulasi Pengantaran Riil</h2>
+              <span class="rounded-full bg-success/15 px-2.5 py-0.5 font-mono text-[10.5px] font-semibold text-success-foreground">LIVE TELEMETRI</span>
+            </div>
+            <p class="text-xs text-muted-foreground">
+              Simulasi pergerakan motor kurir pada peta rute jalan nyata (OSRM/OSM), telemetri dinamis (kecepatan BPR, baterai EV, emisi), cuaca, dan pengalihan PUDO.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <label for="sim-order-select" class="text-xs font-medium text-muted-foreground">Pilih paket:</label>
+            <select
+              id="sim-order-select"
+              value={focusedOrderId}
+              onchange={(e) => (focusedOrderId = (e.currentTarget as HTMLSelectElement).value)}
+              class="rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:border-primary/50"
+            >
+              {#each activeTasks as to (to.id)}
+                <option value={to.id}>
+                  {to.id} · {to.address.city} ({to.address.recipient})
+                </option>
+              {/each}
+            </select>
+          </div>
+        </div>
+
+        <div class="grid gap-4 lg:grid-cols-[1fr_280px]">
+          <div class="space-y-2">
+            <DeliveryMap
+              progress={progressForStatus(focusedOrder.status)}
+              city={focusedOrder.address.city}
+              originLabel={HUB_LABEL}
+              destLabel={`${focusedOrder.address.city} · ${focusedOrder.address.recipient}`}
+              etaMin={etaForCity(focusedOrder.address.city)}
+              height={400}
+              role="KURIR"
+              routeIntel
+              showSimulation={true}
+              compact={false}
+              onSimulationComplete={() => handleOrderSimArrival(focusedOrder!)}
+              onSimulationDivertPudo={() => toPudo(focusedOrder!)}
+            />
+            <p class="text-[11px] text-muted-foreground">
+              Peta rute riil {HUB_LABEL} → {focusedOrder.address.city} ({distanceForCity(focusedOrder.address.city)} km). Tekan tombol <b>Simulasi</b> pada bilah peta untuk melihat pergerakan kurir dan telemetri langsung.
+            </p>
+          </div>
+
+          <!-- Panel Info Tugas & Tindakan Cepat Kurir -->
+          <div class="flex flex-col justify-between rounded-xl border border-border bg-muted/20 p-4">
+            <div class="space-y-3">
+              <div class="border-b border-border pb-2.5">
+                <span class="font-mono text-xs text-muted-foreground">{focusedOrder.id}</span>
+                <p class="text-sm font-bold text-foreground">{focusedOrder.address.recipient}</p>
+                <p class="text-xs text-muted-foreground">{focusedOrder.address.street}, {focusedOrder.address.city}</p>
+                <p class="mt-1 font-mono text-xs font-semibold text-primary">{formatRupiah(focusedOrder.total)} · {focusedOrder.payment}</p>
+              </div>
+
+              <div>
+                <p class="text-[10.5px] uppercase tracking-wider text-muted-foreground">Status Paket</p>
+                <span class="mt-1 inline-block rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                  {ORDER_STATUS_LABEL[focusedOrder.status]}
+                </span>
+              </div>
+
+              {#if focusedOrder.payment === "COD"}
+                <div class="rounded-lg border border-warning/30 bg-warning/10 p-2.5 text-xs text-warning-foreground">
+                  <p class="font-semibold">Tagihan COD: {formatRupiah(focusedOrder.total)}</p>
+                  <p class="mt-0.5 text-[11px]">
+                    {focusedOrder.codCollected ? "✓ Tunai sudah diterima kurir" : "Tagih tunai saat paket diserahkan ke penerima."}
+                  </p>
+                  {#if !focusedOrder.codCollected}
+                    <button
+                      type="button"
+                      onclick={() => collect(focusedOrder!)}
+                      class="mt-2 w-full rounded-lg bg-warning px-2.5 py-1 text-xs font-semibold text-warning-foreground transition-opacity hover:opacity-90"
+                    >
+                      Terima Tunai COD
+                    </button>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+
+            <div class="space-y-2 border-t border-border pt-3">
+              {#if focusedOrder.status !== "terkirim"}
+                <button
+                  type="button"
+                  onclick={() => advance(focusedOrder!)}
+                  class="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-px"
+                >
+                  <Icon name="check" cls="h-3.5 w-3.5" weight="bold" />
+                  Majukan: {ORDER_STATUS_LABEL[nextStatus(focusedOrder.status) ?? "terkirim"]}
+                </button>
+              {:else}
+                <div class="rounded-xl bg-success/15 p-2 text-center text-xs font-semibold text-success-foreground">
+                  ✓ Paket Terkirim
+                </div>
+              {/if}
+
+              {#if !focusedOrder.routedToPudo && focusedOrder.status !== "terkirim"}
+                <button
+                  type="button"
+                  onclick={() => toPudo(focusedOrder!)}
+                  class="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent"
+                >
+                  <Icon name="map" cls="h-3 w-3" /> Alihkan ke PUDO
+                </button>
+              {/if}
+            </div>
+          </div>
+        </div>
+      </section>
+    {/if}
+
     <ul class="space-y-4">
       {#each tasks as o (o.id)}
         {@const idx = statusIndex(o.status)}
@@ -393,11 +535,15 @@
                   originLabel={HUB_LABEL}
                   destLabel={`${o.address.city} · ${o.address.recipient}`}
                   etaMin={etaForCity(o.address.city)}
-                  height={360}
+                  height={380}
                   role="KURIR"
                   routeIntel
                   compact
+                  showSimulation={true}
+                  onSimulationComplete={() => handleOrderSimArrival(o)}
+                  onSimulationDivertPudo={() => toPudo(o)}
                 />
+
                 <p class="text-[11px] leading-snug text-muted-foreground">
                   Peta lengkap: titik awal {HUB_LABEL} → posisi kurir → tujuan {o.address.city}
                   ({distanceForCity(o.address.city)} km · ETA {etaForCity(o.address.city)} mnt).
