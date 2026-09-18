@@ -59,7 +59,6 @@
 
   const roleNav: Record<Role, NavItem[]> = {
     PUSAT: [
-      { label: "Nigi AI", href: "/dashboard/pusat/assistant", icon: "chat" },
       { label: "Overview", href: "/dashboard/pusat/overview", icon: "circle" },
       { label: "Executive Dashboard", href: "/dashboard/pusat/executive", icon: "grid" },
       { label: "Digital Twin", href: "/dashboard/pusat/digital-twin", icon: "compass" },
@@ -68,19 +67,19 @@
       { label: "Market Expansion ROI", href: "/dashboard/pusat/expansion", icon: "target" },
       { label: "EV Fleet BCA", href: "/dashboard/pusat/ev-bca", icon: "chart" },
       { label: "ROI & BCA", href: "/dashboard/pusat/roi", icon: "currency" },
-      { label: "Cost-Waterfall P&L", href: "/dashboard/pusat/pnl", icon: "coins" }
+      { label: "Cost-Waterfall P&L", href: "/dashboard/pusat/pnl", icon: "coins" },
+      { label: "Nigi AI", href: "/dashboard/pusat/assistant", icon: "chat" },
     ],
     HUB: [
-      { label: "Nigi AI", href: "/dashboard/hub/assistant", icon: "chat" },
       { label: "Overview", href: "/dashboard/hub/overview", icon: "circle" },
       { label: "Hub Dashboard", href: "/dashboard/hub/dashboard", icon: "globe" },
       { label: "Demand Forecast", href: "/dashboard/hub/forecast", icon: "chart" },
       { label: "Load Balancing", href: "/dashboard/hub/load-balance", icon: "compass" },
       { label: "Capacity Alert", href: "/dashboard/hub/capacity", icon: "bell" },
-      { label: "Peak-Surge Test", href: "/dashboard/hub/surge", icon: "activity" }
+      { label: "Peak-Surge Test", href: "/dashboard/hub/surge", icon: "activity" },
+      { label: "Nigi AI", href: "/dashboard/hub/assistant", icon: "chat" },
     ],
     KURIR: [
-      { label: "Nigi AI", href: "/dashboard/kurir/assistant", icon: "chat" },
       { label: "Overview", href: "/dashboard/kurir/overview", icon: "circle" },
       { label: "Tugas Pengantaran", href: "/dashboard/kurir/tasks", icon: "map" },
       { label: "Route Clustering", href: "/dashboard/kurir/routes", icon: "compass" },
@@ -89,16 +88,17 @@
       { label: "COD Cash Risk", href: "/dashboard/kurir/cod-cash", icon: "wallet" },
       { label: "Slot Confirmation", href: "/dashboard/kurir/slot", icon: "bell" },
       { label: "Digital Payment", href: "/dashboard/kurir/payment", icon: "shield" },
-      { label: "PUDO Network", href: "/dashboard/kurir/pudo", icon: "map" }
+      { label: "PUDO Network", href: "/dashboard/kurir/pudo", icon: "map" },
+      { label: "Nigi AI", href: "/dashboard/kurir/assistant", icon: "chat" },
     ],
     DATA: [
-      { label: "Nigi AI", href: "/dashboard/data/assistant", icon: "chat" },
       { label: "Overview", href: "/dashboard/data/overview", icon: "circle" },
       { label: "Address Intelligence", href: "/dashboard/data/address", icon: "map" },
       { label: "Complaint Monitor", href: "/dashboard/data/complaint", icon: "users" },
       { label: "Control Tower", href: "/dashboard/data/multimodal", icon: "compass" },
       { label: "Fleet & Emissions", href: "/dashboard/data/fleet", icon: "stack" },
-      { label: "EV Site Selection", href: "/dashboard/data/ev-sites", icon: "grad" }
+      { label: "EV Site Selection", href: "/dashboard/data/ev-sites", icon: "grad" },
+      { label: "Nigi AI", href: "/dashboard/data/assistant", icon: "chat" },
     ],
     CUSTOMER: [
       { label: "Dashboard", href: "/dashboard/customer/dashboard", icon: "chart", short: "Dashboard" },
