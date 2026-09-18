@@ -18,6 +18,8 @@ export interface Address {
   phone: string;
   street: string;
   city: string;
+  lat?: number;
+  lng?: number;
 }
 
 export type PaymentMethod = "COD" | "Transfer";
@@ -94,17 +96,90 @@ export interface ShopState {
   buyerId: string;
 }
 
+export const DEFAULT_ORDERS: Order[] = [
+  {
+    id: "ORD-BDO-101",
+    createdAt: Date.now() - 3600000,
+    items: [
+      { productId: "P-EL-01", name: "TWS Bluetooth Earbuds Pro", icon: "box", price: 189000, qty: 1 },
+      { productId: "P-CA-01", name: "Kopi Arabika Gunung Tilu 250g", icon: "box", price: 65000, qty: 2 }
+    ],
+    subtotal: 319000,
+    shipping: 18000,
+    total: 337000,
+    address: {
+      recipient: "Rian Hidayat",
+      phone: "081223344556",
+      street: "Jl. Braga No. 45, Sumur Bandung",
+      city: "Bandung",
+      lat: -6.91746,
+      lng: 107.61912
+    },
+    payment: "COD",
+    codScore: 0.35,
+    codDecision: "antar-normal",
+    status: "dikirim",
+    statusNote: "Kurir dalam perjalanan melintasi koridor Dago-Braga.",
+    courier: "Kurir Baits · BDO-02",
+    updatedAt: Date.now() - 1800000,
+    events: [
+      { at: Date.now() - 3600000, status: "dikemas", note: "Pesanan dikemas di Hub Bandung.", actor: "Sistem" },
+      { at: Date.now() - 2700000, status: "transit", note: "Sortir rute last-mile Bandung.", actor: "Kurir Baits · BDO-02" },
+      { at: Date.now() - 1800000, status: "dikirim", note: "Kurir dalam perjalanan melintasi koridor Dago-Braga.", actor: "Kurir Baits · BDO-02" }
+    ],
+    slot: "13:00-15:00",
+    codCollected: false,
+    routedToPudo: false,
+    presenceStatus: "di-rumah",
+    presenceAt: Date.now() - 1500000
+  },
+  {
+    id: "ORD-BGR-102",
+    createdAt: Date.now() - 7200000,
+    items: [
+      { productId: "P-EL-02", name: "Smartwatch Fitness Tracker", icon: "box", price: 245000, qty: 1 }
+    ],
+    subtotal: 245000,
+    shipping: 15000,
+    total: 260000,
+    address: {
+      recipient: "Sari Wulandari",
+      phone: "081234567890",
+      street: "Jl. Raya Pajajaran No. 12, Bogor Tengah",
+      city: "Bogor",
+      lat: -6.5971,
+      lng: 106.8060
+    },
+    payment: "COD",
+    codScore: 0.42,
+    codDecision: "pudo",
+    status: "transit",
+    statusNote: "Menunggu pemberangkatan ke titik klaster Bogor.",
+    courier: "Kurir Baits · JKT-04",
+    updatedAt: Date.now() - 3600000,
+    events: [
+      { at: Date.now() - 7200000, status: "dikemas", note: "Pesanan dikemas di Hub Jakarta.", actor: "Sistem" },
+      { at: Date.now() - 3600000, status: "transit", note: "Menunggu pemberangkatan ke titik klaster Bogor.", actor: "Kurir Baits · JKT-04" }
+    ],
+    slot: "15:00-17:00",
+    codCollected: false,
+    routedToPudo: false,
+    presenceStatus: null,
+    presenceAt: null
+  }
+];
+
 const STORAGE_KEY = "omnigistic-shop-v1";
 
 const EMPTY: ShopState = { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
 
 function load(): ShopState {
-  if (!browser) return { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
+  if (!browser) return { cart: [], address: null, orders: DEFAULT_ORDERS, buyerId: DEFAULT_PERSONA_ID };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
+    if (!raw) return { cart: [], address: null, orders: DEFAULT_ORDERS, buyerId: DEFAULT_PERSONA_ID };
     const parsed = JSON.parse(raw) as Partial<ShopState>;
-    const orders = (Array.isArray(parsed.orders) ? parsed.orders : []).map(normalizeOrder);
+    const orders = Array.isArray(parsed.orders) ? parsed.orders.map(normalizeOrder) : DEFAULT_ORDERS;
     return {
       cart: Array.isArray(parsed.cart) ? parsed.cart : [],
       address: parsed.address ?? null,
@@ -112,13 +187,13 @@ function load(): ShopState {
       buyerId: typeof parsed.buyerId === "string" ? parsed.buyerId : DEFAULT_PERSONA_ID,
     };
   } catch {
-    return { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
+    return { cart: [], address: null, orders: DEFAULT_ORDERS, buyerId: DEFAULT_PERSONA_ID };
   }
 }
 
 /**
  * Normalisasi pesanan dari localStorage agar kompatibel dengan skema lama
- * (sebelum ada slot/codCollected/routedToPudo/events).
+ * (sebelum ada slot/codCollected/routedToPudo/events/lat/lng).
  */
 function normalizeOrder(o: Partial<Order>): Order {
   const now = Date.now();
@@ -137,7 +212,16 @@ function normalizeOrder(o: Partial<Order>): Order {
     subtotal: o.subtotal ?? 0,
     shipping: o.shipping ?? 0,
     total: o.total ?? 0,
-    address: o.address ?? { recipient: "-", phone: "-", street: "-", city: "Jakarta" },
+    address: o.address
+      ? {
+          recipient: o.address.recipient ?? "-",
+          phone: o.address.phone ?? "-",
+          street: o.address.street ?? "-",
+          city: o.address.city ?? "Jakarta",
+          lat: typeof o.address.lat === "number" ? o.address.lat : undefined,
+          lng: typeof o.address.lng === "number" ? o.address.lng : undefined,
+        }
+      : { recipient: "-", phone: "-", street: "-", city: "Jakarta" },
     payment: o.payment ?? "Transfer",
     codScore: o.codScore ?? null,
     codDecision: o.codDecision ?? null,

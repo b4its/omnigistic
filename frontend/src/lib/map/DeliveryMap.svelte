@@ -17,6 +17,7 @@
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import {
     coordsForCity,
+    routeForCity,
     HUB_LABEL,
     etaForCity,
     distanceForCity,
@@ -40,6 +41,8 @@
     city?: string;
     originLabel?: string;
     destLabel?: string;
+    /** Koordinat tujuan spesifik [lat, lng] (mis. dari titik yang dipilih pembeli di peta). */
+    destCoord?: [number, number];
     /** Estimasi waktu tempuh total (menit). Default dari data kota. */
     etaMin?: number;
     height?: number | string;
@@ -80,6 +83,7 @@
     city = "Bogor",
     originLabel = HUB_LABEL,
     destLabel = "Alamat penerima",
+    destCoord,
     etaMin,
     height = 360,
     role = "",
@@ -151,9 +155,11 @@
   const pudos = $derived(showPudo ? pudosForCity(city) : []);
   const dropRec = $derived(showPudo ? pudoDropRecommendation(city) : null);
 
-  /** Geometri + metrik rute per kota (reaktif terhadap prop `city` dan pengalihan PUDO). */
+  /** Geometri + metrik rute per kota (reaktif terhadap prop `city`, `destCoord`, dan pengalihan PUDO). */
   const rgeo = $derived.by(() => {
-    let route: LL[] = coordsForCity(city);
+    let route: LL[] = destCoord
+      ? [coordsForCity(city)[0], ...routeForCity(city).via, destCoord]
+      : coordsForCity(city);
     if (simDiverted && dropRec) {
       route = [...route.slice(0, -1), dropRec.pudo.coord];
     }
@@ -1130,6 +1136,7 @@
             {city}
             {originLabel}
             {destLabel}
+            {destCoord}
             {etaMin}
             height="100%"
             {role}

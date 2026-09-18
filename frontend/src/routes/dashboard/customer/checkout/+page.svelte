@@ -4,7 +4,8 @@
   import Icon from "$lib/components/Icon.svelte";
   import { formatRupiah } from "$lib/shop/catalog";
   import { shop, cartDetail, shippingCost, buyerReputation, type ResolvedCartItem, type Address, type PaymentMethod } from "$lib/stores/shop";
-  import { CITIES } from "$lib/logistics";
+  import { CITIES, CITY_ROUTES, type City } from "$lib/logistics";
+  import CoordPicker from "$lib/map/CoordPicker.svelte";
   import { notify } from "$lib/toast";
   import { api, type CodRiskResult, type Hub } from "$lib/api";
   import type { Reputation } from "$lib/shop/reputation";
@@ -23,7 +24,17 @@
       items = d.items;
       subtotal = d.subtotal;
     });
-    const unsubShop = shop.subscribe((s) => (savedAddress = s.address));
+    const unsubShop = shop.subscribe((s) => {
+      savedAddress = s.address;
+      if (s.address) {
+        if (!recipient) recipient = s.address.recipient ?? "";
+        if (!phone) phone = s.address.phone ?? "";
+        if (!street) street = s.address.street ?? "";
+        if (s.address.city) city = s.address.city;
+        if (typeof s.address.lat === "number") selectedLat = s.address.lat;
+        if (typeof s.address.lng === "number") selectedLng = s.address.lng;
+      }
+    });
     const unsubRep = buyerReputation.subscribe((r) => (reputation = r));
     return () => {
       unsub();
@@ -37,6 +48,9 @@
   let phone = $state("");
   let street = $state("");
   let city = $state("Jakarta");
+  let selectedLat = $state<number | null>(null);
+  let selectedLng = $state<number | null>(null);
+  let showCoordMap = $state(false);
 
   // Metode bayar
   let payment = $state<PaymentMethod>("COD");
@@ -121,9 +135,34 @@
     if (m === "COD") void scoreCod();
   }
 
+  function onCityChange() {
+    const c = city as City;
+    if (CITY_ROUTES[c]) {
+      selectedLat = CITY_ROUTES[c].dest[0];
+      selectedLng = CITY_ROUTES[c].dest[1];
+    }
+  }
+
+  function getEffectiveCoord(): { lat: number; lng: number } {
+    const c = city as City;
+    const fallback = CITY_ROUTES[c]?.dest ?? CITY_ROUTES.Jakarta.dest;
+    return {
+      lat: selectedLat ?? fallback[0],
+      lng: selectedLng ?? fallback[1]
+    };
+  }
+
   function saveAddressIfNeeded(): boolean {
     if (!addressValid) return false;
-    shop.saveAddress({ recipient: recipient.trim(), phone: phone.trim(), street: street.trim(), city });
+    const coord = getEffectiveCoord();
+    shop.saveAddress({
+      recipient: recipient.trim(),
+      phone: phone.trim(),
+      street: street.trim(),
+      city,
+      lat: coord.lat,
+      lng: coord.lng
+    });
     return true;
   }
 
@@ -132,6 +171,7 @@
     if (payment === "COD" && !codResult) {
       await scoreCod();
     }
+    const coord = getEffectiveCoord();
     const orderItems = items.map((i) => ({
       productId: i.product.id,
       name: i.product.name,
@@ -144,7 +184,14 @@
       subtotal,
       shipping,
       total,
-      address: { recipient: recipient.trim(), phone: phone.trim(), street: street.trim(), city },
+      address: {
+        recipient: recipient.trim(),
+        phone: phone.trim(),
+        street: street.trim(),
+        city,
+        lat: coord.lat,
+        lng: coord.lng
+      },
       payment,
       codScore: codResult?.score ?? null,
       codDecision: codResult?.decision ?? null
@@ -214,15 +261,72 @@
               Alamat lengkap
               <textarea autocomplete="street-address" bind:value={street} rows="2" placeholder="Jl. Raya Jakarta-Bogor No.12, RT 03/RW 05" class="w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"></textarea>
             </label>
-            <label class="space-y-1.5 text-xs font-medium text-muted-foreground">
-              Kota
-              <select bind:value={city} class="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50">
-                {#each CITIES as c (c)}<option value={c}>{c}</option>{/each}
-              </select>
-            </label>
+            <!-- Pilihan Wilayah & Koordinat dari Peta -->
+            <div class="sm:col-span-2 space-y-3 border-t border-border pt-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <span class="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Icon name="map" cls="h-4 w-4 text-primary" /> Titik Lokasi &amp; Wilayah Pengantaran
+                  </span>
+                  <p class="text-[11px] text-muted-foreground">
+                    Tentukan titik presisi penjemputan/pengantaran kurir di peta (bukan sekadar memilih kota umum).
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onclick={() => (showCoordMap = !showCoordMap)}
+                  aria-expanded={showCoordMap}
+                  class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-accent"
+                >
+                  <Icon name="target" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" />
+                  <span>{showCoordMap ? "Tutup Peta Titik Koordinat" : "Pilih Koordinat dari Peta"}</span>
+                </button>
+              </div>
+
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label class="space-y-1.5 text-xs font-medium text-muted-foreground">
+                  Kota / Klaster Wilayah
+                  <select
+                    bind:value={city}
+                    onchange={onCityChange}
+                    class="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
+                  >
+                    {#each CITIES as c (c)}<option value={c}>{c}</option>{/each}
+                  </select>
+                </label>
+
+                <div class="space-y-1.5 text-xs font-medium text-muted-foreground">
+                  <span>Koordinat Titik Presisi</span>
+                  <div class="flex items-center justify-between rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-xs font-mono text-foreground">
+                    <span class="truncate">
+                      {#if selectedLat != null && selectedLng != null}
+                        {selectedLat.toFixed(5)}, {selectedLng.toFixed(5)}
+                      {:else}
+                        {CITY_ROUTES[city as City]?.dest[0] ?? "-6.20864"}, {CITY_ROUTES[city as City]?.dest[1] ?? "106.84566"}
+                      {/if}
+                    </span>
+                    <span class="rounded bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">GPS</span>
+                  </div>
+                </div>
+              </div>
+
+              {#if showCoordMap}
+                <CoordPicker
+                  bind:lat={selectedLat}
+                  bind:lng={selectedLng}
+                  bind:city
+                />
+              {/if}
+            </div>
           </div>
           {#if savedAddress}
-            <p class="text-xs text-muted-foreground">Tersimpan sebelumnya: {savedAddress.recipient} · {savedAddress.city}. Isi ulang untuk mengubah.</p>
+            <p class="text-xs text-muted-foreground">
+              Tersimpan sebelumnya: {savedAddress.recipient} · {savedAddress.city}
+              {#if savedAddress.lat != null && savedAddress.lng != null}
+                (GPS {savedAddress.lat.toFixed(4)}, {savedAddress.lng.toFixed(4)})
+              {/if}.
+              Isi ulang untuk mengubah.
+            </p>
           {/if}
         </section>
 
