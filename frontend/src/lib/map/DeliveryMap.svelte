@@ -104,6 +104,10 @@
   let legendOpen = $state(true);
   /** Legenda pada instance modal (layar penuh) — bisa dibuka/tutup sendiri. */
   let legendOpenFs = $state(true);
+  /** Bilah simulasi pengantaran riil: terbuka default (collapsible). */
+  let simWidgetOpen = $state(true);
+  /** Panel Route Intelligence (jalur tercepat): terbuka default (collapsible). */
+  let routeIntelOpen = $state(true);
 
   /** Modal layar-penuh: status buka + fokus terakhir (untuk dikembalikan). */
   let fullscreen = $state(false);
@@ -638,241 +642,305 @@
       <span>Perbesar</span>
     </button>
   {/if}
-
-  {#if routeIntel && !compact}
-    <!-- Panel Route Intelligence: jalur tercepat (kepadatan + efisiensi) -->
-    <div class="absolute right-2.5 top-12 z-[1000] w-[min(20rem,calc(100%-1rem))] rounded-xl border border-border bg-background/95 p-3 text-[12px] shadow-pop backdrop-blur">
-      <div class="mb-2 flex items-center justify-between gap-2">
-        <p class="flex items-center gap-1.5 font-semibold text-foreground">
-          <Icon name="route" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Jalur tercepat
-        </p>
-        {#if plan}
-          <span class="rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--bitcoin)]">−{plan.summary.timeSavedMin} mnt</span>
-        {/if}
-      </div>
-
-      {#if planFailed}
-        <p class="text-muted-foreground">Gagal memuat analisis jalur (backend offline). Rute dasar tetap ditampilkan.</p>
-      {:else if !plan}
-        <div class="h-16 animate-pulse rounded-lg bg-muted/50"></div>
-      {:else}
-        <!-- Kontrol kepadatan (jam sibuk) -->
-        <label class="block">
-          <span class="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            <span>Kepadatan</span><span>{density == null ? "profil kasus" : `${Math.round(density * 100)}%`}</span>
-          </span>
-          <input
-            type="range" min="0" max="1" step="0.1"
-            value={density ?? 0.5}
-            oninput={(e) => (density = Number((e.currentTarget as HTMLInputElement).value))}
-            aria-label="Tingkat kepadatan jalur"
-            class="mt-1 w-full accent-[var(--bitcoin)]"
-          />
-        </label>
-        <button type="button" onclick={() => (density = null)} class="mt-1 text-[10px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">Reset ke profil kasus</button>
-
-        <!-- Daftar kandidat jalur -->
-        <ul class="mt-2 space-y-1.5">
-          {#each candidates as c (c.key)}
-            <li>
-              <button
-                type="button"
-                onclick={() => (selectedKey = c.key)}
-                aria-pressed={selectedKey === c.key}
-                class="flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-colors {selectedKey === c.key ? 'border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)]' : 'border-border hover:bg-muted/50'}"
-              >
-                <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background:{densityColor(c.density)}"></span>
-                <span class="min-w-0 flex-1">
-                  <span class="flex items-center gap-1.5">
-                    <span class="truncate font-medium text-foreground">{c.label}</span>
-                    {#if c.key === plan.fastestKey}<span class="rounded bg-success px-1 text-[9px] font-bold text-success-foreground">tercepat</span>{/if}
-                    {#if c.key === plan.mostEfficientKey}<span class="rounded bg-[var(--gold)] px-1 text-[9px] font-bold text-[#030304]">efisien</span>{/if}
-                  </span>
-                  <span class="mt-0.5 block font-mono text-[10px] text-muted-foreground">
-                    {c.timeMin} mnt · {c.distanceKm} km · {c.effectiveSpeedKmh} km/j · padat {Math.round(c.density * 100)}%{#if c.toll} · tol{/if}
-                  </span>
-                </span>
-                <span class="shrink-0 text-right">
-                  <span class="block font-mono text-[11px] font-semibold tabular-nums text-foreground">{(c.efficiencyScore * 100).toFixed(0)}</span>
-                  <span class="block font-mono text-[8px] uppercase tracking-wider text-muted-foreground">skor</span>
-                </span>
-              </button>
-            </li>
-          {/each}
-        </ul>
-
-        {#if selected}
-          <p class="mt-2 rounded-lg bg-muted/50 px-2 py-1.5 text-[11px] text-muted-foreground">
-            <span class="font-medium text-foreground">Dipilih: {selected.label}.</span>
-            ETA {selected.timeMin} mnt · Rp{new Intl.NumberFormat("id-ID").format(selected.costIdr)} · {selected.co2G} g CO₂. Keandalan {(selected.reliability * 100).toFixed(0)}%.
-          </p>
-        {/if}
-        <p class="mt-1.5 text-[10px] italic text-muted-foreground">Kepadatan/kecepatan/biaya = asumsi tim; bukan data lalu lintas live.</p>
-      {/if}
-    </div>
-  {/if}
-
-  <!-- ── Bilah & Panel Kontrol Simulasi Pengantaran Riil ── -->
-  {#if showSimulation}
-    <div
-      class="absolute inset-x-2 bottom-2 z-[1001] rounded-xl border border-border bg-background/95 p-2 text-[12px] shadow-pop backdrop-blur"
-      role="region"
-      aria-label="Kontrol simulasi pengantaran riil"
-    >
-      <!-- Baris 1: Kontrol Playback, Kecepatan, dan Speedometer -->
-      <div class="flex flex-wrap items-center justify-between gap-1.5">
-        <div class="flex items-center gap-1.5">
-          <button
-            type="button"
-            onclick={toggleSimPlay}
-            aria-label={simPlaying ? "Jeda simulasi pengantaran" : "Mulai simulasi pengantaran"}
-            class="inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold shadow-sm transition-all {simPlaying ? 'bg-warning text-warning-foreground animate-pulse' : 'bg-primary text-primary-foreground hover:opacity-90'}"
-          >
-            {#if simPlaying}
-              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-current"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-              <span>Jeda</span>
-            {:else}
-              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-current"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-              <span>{simProgress >= 1 ? "Ulangi" : "Simulasi"}</span>
-            {/if}
-          </button>
-
-          <button
-            type="button"
-            onclick={resetSim}
-            aria-label="Reset simulasi"
-            title="Reset ke titik awal"
-            class="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-none stroke-current stroke-2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          </button>
-
-          <!-- Pilihan Kecepatan -->
-          <div class="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 font-mono text-[10.5px]">
-            {#each [1, 2, 5, 10] as sp}
-              <button
-                type="button"
-                onclick={() => (simSpeed = sp)}
-                aria-pressed={simSpeed === sp}
-                class="rounded px-1.5 py-0.5 font-semibold transition-colors {simSpeed === sp ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
-              >
-                {sp}×
-              </button>
-            {/each}
-          </div>
-        </div>
-
-        <!-- Telemetri Cepat: Kecepatan & Progres -->
-        <div class="flex items-center gap-1.5">
-          <span class="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10.5px] font-semibold tabular-nums text-foreground">
-            <span class="h-2 w-2 rounded-full {simPlaying ? 'bg-success animate-ping' : 'bg-muted-foreground'}"></span>
-            {simTelemetry.speedKmh} km/j
-          </span>
-          <span class="hidden font-mono text-[10.5px] text-muted-foreground sm:inline">
-            {Math.round(simProgress * 100)}% · {simTelemetry.distanceDoneKm}/{simTelemetry.distanceTotalKm} km
-          </span>
-          <button
-            type="button"
-            onclick={() => (simPanelExpanded = !simPanelExpanded)}
-            aria-expanded={simPanelExpanded}
-            class="inline-flex items-center gap-1 rounded-lg border border-border px-1.5 py-0.5 text-[10.5px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <Icon name="trend" cls="h-3 w-3" /> {simPanelExpanded ? "Tutup" : "Telemetri"}
-          </button>
-        </div>
-      </div>
-
-      <!-- Scrubber Progres Jalur Rute -->
-      <div class="mt-1.5 flex items-center gap-2">
-        <span class="font-mono text-[9.5px] text-muted-foreground">Hub</span>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.005"
-          value={simProgress}
-          oninput={handleScrub}
-          aria-label="Scrubber posisi kurir sepanjang rute"
-          class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary"
-        />
-        <span class="font-mono text-[9.5px] text-muted-foreground">{simDiverted ? "PUDO" : city}</span>
-      </div>
-
-      <!-- Detail Telemetri & Kondisi Lapangan (Collapsible) -->
-      {#if simPanelExpanded}
-        <div class="mt-2 space-y-1.5 border-t border-border pt-1.5 text-[11px]">
-          <div class="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-            <div class="rounded-lg bg-muted/40 px-2 py-1">
-              <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">ETA Tersisa</span>
-              <span class="font-mono font-semibold text-foreground">~{simTelemetry.etaRemainingMin} mnt</span>
-            </div>
-            <div class="rounded-lg bg-muted/40 px-2 py-1">
-              <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Sisa Jarak</span>
-              <span class="font-mono font-semibold text-foreground">{simTelemetry.distanceRemainingKm} km</span>
-            </div>
-            <div class="rounded-lg bg-muted/40 px-2 py-1">
-              <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Baterai EV</span>
-              <span class="font-mono font-semibold text-success-foreground">🔋 {simTelemetry.batteryPct}%</span>
-            </div>
-            <div class="rounded-lg bg-muted/40 px-2 py-1">
-              <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Hemat CO₂</span>
-              <span class="font-mono font-semibold text-primary">{simTelemetry.co2SavedG} g</span>
-            </div>
-          </div>
-
-          <!-- Segmen Jalan & Milestone Event -->
-          <div class="flex items-center justify-between rounded-lg bg-accent/30 px-2 py-1">
-            <span class="flex items-center gap-1.5 truncate font-medium text-foreground">
-              <Icon name="compass" cls="h-3 w-3 text-primary shrink-0" />
-              <span class="truncate">{simTelemetry.phase}</span>
-            </span>
-            {#if simTelemetry.event}
-              <span class="hidden truncate text-[10px] italic text-muted-foreground md:inline">{simTelemetry.event}</span>
-            {/if}
-          </div>
-
-          <!-- Kondisi Cuaca, Macet, dan Skenario Reroute PUDO -->
-          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-0.5">
-            <div class="flex flex-wrap items-center gap-1.5">
-              <div class="flex items-center gap-1">
-                <span class="text-[10px] text-muted-foreground">Cuaca:</span>
-                <button
-                  type="button"
-                  onclick={() => (simWeather = simWeather === "cerah" ? "hujan" : "cerah")}
-                  class="rounded-md border border-border px-1.5 py-0.5 text-[10.5px] font-semibold transition-colors {simWeather === 'hujan' ? 'bg-primary/15 text-primary border-primary/40' : 'bg-card text-foreground'}"
-                >
-                  {simWeather === "hujan" ? "🌧️ Hujan" : "☀️ Cerah"}
-                </button>
-              </div>
-
-              <div class="flex items-center gap-1">
-                <span class="text-[10px] text-muted-foreground">Lalin:</span>
-                <button
-                  type="button"
-                  onclick={() => (simTraffic = simTraffic === "lancar" ? "macet" : "lancar")}
-                  class="rounded-md border border-border px-1.5 py-0.5 text-[10.5px] font-semibold transition-colors {simTraffic === 'macet' ? 'bg-destructive/15 text-destructive-foreground border-destructive/40' : 'bg-card text-foreground'}"
-                >
-                  {simTraffic === "macet" ? "🔴 Macet" : "🟢 Lancar"}
-                </button>
-              </div>
-            </div>
-
-            {#if showPudo && dropRec}
-              <button
-                type="button"
-                onclick={toggleDivertPudo}
-                aria-pressed={simDiverted}
-                class="rounded-md border px-2 py-0.5 text-[10.5px] font-semibold transition-all {simDiverted ? 'border-purple-500 bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold' : 'border-border text-foreground hover:bg-accent'}"
-              >
-                {simDiverted ? "✓ Rute ke PUDO" : "Alihkan PUDO"}
-              </button>
-            {/if}
-          </div>
-        </div>
-      {/if}
-    </div>
-  {/if}
 </div>
+
+<!-- ── Widget 1: Bilah Kontrol & Telemetri Simulasi Pengantaran Riil (Di Luar Peta) ── -->
+{#if showSimulation}
+  <div
+    class="mt-3 rounded-2xl border border-border bg-card/90 p-3 text-[12px] shadow-sm backdrop-blur transition-all"
+    role="region"
+    aria-label="Kontrol simulasi pengantaran riil"
+  >
+    <!-- Header Widget: Judul, Status Live, dan Tombol Buka/Tutup -->
+    <div class="flex items-center justify-between gap-2 border-b border-border pb-2">
+      <div class="flex items-center gap-2">
+        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon name="route" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" />
+        </span>
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-foreground">Simulasi Pengantaran Riil</span>
+          <span class="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-mono text-[9.5px] font-semibold text-muted-foreground">
+            <span class="h-1.5 w-1.5 rounded-full {simPlaying ? 'bg-success animate-ping' : 'bg-muted-foreground'}"></span>
+            {simPlaying ? "BERJALAN" : "SIAP"}
+          </span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onclick={() => (simWidgetOpen = !simWidgetOpen)}
+        aria-expanded={simWidgetOpen}
+        aria-controls="sim-control-body"
+        aria-label={simWidgetOpen ? "Tutup bilah simulasi" : "Buka bilah simulasi"}
+        class="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        {#if simWidgetOpen}
+          <Icon name="x" cls="h-3 w-3" weight="bold" /> Tutup Bilah Simulasi
+        {:else}
+          <Icon name="route" cls="h-3 w-3 text-[var(--bitcoin)]" /> Buka Bilah Simulasi
+        {/if}
+      </button>
+    </div>
+
+    {#if simWidgetOpen}
+      <div id="sim-control-body" class="mt-2.5 space-y-2">
+        <!-- Baris 1: Kontrol Playback, Kecepatan, dan Speedometer -->
+        <div class="flex flex-wrap items-center justify-between gap-1.5">
+          <div class="flex items-center gap-1.5">
+            <button
+              type="button"
+              onclick={toggleSimPlay}
+              aria-label={simPlaying ? "Jeda simulasi pengantaran" : "Mulai simulasi pengantaran"}
+              class="inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold shadow-sm transition-all {simPlaying ? 'bg-warning text-warning-foreground animate-pulse' : 'bg-primary text-primary-foreground hover:opacity-90'}"
+            >
+              {#if simPlaying}
+                <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-current"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                <span>Jeda</span>
+              {:else}
+                <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-current"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+                <span>{simProgress >= 1 ? "Ulangi" : "Simulasi"}</span>
+              {/if}
+            </button>
+
+            <button
+              type="button"
+              onclick={resetSim}
+              aria-label="Reset simulasi"
+              title="Reset ke titik awal"
+              class="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-none stroke-current stroke-2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+
+            <!-- Pilihan Kecepatan -->
+            <div class="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 font-mono text-[10.5px]">
+              {#each [1, 2, 5, 10] as sp}
+                <button
+                  type="button"
+                  onclick={() => (simSpeed = sp)}
+                  aria-pressed={simSpeed === sp}
+                  class="rounded px-1.5 py-0.5 font-semibold transition-colors {simSpeed === sp ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+                >
+                  {sp}×
+                </button>
+              {/each}
+            </div>
+          </div>
+
+          <!-- Telemetri Cepat: Kecepatan & Progres -->
+          <div class="flex items-center gap-1.5">
+            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10.5px] font-semibold tabular-nums text-foreground">
+              <span class="h-2 w-2 rounded-full {simPlaying ? 'bg-success animate-ping' : 'bg-muted-foreground'}"></span>
+              {simTelemetry.speedKmh} km/j
+            </span>
+            <span class="hidden font-mono text-[10.5px] text-muted-foreground sm:inline">
+              {Math.round(simProgress * 100)}% · {simTelemetry.distanceDoneKm}/{simTelemetry.distanceTotalKm} km
+            </span>
+            <button
+              type="button"
+              onclick={() => (simPanelExpanded = !simPanelExpanded)}
+              aria-expanded={simPanelExpanded}
+              class="inline-flex items-center gap-1 rounded-lg border border-border px-1.5 py-0.5 text-[10.5px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <Icon name="trend" cls="h-3 w-3" /> {simPanelExpanded ? "Ringkas" : "Rincian"}
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrubber Progres Jalur Rute -->
+        <div class="flex items-center gap-2 pt-0.5">
+          <span class="font-mono text-[9.5px] text-muted-foreground">Hub</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.005"
+            value={simProgress}
+            oninput={handleScrub}
+            aria-label="Scrubber posisi kurir sepanjang rute"
+            class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary"
+          />
+          <span class="font-mono text-[9.5px] text-muted-foreground">{simDiverted ? "PUDO" : city}</span>
+        </div>
+
+        <!-- Detail Telemetri & Kondisi Lapangan -->
+        {#if simPanelExpanded}
+          <div class="space-y-2 border-t border-border pt-2 text-[11px]">
+            <div class="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+              <div class="rounded-lg bg-muted/40 px-2 py-1.5">
+                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">ETA Tersisa</span>
+                <span class="font-mono font-semibold text-foreground">~{simTelemetry.etaRemainingMin} mnt</span>
+              </div>
+              <div class="rounded-lg bg-muted/40 px-2 py-1.5">
+                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Sisa Jarak</span>
+                <span class="font-mono font-semibold text-foreground">{simTelemetry.distanceRemainingKm} km</span>
+              </div>
+              <div class="rounded-lg bg-muted/40 px-2 py-1.5">
+                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Baterai EV</span>
+                <span class="font-mono font-semibold text-success-foreground">🔋 {simTelemetry.batteryPct}%</span>
+              </div>
+              <div class="rounded-lg bg-muted/40 px-2 py-1.5">
+                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Hemat CO₂</span>
+                <span class="font-mono font-semibold text-primary">{simTelemetry.co2SavedG} g</span>
+              </div>
+            </div>
+
+            <!-- Segmen Jalan & Milestone Event -->
+            <div class="flex items-center justify-between rounded-lg bg-accent/30 px-2.5 py-1.5">
+              <span class="flex items-center gap-1.5 truncate font-medium text-foreground">
+                <Icon name="compass" cls="h-3.5 w-3.5 text-primary shrink-0" />
+                <span class="truncate">{simTelemetry.phase}</span>
+              </span>
+              {#if simTelemetry.event}
+                <span class="hidden truncate text-[10.5px] italic text-muted-foreground md:inline">{simTelemetry.event}</span>
+              {/if}
+            </div>
+
+            <!-- Kondisi Cuaca, Macet, dan Skenario Reroute PUDO -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+              <div class="flex flex-wrap items-center gap-2">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10.5px] text-muted-foreground">Cuaca:</span>
+                  <button
+                    type="button"
+                    onclick={() => (simWeather = simWeather === "cerah" ? "hujan" : "cerah")}
+                    class="rounded-md border border-border px-2 py-0.5 text-[10.5px] font-semibold transition-colors {simWeather === 'hujan' ? 'bg-primary/15 text-primary border-primary/40' : 'bg-card text-foreground'}"
+                  >
+                    {simWeather === "hujan" ? "🌧️ Hujan" : "☀️ Cerah"}
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10.5px] text-muted-foreground">Lalin:</span>
+                  <button
+                    type="button"
+                    onclick={() => (simTraffic = simTraffic === "lancar" ? "macet" : "lancar")}
+                    class="rounded-md border border-border px-2 py-0.5 text-[10.5px] font-semibold transition-colors {simTraffic === 'macet' ? 'bg-destructive/15 text-destructive-foreground border-destructive/40' : 'bg-card text-foreground'}"
+                  >
+                    {simTraffic === "macet" ? "🔴 Macet" : "🟢 Lancar"}
+                  </button>
+                </div>
+              </div>
+
+              {#if showPudo && dropRec}
+                <button
+                  type="button"
+                  onclick={toggleDivertPudo}
+                  aria-pressed={simDiverted}
+                  class="rounded-md border px-2.5 py-0.5 text-[10.5px] font-semibold transition-all {simDiverted ? 'border-purple-500 bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold' : 'border-border text-foreground hover:bg-accent'}"
+                >
+                  {simDiverted ? "✓ Rute ke PUDO" : "Alihkan PUDO"}
+                </button>
+              {/if}
+            </div>
+          </div>
+        {/if}
+      </div>
+    {/if}
+  </div>
+{/if}
+
+<!-- ── Widget 2: Analisis Jalur Tercepat / Route Intelligence (Di Luar Peta) ── -->
+{#if routeIntel && !compact}
+  <div
+    class="mt-3 rounded-2xl border border-border bg-card/90 p-3.5 text-[12px] shadow-sm backdrop-blur transition-all"
+    role="region"
+    aria-label="Panel jalur tercepat route intelligence"
+  >
+    <!-- Header Widget Route Intelligence: Judul + Penghematan + Tombol Buka/Tutup -->
+    <div class="flex items-center justify-between gap-2 border-b border-border pb-2">
+      <div class="flex items-center gap-2">
+        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon name="compass" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" />
+        </span>
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-foreground">Jalur tercepat</span>
+          {#if plan}
+            <span class="rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--bitcoin)]">−{plan.summary.timeSavedMin} mnt</span>
+          {/if}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onclick={() => (routeIntelOpen = !routeIntelOpen)}
+        aria-expanded={routeIntelOpen}
+        aria-controls="route-intel-body"
+        aria-label={routeIntelOpen ? "Tutup jalur tercepat" : "Buka jalur tercepat"}
+        class="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        {#if routeIntelOpen}
+          <Icon name="x" cls="h-3 w-3" weight="bold" /> Tutup Jalur Tercepat
+        {:else}
+          <Icon name="compass" cls="h-3 w-3 text-[var(--bitcoin)]" /> Buka Jalur Tercepat
+        {/if}
+      </button>
+    </div>
+
+    {#if routeIntelOpen}
+      <div id="route-intel-body" class="mt-2.5 space-y-2.5">
+        {#if planFailed}
+          <p class="text-muted-foreground">Gagal memuat analisis jalur (backend offline). Rute dasar tetap ditampilkan.</p>
+        {:else if !plan}
+          <div class="h-16 animate-pulse rounded-lg bg-muted/50"></div>
+        {:else}
+          <!-- Kontrol kepadatan (jam sibuk) -->
+          <label class="block">
+            <span class="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span>Kepadatan</span><span>{density == null ? "profil kasus" : `${Math.round(density * 100)}%`}</span>
+            </span>
+            <input
+              type="range" min="0" max="1" step="0.1"
+              value={density ?? 0.5}
+              oninput={(e) => (density = Number((e.currentTarget as HTMLInputElement).value))}
+              aria-label="Tingkat kepadatan jalur"
+              class="mt-1 w-full accent-[var(--bitcoin)]"
+            />
+          </label>
+          <button type="button" onclick={() => (density = null)} class="text-[10px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">Reset ke profil kasus</button>
+
+          <!-- Daftar kandidat jalur -->
+          <ul class="space-y-1.5">
+            {#each candidates as c (c.key)}
+              <li>
+                <button
+                  type="button"
+                  onclick={() => (selectedKey = c.key)}
+                  aria-pressed={selectedKey === c.key}
+                  class="flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-colors {selectedKey === c.key ? 'border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)]' : 'border-border hover:bg-muted/50'}"
+                >
+                  <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background:{densityColor(c.density)}"></span>
+                  <span class="min-w-0 flex-1">
+                    <span class="flex items-center gap-1.5">
+                      <span class="truncate font-medium text-foreground">{c.label}</span>
+                      {#if c.key === plan.fastestKey}<span class="rounded bg-success px-1 text-[9px] font-bold text-success-foreground">tercepat</span>{/if}
+                      {#if c.key === plan.mostEfficientKey}<span class="rounded bg-[var(--gold)] px-1 text-[9px] font-bold text-[#030304]">efisien</span>{/if}
+                    </span>
+                    <span class="mt-0.5 block font-mono text-[10px] text-muted-foreground">
+                      {c.timeMin} mnt · {c.distanceKm} km · {c.effectiveSpeedKmh} km/j · padat {Math.round(c.density * 100)}%{#if c.toll} · tol{/if}
+                    </span>
+                  </span>
+                  <span class="shrink-0 text-right">
+                    <span class="block font-mono text-[11px] font-semibold tabular-nums text-foreground">{(c.efficiencyScore * 100).toFixed(0)}</span>
+                    <span class="block font-mono text-[8px] uppercase tracking-wider text-muted-foreground">skor</span>
+                  </span>
+                </button>
+              </li>
+            {/each}
+          </ul>
+
+          {#if selected}
+            <p class="rounded-lg bg-muted/50 px-2.5 py-1.5 text-[11px] text-muted-foreground">
+              <span class="font-medium text-foreground">Dipilih: {selected.label}.</span>
+              ETA {selected.timeMin} mnt · Rp{new Intl.NumberFormat("id-ID").format(selected.costIdr)} · {selected.co2G} g CO₂. Keandalan {(selected.reliability * 100).toFixed(0)}%.
+            </p>
+          {/if}
+          <p class="text-[10px] italic text-muted-foreground">Kepadatan/kecepatan/biaya = asumsi tim; bukan data lalu lintas live.</p>
+        {/if}
+      </div>
+    {/if}
+  </div>
+{/if}
 
 <!-- ── Informasi Legenda di Luar Peta (Clean Map Architecture) ── -->
 {#if showLegend}

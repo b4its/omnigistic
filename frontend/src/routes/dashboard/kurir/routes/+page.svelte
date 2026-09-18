@@ -14,6 +14,7 @@
   let loaded = $state(false);
   let failed = $state(false);
   let selectedCity = $state<City>("Bogor");
+  let showRouteMapSection = $state(true);
 
 
   /** Aktivitas pengantaran nyata (cluster kurir dari pesanan aktual). */
@@ -81,44 +82,65 @@
   <section class="space-y-4 rounded-2xl border border-border bg-card p-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <p class="text-base font-semibold">Peta Rute &amp; Simulasi Pengantaran Kurir</p>
+        <div class="flex items-center gap-2">
+          <p class="text-base font-semibold">Peta Rute &amp; Simulasi Pengantaran Kurir</p>
+          <span class="rounded-full bg-primary/10 px-2.5 py-0.5 font-mono text-[10.5px] font-semibold text-primary">
+            Klaster {selectedCity}
+          </span>
+        </div>
         <p class="text-[13.5px] text-muted-foreground">
           Eksplorasi koridor pengantaran last-mile per wilayah. Jalankan simulasi untuk menganalisis waktu tempuh, kepadatan jalan, dan titik PUDO.
         </p>
       </div>
 
-      <!-- Tab Kota Klaster -->
-      <div class="flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/40 p-1">
-        {#each CITIES as c}
-          <button
-            type="button"
-            onclick={() => (selectedCity = c)}
-            aria-pressed={selectedCity === c}
-            class="rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors {selectedCity === c ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
-          >
-            {c}
-          </button>
-        {/each}
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Tab Kota Klaster -->
+        <div class="flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/40 p-1">
+          {#each CITIES as c}
+            <button
+              type="button"
+              onclick={() => (selectedCity = c)}
+              aria-pressed={selectedCity === c}
+              class="rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors {selectedCity === c ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+            >
+              {c}
+            </button>
+          {/each}
+        </div>
+
+        <!-- Tombol Buka/Tutup Seluruh Peta Rute & Simulasi -->
+        <button
+          type="button"
+          onclick={() => (showRouteMapSection = !showRouteMapSection)}
+          aria-expanded={showRouteMapSection}
+          aria-label={showRouteMapSection ? "Tutup Peta Rute & Simulasi" : "Buka Peta Rute & Simulasi"}
+          class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-accent"
+        >
+          <Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" />
+          <span>{showRouteMapSection ? "Tutup Peta Rute" : "Buka Peta Rute"}</span>
+        </button>
       </div>
     </div>
 
-    <!-- Peta DeliveryMap dengan Simulasi Aktif -->
-    <DeliveryMap
-      progress={0.35}
-      city={selectedCity}
-      originLabel={HUB_LABEL}
-      destLabel={`Klaster ${selectedCity}`}
-      etaMin={etaForCity(selectedCity)}
-      height={380}
-      role="KURIR"
-      routeIntel
-      showSimulation={true}
-      compact={false}
-    />
-    <p class="text-[11px] text-muted-foreground">
-      Rute {HUB_LABEL} → {selectedCity} ({distanceForCity(selectedCity)} km · perkiraan waktu tempuh normal {etaForCity(selectedCity)} menit).
-      Gunakan tombol <b>Simulasi</b> di bilah bawah peta untuk menjalankan telemetri riil.
-    </p>
+    {#if showRouteMapSection}
+      <!-- Peta DeliveryMap dengan Kanvas Bersih & Widget Eksternal -->
+      <DeliveryMap
+        progress={0.35}
+        city={selectedCity}
+        originLabel={HUB_LABEL}
+        destLabel={`Klaster ${selectedCity}`}
+        etaMin={etaForCity(selectedCity)}
+        height={400}
+        role="KURIR"
+        routeIntel
+        showSimulation={true}
+        compact={false}
+      />
+      <p class="text-[11px] text-muted-foreground">
+        Rute {HUB_LABEL} → {selectedCity} ({distanceForCity(selectedCity)} km · perkiraan waktu tempuh normal {etaForCity(selectedCity)} menit).
+        Bilah simulasi, analisis rute, dan legenda dapat dibuka-tutup secara mandiri di bawah peta.
+      </p>
+    {/if}
   </section>
 
   {#if failed && !route.length}
