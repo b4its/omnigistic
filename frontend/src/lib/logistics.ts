@@ -427,3 +427,100 @@ export const COD_CLUSTER_LABEL: Record<string, string> = {
   kuning: "Kuning · Sedang",
   merah: "Merah · Lambat",
 };
+
+/* ── Simulasi Telemetri Pengantaran Riil (Kurir & Peta) ─────────────── */
+
+export interface SimTelemetry {
+  distanceDoneKm: number;
+  distanceTotalKm: number;
+  distanceRemainingKm: number;
+  speedKmh: number;
+  etaRemainingMin: number;
+  elapsedMin: number;
+  batteryPct: number;
+  co2SavedG: number;
+  phase: string;
+  event: string | null;
+}
+
+/**
+ * Hitung metrik telemetri dinamis (kecepatan, jarak, waktu, baterai EV, status jalan)
+ * secara realtime untuk simulasi pengantaran kurir di peta.
+ */
+export function calculateSimTelemetry(
+  city: string,
+  progress: number,
+  weather: "cerah" | "hujan" | "badai" = "cerah",
+  traffic: "lancar" | "sedang" | "macet" = "lancar",
+  pudoDiverted = false,
+  vehicle: "ev_motor" | "ice_motor" = "ev_motor"
+): SimTelemetry {
+  const baseKm = distanceForCity(city);
+  const totalKm = pudoDiverted ? Math.round(baseKm * 0.85 * 10) / 10 : baseKm;
+  const frac = Math.max(0, Math.min(1, progress));
+  const doneKm = Math.round(totalKm * frac * 10) / 10;
+  const remKm = Math.max(0, Math.round((totalKm - doneKm) * 10) / 10);
+
+  const weatherSpeedMult = weather === "badai" ? 0.6 : weather === "hujan" ? 0.8 : 1.0;
+  const trafficSpeedMult = traffic === "macet" ? 0.55 : traffic === "sedang" ? 0.82 : 1.0;
+  const nominalSpeed = 36.0 * weatherSpeedMult * trafficSpeedMult;
+
+  // Segment variation
+  let segMult = 1.0;
+  let phase = "Keberangkatan";
+  if (frac < 0.12) {
+    segMult = 0.7;
+    phase = `Keberangkatan dari ${HUB_LABEL}`;
+  } else if (frac < 0.35) {
+    segMult = 1.05;
+    phase = "Jalur Arteri Utama & Akses Tol";
+  } else if (frac < 0.70) {
+    segMult = 1.18;
+    phase = "Koridor Cepat Tol Bebas Hambatan";
+  } else if (frac < 0.90) {
+    segMult = 0.88;
+    phase = `Memasuki Wilayah ${city}`;
+  } else if (frac < 1.0) {
+    segMult = 0.65;
+    phase = "Jalan Kolektor & Area Permukiman";
+  } else {
+    segMult = 0.0;
+    phase = pudoDiverted ? `Tiba di Gerai Mitra PUDO (${city})` : `Tiba di Alamat Penerima (${city})`;
+  }
+
+  const currentSpeed = frac >= 1.0 ? 0 : Math.round(nominalSpeed * segMult * 10) / 10;
+  const totalMin = Math.round((totalKm / (nominalSpeed || 20)) * 60);
+  const elapsedMin = Math.round(totalMin * frac);
+  const etaRemainingMin = Math.max(0, totalMin - elapsedMin);
+
+  // EV Battery: ~1.5% drop per km
+  const batteryPct = Math.max(5, Math.round((96 - doneKm * 1.5) * 10) / 10);
+  const co2SavedG = vehicle === "ev_motor" ? Math.round(doneKm * 72) : 0;
+
+  let event: string | null = null;
+  if (frac === 0) {
+    event = "Kurir siap di Hub. Telemetri aktif.";
+  } else if (frac >= 1.0) {
+    event = pudoDiverted ? "Kurir tiba di gerai PUDO mitra." : "Kurir tiba di alamat penerima! Paket siap diserahterimakan.";
+  } else if (pudoDiverted && frac > 0.5 && frac < 0.7) {
+    event = "Rute dialihkan ke titik PUDO terdekat (penerima tidak di rumah).";
+  } else if (weather === "hujan" && frac > 0.25 && frac < 0.45) {
+    event = "Cuaca hujan: kurir menurunkan kecepatan untuk keselamatan berkendara.";
+  } else if (traffic === "macet" && frac > 0.4 && frac < 0.65) {
+    event = "Kepadatan jalan tinggi: navigasi kurir mengarahkan ke koridor efisien.";
+  }
+
+  return {
+    distanceDoneKm: doneKm,
+    distanceTotalKm: totalKm,
+    distanceRemainingKm: remKm,
+    speedKmh: currentSpeed,
+    etaRemainingMin,
+    elapsedMin,
+    batteryPct,
+    co2SavedG,
+    phase,
+    event,
+  };
+}
+

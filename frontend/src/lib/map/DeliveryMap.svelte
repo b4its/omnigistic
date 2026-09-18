@@ -15,7 +15,21 @@
   import { themeStore } from "$lib/stores/theme";
   import Icon from "$lib/components/Icon.svelte";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
-  import { coordsForCity, HUB_LABEL, etaForCity, distanceForCity, pudosForCity, pudoDropRecommendation, PUDO_POINTS, PUDO_KIND_META, pudoCountByKind, pudoCityCount, type PudoKind } from "$lib/logistics";
+  import {
+    coordsForCity,
+    HUB_LABEL,
+    etaForCity,
+    distanceForCity,
+    pudosForCity,
+    pudoDropRecommendation,
+    PUDO_POINTS,
+    PUDO_KIND_META,
+    pudoCountByKind,
+    pudoCityCount,
+    calculateSimTelemetry,
+    type PudoKind,
+    type SimTelemetry
+  } from "$lib/logistics";
   import { api, type RoutePlanResult } from "$lib/api";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
 
@@ -51,9 +65,34 @@
      * Pewarnaan rute tetap aktif; panel lengkap tersedia lewat peta layar penuh.
      */
     compact?: boolean;
+    /** Aktifkan kontrol & telemetri simulasi pengantaran riil (default true). */
+    showSimulation?: boolean;
+    /** Callback saat progres simulasi bergerak (0..1). */
+    onProgressChange?: (progress: number) => void;
+    /** Callback saat simulasi mencapai 100% (tiba di tujuan). */
+    onSimulationComplete?: () => void;
+    /** Callback saat rute dialihkan ke titik PUDO. */
+    onSimulationDivertPudo?: () => void;
   }
 
-  let { progress = 0, city = "Bogor", originLabel = HUB_LABEL, destLabel = "Alamat penerima", etaMin, height = 360, role = "", showPudo = true, routeIntel = false, expandable = true, showLegend = true, compact = false }: Props = $props();
+  let {
+    progress = 0,
+    city = "Bogor",
+    originLabel = HUB_LABEL,
+    destLabel = "Alamat penerima",
+    etaMin,
+    height = 360,
+    role = "",
+    showPudo = true,
+    routeIntel = false,
+    expandable = true,
+    showLegend = true,
+    compact = false,
+    showSimulation = true,
+    onProgressChange,
+    onSimulationComplete,
+    onSimulationDivertPudo
+  }: Props = $props();
 
   /** true bila pengguna adalah kurir (PUDO = titik aksi, bukan sekadar info). */
   const isCourier = $derived(role.toUpperCase() === "KURIR");
@@ -81,21 +120,121 @@
 
   type LL = [number, number];
 
-  /** Geometri + metrik rute per kota (reaktif terhadap prop `city`). */
+  // ── Simulasi Pengantaran Riil (Kurir) ──────────────────────────────────
+  let simPlaying = $state(false);
+  let simSpeed = $state(1); // 1, 2, 5, 10
+  let simProgress = $state(0);
+  let simWeather = $state<"cerah" | "hujan" | "badai">("cerah");
+  let simTraffic = $state<"lancar" | "sedang" | "macet">("lancar");
+  let simDiverted = $state(false);
+  let simPanelExpanded = $state(false);
+  let simInitDone = false;
+  let simAnimId: number | null = null;
+  let lastTimestamp = 0;
+
+  $effect(() => {
+    if (!simInitDone) {
+      simProgress = progress;
+      simPanelExpanded = !compact;
+      simInitDone = true;
+    }
+  });
+
+
+  /** Titik PUDO di kota ini + rekomendasi drop terdekat dari tujuan. */
+  const pudos = $derived(showPudo ? pudosForCity(city) : []);
+  const dropRec = $derived(showPudo ? pudoDropRecommendation(city) : null);
+
+  /** Geometri + metrik rute per kota (reaktif terhadap prop `city` dan pengalihan PUDO). */
   const rgeo = $derived.by(() => {
-    const route: LL[] = coordsForCity(city);
+    let route: LL[] = coordsForCity(city);
+    if (simDiverted && dropRec) {
+      route = [...route.slice(0, -1), dropRec.pudo.coord];
+    }
     const segLen: number[] = [];
     for (let i = 1; i < route.length; i++) segLen.push(haversine(route[i - 1], route[i]));
     const total = segLen.reduce((s, d) => s + d, 0) || 1;
     return { route, segLen, total, origin: route[0], dest: route[route.length - 1] };
   });
+
   /** ETA total (menit): prop eksplisit bila ada, jika tidak dari data kota. */
   const tripMin = $derived(etaMin ?? etaForCity(city));
   const tripKm = $derived(distanceForCity(city));
 
-  /** Titik PUDO di kota ini + rekomendasi drop terdekat dari tujuan. */
-  const pudos = $derived(showPudo ? pudosForCity(city) : []);
-  const dropRec = $derived(showPudo ? pudoDropRecommendation(city) : null);
+  const simTelemetry = $derived(
+    calculateSimTelemetry(city, simProgress, simWeather, simTraffic, simDiverted)
+  );
+
+  function simStep(timestamp: number) {
+    if (!simPlaying) return;
+    if (!lastTimestamp) lastTimestamp = timestamp;
+    const dtMs = timestamp - lastTimestamp;
+    lastTimestamp = timestamp;
+
+    const baseTripSeconds = 30; // basis durasi simulasi (detik)
+    const weatherMult = simWeather === "hujan" ? 0.78 : simWeather === "badai" ? 0.55 : 1.0;
+    const trafficMult = simTraffic === "macet" ? 0.52 : simTraffic === "sedang" ? 0.8 : 1.0;
+    const rate = (1 / (baseTripSeconds / (weatherMult * trafficMult))) * simSpeed;
+
+    const nextP = Math.min(1.0, simProgress + (dtMs / 1000) * rate);
+    simProgress = nextP;
+    paint(nextP);
+    onProgressChange?.(nextP);
+
+    if (nextP >= 1.0) {
+      simPlaying = false;
+      simAnimId = null;
+      onSimulationComplete?.();
+    } else {
+      simAnimId = requestAnimationFrame(simStep);
+    }
+  }
+
+  function toggleSimPlay() {
+    if (simPlaying) {
+      simPlaying = false;
+      if (simAnimId) cancelAnimationFrame(simAnimId);
+      simAnimId = null;
+    } else {
+      if (simProgress >= 1.0) {
+        simProgress = 0;
+        paint(0);
+        onProgressChange?.(0);
+      }
+      simPlaying = true;
+      lastTimestamp = 0;
+      simAnimId = requestAnimationFrame(simStep);
+    }
+  }
+
+  function resetSim() {
+    simPlaying = false;
+    if (simAnimId) cancelAnimationFrame(simAnimId);
+    simAnimId = null;
+    simProgress = 0;
+    simDiverted = false;
+    paint(0);
+    onProgressChange?.(0);
+  }
+
+  function handleScrub(e: Event) {
+    const val = Number((e.currentTarget as HTMLInputElement).value);
+    simProgress = val;
+    paint(val);
+    onProgressChange?.(val);
+    if (val >= 1.0 && simPlaying) {
+      simPlaying = false;
+      if (simAnimId) cancelAnimationFrame(simAnimId);
+      simAnimId = null;
+      onSimulationComplete?.();
+    }
+  }
+
+  function toggleDivertPudo() {
+    simDiverted = !simDiverted;
+    onSimulationDivertPudo?.();
+  }
+
 
   /** Warna PUDO per KATEGORI mitra (minimarket/pos/agen/komunitas). */
   function pudoKindStyle(kind: PudoKind): { color: string; fill: string } {
@@ -210,14 +349,20 @@
     traveled.setLatLngs(sliceUpTo(frac) as unknown as LeafletNS.LatLngExpression[]);
     courierMk.setLatLng(pointAt(frac) as unknown as LeafletNS.LatLngExpression);
     const pct = Math.round(frac * 100);
-    const km = Math.round(frac * tripKm * 10) / 10;
-    const etaLeft = Math.max(0, Math.round(tripMin * (1 - frac)));
+    const km = Math.round(frac * simTelemetry.distanceTotalKm * 10) / 10;
+    const etaLeft = simTelemetry.etaRemainingMin;
+    const targetLabel = simDiverted && dropRec ? `Gerai PUDO (${dropRec.pudo.name})` : destLabel;
     try {
-      courierMk.setTooltipContent(frac >= 1 ? `Tiba · ${destLabel}` : `Kurir · ${pct}% · ~${km} km · ETA ~${etaLeft} mnt`);
+      courierMk.setTooltipContent(
+        frac >= 1
+          ? `Tiba · ${targetLabel}`
+          : `Kurir · ${pct}% · ~${km} km · ${simTelemetry.speedKmh} km/j · ETA ~${etaLeft} mnt`
+      );
     } catch {
       /* noop */
     }
   }
+
 
   let map: LeafletNS.Map | null = null;
   let cleanupTheme: (() => void) | null = null;
@@ -335,6 +480,8 @@
   }
 
   function teardownMap() {
+    if (simAnimId) cancelAnimationFrame(simAnimId);
+    simAnimId = null;
     buildSeq++; // batalkan build async yang masih berjalan
     cleanupTheme?.();
     cleanupTheme = null;
@@ -357,6 +504,7 @@
     // disposed dikelola di luar agar $effect rebuild tak dianggap unmount.
     return () => {
       window.removeEventListener("keydown", onKey);
+      if (simAnimId) cancelAnimationFrame(simAnimId);
       disposed = true;
       teardownMap();
     };
@@ -371,10 +519,10 @@
     };
   });
 
-  // Bangun ulang peta saat identitas rute berubah (city/showPudo/role), saat
+  // Bangun ulang peta saat identitas rute berubah (city/showPudo/role/simDiverted), saat
   // Route Intelligence berubah (kandidat/jalur terpilih/kepadatan), & saat el siap.
   $effect(() => {
-    const ident = `${city}|${showPudo}|${role}|${routeIntel ? selectedKey ?? "" : ""}|${candidates.length}`;
+    const ident = `${city}|${showPudo}|${role}|${routeIntel ? selectedKey ?? "" : ""}|${candidates.length}|${simDiverted}`;
     const el = mapEl;
     if (!el) return;
     void ident; // jadikan dependensi eksplisit
@@ -391,10 +539,14 @@
     void loadPlan();
   });
 
-  // Kurir bergerak ketika progress berubah.
+  // Kurir bergerak ketika progress berubah dari luar (hanya jika simulasi internal tidak berjalan).
   $effect(() => {
-    paint(progress);
+    if (!simPlaying) {
+      simProgress = progress;
+      paint(progress);
+    }
   });
+
 </script>
 
 <div class="relative isolate z-0 w-full overflow-hidden rounded-2xl border border-border" style="height:{height}px">
@@ -561,7 +713,7 @@
   {/if}
 
   {#if showPudo && dropRec}
-    <div class="pointer-events-none absolute bottom-2 left-2 z-[1000] max-w-[calc(100%-1rem)] rounded-lg border border-[#7c3aed]/40 bg-background/95 px-3 py-2 text-[12px] shadow-pop">
+    <div class="pointer-events-none absolute {showSimulation ? (simPanelExpanded ? 'bottom-40' : 'bottom-16') : 'bottom-2'} left-2 z-[1000] max-w-[calc(100%-1rem)] rounded-lg border border-[#7c3aed]/40 bg-background/95 px-3 py-2 text-[12px] shadow-pop transition-all">
       <p class="font-semibold text-foreground">
         {#if isCourier}Titik drop paket rekomendasi{:else}PUDO terdekat untuk penerima{/if}
       </p>
@@ -579,12 +731,174 @@
       onclick={openFullscreen}
       aria-label="Perbesar peta ke layar penuh"
       title="Perbesar peta (layar penuh)"
-      class="absolute bottom-2 right-2 z-[1000] inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/95 px-3 py-2 text-[12px] font-semibold text-foreground shadow-pop backdrop-blur transition-colors hover:bg-accent"
+      class="absolute {showSimulation ? (simPanelExpanded ? 'bottom-40' : 'bottom-16') : 'bottom-2'} right-2 z-[1000] inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/95 px-3 py-2 text-[12px] font-semibold text-foreground shadow-pop backdrop-blur transition-all hover:bg-accent"
     >
       <Icon name="layers" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Perbesar
     </button>
   {/if}
+
+  <!-- ── Bilah & Panel Kontrol Simulasi Pengantaran Riil ── -->
+  {#if showSimulation}
+    <div
+      class="absolute inset-x-2 bottom-2 z-[1001] rounded-xl border border-border bg-background/95 p-2 text-[12px] shadow-pop backdrop-blur"
+      role="region"
+      aria-label="Kontrol simulasi pengantaran riil"
+    >
+      <!-- Baris 1: Kontrol Playback, Kecepatan, dan Speedometer -->
+      <div class="flex flex-wrap items-center justify-between gap-1.5">
+        <div class="flex items-center gap-1.5">
+          <button
+            type="button"
+            onclick={toggleSimPlay}
+            aria-label={simPlaying ? "Jeda simulasi pengantaran" : "Mulai simulasi pengantaran"}
+            class="inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold shadow-sm transition-all {simPlaying ? 'bg-warning text-warning-foreground animate-pulse' : 'bg-primary text-primary-foreground hover:opacity-90'}"
+          >
+            {#if simPlaying}
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-current"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              <span>Jeda</span>
+            {:else}
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-current"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+              <span>{simProgress >= 1 ? "Ulangi" : "Simulasi"}</span>
+            {/if}
+          </button>
+
+          <button
+            type="button"
+            onclick={resetSim}
+            aria-label="Reset simulasi"
+            title="Reset ke titik awal"
+            class="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-none stroke-current stroke-2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+
+          <!-- Pilihan Kecepatan -->
+          <div class="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 font-mono text-[10.5px]">
+            {#each [1, 2, 5, 10] as sp}
+              <button
+                type="button"
+                onclick={() => (simSpeed = sp)}
+                aria-pressed={simSpeed === sp}
+                class="rounded px-1.5 py-0.5 font-semibold transition-colors {simSpeed === sp ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+              >
+                {sp}×
+              </button>
+            {/each}
+          </div>
+        </div>
+
+        <!-- Telemetri Cepat: Kecepatan & Progres -->
+        <div class="flex items-center gap-1.5">
+          <span class="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10.5px] font-semibold tabular-nums text-foreground">
+            <span class="h-2 w-2 rounded-full {simPlaying ? 'bg-success animate-ping' : 'bg-muted-foreground'}"></span>
+            {simTelemetry.speedKmh} km/j
+          </span>
+          <span class="hidden font-mono text-[10.5px] text-muted-foreground sm:inline">
+            {Math.round(simProgress * 100)}% · {simTelemetry.distanceDoneKm}/{simTelemetry.distanceTotalKm} km
+          </span>
+          <button
+            type="button"
+            onclick={() => (simPanelExpanded = !simPanelExpanded)}
+            aria-expanded={simPanelExpanded}
+            class="inline-flex items-center gap-1 rounded-lg border border-border px-1.5 py-0.5 text-[10.5px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <Icon name="trend" cls="h-3 w-3" /> {simPanelExpanded ? "Tutup" : "Telemetri"}
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrubber Progres Jalur Rute -->
+      <div class="mt-1.5 flex items-center gap-2">
+        <span class="font-mono text-[9.5px] text-muted-foreground">Hub</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.005"
+          value={simProgress}
+          oninput={handleScrub}
+          aria-label="Scrubber posisi kurir sepanjang rute"
+          class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary"
+        />
+        <span class="font-mono text-[9.5px] text-muted-foreground">{simDiverted ? "PUDO" : city}</span>
+      </div>
+
+      <!-- Detail Telemetri & Kondisi Lapangan (Collapsible) -->
+      {#if simPanelExpanded}
+        <div class="mt-2 space-y-1.5 border-t border-border pt-1.5 text-[11px]">
+          <div class="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+            <div class="rounded-lg bg-muted/40 px-2 py-1">
+              <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">ETA Tersisa</span>
+              <span class="font-mono font-semibold text-foreground">~{simTelemetry.etaRemainingMin} mnt</span>
+            </div>
+            <div class="rounded-lg bg-muted/40 px-2 py-1">
+              <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Sisa Jarak</span>
+              <span class="font-mono font-semibold text-foreground">{simTelemetry.distanceRemainingKm} km</span>
+            </div>
+            <div class="rounded-lg bg-muted/40 px-2 py-1">
+              <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Baterai EV</span>
+              <span class="font-mono font-semibold text-success-foreground">🔋 {simTelemetry.batteryPct}%</span>
+            </div>
+            <div class="rounded-lg bg-muted/40 px-2 py-1">
+              <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Hemat CO₂</span>
+              <span class="font-mono font-semibold text-primary">{simTelemetry.co2SavedG} g</span>
+            </div>
+          </div>
+
+          <!-- Segmen Jalan & Milestone Event -->
+          <div class="flex items-center justify-between rounded-lg bg-accent/30 px-2 py-1">
+            <span class="flex items-center gap-1.5 truncate font-medium text-foreground">
+              <Icon name="compass" cls="h-3 w-3 text-primary shrink-0" />
+              <span class="truncate">{simTelemetry.phase}</span>
+            </span>
+            {#if simTelemetry.event}
+              <span class="hidden truncate text-[10px] italic text-muted-foreground md:inline">{simTelemetry.event}</span>
+            {/if}
+          </div>
+
+          <!-- Kondisi Cuaca, Macet, dan Skenario Reroute PUDO -->
+          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-0.5">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-muted-foreground">Cuaca:</span>
+                <button
+                  type="button"
+                  onclick={() => (simWeather = simWeather === "cerah" ? "hujan" : "cerah")}
+                  class="rounded-md border border-border px-1.5 py-0.5 text-[10.5px] font-semibold transition-colors {simWeather === 'hujan' ? 'bg-primary/15 text-primary border-primary/40' : 'bg-card text-foreground'}"
+                >
+                  {simWeather === "hujan" ? "🌧️ Hujan" : "☀️ Cerah"}
+                </button>
+              </div>
+
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-muted-foreground">Lalin:</span>
+                <button
+                  type="button"
+                  onclick={() => (simTraffic = simTraffic === "lancar" ? "macet" : "lancar")}
+                  class="rounded-md border border-border px-1.5 py-0.5 text-[10.5px] font-semibold transition-colors {simTraffic === 'macet' ? 'bg-destructive/15 text-destructive-foreground border-destructive/40' : 'bg-card text-foreground'}"
+                >
+                  {simTraffic === "macet" ? "🔴 Macet" : "🟢 Lancar"}
+                </button>
+              </div>
+            </div>
+
+            {#if showPudo && dropRec}
+              <button
+                type="button"
+                onclick={toggleDivertPudo}
+                aria-pressed={simDiverted}
+                class="rounded-md border px-2 py-0.5 text-[10.5px] font-semibold transition-all {simDiverted ? 'border-purple-500 bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold' : 'border-border text-foreground hover:bg-accent'}"
+              >
+                {simDiverted ? "✓ Rute ke PUDO" : "Alihkan PUDO"}
+              </button>
+            {/if}
+          </div>
+        </div>
+      {/if}
+    </div>
+  {/if}
 </div>
+
 
 {#if expandable && fullscreen}
   <!-- Modal peta layar penuh: peta penuh tanpa gangguan + legenda collapsible -->
@@ -634,14 +948,17 @@
             {originLabel}
             {destLabel}
             {etaMin}
-            height={420}
+            height={500}
             {role}
             {showPudo}
             {routeIntel}
             expandable={false}
             showLegend={false}
+            showSimulation={showSimulation}
+            compact={false}
           />
         {/key}
+
       </div>
       {#if legendOpenFs}
         <aside class="w-[18rem] max-w-[40vw] shrink-0 overflow-y-auto border-l border-border bg-card p-4 text-[12px]">

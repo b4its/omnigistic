@@ -837,6 +837,58 @@ export interface RoutePlanResult {
   candidates: RouteCandidate[];
 }
 
+export interface DeliverySimWaypoint {
+  step: number;
+  progress: number;
+  distanceCoveredKm: number;
+  distanceRemainingKm: number;
+  speedKmh: number;
+  elapsedMin: number;
+  etaRemainingMin: number;
+  batteryPct: number | null;
+  phase: string;
+  event: string | null;
+}
+
+export interface DeliverySimResult {
+  engine: string;
+  note: string;
+  inputs: {
+    city: string;
+    distanceKm: number;
+    effectiveKm: number;
+    savedDistanceKm: number;
+    weather: string;
+    traffic: string;
+    vehicle: string;
+    pudoDiverted: boolean;
+    stepsCount: number;
+  };
+  summary: {
+    totalDistanceKm: number;
+    totalDurationMin: number;
+    effectiveSpeedKmh: number;
+    energyKwhUsed: number;
+    fuelLitersUsed: number;
+    co2SavedG: number;
+    weatherLabel: string;
+    trafficDensity: number;
+    pudoDiverted: boolean;
+  };
+  waypoints: DeliverySimWaypoint[];
+}
+
+export interface DeliverySimRequest {
+  distance_km: number;
+  city?: string;
+  weather?: "cerah" | "hujan" | "badai";
+  traffic?: "lancar" | "sedang" | "macet";
+  vehicle?: "ev_motor" | "ice_motor";
+  pudo_divert?: boolean;
+  steps_count?: number;
+}
+
+
 export const api = {
   hubs: () => get<Hub[]>("/api/hubs"),
   regions: () => get<string[]>("/api/regions"),
@@ -907,7 +959,9 @@ export const api = {
   pnlWaterfall: (includeSustainability = true) =>
     get<PnlResult>("/ml/pnl/waterfall?include_sustainability=" + (includeSustainability ? "true" : "false")),
   routePlan: (body: { distance_km: number; density_override?: number | null; base_speed_kmh?: number }) =>
-    post<RoutePlanResult>("/ml/route/plan", body)
+    post<RoutePlanResult>("/ml/route/plan", body),
+  routeSimulate: (body: DeliverySimRequest) =>
+    post<DeliverySimResult>("/ml/route/simulate", body)
 };
 
 export const online = writable(false);
