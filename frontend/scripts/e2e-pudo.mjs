@@ -104,18 +104,63 @@ try {
     R((await leafletShapeCount()) >= 5, "customer/orders: marker PUDO tergambar", `shapes=${await leafletShapeCount()}`);
   }
 
-  // ── 3. pusat/utilization: HubMap dengan overlay PUDO ──
+  // ── 3. pusat/utilization: HubMap dengan overlay PUDO + interaktif ──
   await goto("/dashboard/pusat/utilization");
   text = await page.locator("body").innerText();
   R((await page.locator(".leaflet-container").count()) >= 1, "pusat/utilization: peta hub tampil");
   R(/PUDO mitra per region/i.test(text) || /PUDO mitra/i.test(text), "pusat/utilization: legenda PUDO mitra tampil");
-  // Legenda sebaran PUDO per-region (33 titik, 6 region).
+  // Legenda sebaran PUDO per-region — jumlah titik dibaca dinamis (bukan angka usang).
   const hubLegend = await page.locator("#hub-legend").innerText().catch(() => "");
   R(/PUDO mitra per region/i.test(hubLegend), "pusat/utilization: legenda sebaran per-region tampil");
-  R(/33 titik/i.test(hubLegend), "pusat/utilization: total 33 titik PUDO", "");
+  const legendCount = Number((hubLegend.match(/(\d+)\s*titik/i) || [])[1] || 0);
+  // Jumlah per-region (Java · 32, dst) bila dijumlahkan harus = total titik pada header legenda.
+  const regionNums = [...hubLegend.matchAll(/·\s*(\d+)/g)].map((m) => Number(m[1]));
+  const regionSum = regionNums.reduce((s, n) => s + n, 0);
+  R(legendCount > 0 && legendCount === regionSum, "pusat/utilization: jumlah titik PUDO di legenda = total per-region", `total=${legendCount} sum=${regionSum}`);
   R(/Java/.test(hubLegend) && /Maluku & Papua/.test(hubLegend) && /Kalimantan/.test(hubLegend), "pusat/utilization: 6 region tercantum di legenda");
   const shapesHub = await leafletShapeCount();
   R(shapesHub >= 30, "pusat/utilization: marker hub + PUDO (nasional) tergambar", `shapes=${shapesHub}`);
+
+  // ── 3b. Interaktivitas peta hub: daftar, pilih, filter, sort, reset-view ──
+  const listRows = page.locator("#hub-list li button");
+  const totalRows = await listRows.count();
+  R(totalRows >= 20, "pusat/utilization: panel daftar hub terisi", `rows=${totalRows}`);
+  // Klik baris daftar → hub terpilih (aria-pressed) + kartu detail muncul.
+  await listRows.nth(2).click();
+  await page.waitForTimeout(500);
+  R((await page.locator('#hub-list li button[aria-pressed="true"]').count()) === 1, "pusat/utilization: klik daftar menandai hub terpilih");
+  const bodyAfterPick = await page.locator("body").innerText();
+  R(/Peringkat/i.test(bodyAfterPick) && /Pangsa nasional/i.test(bodyAfterPick), "pusat/utilization: kartu detail hub menampilkan peringkat & pangsa nasional");
+  // Filter tier overload menyaring daftar (jumlah baris berkurang) + insight defisit.
+  await page.getByRole("button", { name: /Overload/ }).first().click();
+  await page.waitForTimeout(400);
+  const overloaded = await page.locator("#hub-list li button").count();
+  R(overloaded >= 1 && overloaded < totalRows, "pusat/utilization: filter overload menyaring daftar", `rows=${overloaded} < ${totalRows}`);
+  R(/hub overload/i.test(await page.locator("body").innerText()), "pusat/utilization: insight defisit beban tampil");
+  // Sort daftar: ubah ke Nama → baris tersaring urut alfabetis (naik).
+  const sortSel = page.getByRole("combobox", { name: "Urutkan daftar hub" });
+  R((await sortSel.count()) > 0, "pusat/utilization: kontrol urut daftar tersedia");
+  if (await sortSel.count()) {
+    await sortSel.selectOption("name");
+    await page.waitForTimeout(300);
+    const names = await page.locator("#hub-list li button span.truncate").allInnerTexts();
+    const sortedOk = names.every((n, i) => i === 0 || names[i - 1].localeCompare(n, "id") <= 0);
+    R(names.length > 1 && sortedOk, "pusat/utilization: urut nama mengurutkan daftar alfabetis", `n=${names.length} top=${names[0]}`);
+  }
+  // Reset filter → tombol "Semua hub" mengembalikan tampilan nasional (tanpa error).
+  const resetBtn = page.getByRole("button", { name: "Reset" }).first();
+  if (await resetBtn.count()) {
+    await resetBtn.click();
+    await page.waitForTimeout(300);
+  }
+  R((await page.locator("#hub-list li button").count()) === totalRows, "pusat/utilization: reset filter memulihkan seluruh daftar");
+  const fitAllBtn = page.getByRole("button", { name: /Lihat semua hub/ }).first();
+  R((await fitAllBtn.count()) > 0, "pusat/utilization: tombol 'Semua hub' (reset view) tersedia");
+  if (await fitAllBtn.count()) {
+    await fitAllBtn.click();
+    await page.waitForTimeout(500);
+    R((await page.locator(".leaflet-container").count()) >= 1, "pusat/utilization: reset view tetap menampilkan peta (tanpa error)");
+  }
 
   // ── 4. data/address: AddressMap dengan titik PUDO ──
   await goto("/dashboard/data/address", 3000);
