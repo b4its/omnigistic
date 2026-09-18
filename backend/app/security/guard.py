@@ -115,10 +115,10 @@ def filter_output(text: str | None) -> str:
         # Buang baris tabel markdown (pipe penuh).
         if re.match(r"^\s*\|", line) or re.search(r"\|[\w\s.]+\|\s*$", line):
             continue
-        # Terima baris kosong, bullet, heading, angka, atau teks biasa (termasuk
-        # yang ber-indent) — abaikan hanya indentasi spasi di awal saat mencocokkan.
-        if line.strip() and not re.match(r"^(?:[-*•]\s|>\s|#{1,3}\s|\d+[.)]\s|\S)", line.strip()):
-            continue
+        # Baris lain (kosong, bullet, heading, angka, atau teks biasa termasuk yang
+        # ber-indent) DIPERTAHANKAN. (Dulu ada filter "buang baris non-daftar" yang
+        # tak pernah aktif — alternasi diakhiri `\S` sehingga selalu cocok — kini
+        # dihapus agar perilaku = niat.) Hanya baris ekstrem (>1500 char) dibuang.
         if len(line.strip()) < 1500:
             out.append(line)
     return "\n".join(out)

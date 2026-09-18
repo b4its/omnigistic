@@ -31,7 +31,9 @@ _ROLE_SUGGESTIONS = {
 
 
 def default_suggestions(role: str) -> list[str]:
-    return _ROLE_SUGGESTIONS.get((role or "").upper(), _DEFAULT_SUGGESTIONS)
+    """Salinan daftar saran untuk role — copy agar respons tak meng-*alias* list
+    modul (mutasi di satu respons tidak merusak respons lain)."""
+    return list(_ROLE_SUGGESTIONS.get((role or "").upper(), _DEFAULT_SUGGESTIONS))
 
 
 class ChatBody(BaseModel):

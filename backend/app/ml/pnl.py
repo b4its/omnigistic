@@ -45,7 +45,7 @@ LEVERS: list[dict[str, Any]] = [
         "frac": 0.045,
         "co2Pct": 18.4,
         "mechanism": "Rute non-ekspres dialihkan ke laut/kapal (murah + emisi rendah).",
-        "evidence": "Modal-Shift Optimizer: hemat biaya & emisi pada 11 koridor.",
+        "evidence": "Modal-Shift Optimizer: hemat biaya & emisi pada koridor yang berpindah moda.",
     },
     {
         "lever": "Hilangkan idle time COD",
@@ -122,7 +122,12 @@ def cost_waterfall(include_sustainability: bool = True) -> dict[str, Any]:
         steps.append({
             "lever": name,
             "dimension": dim,
+            # savingPct = fraksi terhadap DIMENSI tuas (shipping/fulfilment/cost) —
+            # berbeda antar tuas. savingPctOfCost = terhadap SELURUH biaya (basis sama,
+            # bisa dibandingkan lintas tuas). Keduanya diekspos agar tak menyesatkan.
+            "baseT": round(base, 2),
             "savingPct": round(frac * 100, 1),
+            "savingPctOfCost": round(saving / base_cost * 100, 2) if base_cost else 0.0,
             "savingT": round(saving, 3),
             "costAfterT": round(running, 3),
         })

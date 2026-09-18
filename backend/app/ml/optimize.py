@@ -165,8 +165,9 @@ def optimize_load_balance(
         "engine": "transportation-heuristic (greedy cheapest-link-first)",
         "note": (
             "Biaya = indeks relatif antar-region (proxy prototipe), bukan tarif nyata. "
-            f"Kendala: headroom tujuan + lantai aman {floor:.0f}%, maks {max_frac * 100:.0f}% dialihkan "
-            f"(ambang kritis {crit:.0f}%, sumber ber-utilisasi ≥ {warn:.0f}%)."
+            f"Kendala: sumber = hub ber-utilisasi > {crit:.0f}% (ambang kritis); "
+            f"penerima = hub ber-utilisasi < {warn:.0f}% (headroom); lantai aman {floor:.0f}%, "
+            f"maks {max_frac * 100:.0f}% dialihkan."
         ),
         "thresholds": {"critical": crit, "safeFloor": floor, "maxDivertFrac": max_frac, "warnUtil": warn},
         "summary": {

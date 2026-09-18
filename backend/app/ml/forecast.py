@@ -89,7 +89,7 @@ def _in_sample_fit() -> dict:
     overall = sum(series) / n if n else 0.0
     seasonal = [(v / overall) if overall else 1.0 for v in series]
     xs = list(range(n))
-    mean_x = sum(xs) / n
+    mean_x = sum(xs) / n if n else 0.0
     denom = sum((x - mean_x) ** 2 for x in xs) or 1.0
     slope = sum((x - mean_x) * (series[i] - overall) for i, x in enumerate(xs)) / denom
     intercept = overall - slope * mean_x

@@ -45,18 +45,22 @@ DEFAULT_SLA_HOURS = 48.0
 
 # Koridor antar-region (jarak km perkiraan; konteks geografi kasus).
 # Origin = hub Jawa (Jakarta) sebagai titik konsolidasi nasional.
+# `current` = moda yang dipakai GC SEKARANG (asumsi tim — mencerminkan pola
+# "cost naik lebih cepat dari sales": ekspres/udara dominan di lan jauh).
+# Optimizer mencari moda lebih murah/bersih yang masih memenuhi SLA → saving =
+# peralihan dari moda insiden ini.
 _CORRIDORS = [
-    {"toRegion": "Java", "dest": "Bandung", "distanceKm": 148.0, "options": ["darat"]},
-    {"toRegion": "Java", "dest": "Surabaya", "distanceKm": 782.0, "options": ["darat"]},
-    {"toRegion": "Sumatra", "dest": "Medan", "distanceKm": 1900.0, "options": ["darat", "laut", "udara"]},
-    {"toRegion": "Sumatra", "dest": "Palembang", "distanceKm": 560.0, "options": ["darat", "udara"]},
-    {"toRegion": "Kalimantan", "dest": "Balikpapan", "distanceKm": 1250.0, "options": ["laut", "udara"]},
-    {"toRegion": "Kalimantan", "dest": "Banjarmasin", "distanceKm": 1100.0, "options": ["laut", "udara"]},
-    {"toRegion": "Sulawesi", "dest": "Makassar", "distanceKm": 1400.0, "options": ["laut", "udara"]},
-    {"toRegion": "Sulawesi", "dest": "Manado", "distanceKm": 2200.0, "options": ["laut", "udara"]},
-    {"toRegion": "Bali & Nusa Tenggara", "dest": "Denpasar", "distanceKm": 950.0, "options": ["darat", "laut", "udara"]},
-    {"toRegion": "Maluku & Papua", "dest": "Ambon", "distanceKm": 2400.0, "options": ["laut", "udara"]},
-    {"toRegion": "Maluku & Papua", "dest": "Jayapura", "distanceKm": 3800.0, "options": ["laut", "udara"]},
+    {"toRegion": "Java", "dest": "Bandung", "distanceKm": 148.0, "options": ["darat", "laut", "udara"], "current": "darat"},
+    {"toRegion": "Java", "dest": "Surabaya", "distanceKm": 782.0, "options": ["darat", "laut", "udara"], "current": "darat"},
+    {"toRegion": "Sumatra", "dest": "Medan", "distanceKm": 1900.0, "options": ["darat", "laut", "udara"], "current": "udara"},
+    {"toRegion": "Sumatra", "dest": "Palembang", "distanceKm": 560.0, "options": ["darat", "udara"], "current": "udara"},
+    {"toRegion": "Kalimantan", "dest": "Balikpapan", "distanceKm": 1250.0, "options": ["laut", "udara"], "current": "udara"},
+    {"toRegion": "Kalimantan", "dest": "Banjarmasin", "distanceKm": 1100.0, "options": ["laut", "udara"], "current": "udara"},
+    {"toRegion": "Sulawesi", "dest": "Makassar", "distanceKm": 1400.0, "options": ["laut", "udara"], "current": "udara"},
+    {"toRegion": "Sulawesi", "dest": "Manado", "distanceKm": 2200.0, "options": ["laut", "udara"], "current": "udara"},
+    {"toRegion": "Bali & Nusa Tenggara", "dest": "Denpasar", "distanceKm": 950.0, "options": ["darat", "laut", "udara"], "current": "udara"},
+    {"toRegion": "Maluku & Papua", "dest": "Ambon", "distanceKm": 2400.0, "options": ["laut", "udara"], "current": "udara"},
+    {"toRegion": "Maluku & Papua", "dest": "Jayapura", "distanceKm": 3800.0, "options": ["laut", "udara"], "current": "udara"},
 ]
 
 
@@ -114,6 +118,7 @@ def optimize_corridors(
     total_co2_base = 0.0
     total_co2_opt = 0.0
     sla_infeasible = 0  # jumlah koridor yang tak punya opsi memenuhi SLA
+    shifted_routes = 0  # jumlah koridor yang benar-benar berpindah moda
 
     for c in _CORRIDORS:
         if filter_rejected:
@@ -143,24 +148,32 @@ def optimize_corridors(
             )
             x["withinSla"] = x["etaHours"] <= sla_hours
 
-        # Kendala SLA KERAS: pilih hanya opsi yang memenuhi SLA. Bila tak ada opsi
-        # yang memenuhi, pilih yang ETA-nya paling dekat lalu tandai pelanggaran
-        # (transparan) — alih-alih diam-diam mengabaikan SLA.
-        feasible = [x for x in metrics if x["withinSla"]]
-        if feasible:
-            chosen = max(feasible, key=lambda x: x["score"])
-        else:
-            chosen = min(metrics, key=lambda x: x["etaHours"])
-            sla_infeasible += 1
+        # Baseline = moda INSIDEN eksplisit per koridor (`c["current"]`), yaitu cara
+        # GC mengirim koridor ini SEKARANG (asumsi tim: ekspres/udara dominan di lan
+        # jauh → akar "cost naik > sales"). saving = penghematan dari peralihan nyata.
+        incumbent_key = c.get("current") or c["options"][0]
+        baseline = next((x for x in metrics if x["mode"] == incumbent_key), metrics[0])
 
-        # Baseline = moda default (darat bila ada; jika tidak, opsi termahal-tercepat?).
-        # Kita pakai profil "express": opsi tercepat (biasanya udara) sebagai pembanding,
-        # karena strategi default ekspres mendominasi saat ini.
-        baseline = min(metrics, key=lambda x: x["etaHours"])
-        total_cost_base += baseline["costPerPkgIdr"]
-        total_co2_base += baseline["co2GPerPkg"]
-        total_cost_opt += chosen["costPerPkgIdr"]
-        total_co2_opt += chosen["co2GPerPkg"]
+        # Kendala SLA: kandidat = opsi yang memenuhi SLA. Moda INSIDEN selalu
+        # dianggap layak (tak masuk akal "melanggar SLA" dgn moda yang justru dipakai
+        # sekarang) → SLA jadi target peningkatan, bukan pemicu pindah ke moda mahal.
+        feasible = [x for x in metrics if x["withinSla"] or x["mode"] == baseline["mode"]]
+        chosen = max(feasible, key=lambda x: x["score"])
+        # SLA hanya benar-benar tak terpenuhi bila moda terbaik PUN masih > SLA.
+        if not chosen["withinSla"]:
+            sla_infeasible += 1
+        changed = chosen["mode"] != baseline["mode"]
+        # Agregat hanya menjumlah koridor yang BENAR-BENAR berpindah moda, agar
+        # persentase saving tidak "diencerkan" koridor yang tak berubah.
+        baseline_cost = baseline["costPerPkgIdr"]
+        baseline_co2 = baseline["co2GPerPkg"]
+        if changed:
+            total_cost_base += baseline_cost
+            total_co2_base += baseline_co2
+        total_cost_opt += chosen["costPerPkgIdr"] if changed else 0.0
+        total_co2_opt += chosen["co2GPerPkg"] if changed else 0.0
+        if changed:
+            shifted_routes += 1
 
         rows.append(
             {
@@ -170,6 +183,7 @@ def optimize_corridors(
                 "options": metrics,
                 "baseline": {"mode": baseline["mode"], "label": baseline["label"], "costPerPkgIdr": baseline["costPerPkgIdr"], "co2GPerPkg": baseline["co2GPerPkg"], "etaHours": baseline["etaHours"]},
                 "chosen": {"mode": chosen["mode"], "label": chosen["label"], "costPerPkgIdr": chosen["costPerPkgIdr"], "co2GPerPkg": chosen["co2GPerPkg"], "etaHours": chosen["etaHours"], "score": chosen["score"], "withinSla": chosen["withinSla"]},
+                "changed": changed,
                 # saving = baseline − chosen (POSITIF = hemat biaya/emisi).
                 "saving": {
                     "costPerPkgIdr": baseline["costPerPkgIdr"] - chosen["costPerPkgIdr"],
@@ -187,7 +201,8 @@ def optimize_corridors(
         "engine": "Modal-Shift Optimizer (cost + emission + speed, kendala SLA)",
         "note": (
             "Biaya/emisi/kecepatan per moda = ASUMSI TIM (dokumen kasus tidak memuat tarif). "
-            "Jarak koridor mengikuti geografi 23 hub. Baseline = opsi tercepat (profil ekspres)."
+            "Jarak koridor mengikuti geografi 23 hub. Baseline = moda default (insiden) tiap "
+            "koridor; persentase hemat hanya menjumlah koridor yang benar-benar berpindah moda."
         ),
         "weights": {k: round(v, 3) for k, v in w.items()},
         "slaHours": sla_hours,
@@ -195,12 +210,16 @@ def optimize_corridors(
         "routes": rows,
         "summary": {
             "routes": len(rows),
+            "routesShifted": shifted_routes,
             "costSavingPct": cost_saving_pct,
             "co2SavingPct": co2_saving_pct,
-            "totalCostPerPkgIdr": round(total_cost_opt),
-            "baselineCostPerPkgIdr": round(total_cost_base),
-            "totalCo2PerPkgG": round(total_co2_opt),
-            "baselineCo2PerPkgG": round(total_co2_base),
+            # Nama jujur: ini INDEKS (jumlah biaya-per-paket lintas koridor, bobot
+            # jarak berbeda) — bukan "biaya per paket" tunggal. Ditampilkan hanya
+            # untuk perbandingan relatif baseline vs optimum.
+            "totalCostIndexIdr": round(total_cost_opt),
+            "baselineCostIndexIdr": round(total_cost_base),
+            "totalCo2IndexG": round(total_co2_opt),
+            "baselineCo2IndexG": round(total_co2_base),
             "modeMix": _mode_mix(rows),
             "slaInfeasibleRoutes": sla_infeasible,
             "filterRejected": filter_rejected,
