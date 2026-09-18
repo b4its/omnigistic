@@ -1,7 +1,9 @@
 /** ECharts option helpers — semua pakai token CSS (light & dark) seperti ChartTooltip lama. */
 import type { EChartsOption } from "echarts";
 
-const FONT = "'Plus Jakarta Sans', 'Instrument Sans', sans-serif";
+// Font grafik = token font-sans aplikasi (Inter) agar teks chart selaras dgn UI,
+// bukan nama font hardcoded yang berbeda dari sistem desain.
+const FONT = "var(--font-sans, ui-sans-serif, system-ui, sans-serif)";
 
 function baseTooltip(): Record<string, unknown> {
   return {

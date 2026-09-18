@@ -198,7 +198,7 @@
     <div class="relative">
       <button
         type="button"
-        aria-label={notifs ? `Notifikasi, ${notifs} belum dibaca` : "Notifikasi"}
+        aria-label={notifs ? `Pembaruan, ${notifs} item` : "Pembaruan"}
         aria-expanded={openPop === "notif"}
         onclick={() => (openPop = openPop === "notif" ? null : "notif")}
         class="relative flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary"
@@ -211,8 +211,8 @@
       {#if openPop === "notif"}
         <div class="absolute right-0 top-[calc(100%+8px)] z-[9999] w-72 rounded-xl border border-border bg-card shadow-pop">
           <div class="flex items-center justify-between border-b border-border px-4 py-2.5">
-            <span class="text-sm font-semibold">Notifikasi</span>
-            <span class="text-xs text-muted-foreground">{notifs} baru</span>
+            <span class="text-sm font-semibold">Pembaruan</span>
+            <span class="text-xs text-muted-foreground">{notifs} item</span>
           </div>
           <ul class="max-h-64 overflow-y-auto text-xs">
             {#if notifs > 0}
@@ -220,7 +220,7 @@
                 <li class="flex gap-2 border-b border-border px-4 py-3 last:border-0"><span>{n}</span></li>
               {/each}
             {:else}
-              <li class="px-4 py-6 text-center text-muted-foreground">Semua sudah dibaca</li>
+              <li class="px-4 py-6 text-center text-muted-foreground">Belum ada pembaruan</li>
             {/if}
           </ul>
         </div>

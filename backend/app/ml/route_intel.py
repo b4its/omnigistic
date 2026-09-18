@@ -22,6 +22,7 @@ tersedia, kalau tidak memakai jarak yang dikirim klien.
 """
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from app.ml.metrics import clamp
@@ -71,15 +72,23 @@ def plan_route(
     """
     base_km = clamp(distance_km, 0.1, 5_000.0, 10.0)
     base_speed = clamp(base_speed_kmh, 5.0, 120.0, _BASE_SPEED_KMH)
+    # Normalisasi override SEKALI: None/NaN/Inf → None (tanpa override); nilai lain
+    # dijepit 0..1. Di-echo dari hasil normalisasi (bukan nilai mentah) → cegah
+    # NaN/Inf merusak serialisasi JSON.
+    override: float | None = None
+    if density_override is not None:
+        cand = clamp(density_override, 0.0, 1.0, float("nan"))
+        override = None if not math.isfinite(cand) else cand
 
     candidates: list[dict[str, Any]] = []
     for p in _CANDIDATE_PROFILES:
         # Kepadatan efektif: override menggeser seluruh kandidat, tapi jalur
         # berkapadatan dasar lebih rendah tetap relatif lebih lengang.
-        density = clamp(density_override, 0.0, 1.0, p["density"]) if density_override is not None else p["density"]
-        if density_override is not None:
+        if override is not None:
             # pertahankan gradien antar-kandidat di sekitar override.
-            density = clamp((density + p["density"]) / 2, 0.0, 1.0, p["density"])
+            density = clamp((override + p["density"]) / 2, 0.0, 1.0, p["density"])
+        else:
+            density = p["density"]
 
         route_km = base_km * p["extraKm"]
         free_speed = base_speed * p["speedFactor"]
@@ -145,7 +154,7 @@ def plan_route(
         "inputs": {
             "distanceKm": round(base_km, 2),
             "baseSpeedKmh": round(base_speed, 1),
-            "densityOverride": density_override,
+            "densityOverride": override,
         },
         "recommended": recommended["key"],
         "fastestKey": fastest["key"],

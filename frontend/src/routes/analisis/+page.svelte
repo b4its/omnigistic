@@ -102,8 +102,8 @@
         (audit ? fmt(audit.regionSummary.find((r) => r.region === "Java")?.avgUtilizationPct ?? 69.4) : "69,4") +
         "%) tetap Direct Operation karena skala ekonomi. Timur under-utilisasi (Kalimantan/Sulawesi/Maluku) jadi kandidat sponsor bertahap.",
       evidence: [
-        `Optimizer mengalihkan ${optimize ? fmt(optimize.summary.totalMovedM) + "M paket/hari" : "0,31M paket/hari"} dari hub overload ke hub ber-headroom.`,
-        `Utilisasi timur naik ${optimize ? fmt(optimize.summary.eastAvgUtilBefore) + "% → " + fmt(optimize.summary.eastAvgUtilAfter) + "%" : "41,5% → 63,6%"}.`,
+        `Optimizer mengalihkan ${optimize ? fmt(optimize.summary.totalMovedM) + "M paket/hari" : "0,07M paket/hari (estimasi kasus)"} dari hub overload ke hub ber-headroom.`,
+        `Utilisasi timur naik ${optimize ? fmt(optimize.summary.eastAvgUtilBefore) + "% → " + fmt(optimize.summary.eastAvgUtilAfter) + "%" : "41,5% → 50,0% (estimasi kasus)"}.`,
         "3 region bertanda 'kandidat sponsor' (Kalimantan, Sulawesi, Maluku & Papua) berbasis utilisasi <50%.",
       ],
       link: "/dashboard/pusat/digital-twin",
@@ -170,7 +170,7 @@
       evidence: [
         "Fulfilment +54,9% vs Net Sales +48,7% (2020→2023): biaya tumbuh lebih cepat dari pendapatan.",
         "Network partner tumbuh 23,9× (20→478) tetapi outlet hanya 3,3× — kompleksitas melonjak.",
-        "Optimizer membebaskan kapasitas tanpa capex baru (utilisasi timur +" + (optimize ? fmt(optimize.summary.eastAvgUtilAfter - optimize.summary.eastAvgUtilBefore) : "22,1") + " poin).",
+        "Optimizer membebaskan kapasitas tanpa capex baru (utilisasi timur +" + (optimize ? fmt(optimize.summary.eastAvgUtilAfter - optimize.summary.eastAvgUtilBefore) : "8,5") + " poin).",
       ],
       link: "/dashboard/pusat/roi",
       linkLabel: "Buka ROI & BCA",

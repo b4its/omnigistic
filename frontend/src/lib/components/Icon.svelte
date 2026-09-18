@@ -1,11 +1,14 @@
 <script lang="ts">
   import type { IconName } from "$lib/icon-names";
 
-  export let name: IconName = "circle";
-  export let cls = "h-5 w-5";
-  export let weight: "fill" | "regular" | "bold" | "duotone" = "regular";
-  /** Gaya inline opsional (mis. `color:var(--bitcoin)`). */
-  export let style = "";
+  interface Props {
+    name?: IconName;
+    cls?: string;
+    weight?: "fill" | "regular" | "bold" | "duotone";
+    /** Gaya inline opsional (mis. `color:var(--bitcoin)`). */
+    style?: string;
+  }
+  let { name = "circle", cls = "h-5 w-5", weight = "regular", style = "" }: Props = $props();
 
   const d: Record<IconName, string> = {
     circle: "M128 96a32 32 0 1 1-32 32 32 32 0 0 1 32-32Zm0-24a56 56 0 1 0 56 56 56 56 0 0 0-56-56Z",

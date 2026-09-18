@@ -20,12 +20,12 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
-from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN, clamp, unit_economics
+from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN, VARIABLE_COST_FRAC, clamp, unit_economics
 
 # Capex ekspansi per hub (asumsi tim, IDR) — perluasan kapasitas/menambah outlet.
 _CAPEX_PER_HUB_IDR = 50_000_000_000       # Rp50 M/hub (asumsi tim, pilot: hub+armada)
-# Porsi biaya tetap vs variabel dari total biaya Table 3 (asumsi tim).
-_VARIABLE_COST_FRAC = 0.70
+# Porsi biaya tetap vs variabel dari total biaya Table 3 → dari SATU sumber
+# (metrics.VARIABLE_COST_FRAC) agar tak drift dgn sponsor.py.
 # Target utilisasi aman pasca-ekspansi (headroom terserap sampai ini, asumsi tim).
 _TARGET_UTIL = 0.75
 # Laju tangkap headroom per tahun (asumsi tim): headroom tak terisi instan — dibatasi
@@ -47,7 +47,7 @@ def _unit_economics() -> dict[str, float]:
     sales_per = ue["revenuePerParcelIdr"]
     cost_per = ue["costPerParcelIdr"]
     gross_margin = sales_per - cost_per
-    variable_cost_per = cost_per * _VARIABLE_COST_FRAC
+    variable_cost_per = cost_per * VARIABLE_COST_FRAC
     # Kontribusi: revenue − biaya VARIABEL inkremental (fixed cost tak berubah).
     contrib_margin = sales_per - variable_cost_per
     return {

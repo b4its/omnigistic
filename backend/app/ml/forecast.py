@@ -17,6 +17,28 @@ _EVENTS = [
     {"label": "Pemulihan pasca-shock", "months": ["Nov","Dec"], "boost": 1.05},
 ]
 
+# Batas skala event (simulasi). 0 = event dimatikan, 1 = boost kasus apa adanya.
+# Dijepit 0..3 agar input liar (mis. 1e6 atau negatif) tak menghasilkan demand
+# absurd / membalik arah event. Angka ini = kebijakan prototipe (asumsi tim).
+_EVENT_SCALE_MIN = 0.0
+_EVENT_SCALE_MAX = 3.0
+
+
+def _sanitize_event_scale(event_scale: dict[str, float] | None) -> dict[str, float]:
+    """Jepit tiap skala event ke rentang sah + buang label tak dikenal; NaN/None → 1.
+
+    Menjamin nilai yang dikembalikan (echo) selalu JSON-aman & terbatas, sehingga
+    tak ada lagi 500 akibat NaN/Infinity dan tak ada demand nonsense.
+    """
+    out: dict[str, float] = {}
+    known = {e["label"] for e in _EVENTS}
+    for k, v in (event_scale or {}).items():
+        key = str(k)
+        if key not in known:
+            continue
+        out[key] = clamp(v, _EVENT_SCALE_MIN, _EVENT_SCALE_MAX, 1.0)
+    return out
+
 
 def _base_series() -> list[float]:
     data = load()
@@ -107,9 +129,10 @@ def forecast_next_12(
     base_year: int = 2024,
 ) -> dict[str, Any]:
     horizon = int(clamp(horizon, 1, 24, 12))
+    scale = _sanitize_event_scale(event_scale)  # jepit & JSON-aman (NaN-safe)
     series = _base_series()
     vals = _seasonal_decomp(series, horizon)
-    proj = _apply_events(vals, event_scale, base_year)
+    proj = _apply_events(vals, scale, base_year)
     peak = max(proj, key=lambda x: x["totalM"])
     trough = min(proj, key=lambda x: x["totalM"])
     totals = [p["totalM"] for p in proj]
@@ -118,7 +141,8 @@ def forecast_next_12(
         "note": "Prototipe presentasi — 12 titik 2023 + kalender promo/regulasi; proyeksi indikatif 2024.",
         "dataPoints": len(series),
         "horizon": horizon,
-        "eventScale": event_scale or {e["label"]: 1.0 for e in _EVENTS},
+        "eventScale": {**{e["label"]: 1.0 for e in _EVENTS}, **scale},
+        "eventScaleBounds": {"min": _EVENT_SCALE_MIN, "max": _EVENT_SCALE_MAX},
         "eventCatalog": [{"label": e["label"], "months": e["months"], "boost": e["boost"]} for e in _EVENTS],
         "projection": proj,
         "peak": {"month": peak["month"], "label": peak["label"], "totalM": peak["totalM"]},

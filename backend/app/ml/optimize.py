@@ -163,7 +163,11 @@ def optimize_load_balance(
 
     return {
         "engine": "transportation-heuristic (greedy cheapest-link-first)",
-        "note": "Biaya = indeks relatif antar-region (proxy prototipe), bukan tarif nyata. Kendala: headroom tujuan, lantai aman 60%, maks 35% dialihkan.",
+        "note": (
+            "Biaya = indeks relatif antar-region (proxy prototipe), bukan tarif nyata. "
+            f"Kendala: headroom tujuan + lantai aman {floor:.0f}%, maks {max_frac * 100:.0f}% dialihkan "
+            f"(ambang kritis {crit:.0f}%, sumber ber-utilisasi ≥ {warn:.0f}%)."
+        ),
         "thresholds": {"critical": crit, "safeFloor": floor, "maxDivertFrac": max_frac, "warnUtil": warn},
         "summary": {
             "totalMovedM": total_moved,

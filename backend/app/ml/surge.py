@@ -11,8 +11,8 @@ Engine memodelkan:
   1. Amplifikasi puncak (peak multiplier) dari basis harian → beban per hub.
   2. Kapasitas efektif hub (kapasitas × faktor surge) dan pelanggaran (breach).
   3. Backlog & waktu pemulihan (drain rate) bila beban > kapasitas.
-  4. Rencana mitraasi: spillover ke hub ber-headroom (pakai cost index region
-     yang sama dgn optimize.py) + opsi buffer armada.
+  4. Rencana mitraasi: spillover ke hub ber-headroom (greedy: headroom terbesar
+     lebih dulu) + opsi buffer armada.
 
 Semua rasio/koefisien non-kasus = ASUMSI TIM, dilabel.
 """
@@ -90,6 +90,9 @@ def stress_test(
             "peakUtilPct": util_pct,
             "overflowM": round(breach, 4),
             "breached": breach > 1e-6,
+            # Selalu ada (0 bila tak overflow / spillover dimatikan) agar kontrak
+            # respons konsisten untuk semua pemanggil.
+            "residualOverflowM": round(breach, 4),
         })
 
     overflowed = [r for r in rows if r["breached"]]

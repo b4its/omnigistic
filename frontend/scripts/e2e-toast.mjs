@@ -96,16 +96,22 @@ try {
   const retry = page.getByRole("button", { name: /Coba lagi/i }).first();
   if (await retry.count()) await clickAndRead(retry, "kurir/overview: tombol coba lagi", "info");
 
-  // ── Hub: load-balance slider (change) ──
+  // ── Hub: load-balance slider + tombol "Jalankan optimizer" → toast ──
+  // Desain halaman: geser ambang lalu KLIK tombol (bukan auto-jalan tiap geser),
+  // agar tiap perubahan endpoint dapat dibatalkan/dikonfirmasi. Jadi aksi yang
+  // memicu notifikasi = klik tombol, bukan event 'input' mentah.
   await goto("/dashboard/hub/load-balance");
   {
     const slider = page.locator('input[type="range"]').first();
-    if (await slider.count()) {
-      const before = (await toasts()).length;
+    const runBtn = page.getByRole("button", { name: /Jalankan optimizer/i }).first();
+    if ((await slider.count()) && (await runBtn.count())) {
       await slider.evaluate((el) => { el.value = "30"; el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); });
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(300);
+      const before = (await toasts()).length;
+      await runBtn.click();
+      await page.waitForTimeout(600);
       const added = (await toasts()).slice(before);
-      R(added.length >= 1, "load-balance: geser slider memunculkan notifikasi", added.length ? `"${added[added.length-1].text.slice(0,40)}"` : "");
+      R(added.length >= 1, "load-balance: jalankan optimizer memunculkan notifikasi", added.length ? `"${added[added.length-1].text.slice(0,40)}"` : "");
     }
   }
 

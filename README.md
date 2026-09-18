@@ -237,6 +237,9 @@ PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node script
 
 # Uji state error saat backend offline — 8 halaman (8)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-offline.mjs
+
+# Uji regresi audit menyeluruh — integritas angka/wording lintas-fitur (11)
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-audit-fixes.mjs
 ```
 
-Laporan audit detail: `docs/angka-audit-2026-09-07.md`, `docs/audit-penutupan-celah-2026-09-08.md`.
+Laporan audit detail: `docs/angka-audit-2026-09-07.md`, `docs/audit-penutupan-celah-2026-09-08.md`, `docs/audit-penyempurnaan-menyeluruh-2-2026-09-08.md`.

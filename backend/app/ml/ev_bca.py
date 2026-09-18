@@ -515,7 +515,8 @@ def ev_bca(
         "incrementalFleetStressTest": incremental,
         "scenarioComparison": _scenario_comparison(scenarios, incremental),
         "utilizationSensitivity": _utilization_sensitivity(**common),
-        "discountRateSensitivity": _discount_rate_sensitivity(**common),
+        # Discount rate di-sweep pada grid tetap → `discount` sengaja tak diteruskan.
+        "discountRateSensitivity": _discount_rate_sensitivity(**{k: v for k, v in common.items() if k != "discount"}),
         "breakevens": _breakevens(**common),
         "tcoPerKm": _tco_per_km(**common),
         "tornadoSensitivity": _tornado_sensitivity(**common),
@@ -525,7 +526,8 @@ def ev_bca(
         "escalationPreview": _escalation_preview(u=u, pertamax=pertamax, include_maintenance=include_maintenance,
                                                  discount=disc, tariff=tariff, battery_lease_year=battery_lease,
                                                  ev_price=ev_price, ice_price=ice_price),
-        "roadmap": _roadmap(**common),
+        # Roadmap memakai basis armada kasus (12.500 motor), bukan input `units`.
+        "roadmap": _roadmap(**{k: v for k, v in common.items() if k != "units"}),
         "roadmapProgramCashflow": _roadmap_program_cashflow(**common),
         "strategicTakeaway": (
             "Pertanyaan utama bukan 'apakah EV lebih hemat?' (energi EV jauh "
@@ -635,10 +637,15 @@ def _utilization_sensitivity(*, units: float, pertamax: float, include_maintenan
     }
 
 
-def _discount_rate_sensitivity(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
+def _discount_rate_sensitivity(*, units: float, pertamax: float, include_maintenance: bool,
                                tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
                                fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
-    """Sensitivitas NPV terhadap discount rate (8%..20%) — skenario base replacement."""
+    """Sensitivitas NPV terhadap discount rate (8%..20%) — skenario base replacement.
+
+    Discount rate di-sweep pada grid tetap (bukan dari input), karena tujuannya
+    memetakan kepekaan, bukan mengevaluasi satu nilai. Karena itu input `discount`
+    pada pemanggil sengaja tidak diterima di sini.
+    """
     rows: list[dict[str, Any]] = []
     for dr in (0.08, 0.10, 0.12, 0.15, 0.18, 0.20):
         r = _scenario("base", replacement=True, units=units, pertamax=pertamax, include_maintenance=include_maintenance,
@@ -648,14 +655,14 @@ def _discount_rate_sensitivity(*, units: float, pertamax: float, include_mainten
     return {"metric": "discount rate (%)", "note": "Base replacement; hanya discount rate divariasikan.", "rows": rows}
 
 
-def _roadmap(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
+def _roadmap(*, pertamax: float, include_maintenance: bool, discount: float,
              tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
              fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
     """Roadmap 3 fase konversi parsial armada kasus (12.500 motor) — simulasi.
 
     Tiap fase memakai skenario base untuk ekonomi unit, tetapi jumlah unit =
-    fraksi kumulatif × basis motor. Menghasilkan NPV & CO₂ kumulatif per fase
-    sebagai panduan rollout (bukan komitmen capex).
+    fraksi kumulatif × basis motor (BUKAN dari input `units`). Menghasilkan NPV &
+    CO₂ kumulatif per fase sebagai panduan rollout (bukan komitmen capex).
     """
     fleet = _fleet_basis()
     moto = fleet["motorcycles"] or int(DEFAULT_EV_UNITS)
@@ -701,11 +708,6 @@ def _roadmap(*, units: float, pertamax: float, include_maintenance: bool, discou
 
 
 # ── Simulasi lanjut (breakeven, tornado, Monte Carlo, TCO, hub, lifecycle) ───
-def _pv_factor(discount: float) -> float:
-    """Faktor anuitas PV untuk horizon 5 tahun (dipakai reverse-solve)."""
-    return sum(1.0 / (1.0 + discount) ** t for t in range(1, HORIZON_YEARS + 1))
-
-
 def _breakevens(*, units: float, pertamax: float, include_maintenance: bool, discount: float,
                 tariff: float, battery_lease_year: float, ev_price: float, ice_price: float,
                 fuel_growth: float = 0.0, elec_growth: float = 0.0, battery_growth: float = 0.0) -> dict[str, Any]:
@@ -1032,18 +1034,19 @@ def _hub_deployment(*, units: float, pertamax: float, include_maintenance: bool,
     """
     hubs = load()["hubs"]
     total_cap = sum(float(h.get("capacityM", 0.0)) for h in hubs) or 1.0
-    # Alokasi proporsional kapasitas lalu dibulatkan ke 10 unit dengan penyesuaian
-    # sisa (largest-remainder) agar TOTAL tepat = units (menghindari drift pembulatan).
-    raw = [float(units) * float(h.get("capacityM", 0.0)) / total_cap for h in hubs]
-    alloc = [int(round(v / 10.0) * 10) for v in raw]
-    deficit = int(round(units)) - sum(alloc)
-    if deficit != 0:
-        # urutkan menurut sisa pecahan terbesar untuk menambah/kurangi kelipatan 10.
-        order = sorted(range(len(hubs)), key=lambda i: (raw[i] - alloc[i]), reverse=deficit > 0)
-        step = 10 if deficit > 0 else -10
-        need = abs(deficit) // 10
-        for i in order[:need]:
-            alloc[i] += step
+    # Alokasi proporsional kapasitas dengan metode largest-remainder pada granularitas
+    # SATU unit → TOTAL tepat = round(units). (Versi lama membulatkan ke kelipatan 10
+    # lalu hanya memperbaiki selisih >=10, sehingga anggaran <10 unit terbuang dan
+    # bisa meleset, mis. units=5 → 0, units=205 → 210.)
+    target = max(0, int(round(float(units))))
+    raw = [target * float(h.get("capacityM", 0.0)) / total_cap for h in hubs]
+    alloc = [int(v) for v in raw]                     # floor
+    remainder = target - sum(alloc)                   # sisa unit yg harus dibagikan
+    if remainder > 0:
+        # Beri 1 unit ke hub dengan pecahan (sisa) terbesar lebih dulu.
+        order = sorted(range(len(hubs)), key=lambda i: (raw[i] - alloc[i]), reverse=True)
+        for i in order[:remainder]:
+            alloc[i] += 1
     rows: list[dict[str, Any]] = []
     by_region: dict[str, dict[str, float]] = {}
     for h, hub_units in zip(hubs, alloc):
@@ -1186,7 +1189,7 @@ def _roadmap_program_cashflow(*, units: float, pertamax: float, include_maintena
     fase 3 → Y3) dan benefit berjalan setelah unit terpasang. Memberi gambaran
     arus kas program agregat. Simulasi perencanaan.
     """
-    roadmap = _roadmap(units=units, pertamax=pertamax, include_maintenance=include_maintenance, discount=discount,
+    roadmap = _roadmap(pertamax=pertamax, include_maintenance=include_maintenance, discount=discount,
                        tariff=tariff, battery_lease_year=battery_lease_year, ev_price=ev_price,
                        ice_price=ice_price, fuel_growth=fuel_growth, elec_growth=elec_growth,
                        battery_growth=battery_growth)

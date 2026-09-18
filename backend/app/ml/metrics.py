@@ -45,15 +45,23 @@ REGION_ORDER = [
     "Maluku & Papua",
 ]
 
-# Region yang direkomendasikan untuk Regional Sponsor Model (utilisasi rendah,
-# jaringan mahal per paket). Ambang mengikuti angka kasus (utilisasi < 50%).
-SPONSOR_CANDIDATE_REGIONS = {"Kalimantan", "Sulawesi", "Maluku & Papua"}
+# Region yang direkomendasikan untuk Regional Sponsor Model — DITURUNKAN dari
+# ambang utilisasi kanonik (rata-rata < UTIL_WARN), bukan daftar beku, agar ikut
+# berubah bila data/ambang berubah. `region_summary()` memakai kriteria yang sama.
+def sponsor_candidate_regions() -> set[str]:
+    """Region sponsor = region dengan utilisasi rata-rata < UTIL_WARN (satu kriteria)."""
+    return {r["region"] for r in region_summary() if r["avgUtilizationPct"] < UTIL_WARN}
 
 # Ambang utilisasi KANONIK (satu sumber kebenaran) — dipakai optimize.py &
 # sponsor.py agar tak ada tiga definisi yang bisa melenceng.
 UTIL_WARN = 50.0       # di bawah ini: hub ber-headroom / kandidat sponsor
 UTIL_CRITICAL = 65.0   # di atas ini: hub over-utilisasi (perlu dialihkan)
 UTIL_THRESHOLD = {"warn": UTIL_WARN, "critical": UTIL_CRITICAL}
+
+# Porsi biaya VARIABEL vs TETAP pada unit economics (proxy prototipe, asumsi tim).
+# Dipakai expansion.py (biaya per region) & sponsor.py (biaya Direct vs Sponsor)
+# agar tak ada dua magic number 0.70 yang bisa melenceng.
+VARIABLE_COST_FRAC = 0.70
 
 
 def _roi(a: float, b: float) -> float:
@@ -102,7 +110,7 @@ def region_summary() -> list[dict[str, Any]]:
                 "avgUtilizationPct": util,
                 "outlets": outlets,
                 "usedVolumeM": used,
-                "sponsorCandidate": region in SPONSOR_CANDIDATE_REGIONS,
+                "sponsorCandidate": util < UTIL_WARN,
             }
         )
     return out

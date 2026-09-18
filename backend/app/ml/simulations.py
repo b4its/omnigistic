@@ -63,6 +63,13 @@ def calculate_digital_twin(shares: dict[str, float]) -> dict:
         "onTimeImpactPct": round(on_time, 1),
         "regionalSponsorPct": round(total_sponsor, 1),
         "directOpVolFreedM": round(freed, 3),
+        # Label kejujuran: koefisien dampak = asumsi tim model; base util/fulfilment
+        # dari data kasus (hubs + financial 2023).
+        "note": (
+            "SIMULASI/prototipe: koefisien dampak (util +15pt, capex ×0,35, on-time "
+            "−3pt per 100% sponsor) = ASUMSI TIM; base util timur & fulfilment 2023 "
+            "dari data kasus."
+        ),
     }
 
 
@@ -126,4 +133,11 @@ def calculate_cod_impact(cod_packets: int = 8, prob_digital: float = 60, cod_sha
         "packages": cod_packets,
         "codSharePct": round(share * 100, 1),
         "probDigitalPct": round(p_digital * 100, 1),
+        # Label kejujuran: durasi dasar dari Figure 2 (kasus); waiting & porsi
+        # digital = asumsi tim.
+        "note": (
+            "SIMULASI/prototipe: durasi dasar dari Figure 2 (8 pkg: 75 mnt non-COD, "
+            "138 mnt COD) = data kasus; waiting COD & porsi digital dihilangkan = "
+            "ASUMSI TIM."
+        ),
     }

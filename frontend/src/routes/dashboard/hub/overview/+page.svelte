@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { api, type Hub, type Insights } from "$lib/api";
+  import { UTIL_THRESHOLD } from "$lib/logistics";
   import RoleOverview from "$lib/components/RoleOverview.svelte";
   import EChart from "$lib/components/EChart.svelte";
   import PageState from "$lib/components/PageState.svelte";
@@ -34,9 +35,10 @@
   onMount(() => void load());
 
   const bdg = $derived(hubs.find((h) => h.name === "Bandung") ?? hubs[0]);
+  const javaHubs = $derived(hubs.filter((h) => h.region === "Java"));
   const javaAvg = $derived(
-    hubs.length
-      ? Math.round((hubs.filter((h) => h.region === "Java").reduce((s, h) => s + h.utilizationPct, 0) / Math.max(1, hubs.filter((h) => h.region === "Java").length)) * 10) / 10
+    javaHubs.length
+      ? Math.round((javaHubs.reduce((s, h) => s + h.utilizationPct, 0) / Math.max(1, javaHubs.length)) * 10) / 10
       : 0
   );
   const rank = $derived(
@@ -46,9 +48,9 @@
   const kpi = $derived(
     hubs.length
       ? [
-          { label: "Utilization Anda", value: `${bdg.utilizationPct}%`, sub: bdg.name, accent: bdg.utilizationPct > 65 ? "var(--color-destructive-foreground)" : "var(--color-success-foreground)" },
-          { label: "Rata-rata Jawa", value: `${javaAvg}%`, sub: "8 hub" },
-          { label: "Peringkat", value: `#${rank}`, sub: "dari 23 hub" },
+          { label: "Utilization Anda", value: `${bdg.utilizationPct}%`, sub: bdg.name, accent: bdg.utilizationPct > UTIL_THRESHOLD.critical ? "var(--color-destructive-foreground)" : "var(--color-success-foreground)" },
+          { label: "Rata-rata Jawa", value: `${javaAvg}%`, sub: `${javaHubs.length} hub` },
+          { label: "Peringkat", value: `#${rank}`, sub: `dari ${hubs.length} hub` },
           { label: "Kapasitas", value: `${bdg.capacityM}M`, sub: `${bdg.outlets} outlet` }
         ]
       : []

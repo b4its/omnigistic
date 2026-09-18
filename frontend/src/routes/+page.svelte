@@ -4,6 +4,14 @@
   import Icon from "$lib/components/Icon.svelte";
   import { cn, resolveHref } from "$lib/utils";
 
+  /** Potong di batas kata; hanya tambah `…` bila teks BENAR-BENAR terpotong. */
+  function truncate(s: string, max: number): string {
+    if (s.length <= max) return s;
+    const cut = s.slice(0, max);
+    const sp = cut.lastIndexOf(" ");
+    return (sp > max * 0.6 ? cut.slice(0, sp) : cut).trimEnd() + "…";
+  }
+
   const navLinks = [
     { href: "#jawaban", label: "Jawaban" },
     { href: "#diagnosis", label: "Diagnosis" },
@@ -360,10 +368,10 @@
                 <p class="text-[16px] font-semibold leading-tight tracking-tight text-[var(--lnd-ink)]">{rc.title}</p>
                 <p class="mt-1 font-heading text-[15px] italic text-[var(--lnd-soft)]">{rc.titleId}</p>
               </div>
-              <p class="text-[15px] leading-relaxed text-[var(--lnd-soft)]"><span class="font-medium text-[var(--lnd-ink)]">Gejala:</span> {rc.symptoms.slice(0, 130)}&hellip;</p>
+              <p class="text-[15px] leading-relaxed text-[var(--lnd-soft)]"><span class="font-medium text-[var(--lnd-ink)]">Gejala:</span> {truncate(rc.symptoms, 130)}</p>
               <div class="mt-auto rounded-xl border border-[var(--lnd-line)] bg-[var(--lnd-bg-raise)] p-3">
                 <p class="text-[13.5px] font-semibold uppercase tracking-wider text-[var(--lnd-soft)]">Solusi Omnigistic</p>
-                <p class="mt-1 text-[15px] leading-snug text-[var(--lnd-ink)]">{rc.solution.slice(0, 135)}&hellip;</p>
+                <p class="mt-1 text-[15px] leading-snug text-[var(--lnd-ink)]">{truncate(rc.solution, 135)}</p>
                 <p class="mt-2 text-[14px] font-semibold text-[var(--lnd-accent-ink)]">{rc.kpi}</p>
               </div>
             </li>

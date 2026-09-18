@@ -139,7 +139,7 @@ def score_package(pkg: dict[str, Any]) -> dict:
                 "value": round(val, 2),
                 "coef": round(coef, 4),
                 "contribution": round(contrib, 3),
-                "direction": "naik" if contrib > 0 else "turun",
+                "direction": "naik" if contrib > 0 else ("turun" if contrib < 0 else "netral"),
             })
     else:  # pragma: no cover
         proba = min(1.0, max(0.0, 0.05 + 0.003 * feats[1] + 0.25 * feats[3] + 0.1 * feats[4]))
@@ -164,6 +164,13 @@ def score_package(pkg: dict[str, Any]) -> dict:
         "clusterAction": cluster_action,
         # Proxy kecepatan penerima mengambil paket (menit); prototipe, bukan data kasus.
         "pickupWaitMin": round(2 + 12 * proba, 1),
+        # Label kejujuran (prototipe): model dilatih pada data SINTETIK & ambang
+        # kebijakan (0,35/0,65) serta pickupWaitMin = asumsi tim, bukan data kasus.
+        "note": (
+            "Prototipe presentasi: model Logistic Regression dilatih pada data "
+            "SINTETIK; ambang kebijakan (0,35/0,65) & pickupWaitMin = ASUMSI TIM. "
+            "Skor bukan hasil produksi."
+        ),
     }
     if factors:
         out["factors"] = factors

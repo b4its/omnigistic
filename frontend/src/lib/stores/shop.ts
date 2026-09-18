@@ -648,10 +648,10 @@ export const codOutstanding: Readable<Order[]> = derived(shop, (s) =>
   s.orders.filter((o) => o.payment === "COD" && !o.codCollected)
 );
 
-/** Pesanan COD berisiko (keputusan model bukan antar-normal). */
-export const codAtRisk: Readable<Order[]> = derived(shop, (s) =>
-  s.orders.filter((o) => o.payment === "COD" && o.codDecision !== null && o.codDecision !== "antar-normal")
-);
+/** Pesanan COD berisiko (keputusan model bukan antar-normal) — pakai SATU
+ *  predikat kanonik `isCodAtRisk` (termasuk syarat belum dialihkan ke PUDO),
+ *  agar store tak menghitung pesanan yang sudah dirutekan sebagai masih berisiko. */
+export const codAtRisk: Readable<Order[]> = derived(shop, (s) => s.orders.filter(isCodAtRisk));
 
 /** Pesanan yang dialihkan ke PUDO. */
 export const pudoOrders: Readable<Order[]> = derived(shop, (s) => s.orders.filter((o) => o.routedToPudo));

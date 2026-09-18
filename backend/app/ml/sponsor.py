@@ -30,7 +30,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.db.loader import load
-from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN, clamp, unit_economics
+from app.ml.metrics import UTIL_CRITICAL, UTIL_WARN, VARIABLE_COST_FRAC, clamp, unit_economics
 
 # ── Parameter default (asumsi tim — dapat di-override via API) ──────────────
 # Porsi biaya tetap (dari total unit cost) yang bergeser ke mitra pada model sponsor.
@@ -114,8 +114,10 @@ def _region_metrics() -> list[dict[str, Any]]:
 
         # Biaya tetap tersebar ke volume → makin rendah utilisasi, makin mahal/paket.
         # Faktor = nat_util / util (dibatasi agar tidak ekstrem). Util rendah → faktor > 1.
+        # Porsi variabel dari SATU sumber (metrics.VARIABLE_COST_FRAC = 0,70);
+        # sisanya (1 − porsi) = biaya tetap yang terdampak utilisasi.
         adjust = (nat_util / util) if util > 0 else 1.0
-        cost_ratio = 0.7 + 0.3 * adjust  # 70% biaya variabel, 30% tetap terdampak utilisasi
+        cost_ratio = VARIABLE_COST_FRAC + (1.0 - VARIABLE_COST_FRAC) * adjust
         unit_cost = round(national_unit * cost_ratio)
 
         out.append(

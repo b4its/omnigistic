@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { api, type Hub } from "$lib/api";
+  import { UTIL_THRESHOLD } from "$lib/logistics";
   import EChart from "$lib/components/EChart.svelte";
   import PageState from "$lib/components/PageState.svelte";
   import { barChart } from "$lib/charts/options";
@@ -75,7 +76,7 @@
         <p class="kpi-value text-xl text-chart-3">{(bdg.utilizationPct - javaAvg > 0 ? "+" : "")}{numId(bdg.utilizationPct - javaAvg, 1)} pts</p><p class="text-xs text-muted-foreground">vs rata-rata Jawa</p>
       </div>
       <div class="rounded-2xl border bg-card p-4 text-center">
-        <p class="kpi-value text-xl text-destructive-foreground">&ge;65%</p><p class="text-xs text-muted-foreground">Ambang alert</p>
+        <p class="kpi-value text-xl text-destructive-foreground">&ge;{UTIL_THRESHOLD.critical}%</p><p class="text-xs text-muted-foreground">Ambang alert</p>
       </div>
     </div>
   </div>

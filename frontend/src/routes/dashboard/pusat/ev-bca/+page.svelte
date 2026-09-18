@@ -617,7 +617,9 @@
                   <td class="px-4 py-2">Total</td>
                   <td class="px-4 py-2 text-right tabular-nums">{idr(scen.cashflow.totalNetIdr)}</td>
                   <td class="px-4 py-2 text-right tabular-nums">NPV {idr(scen.cashflow.npvIdr)}</td>
-                  <td class="px-4 py-2 text-right tabular-nums">{idr(scen.cashflow.totalNetIdr + scen.capex.initialInvestmentIdr)}</td>
+                  <!-- Kumulatif akhir = totalNetIdr (SUDAH termasuk Y0 = −investasi awal,
+                       sama dgn baris terakhir kolom Kumulatif). Jangan ditambah capex lagi. -->
+                  <td class="px-4 py-2 text-right tabular-nums">{idr(scen.cashflow.totalNetIdr)}</td>
                 </tr>
               </tbody>
             </table>
