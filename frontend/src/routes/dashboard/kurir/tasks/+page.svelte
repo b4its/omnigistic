@@ -100,12 +100,14 @@
 
   /** Pesanan yang sedang menjadi fokus simulasi pengantaran riil kurir. */
   let focusedOrderId = $state<string | null>(null);
+  let showCockpit = $state(false);
   $effect(() => {
     if (!focusedOrderId && activeTasks.length > 0) {
       const out = activeTasks.find((o) => isOutForDelivery(o.status)) ?? activeTasks[0];
       focusedOrderId = out.id;
     }
   });
+
   const focusedOrder = $derived(
     orders.find((o) => o.id === focusedOrderId) ?? activeTasks[0] ?? null
   );
@@ -214,8 +216,8 @@
   {:else}
     <!-- ── Simulator Pengantaran Lapangan (Live Fleet Cockpit) ── -->
     {#if activeTasks.length > 0 && focusedOrder}
-      <section class="space-y-4 rounded-2xl border border-primary/30 bg-card p-5 shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+      <section class="space-y-4 rounded-2xl border border-primary/30 bg-card p-4 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 {showCockpit ? 'border-b border-border pb-3' : ''}">
           <div class="space-y-0.5">
             <div class="flex items-center gap-2">
               <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
@@ -230,23 +232,37 @@
           </div>
 
           <div class="flex items-center gap-2">
-            <label for="sim-order-select" class="text-xs font-medium text-muted-foreground">Pilih paket:</label>
-            <select
-              id="sim-order-select"
-              value={focusedOrderId}
-              onchange={(e) => (focusedOrderId = (e.currentTarget as HTMLSelectElement).value)}
-              class="rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:border-primary/50"
+            {#if showCockpit}
+              <label for="sim-order-select" class="text-xs font-medium text-muted-foreground">Pilih paket:</label>
+              <select
+                id="sim-order-select"
+                value={focusedOrderId}
+                onchange={(e) => (focusedOrderId = (e.currentTarget as HTMLSelectElement).value)}
+                class="rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:border-primary/50"
+              >
+                {#each activeTasks as to (to.id)}
+                  <option value={to.id}>
+                    {to.id} · {to.address.city} ({to.address.recipient})
+                  </option>
+                {/each}
+              </select>
+            {/if}
+
+            <button
+              type="button"
+              onclick={() => (showCockpit = !showCockpit)}
+              aria-expanded={showCockpit}
+              class="inline-flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent"
             >
-              {#each activeTasks as to (to.id)}
-                <option value={to.id}>
-                  {to.id} · {to.address.city} ({to.address.recipient})
-                </option>
-              {/each}
-            </select>
+              <Icon name="route" cls="h-3.5 w-3.5" />
+              {showCockpit ? "Tutup Peta Cockpit" : "Buka Peta Cockpit"}
+            </button>
           </div>
         </div>
 
-        <div class="grid gap-4 lg:grid-cols-[1fr_280px]">
+        {#if showCockpit}
+          <div class="grid gap-4 lg:grid-cols-[1fr_280px]">
+
           <div class="space-y-2">
             <DeliveryMap
               progress={progressForStatus(focusedOrder.status)}
@@ -331,6 +347,7 @@
             </div>
           </div>
         </div>
+      {/if}
       </section>
     {/if}
 

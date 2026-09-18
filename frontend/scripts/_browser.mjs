@@ -30,6 +30,9 @@ export function resolveChromium() {
       }
     }
   }
+  for (const sys of ["/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/google-chrome"]) {
+    if (existsSync(sys)) return sys;
+  }
   // fallback: biarkan playwright-core mencari sendiri
   return undefined;
 }
