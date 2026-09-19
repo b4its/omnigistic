@@ -1,10 +1,10 @@
 # omnigistic — dev container (lokal saja, tanpa deploy)
 # DEFAULT (hot reload): sumber di-bind-mount dari host, edit file → langsung reload.
-#   docker compose up -d --build      → :3000 Svelte (vite dev + HMR), :8000 FastAPI (uvicorn --reload).
+#   docker compose up -d --build      → :3077 Svelte (vite dev + HMR), :8077 FastAPI (uvicorn --reload).
 #   +DB: docker compose --profile db up -d --build  → postgres lokal + auto-seed via db-seed.
 #   neon:  SKIP_DB=0 DATABASE_URL=postgres://.. docker compose up -d   (override dari .env host).
 #   PROD (image build, tanpa mount):  docker compose --profile prod up -d --build
-#   API public default browser = http://127.0.0.1:8000 (override: edit frontend/.env → rebuild).
+#   API public default browser = http://127.0.0.1:8077 (override: edit frontend/.env → rebuild).
 
 services:
   # ================= DEFAULT: DEV + HOT RELOAD =================
@@ -22,7 +22,7 @@ services:
       AI_API_KEY: ${AI_API_KEY:-}
       AI_MODEL: ${AI_MODEL:-}
     ports:
-      - "${BACKEND_HOST:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
+      - "${BACKEND_HOST:-127.0.0.1}:${BACKEND_PORT:-8077}:8077"
     volumes:
       # Hot reload: source host → container (uvicorn --reload memantau /code/app).
       - ./backend/app:/code/app
@@ -44,9 +44,9 @@ services:
     environment:
       NODE_ENV: development
       HOST: 0.0.0.0
-      PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-http://127.0.0.1:8000}
+      PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-http://127.0.0.1:8077}
     ports:
-      - "${FRONTEND_HOST:-127.0.0.1}:${FRONTEND_PORT:-3000}:3100"
+      - "${FRONTEND_HOST:-127.0.0.1}:${FRONTEND_PORT:-3077}:3177"
     volumes:
       # Hot reload: source host → container (vite HMR memantau /app/src, dsb).
       - ./frontend:/app
@@ -73,7 +73,7 @@ services:
       AI_API_KEY: ${AI_API_KEY:-}
       AI_MODEL: ${AI_MODEL:-}
     ports:
-      - "${BACKEND_HOST:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
+      - "${BACKEND_HOST:-127.0.0.1}:${BACKEND_PORT:-8077}:8077"
     restart: unless-stopped
 
   frontend-prod:
@@ -85,9 +85,9 @@ services:
     container_name: omnigistic-frontend-prod
     environment:
       HOST: 0.0.0.0
-      PORT: "3000"
+      PORT: "3077"
     ports:
-      - "${FRONTEND_HOST:-127.0.0.1}:${FRONTEND_PORT:-3000}:3000"
+      - "${FRONTEND_HOST:-127.0.0.1}:${FRONTEND_PORT:-3077}:3077"
     depends_on:
       - backend-prod
     restart: unless-stopped
@@ -100,13 +100,14 @@ services:
       POSTGRES_USER: omnigistic
       POSTGRES_PASSWORD: omnigistic
       POSTGRES_DB: omnigistic
+      PGPORT: "5509"
     profiles: ["db"]
     ports:
-      - "127.0.0.1:5433:5432"
+      - "127.0.0.1:5510:5509"
     volumes:
       - omnigistic-pg:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U omnigistic -d omnigistic"]
+      test: ["CMD-SHELL", "pg_isready -p 5509 -U omnigistic -d omnigistic"]
       interval: 4s
       timeout: 2s
       retries: 10
@@ -120,7 +121,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://omnigistic:omnigistic@db:5432/omnigistic
+      DATABASE_URL: postgresql://omnigistic:omnigistic@db:5509/omnigistic
       DB_DRIVER: postgresql+psycopg
       SKIP_DB: "0"
     command: python -c "import sys;sys.path.insert(0,'/code');from app.db.seed import seed;print('seed:',seed())"

@@ -8,5 +8,5 @@ services:
   backend:
     environment:
       SKIP_DB: "0"
-      DATABASE_URL: postgresql://omnigistic:omnigistic@db:5432/omnigistic
+      DATABASE_URL: postgresql://omnigistic:omnigistic@db:5509/omnigistic
       DB_DRIVER: postgresql+psycopg
