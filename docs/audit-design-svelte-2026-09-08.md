@@ -2,7 +2,7 @@
 
 **Tanggal:** 2026-09-08 · post-migrasi Svelte + fase audit-visual & perbaikan
 **Stack terdeteksi:** SvelteKit 2 (Svelte 5 runes) · Tailwind v4 `@theme` 50 token · dark mode · Leaflet + ECharts · tanpa component lib (custom) · M3 window-store 600/840
-**Metode:** 11 sub-agent (color, typography, layout, component, a11y, interaction, psychology, visual-style, platform, ux-flow, performance-ux) + engine `uiux_audit_run` live (Puppeteer/Playwright) + Docker (FE :3000 / BE :8000)
+**Metode:** 11 sub-agent (color, typography, layout, component, a11y, interaction, psychology, visual-style, platform, ux-flow, performance-ux) + engine `uiux_audit_run` live (Puppeteer/Playwright) + Docker (FE :3077 / BE :8077)
 
 ## Score Card
 

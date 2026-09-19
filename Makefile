@@ -21,15 +21,15 @@ NPM          ?= npm
 DC           ?= docker compose
 COMPOSE_FILE ?= docker-compose.yml
 
-# ---- Ports / host (override: `make backend-dev BACKEND_PORT=9000`) ---------
+# ---- Ports / host (override: `make backend-dev BACKEND_PORT=9077`) ---------
 HOST           ?= 127.0.0.1
-BACKEND_PORT   ?= 8000
-FRONTEND_PORT  ?= 3100
-PREVIEW_PORT   ?= 3101
-SERVE_PORT     ?= 3102
+BACKEND_PORT   ?= 8077
+FRONTEND_PORT  ?= 3177
+PREVIEW_PORT   ?= 3178
+SERVE_PORT     ?= 3179
 # Port default untuk uji e2e (skrip frontend/scripts/*.mjs).
-E2E_BASE ?= http://127.0.0.1:3104
-E2E_API  ?= http://127.0.0.1:8000
+E2E_BASE ?= http://127.0.0.1:3181
+E2E_API  ?= http://127.0.0.1:8077
 
 # ---- Colours (auto-off bila bukan TTY) -------------------------------------
 ifeq ($(shell test -t 1 && echo yes),yes)
@@ -55,9 +55,9 @@ help: ## Tampilkan daftar perintah ini
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| sort \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-22s$(RST) %s\n", $$1, $$2}'
-	@printf "\n$(DIM)Override contoh: $(CYAN)make backend-dev BACKEND_PORT=9000$(RST)\n"
+	@printf "\n$(DIM)Override contoh: $(CYAN)make backend-dev BACKEND_PORT=9077$(RST)\n"
 	@printf "$(DIM)Tes cepat (hijau): $(CYAN)make check$(RST)\n"
-	@printf "$(DIM)Jalanin stack Docker: $(CYAN)make up$(RST)  →  FE :3000 · API :8000$(RST)\n\n"
+	@printf "$(DIM)Jalanin stack Docker: $(CYAN)make up$(RST)  →  FE :3077 · API :8077$(RST)\n\n"
 
 # ============================================================================
 # Setup / install
@@ -85,12 +85,12 @@ install: install-backend install-frontend ## Install semua dependensi (backend +
 # Dev (lokal, tanpa Docker)
 # ============================================================================
 .PHONY: backend-dev
-backend-dev: ## Jalankan FastAPI dev (--reload) di BACKEND_PORT (default :8000)
+backend-dev: ## Jalankan FastAPI dev (--reload) di BACKEND_PORT (default :8077)
 	@cd $(BACKEND) && SKIP_DB=1 $(abspath $(UVICORN)) app.main:app \
 		--host $(HOST) --port $(BACKEND_PORT) --reload
 
 .PHONY: frontend-dev
-frontend-dev: ## Jalankan SvelteKit dev server (vite, HMR) di FRONTEND_PORT (:3100)
+frontend-dev: ## Jalankan SvelteKit dev server (vite, HMR) di FRONTEND_PORT (:3177)
 	@cd $(FRONTEND) && $(NPM) run dev
 
 .PHONY: dev
@@ -118,11 +118,11 @@ backend-run: ## Jalankan FastAPI tanpa reload (mirip prod) di BACKEND_PORT
 		--host $(HOST) --port $(BACKEND_PORT)
 
 .PHONY: frontend-serve
-frontend-serve: build-frontend ## Serve build frontend (node build) di SERVE_PORT (:3102)
+frontend-serve: build-frontend ## Serve build frontend (node build) di SERVE_PORT (:3179)
 	@cd $(FRONTEND) && PORT=$(SERVE_PORT) HOST=$(HOST) node build/index.js
 
 .PHONY: frontend-preview
-frontend-preview: ## Preview build frontend (vite preview) di PREVIEW_PORT (:3101)
+frontend-preview: ## Preview build frontend (vite preview) di PREVIEW_PORT (:3178)
 	@cd $(FRONTEND) && $(NPM) run preview -- --port $(PREVIEW_PORT)
 
 # ============================================================================
@@ -214,7 +214,7 @@ seed: ## Seed data ke Postgres lokal (butuh DB jalan + SKIP_DB=0)
 # Docker
 # ============================================================================
 .PHONY: up
-up: ## Docker DEV + hot reload (FE :3000 · API :8000 · tanpa DB)
+up: ## Docker DEV + hot reload (FE :3077 · API :8077 · tanpa DB)
 	@$(DC) up -d --build
 
 .PHONY: up-db

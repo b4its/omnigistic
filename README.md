@@ -11,9 +11,9 @@ This is a **full 1:1 migration** from Next.js → **SvelteKit 2 (full-stack serv
 
 | Service | Command | URL |
 |---|---|---|
-| FastAPI backend | `cd backend && .venv/bin/uvicorn app.main:app --port 8000` | http://127.0.0.1:8000 |
-| Swagger "API evidence" | (same process, open docs) | **http://127.0.0.1:8000/docs** |
-| SvelteKit frontend node build | `cd frontend && node build/index.js` (env `PORT=3102`) | http://127.0.0.1:3102 |
+| FastAPI backend | `cd backend && .venv/bin/uvicorn app.main:app --port 8077` | http://127.0.0.1:8077 |
+| Swagger "API evidence" | (same process, open docs) | **http://127.0.0.1:8077/docs** |
+| SvelteKit frontend node build | `cd frontend && node build/index.js` (env `PORT=3179`) | http://127.0.0.1:3179 |
 
 First time / on changes: `cd frontend && npm run build` (uses vite).
 
@@ -27,12 +27,12 @@ edit file di `frontend/src` atau `backend/app` → browser/API reload otomatis t
 ```bash
 # 1) Tanpa DB sama sekali (mode default — fallback JSON). Browser buka port host.
 docker compose up -d
-# FE: http://127.0.0.1:3000 (vite dev + HMR)   API: http://127.0.0.1:8000 (uvicorn --reload)
-# Swagger/bukti: http://127.0.0.1:8000/docs
+# FE: http://127.0.0.1:3077 (vite dev + HMR)   API: http://127.0.0.1:8077 (uvicorn --reload)
+# Swagger/bukti: http://127.0.0.1:8077/docs
 
 # 2) Postgres LOKAL + backend benar2 pakai DB (profile db):
 docker compose --profile db up -d --build
-#   → db(:5433) + db-seed jalan, backend SKIP_DB=0 connected; chat/qa dari baris DB.
+#   → db(:5510) + db-seed jalan, backend SKIP_DB=0 connected; chat/qa dari baris DB.
 #   Tanpa profile ini default = SKIP_DB=1 (semua /api dari shared/data-kas.json — nol dependensi, paling aman utk demo).
 
 # 3) Neon asli (bukan lokal):
@@ -46,7 +46,7 @@ docker compose --profile prod up -d --build
 docker compose down -v     # (-v = hapus volume db + data)
 ```
 
-**API base buat browser** = `PUBLIC_API_BASE_URL` (default `http://127.0.0.1:8000`) supaya client-side fetch ke container backend via port host. Untuk akses dari jaringan lain, ubah `PUBLIC_API_BASE_URL` → `docker compose up -d` (dev) atau `docker compose --profile prod up -d --build` (prod).
+**API base buat browser** = `PUBLIC_API_BASE_URL` (default `http://127.0.0.1:8077`) supaya client-side fetch ke container backend via port host. Untuk akses dari jaringan lain, ubah `PUBLIC_API_BASE_URL` → `docker compose up -d` (dev) atau `docker compose --profile prod up -d --build` (prod).
 
 | File | Untuk apa |
 |---|---|
@@ -61,8 +61,8 @@ docker compose down -v     # (-v = hapus volume db + data)
 
 | Service | Command | URL |
 |---|---|---|
-| FastAPI backend | `cd backend && SKIP_DB=1 .venv/bin/uvicorn app.main:app --port 8000` | http://127.0.0.1:8000 |
-| SvelteKit frontend node build | `cd frontend && npm run build && PORT=3102 HOST=127.0.0.1 node build/index.js` | http://127.0.0.1:3102 |
+| FastAPI backend | `cd backend && SKIP_DB=1 .venv/bin/uvicorn app.main:app --port 8077` | http://127.0.0.1:8077 |
+| SvelteKit frontend node build | `cd frontend && npm run build && PORT=3179 HOST=127.0.0.1 node build/index.js` | http://127.0.0.1:3179 |
 
 First time / on changes: `cd frontend && npm run build` (uses vite).
 
@@ -76,10 +76,10 @@ make install        # install deps backend (venv+pip) + frontend (npm ci)
 make check          # GERBANG HIJAU: uji backend (307 assert) + typecheck frontend
 make verify         # check + validasi shared/data-kas.json
 make dev            # info menjalankan dev lokal (2 terminal)
-make backend-dev    # FastAPI --reload          → http://127.0.0.1:8000  (/docs)
-make frontend-dev   # SvelteKit vite HMR        → http://127.0.0.1:3100
+make backend-dev    # FastAPI --reload          → http://127.0.0.1:8077  (/docs)
+make frontend-dev   # SvelteKit vite HMR        → http://127.0.0.1:3177
 
-make up             # Docker DEV + hot reload   → FE :3000 · API :8000
+make up             # Docker DEV + hot reload   → FE :3077 · API :8077
 make up-db          # Docker + Postgres lokal (auto-seed)
 make up-refresh     # rebuild + recreate dgn volume anon fresh (setelah ubah package.json/lock)
 make up-prod        # Docker PROD (image build)
@@ -94,7 +94,7 @@ make version        # versi python/node/npm/ruff/docker
 ```
 
 Semua target didokumentasikan lewat komentar `##`; `make help` mencetaknya. Override port/host tanpa
-mengubah file, mis. `make backend-dev BACKEND_PORT=9000` atau `make e2e E2E_BASE=http://127.0.0.1:3000`.
+mengubah file, mis. `make backend-dev BACKEND_PORT=9077` atau `make e2e E2E_BASE=http://127.0.0.1:3077`.
 
 ### Troubleshooting Docker
 
@@ -109,7 +109,7 @@ mengubah file, mis. `make backend-dev BACKEND_PORT=9000` atau `make e2e E2E_BASE
 ```
 omnigistic/
 ├── shared/data-kas.json         ← Single source of truth (48 QA · 41 suggested · 23 hub · 6 root-causes)
-├── backend/                     ← FastAPI (Python 3.14), uvicorn app.main:app:8000
+├── backend/                     ← FastAPI (Python 3.14), uvicorn app.main:app:8077
 │   ├── app/
 │   │   ├── main.py              ← FastAPI + Swagger /docs
 │   │   ├── api/                 ← /api (chat, qa, insights, data, ml-routes)
@@ -130,7 +130,7 @@ omnigistic/
 ├── docs/                        ← audit laporan (angka + audit codebase 2026-09-08)
 ├── scripts/                     ← harness lokal: e2e.mjs, shot-audit/chat-evidence, redteam, ai-security-test
 ├── Makefile                     ← perintah umum (install/dev/test/lint/e2e/docker/clean) — `make help`
-├── docker-compose.yml + .dockerignore   ← dev container lokal (fe :3000, be :8000, profil db opsional)
+├── docker-compose.yml + .dockerignore   ← dev container lokal (fe :3077, be :8077, profil db opsional)
 └── .gitignore                   ← + venv, node_modules, build, __pycache__
 ```
 
@@ -204,51 +204,51 @@ AI_MODEL=omnigistic-model
 # Backend (217 assert, tanpa pytest)
 cd backend && SKIP_DB=1 .venv/bin/python tests/run_tests.py
 
-# Frontend E2E (52 assert; butuh backend :8000 + frontend dev :3000)
+# Frontend E2E (52 assert; butuh backend :8077 + frontend dev :3077)
 cd frontend
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 E2E_API=http://127.0.0.1:8000 node scripts/e2e.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 E2E_API=http://127.0.0.1:8077 node scripts/e2e.mjs
 
 # Uji sidebar (15) + audit overflow responsif (8 viewport)
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium node scripts/e2e-sidebar.mjs
 PLAYWRIGHT_CHROMIUM=/usr/bin/chromium SHOT_PATH=/dashboard/pusat/executive node scripts/responsive-shot.mjs
 
 # Uji accordion pesanan customer (15) + koherensi lintas role (31)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-customer-accordion.mjs
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-orders.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-customer-accordion.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-orders.mjs
 
 # Uji pemberitahuan kehadiran penerima dua arah saat dalam pengantaran (12)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-arrival.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-arrival.mjs
 
 # Uji mesin analitik interaktif (18) + widget dashboard (9)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-engines.mjs
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-widgets.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-engines.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-widgets.mjs
 
 # Uji halaman simulasi interaktif — capacity/load-balance/forecast/roi/fleet/address (36)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-sims.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-sims.mjs
 
 # Uji solusi tantangan kasus — surge/cod-cash/expansion/pnl (25)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-case.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-case.mjs
 
 # Uji Route Intelligence — jalur tercepat kurir (kepadatan + efisiensi) (9)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-route.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-route.mjs
 
 # Uji PUDO & legenda peta — koordinat asli + sebaran per-region (23)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-pudo.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-pudo.mjs
 
 # Uji peta lengkap halaman tugas pengantaran kurir (auto-buka + toggle + marker) (13)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-tasks-map.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-tasks-map.mjs
 
 # Uji konsistensi triase COD lintas halaman kurir (predikat & ambang tunggal) (13)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-cod-triage.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-cod-triage.mjs
 
 # Uji peta modal layar-penuh + legenda collapsible (open/close) (15)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-map-modal.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-map-modal.mjs
 
 # Uji state error saat backend offline — 8 halaman (8)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-offline.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-offline.mjs
 
 # Uji regresi audit menyeluruh — integritas angka/wording lintas-fitur (11)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3000 node scripts/e2e-audit-fixes.mjs
+PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-audit-fixes.mjs
 ```
 
 Laporan audit detail: `docs/angka-audit-2026-09-07.md`, `docs/audit-penutupan-celah-2026-09-08.md`, `docs/audit-penyempurnaan-menyeluruh-2-2026-09-08.md`.
