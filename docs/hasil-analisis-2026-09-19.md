@@ -183,11 +183,11 @@ Kurir menjawab sesuai insentifnya. Bila COD membuat pendapatan hariannya turun h
 
 **Mulai dengan pilot 350 motor listrik, tunda armada berat, dan pasang solar sebelum mengelektrifikasi truk.**
 
-Pilot membandingkan 350 Honda Scoopy Fashion (bensin) dengan 350 Smoot Zuzu (listrik, sistem tukar baterai) pada siklus penggantian kendaraan. Hasil perhitungan: net benefit operasional sekitar Rp 2,55 miliar per tahun, arus kas Tahun-0 positif sekitar Rp 1,15 miliar, dan penurunan emisi sekitar 266 ton CO₂ per tahun. Penskalaan dilakukan hanya bila lolos syarat pilot. Program ini adalah pilot pembuktian, bukan penggerak laba utama.
+Dua model disajikan, keduanya pada siklus penggantian kendaraan, horizon 5 tahun, diskonto 10%, dan dengan pembebasan pajak EV dimasukkan ke base case. **Model A (sederhana)** membandingkan 350 Honda Scoopy Fashion (bensin) dengan 350 Smoot Zuzu (listrik, tukar baterai): net benefit Rp 2,66 miliar per tahun, arus kas Tahun-0 +Rp 1,81 miliar, BCR 1,84 kali, NPV Rp 11,88 miliar, emisi turun 266 ton CO₂ per tahun. **Model B (rinci, mengikuti campuran armada nyata)** memakai tiga kelas kendaraan: net benefit Rp 3,50 miliar per tahun, arus kas Tahun-0 +Rp 2,21 miliar, BCR 3,50 kali, ROI 250,45%, NPV Rp 15,49 miliar, emisi turun 292 ton CO₂ per tahun. Penskalaan hanya bila lolos syarat pilot. Program ini pilot pembuktian, bukan penggerak laba utama.
 
 ## BAGAIMANA
 
-**Langkah 1. Tetapkan parameter.** Satu kendaraan bensin dibandingkan dengan satu kendaraan listrik, tanpa rata-rata antar merek, dan tanpa subsidi maupun pembebasan pajak.
+**Langkah 1. Tetapkan parameter.** Satu kendaraan bensin dibandingkan dengan satu kendaraan listrik, tanpa rata-rata antar merek. Pembebasan pajak EV dimasukkan ke base case (PKB 2% per tahun, BBNKB 12,5% sekali bayar, NJKB diasumsikan 65% dari harga ICE), karena insentif ini berlaku. Horizon 5 tahun, tingkat diskonto 10%. Semua harga pasar berlabel eksternal dan perlu diverifikasi ulang.
 
 | Parameter | Nilai | Sifat |
 | --- | --- | --- |
@@ -210,25 +210,55 @@ Pilot membandingkan 350 Honda Scoopy Fashion (bensin) dengan 350 Smoot Zuzu (lis
 | 3 | Biaya BBM per km: 16.253,95 ÷ 44,2985 | Rp 366,92 |
 | 4 | Biaya BBM tahunan | Rp 3.749.913.679 |
 | 5 | Biaya swap tahunan: 10.220.000 × 175 | Rp 1.788.500.000 |
-| 6 | Hemat energi | Rp 1.961.413.679 |
-| 7 | Hemat pemeliharaan | Rp 588.000.000 |
-| 8 | **Net benefit operasional per tahun** | **Rp 2.549.413.679** |
-| 9 | Hemat harga beli: 350 × Rp 3.476.000 | Rp 1.216.600.000 |
-| 10 | Biaya pelatihan | Rp 66.848.553 |
-| 11 | **Arus kas Tahun-0** | **+Rp 1.149.751.447** |
-| 12 | Total 5 tahun: (8 × 5) + 11 | Rp 13.896.819.842 |
+| 6 | Hemat energi (4 − 5) | Rp 1.961.413.679 |
+| 7 | Hemat pemeliharaan: 350 × (Rp 2,88 jt − Rp 1,20 jt) | Rp 588.000.000 |
+| 8 | Hemat PKB: 350 × Rp 15.194.400 × 2% | Rp 106.360.800 |
+| 9 | **Net benefit per tahun** (6 + 7 + 8) | **Rp 2.655.774.479** |
+| 10 | Hemat harga beli: 350 × Rp 3.476.000 | Rp 1.216.600.000 |
+| 11 | Hemat BBNKB (sekali): 350 × Rp 15.194.400 × 12,5% | Rp 664.755.000 |
+| 12 | Biaya pelatihan: 350 × (UMP DKI Rp 5.729.876 ÷ 30) | Rp 66.848.553 |
+| 13 | **Arus kas Tahun-0** (10 + 11 − 12) | **+Rp 1.814.506.447** |
+| 14 | Total 5 tahun: (9 × 5) + 13 | Rp 15.093.378.842 |
 
-**Langkah 3. Uji skenario.**
+**Langkah 3. Kunci Model A (BCA sederhana, pajak di base).**
 
-| Skenario | Net benefit per tahun | Arus kas Tahun-0 |
+| Metrik | Base (swap Rp 175/km) | Prudent (swap Rp 200/km) |
 | --- | --- | --- |
-| Base: swap Rp 175 per km, tanpa pajak | Rp 2,55 M | +Rp 1,15 M |
-| Prudent: swap Rp 200 per km | Rp 2,29 M | +Rp 1,15 M |
-| Upside: bila bebas PKB dan BBNKB | Rp 2,66 M | +Rp 1,81 M |
+| Net benefit per tahun | Rp 2.655.774.479 | Rp 2.400.274.479 |
+| Arus kas Tahun-0 | +Rp 1.814.506.447 | +Rp 1.814.506.447 |
+| NPV @10% (5 tahun) | Rp 11.881.981.206 | Rp 10.913.435.187 |
 
-Angka BCR TCO (sekitar 1,77) dan NPV (sekitar Rp 10,8 miliar) belum bisa saya kunci karena dokumen sumber tidak menyediakan tabel arus kas tahunan dan TCO. Keduanya harus dihitung di spreadsheet sebelum ditampilkan di slide.
+TCO 5 tahun per unit. ICE Scoopy: harga Rp 23.376.000 + BBNKB Rp 1.899.300 + 5 × (BBM Rp 10.714.039 + servis Rp 2.880.000 + PKB Rp 303.888) = **Rp 94.764.935**. EV Zuzu: harga Rp 19.900.000 + 5 × (swap Rp 5.110.000 + servis Rp 1.200.000) = **Rp 51.450.000**. Maka **BCR = 94.764.935 ÷ 51.450.000 = 1,84 kali**, artinya EV sekitar 46% lebih murah dimiliki. Payback: tidak ada periode balik modal, karena arus kas Tahun-0 sudah positif (EV lebih murah dibeli ditambah hemat BBNKB).
 
-**Langkah 4. Uji ketahanan pilihan merek.** Terhadap Honda BeAT (pembanding termurah), arus kas Tahun-0 justru negatif sekitar Rp 249 juta karena EV lebih mahal dibeli, tetapi balik modal sekitar 1 sampai 2 bulan operasi. Terhadap Genio, Vario, dan PCX hasilnya positif.
+**Langkah 4. Kunci Model B (BCA rinci per kelas, mengikuti campuran armada nyata).**
+
+Model ini memakai tiga kelas kendaraan, sehingga tidak ada rata-rata antar merek dan sekaligus mencakup pembanding termurah (BeAT).
+
+| Kelas | Unit | ICE → EV | Mode | Konsumsi efektif | Biaya energi ICE → EV (Rp/km) |
+| --- | --- | --- | --- | --- | --- |
+| M1 | 175 | BeAT CBS → Smoot Zuzu | swap Rp 175/km | 45,19 km/L | 359,68 → 175,00 |
+| M2 | 105 | Vario Evo 160 → United MX-1200 | charge | 37,11 km/L | 437,99 → 43,34 |
+| M3 | 70 | Genio → Polytron Fox-200 | charge | 44,35 km/L | 366,50 → 43,34 |
+
+| Kelas | Hemat energi | Hemat servis | Hemat PKB | Hemat CAPEX | BBNKB (sekali) | Emisi turun |
+| --- | --- | --- | --- | --- | --- | --- |
+| M1 | Rp 943.739.611 | Rp 294.000.000 | Rp 44.089.500 | −Rp 91.000.000 | Rp 275.559.375 | 127,8 t |
+| M2 | Rp 1.209.934.208 | Rp 176.400.000 | Rp 38.936.625 | Rp 1.231.125.000 | Rp 243.353.906 | 110,8 t |
+| M3 | Rp 660.544.990 | Rp 117.600.000 | Rp 18.655.000 | Rp 630.000.000 | Rp 116.593.750 | 53,1 t |
+| **Total** | **Rp 2.814.243.463** | **Rp 588.000.000** | **Rp 101.681.125** | **Rp 1.770.125.000** | **Rp 635.507.031** | **291,8 t** |
+
+| KPI Model B | Nilai |
+| --- | --- |
+| Net benefit per tahun | Rp 3.503.924.588 |
+| Net benefit prudent (cadangan baterai Rp 236,25 juta) | Rp 3.267.674.588 |
+| Arus kas Tahun-0 (hemat CAPEX + BBNKB − charger depot Rp 131,25 juta − pelatihan) | +Rp 2.207.533.478 |
+| BCR (manfaat 5 tahun Rp 27.603.867.522 ÷ biaya 5 tahun Rp 7.876.711.103) | 3,50 kali |
+| ROI 5 tahun | 250,45% |
+| NPV @10% (5 tahun) | Rp 15.490.164.448 |
+| TCO 5 tahun (ICE Rp 33.655.367.522 vs EV Rp 15.109.461.103) | 2,227 kali |
+| Emisi turun per tahun | 291,8 ton CO₂ |
+
+Catatan: kelas M1 (BeAT) memang **lebih mahal dibeli** sebagai EV (hemat CAPEX −Rp 91 juta); kelas M2 dan M3 menutupinya sehingga total +Rp 1,77 miliar. Jadi klaim "EV lebih murah dibeli" berlaku pada agregat, bukan pada setiap kelas. Biaya pelatihan Rp 66.848.553 = 350 unit × 1 hari × (UMP DKI Rp 5.729.876 ÷ 30 hari). Tarif listrik depot untuk 175 unit berbasis charge Rp 1.444,70 per kWh dengan efisiensi charging 90%.
 
 **Langkah 5. Hitung titik kritis.**
 
@@ -238,7 +268,7 @@ Angka BCR TCO (sekitar 1,77) dan NPV (sekitar Rp 10,8 miliar) belum bisa saya ku
 | Tarif swap saat net operasional nol | Sekitar Rp 424,45 per km |
 | Harga Pertamax saat energi Scoopy sama dengan swap Rp 175 | Sekitar Rp 7.752 per liter |
 
-**Langkah 6. Hitung emisi.** Scoopy: 2,31 ÷ 44,2985 = 0,05215 kg CO₂ per km. Zuzu: (0,027 ÷ 0,90) × 0,87 = 0,02610 kg CO₂ per km. Penurunan sekitar 49,9%, atau sekitar 266 ton CO₂ per tahun untuk 350 unit.
+**Langkah 6. Hitung emisi.** Scoopy: 2,31 ÷ 44,2985 = 0,05215 kg CO₂ per km. Zuzu: (0,027 ÷ 0,90) × 0,87 = 0,02610 kg CO₂ per km. Penurunan sekitar 49,9%, atau sekitar 266 ton CO₂ per tahun untuk 350 unit pada Model A. Pada Model B (campuran tiga kelas), penurunan total 291,8 ton CO₂ per tahun.
 
 **Langkah 7. Roadmap.**
 
@@ -252,9 +282,11 @@ Angka BCR TCO (sekitar 1,77) dan NPV (sekitar Rp 10,8 miliar) belum bisa saya ku
 
 Syarat lolos penskalaan: uptime di atas 95%, biaya energi aktual maksimal Rp 200 per km, SLA tidak turun, jaringan swap mencakup rute, net benefit aktual minimal 80% model, dan minimal dua vendor swap per kota.
 
+**Cakupan BCA.** Analisis ini mencakup inisiatif armada listrik (350 unit). Dua inisiatif keberlanjutan lain yang disebut kasus, yaitu kantong pengiriman degradable dan tas transit reusable, dinilai pada sisi karbon dan rencana; sisi biayanya berada di Tantangan 6 (tuas 4 dan 5) agar tidak dihitung dua kali. Harga dan volume kemasan tidak tersedia di kasus, sehingga keduanya disajikan sebagai rencana, bukan angka.
+
 ## MENGAPA
 
-Pertama, program ini disebut pilot karena 350 unit hanya 2,8% armada dan net benefit Rp 2,55 miliar sekitar 0,0026% dari biaya logistik Rp 99,54 triliun. Nilainya membuktikan unit economics dan risiko swap sebelum berinvestasi besar. Kedua, motor listrik didahulukan karena keunggulannya berdiri tanpa subsidi: harga beli lebih murah, biaya energi per kilometer lebih rendah, dan emisi turun hampir setengah. Ketiga, Zuzu dipilih bukan karena energinya paling murah (swap justru lebih mahal daripada mengisi daya di depot), tetapi karena jangkauan 80 km sama dengan jarak harian dan tukar baterai hanya beberapa detik, sehingga tidak ada waktu produktif hilang. Keempat, armada berat ditunda karena pada grid listrik yang masih intensif karbon (0,87 kg CO₂ per kWh), truk listrik diperkirakan sekitar 19% lebih emisif daripada diesel. Perhitungan ini perlu dicek ulang sebelum dipakai. Kelima, risiko terbesar program ini bukan teknologi motor, melainkan ketergantungan pada satu operator swap. Karena itu kontrak dibuat berbasis rupiah per kilometer dengan batas kenaikan harga dan minimal dua vendor per kota.
+Pertama, program ini disebut pilot karena 350 unit hanya 2,8% armada dan net benefit Rp 2,66 miliar (Model A) hingga Rp 3,50 miliar (Model B), atau sekitar 0,0027% sampai 0,0035% dari biaya logistik Rp 99,54 triliun. Nilainya membuktikan unit economics dan risiko swap sebelum berinvestasi besar. Kedua, motor listrik didahulukan karena keunggulannya berdiri tanpa subsidi: harga beli lebih murah secara agregat (kelas M2 dan M3; kelas M1 BeAT justru lebih mahal), biaya energi per kilometer lebih rendah, dan emisi turun hampir setengah. Ketiga, Model B memilih kendaraan listrik per kelas: Zuzu untuk kelas swap karena jangkauan 80 km sama dengan jarak harian dan tukar baterai hanya beberapa detik, sehingga tidak ada waktu produktif hilang; kelas charge memakai pengisian di depot yang biaya per kilometernya jauh lebih murah (Rp 43,34 vs swap Rp 175). Keempat, armada berat ditunda karena pada grid listrik yang masih intensif karbon (0,87 kg CO₂ per kWh), truk listrik diperkirakan sekitar 19% lebih emisif daripada diesel. Perhitungan ini perlu dicek ulang sebelum dipakai. Kelima, risiko terbesar program ini bukan teknologi motor, melainkan ketergantungan pada satu operator swap. Karena itu kontrak dibuat berbasis rupiah per kilometer dengan batas kenaikan harga dan minimal dua vendor per kota.
 
 ---
 
@@ -331,7 +363,7 @@ Hasilnya cost-to-sales turun dari 31,34% menjadi 28,35%, atau 26,8% bila sponsor
 | 4 | Right-size packaging | −0,5% | Estimasi |
 | 5 | Backhaul dan berbagi aset | −0,4% | Estimasi |
 | 6 | PUDO dan loker | −0,2% | Estimasi |
-| 7 | Transisi energi armada | −0,1% | Hanya bila armada listrik diskalakan. Pilot 350 unit hanya sekitar 0,004% |
+| 7 | Transisi energi armada | −0,1% | Hanya bila armada listrik diskalakan. Pilot 350 unit hanya sekitar 0,004% (Model A) sampai 0,005% (Model B) |
 |  | Subtotal | −6,2% |  |
 |  | Koreksi tumpang tindih | +1,0 poin |  |
 |  | **Net** | **−5,2% (Rp 4,08 T)** |  |
@@ -389,4 +421,4 @@ Dua angka penutup pada horizon 24 bulan:
 | Utilisasi jaringan tertimbang | 61,8% | 75,0% |
 | Cost-to-sales | 31,34% | 28,35%, atau 26,8% dengan sponsor selektif |
 
-Sebelum dipakai untuk slide, tiga hal wajib dikerjakan: kunci BCR TCO dan NPV lewat spreadsheet arus kas dan TCO, verifikasi ulang seluruh angka pasar eksternal, dan hitung ulang tabel sensitivitas porsi biaya tetap.
+Sebelum dipakai untuk slide, dua hal wajib dikerjakan: verifikasi ulang seluruh angka pasar eksternal (harga Pertamax, harga kendaraan, tarif swap, tarif listrik, tarif kurir), dan validasi dua model BCA armada listrik terhadap harga aktual. BCR, NPV, ROI, dan sensitivitas porsi biaya tetap sudah terkunci. Seluruh angka di dokumen ini adalah model tim dengan asumsi berlabel, bukan hasil kontrak atau data aktual GC.
