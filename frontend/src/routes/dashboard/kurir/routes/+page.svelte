@@ -96,7 +96,7 @@
       <div class="flex flex-wrap items-center gap-2">
         <!-- Tab Kota Klaster -->
         <div class="flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/40 p-1">
-          {#each CITIES as c}
+          {#each CITIES as c (c)}
             <button
               type="button"
               onclick={() => (selectedCity = c)}

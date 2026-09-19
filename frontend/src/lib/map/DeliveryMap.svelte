@@ -28,8 +28,7 @@
     pudoCountByKind,
     pudoCityCount,
     calculateSimTelemetry,
-    type PudoKind,
-    type SimTelemetry
+    type PudoKind
   } from "$lib/logistics";
   import { api, type RoutePlanResult } from "$lib/api";
   import { OSM_TILE, DARK_TILE_FILTER } from "$lib/map/tiles";
@@ -170,7 +169,7 @@
   });
 
   /** ETA total (menit): prop eksplisit bila ada, jika tidak dari data kota. */
-  const tripMin = $derived(etaMin ?? etaForCity(city));
+  const _tripMin = $derived(etaMin ?? etaForCity(city));
   const tripKm = $derived(distanceForCity(city));
 
   const simTelemetry = $derived(
@@ -720,7 +719,7 @@
 
             <!-- Pilihan Kecepatan -->
             <div class="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 font-mono text-[10.5px]">
-              {#each [1, 2, 5, 10] as sp}
+              {#each [1, 2, 5, 10] as sp (sp)}
                 <button
                   type="button"
                   onclick={() => (simSpeed = sp)}
