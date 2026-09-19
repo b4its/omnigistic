@@ -3,8 +3,8 @@ import { browser } from "$app/environment";
 import { writable } from "svelte/store";
 import { PUBLIC_API_BASE_URL } from "$env/static/public";
 
-/** Default 127.0.0.1 buat lokal dev; Docker/browser override ini ke localhost:8000 (exposed) via env build. */
-export const API_BASE = PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+/** Default 127.0.0.1 buat lokal dev; Docker/browser override ini ke localhost:8077 (exposed) via env build. */
+export const API_BASE = PUBLIC_API_BASE_URL || "http://127.0.0.1:8077";
 
 const cache = new Map<string, { t: number; data: unknown }>();
 const inflight = new Map<string, Promise<unknown>>();

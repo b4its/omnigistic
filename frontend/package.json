@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3100 --strictPort",
+    "dev": "vite dev --port 3177 --strictPort",
     "build": "vite build",
-    "preview": "vite preview --port 3101 --strictPort",
+    "preview": "vite preview --port 3178 --strictPort",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "eslint ."
   },
