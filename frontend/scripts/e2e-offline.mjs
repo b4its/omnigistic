@@ -7,7 +7,7 @@
 import { chromium } from "playwright-core";
 import { launchOptions } from "./_browser.mjs";
 
-const BASE = process.env.E2E_BASE || "http://127.0.0.1:3000";
+const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
 

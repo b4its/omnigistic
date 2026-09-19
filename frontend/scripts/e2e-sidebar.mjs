@@ -1,7 +1,7 @@
 import { chromium } from "playwright-core";
 import { launchOptions } from "./_browser.mjs";
 
-const BASE = process.env.SHOT_BASE || "http://127.0.0.1:3000";
+const BASE = process.env.SHOT_BASE || "http://127.0.0.1:3077";
 const PATH = process.env.SHOT_PATH || "/dashboard/pusat/executive";
 
 const b = await chromium.launch({ ...launchOptions(), executablePath: process.env.PLAYWRIGHT_CHROMIUM || launchOptions().executablePath });

@@ -11,13 +11,13 @@
  *     - mengetik alamat baru → POST /ml/address-parse & hasil berubah.
  *     - alamat tanpa kecocokan → pesan "Belum ada kecocokan".
  *
- * Prasyarat: backend :8000 + frontend dev :3000.
+ * Prasyarat: backend :8077 + frontend dev :3077.
  */
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
 import { launchOptions } from "./_browser.mjs";
 
-const BASE = process.env.E2E_BASE || "http://127.0.0.1:3000";
+const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
 mkdirSync("/tmp/opencode/shots", { recursive: true });

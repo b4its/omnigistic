@@ -1,7 +1,7 @@
 import { chromium } from "playwright-core";
 import { launchOptions } from "./_browser.mjs";
 
-const BASE = process.env.SHOT_BASE || "http://127.0.0.1:3000";
+const BASE = process.env.SHOT_BASE || "http://127.0.0.1:3077";
 const pages = (process.env.CHECK_PAGES || "/dashboard/kurir/cod-intel").split(",");
 // Needles wajib ada di teks halaman (dipisah "|" per halaman bila perlu).
 const needles = (process.env.CHECK_NEEDLES || "").split(",").filter(Boolean);

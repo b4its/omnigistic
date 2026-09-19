@@ -1,7 +1,7 @@
 import { chromium } from "playwright-core";
 import { launchOptions } from "./_browser.mjs";
 
-const BASE = process.env.AUDIT_BASE || "http://127.0.0.1:4173";
+const BASE = process.env.AUDIT_BASE || "http://127.0.0.1:4250";
 
 const paths = [
   "/",

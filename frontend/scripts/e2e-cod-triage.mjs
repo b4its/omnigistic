@@ -9,13 +9,13 @@
  *  4. cod-cash & cod-intel: jembatan "Pesanan COD kamu (nyata)" tampil & akurat.
  *  5. pudo: peta pakai progres dari status (bukan 0,75 hardcode) → tetap sehat.
  *
- * Prasyarat: backend :8000 + frontend dev :3000.
+ * Prasyarat: backend :8077 + frontend dev :3077.
  */
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
 import { launchOptions } from "./_browser.mjs";
 
-const BASE = process.env.E2E_BASE || "http://127.0.0.1:3000";
+const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
 const STORAGE_KEY = "omnigistic-shop-v1";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });

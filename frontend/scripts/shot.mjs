@@ -3,7 +3,7 @@ import { mkdirSync } from "node:fs";
 import { launchOptions } from "./_browser.mjs";
 
 mkdirSync("/tmp/opencode/shots", { recursive: true });
-const BASE = process.env.SHOT_BASE || "http://127.0.0.1:3000";
+const BASE = process.env.SHOT_BASE || "http://127.0.0.1:3077";
 const pages = (process.env.SHOT_PAGES || "/dashboard/hub/load-balance").split(",");
 const tag = process.env.SHOT_TAG || "shot";
 

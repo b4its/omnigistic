@@ -6,13 +6,13 @@ const B = await chromium.launch(launchOptions());
 const c = await B.newContext({ viewport: { width: 1400, height: 1000 } });
 const p = await c.newPage();
 p.on("pageerror", (e) => console.log("PAGEERR address:", String(e.message).slice(0, 100)));
-await p.goto("http://127.0.0.1:3104/dashboard/data/address", { waitUntil: "load" });
+await p.goto("http://127.0.0.1:3181/dashboard/data/address", { waitUntil: "load" });
 await p.waitForTimeout(5000);
 await p.screenshot({ path: "images/audit-address.png" });
 console.log("address ok (map present:", (await p.locator(".leaflet-container").count()) + ")");
 
 const p2 = await (await B.newContext({ viewport: { width: 1400, height: 900 } })).newPage();
-await p2.goto("http://127.0.0.1:3104/dashboard/pusat/executive", { waitUntil: "load" });
+await p2.goto("http://127.0.0.1:3181/dashboard/pusat/executive", { waitUntil: "load" });
 await p2.waitForTimeout(2500);
 const mainH1 = await p2.locator("main h1").count();
 const headH1 = await p2.locator("header h1").count();

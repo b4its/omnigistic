@@ -9,7 +9,7 @@ import { mkdirSync } from "node:fs";
  */
 mkdirSync("/tmp/opencode/shots", { recursive: true });
 
-const BASE = process.env.SHOT_BASE || "http://127.0.0.1:3000";
+const BASE = process.env.SHOT_BASE || "http://127.0.0.1:3077";
 const path = process.env.SHOT_PATH || "/dashboard/pusat/executive";
 const tag = process.env.SHOT_TAG || "resp";
 

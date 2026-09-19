@@ -7,12 +7,12 @@
  *  - Peta hub (HubMap, pusat/utilization) menampilkan overlay titik PUDO.
  *  - Peta alamat (AddressMap, data/address) menampilkan titik PUDO.
  *
- * Prasyarat: frontend dev jalan di E2E_BASE (default http://127.0.0.1:3000).
+ * Prasyarat: frontend dev jalan di E2E_BASE (default http://127.0.0.1:3077).
  */
 import { chromium } from "playwright-core";
 import { launchOptions } from "./_browser.mjs";
 
-const BASE = process.env.E2E_BASE || "http://127.0.0.1:3000";
+const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
 

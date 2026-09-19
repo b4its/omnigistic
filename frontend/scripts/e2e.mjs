@@ -1,8 +1,8 @@
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs"; mkdirSync("/tmp/opencode/shots", { recursive: true });
 import { launchOptions } from "./_browser.mjs";
-const BASE = process.env.E2E_BASE || "http://127.0.0.1:3104";
-const API = process.env.E2E_API || "http://127.0.0.1:8000";
+const BASE = process.env.E2E_BASE || "http://127.0.0.1:3181";
+const API = process.env.E2E_API || "http://127.0.0.1:8077";
 const results = [];
 const shotDir = "/tmp/opencode/shots";
 let page, browser;

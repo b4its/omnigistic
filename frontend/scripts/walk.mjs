@@ -26,7 +26,7 @@ const shots = [
 const errs = [];
 p.on("pageerror", e => errs.push(e.message.slice(0, 120)));
 for (const [path, name, pre, extraWait] of shots) {
-  await p.goto("http://127.0.0.1:3000" + path, { waitUntil: "load" });
+  await p.goto("http://127.0.0.1:3077" + path, { waitUntil: "load" });
   await p.waitForTimeout(extraWait || 2400);
   if (pre) await p.evaluate(pre);
   await p.screenshot({ path: `/tmp/shots2/${name}.png` });

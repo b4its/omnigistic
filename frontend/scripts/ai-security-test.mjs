@@ -5,7 +5,7 @@
  */
 
 const BASE = (
-  process.env.BASE_URL || "http://127.0.0.1:3100/api/ai/chat"
+  process.env.BASE_URL || "http://127.0.0.1:3177/api/ai/chat"
 ).replace(/\/$/, "");
 
 const CHAT = BASE.includes("/api/ai/chat") ? BASE : `${BASE}/api/ai/chat`;

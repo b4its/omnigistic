@@ -5,7 +5,7 @@ const p = await (await B.newContext({ viewport: { width: 1440, height: 900 } }))
 const logs = [];
 p.on("console", (m) => logs.push(m.type() + ":" + m.text().slice(0, 140)));
 p.on("pageerror", (e) => logs.push("PAGEERR:" + String(e.message).slice(0, 140)));
-await p.goto("http://127.0.0.1:3000/dashboard/pusat/roi", { waitUntil: "load" });
+await p.goto("http://127.0.0.1:3077/dashboard/pusat/roi", { waitUntil: "load" });
 await p.waitForTimeout(2500);
 const cards = await p.evaluate(() => {
   const grids = [...document.querySelectorAll("main .grid")];

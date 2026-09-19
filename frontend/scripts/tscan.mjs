@@ -3,7 +3,7 @@ import { launchOptions } from "./_browser.mjs";
 const B = await chromium.launch(launchOptions());
 for (const path of ["/", "/login", "/dashboard/pusat/executive", "/dashboard/kurir/cod-risk"]) {
   const p = await (await B.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
-  await p.goto("http://127.0.0.1:3000" + path, { waitUntil: "load" });
+  await p.goto("http://127.0.0.1:3077" + path, { waitUntil: "load" });
   await p.waitForTimeout(1200);
   const stats = await p.evaluate(() => {
     const all = [...document.querySelectorAll("body *")];

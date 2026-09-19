@@ -12,13 +12,13 @@
  *  4. Klik pesanan lain → terbuka; klik lagi → tertutup (toggle berfungsi).
  *  5. aria-expanded konsisten dengan status buka/tutup.
  *
- * Prasyarat: frontend dev jalan di E2E_BASE (default http://127.0.0.1:3000).
+ * Prasyarat: frontend dev jalan di E2E_BASE (default http://127.0.0.1:3077).
  */
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
 import { launchOptions } from "./_browser.mjs";
 
-const BASE = process.env.E2E_BASE || "http://127.0.0.1:3000";
+const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
 const STORAGE_KEY = "omnigistic-shop-v1";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
