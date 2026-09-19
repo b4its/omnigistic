@@ -15,7 +15,7 @@ log = logging.getLogger("omnigistic")
 
 # CORS: default daftar origin dev-localhost saja (bukan "*") — override: CORS_ORIGINS="http://a,http://b"
 _DEFAULT_ORIGINS = ",".join(
-    f"http://{h}:{p}" for h in ("127.0.0.1", "localhost") for p in ("3000", "3100", "3101", "3102", "3103", "3104")
+    f"http://{h}:{p}" for h in ("127.0.0.1", "localhost") for p in ("3077", "3177", "3178", "3179", "3180", "3181")
 )
 _origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", _DEFAULT_ORIGINS).split(",") if o.strip()]
 
