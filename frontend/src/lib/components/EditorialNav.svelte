@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   // Header nav editorial bersama untuk halaman gaya "technical whitepaper":
   // logo diamond kecil + "BRAND / section" (monospace) di kiri, tautan nav
   // monospace kecil dengan panah "→" di kanan. Dipakai /whitepaper & /analisis
@@ -22,7 +23,7 @@
   <div class="wp-wrap flex h-14 items-center gap-4">
     <a href={resolveHref("/")} class="flex items-center gap-2.5" aria-label="Omnigistic">
       <span class="wp-diamond" aria-hidden="true"></span>
-      <span class="wp-mono text-[13px] tracking-[0.08em] text-[var(--wp-fg)]">OMNIGISTIC</span>
+      <span class="wp-mono text-[13px] tracking-[0.08em] text-[var(--wp-fg)]">{m.edip01()}</span>
       <span class="wp-mono text-[13px] tracking-[0.08em] text-[var(--wp-muted)]">/ {section}</span>
     </a>
     {#if links.length}

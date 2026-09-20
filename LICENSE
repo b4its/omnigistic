@@ -1,0 +1,51 @@
+Copyright (c) 2026 virgiawanprima. All rights reserved.
+
+PROPRIETARY LICENSE
+
+This repository and its contents (source code, documentation, data files,
+assets, and the "Omnigistic" prototype) are made available for competition
+review and evaluation only.
+
+No permission is granted, expressly or by implication, to use, copy, modify,
+merge, publish, distribute, sublicense, sell, or otherwise exploit any part of
+this repository, in whole or in part, without the prior written consent of the
+copyright holder.
+
+You may view the repository and run it locally for the sole purpose of
+evaluating the submission.
+
+THIRD-PARTY MATERIALS
+
+1. Case material. The ISCEA Global Case Competition 2026 case ("Delivering
+   Promises", GC Logistics) and its figures remain the property of their
+   respective owners. Figures reproduced under assets/ are included for
+   documentation purposes only. All rights in the case material remain with
+   its owners.
+
+2. Map data. Coordinates and addresses are derived from OpenStreetMap data,
+   (c) OpenStreetMap contributors, licensed under the Open Database License
+   (ODbL), https://www.openstreetmap.org/copyright. Map tiles are rendered by
+   Leaflet using OpenStreetMap tile servers.
+
+3. Open source components. Third-party libraries and fonts bundled or
+   referenced by this project (SvelteKit, Svelte, Vite, Tailwind CSS,
+   Paraglide by inlang, Apache ECharts, Leaflet, GSAP, Fontsource, FastAPI,
+   Uvicorn, SQLModel, pandas, numpy, statsmodels, scikit-learn, rapidfuzz, and
+   the OpenAI Python SDK) remain under their own licenses, which continue to
+   apply to those components.
+
+NO WARRANTY
+
+The software is provided "as is", without warranty of any kind, express or
+implied, including but not limited to the warranties of merchantability,
+fitness for a particular purpose, and non-infringement. In no event shall the
+copyright holder be liable for any claim, damages, or other liability, whether
+in an action of contract, tort, or otherwise, arising from, out of, or in
+connection with the software or the use or other dealings in the software.
+
+The prototype is a decision-support demonstration. Figures, simulations, and
+models are labelled as prototypes and team assumptions throughout the
+interface and documentation. Nothing in this repository constitutes financial,
+operational, or investment advice.
+
+Contact: virgiawanprimarizky@gmail.com

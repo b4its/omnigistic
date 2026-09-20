@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   /**
    * Peta pengantaran realtime (Leaflet) — titik awal (hub), titik saat ini (kurir),
    * dan titik tujuan (pembeli), dengan garis rute yang mengikuti jalan.
@@ -81,7 +82,7 @@
     progress = 0,
     city = "Bogor",
     originLabel = HUB_LABEL,
-    destLabel = "Alamat penerima",
+    destLabel = m.delt1(),
     destCoord,
     etaMin,
     height = 360,
@@ -100,7 +101,7 @@
   const heightStyle = $derived(typeof height === "number" ? `${height}px` : height);
 
   /** true bila pengguna adalah kurir (PUDO = titik aksi, bukan sekadar info). */
-  const isCourier = $derived(role.toUpperCase() === "KURIR");
+  const isCourier = $derived(role.toUpperCase() === m.dv2t1());
 
   let mapEl = $state<HTMLElement | undefined>();
   /** Legenda peta: terbuka default (collapsible). */
@@ -367,7 +368,7 @@
       courierMk.setTooltipContent(
         frac >= 1
           ? `🏁 Tiba · ${targetLabel}`
-          : `🛵 Kurir (${pct}%) · ~${km} km · ${simTelemetry.speedKmh} km/j · ETA ~${etaLeft} mnt`
+          : m.dm4t1({ pct, km, speed: simTelemetry.speedKmh, eta: etaLeft })
       );
     } catch {
       /* noop */
@@ -426,7 +427,7 @@
             dashArray: isSel ? undefined : "4 6",
           })
             .addTo(m)
-            .bindTooltip(`${c.label} · ${c.timeMin} mnt · kepadatan ${Math.round(c.density * 100)}%${c.toll ? " · tol" : ""}`, { direction: "top" });
+            .bindTooltip(`${c.label} · ${c.timeMin} menit · kepadatan ${Math.round(c.density * 100)}%${c.toll ? " · tol" : ""}`, { direction: "top" });
         });
       }
 
@@ -441,7 +442,7 @@
         fillOpacity: 0.95,
         weight: 3
       }).addTo(map);
-      originMk.bindTooltip(`🏢 Hub: ${originLabel}`, {
+      originMk.bindTooltip(m.dm4t2({ hub: originLabel }), {
         direction: "top",
         permanent: true,
         className: "map-label-hub",
@@ -471,7 +472,7 @@
         fillOpacity: 1,
         weight: 3
       }).addTo(map);
-      courierMk.bindTooltip("🛵 Kurir", {
+      courierMk.bindTooltip(m.delt2(), {
         direction: "top",
         permanent: true,
         className: "map-label-courier",
@@ -496,15 +497,22 @@
           className: "map-label-pudo-rec",
           offset: [0, 8]
         });
-        const srcNote = p.source === "osm" ? "Koordinat & alamat: OpenStreetMap (ODbL)" : "Koordinat: asumsi tim";
+        const srcNote = p.source === "osm" ? m.delt3() : m.dv2t2();
         recMk.bindPopup(
-          `<strong>${p.name}</strong> · ${p.partner}<br/>` +
-            `<span style="opacity:.85">${PUDO_KIND_META[p.kind]?.label ?? "Mitra"}</span><br/>` +
-            `${isCourier ? "Titik drop paket rekomendasi" : "Titik ambil/bayar paket"}<br/>` +
-            `<span style="opacity:.8">${p.address}</span><br/>` +
-            `Jam layanan ${p.hours} · kapasitas ${p.capacityPerDay} paket/hari<br/>` +
-            `<span style="opacity:.7;font-size:11px">${p.city} · ${p.region} · ${srcNote}</span>` +
-            `<br/>Jarak dari tujuan ± ${dropRec.distanceKm} km · ETA ± ${dropRec.etaMin} menit`
+          m.dm4t6({
+            name: p.name,
+            partner: p.partner,
+            kind: PUDO_KIND_META[p.kind]?.label ?? m.dm4t7(),
+            label: isCourier ? m.delt4() : m.delt5(),
+            address: p.address,
+            hours: p.hours,
+            capacity: p.capacityPerDay,
+            city: p.city,
+            region: p.region,
+            note: srcNote,
+            km: dropRec.distanceKm,
+            eta: dropRec.etaMin
+          })
         );
       }
 
@@ -525,14 +533,19 @@
           permanent: false,
           className: "map-label-pudo"
         });
-        const srcNote = p.source === "osm" ? "Koordinat & alamat: OpenStreetMap (ODbL)" : "Koordinat: asumsi tim";
+        const srcNote = p.source === "osm" ? m.delt3() : m.dv2t2();
         mk.bindPopup(
-          `<strong>${p.name}</strong> · ${p.partner}<br/>` +
-            `<span style="opacity:.85">${kindLabel}</span><br/>` +
-            `Titik ambil/bayar paket<br/>` +
-            `<span style="opacity:.8">${p.address}</span><br/>` +
-            `Jam layanan ${p.hours} · kapasitas ${p.capacityPerDay} paket/hari<br/>` +
-            `<span style="opacity:.7;font-size:11px">${p.city} · ${p.region} · ${srcNote}</span>`
+          m.dm4t4({
+            name: p.name,
+            partner: p.partner,
+            kind: kindLabel,
+            address: p.address,
+            hours: p.hours,
+            capacity: p.capacityPerDay,
+            city: p.city,
+            region: p.region,
+            note: srcNote
+          })
         );
       }
 
@@ -629,7 +642,7 @@
 <div class="relative isolate z-0 w-full overflow-hidden rounded-2xl border border-border {typeof height === 'string' && height.includes('%') ? 'h-full' : ''}" style="height:{heightStyle}">
   <div
     bind:this={mapEl}
-    aria-label={`Peta pengantaran: titik awal ${originLabel}, titik tujuan ${destLabel}, posisi kurir bergerak mengikuti jalan${showPudo ? ", serta titik PUDO mitra dan rekomendasi drop terdekat" : ""}`}
+    aria-label={m.dm4t5({ origin: originLabel, dest: destLabel, pudo: showPudo ? m.del2t1() : "" })}
     role="application"
     class="absolute inset-0"
   ></div>
@@ -639,12 +652,12 @@
     <button
       type="button"
       onclick={openFullscreen}
-      aria-label="Perbesar peta ke layar penuh"
-      title="Perbesar peta (layar penuh)"
+      aria-label={m.del2t2()}
+      title={m.del2t3()}
       class="absolute right-2.5 top-2.5 z-[1000] inline-flex items-center gap-1.5 rounded-xl border border-border bg-background/90 px-3 py-1.5 text-[12px] font-semibold text-foreground shadow-pop backdrop-blur transition-all hover:bg-accent hover:scale-[1.02]"
     >
       <Icon name="layers" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" />
-      <span>Perbesar</span>
+      <span>{m.dmp01()}</span>
     </button>
   {/if}
 </div>
@@ -654,7 +667,7 @@
   <div
     class="mt-3 rounded-2xl border border-border bg-card/90 p-3 text-[12px] shadow-sm backdrop-blur transition-all"
     role="region"
-    aria-label="Kontrol simulasi pengantaran riil"
+    aria-label={m.del2t4()}
   >
     <!-- Header Widget: Judul, Status Live, dan Tombol Buka/Tutup -->
     <div class="flex items-center justify-between gap-2 border-b border-border pb-2">
@@ -663,10 +676,10 @@
           <Icon name="route" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" />
         </span>
         <div class="flex items-center gap-2">
-          <span class="font-bold text-foreground">Simulasi Pengantaran Riil</span>
+          <span class="font-bold text-foreground">{m.dmp02()}</span>
           <span class="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-mono text-[9.5px] font-semibold text-muted-foreground">
             <span class="h-1.5 w-1.5 rounded-full {simPlaying ? 'bg-success animate-ping' : 'bg-muted-foreground'}"></span>
-            {simPlaying ? "BERJALAN" : "SIAP"}
+            {simPlaying ? "BERJALAN" : m.dv2t3()}
           </span>
         </div>
       </div>
@@ -676,11 +689,11 @@
         onclick={() => (simWidgetOpen = !simWidgetOpen)}
         aria-expanded={simWidgetOpen}
         aria-controls="sim-control-body"
-        aria-label={simWidgetOpen ? "Tutup bilah simulasi" : "Buka bilah simulasi"}
+        aria-label={simWidgetOpen ? m.del2t5() : m.del2t6()}
         class="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       >
         {#if simWidgetOpen}
-          <Icon name="x" cls="h-3 w-3" weight="bold" /> Tutup Bilah Simulasi
+          <Icon name="x" cls="h-3 w-3" weight="bold" /> {m.dm4t10()}
         {:else}
           <Icon name="route" cls="h-3 w-3 text-[var(--bitcoin)]" /> Buka Bilah Simulasi
         {/if}
@@ -695,23 +708,23 @@
             <button
               type="button"
               onclick={toggleSimPlay}
-              aria-label={simPlaying ? "Jeda simulasi pengantaran" : "Mulai simulasi pengantaran"}
+              aria-label={simPlaying ? m.del2t7() : m.del2t8()}
               class="inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold shadow-sm transition-all {simPlaying ? 'bg-warning text-warning-foreground animate-pulse' : 'bg-primary text-primary-foreground hover:opacity-90'}"
             >
               {#if simPlaying}
                 <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-current"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                <span>Jeda</span>
+                <span>{m.dmp03()}</span>
               {:else}
                 <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-current"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-                <span>{simProgress >= 1 ? "Ulangi" : "Simulasi"}</span>
+                <span>{simProgress >= 1 ? m.del3t1() : m.del2t9()}</span>
               {/if}
             </button>
 
             <button
               type="button"
               onclick={resetSim}
-              aria-label="Reset simulasi"
-              title="Reset ke titik awal"
+              aria-label={m.del2t10()}
+              title={m.del2t11()}
               class="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-none stroke-current stroke-2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -736,7 +749,7 @@
           <div class="flex items-center gap-1.5">
             <span class="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[10.5px] font-semibold tabular-nums text-foreground">
               <span class="h-2 w-2 rounded-full {simPlaying ? 'bg-success animate-ping' : 'bg-muted-foreground'}"></span>
-              {simTelemetry.speedKmh} km/j
+              {simTelemetry.speedKmh} kilometer per jam
             </span>
             <span class="hidden font-mono text-[10.5px] text-muted-foreground sm:inline">
               {Math.round(simProgress * 100)}% · {simTelemetry.distanceDoneKm}/{simTelemetry.distanceTotalKm} km
@@ -754,7 +767,7 @@
 
         <!-- Scrubber Progres Jalur Rute -->
         <div class="flex items-center gap-2 pt-0.5">
-          <span class="font-mono text-[9.5px] text-muted-foreground">Hub</span>
+          <span class="font-mono text-[9.5px] text-muted-foreground">{m.dmp04()}</span>
           <input
             type="range"
             min="0"
@@ -762,7 +775,7 @@
             step="0.005"
             value={simProgress}
             oninput={handleScrub}
-            aria-label="Scrubber posisi kurir sepanjang rute"
+            aria-label={m.del2t12()}
             class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary"
           />
           <span class="font-mono text-[9.5px] text-muted-foreground">{simDiverted ? "PUDO" : city}</span>
@@ -773,19 +786,19 @@
           <div class="space-y-2 border-t border-border pt-2 text-[11px]">
             <div class="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
               <div class="rounded-lg bg-muted/40 px-2 py-1.5">
-                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">ETA Tersisa</span>
-                <span class="font-mono font-semibold text-foreground">~{simTelemetry.etaRemainingMin} mnt</span>
+                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">{m.dmp05()}</span>
+                <span class="font-mono font-semibold text-foreground">~{simTelemetry.etaRemainingMin} menit</span>
               </div>
               <div class="rounded-lg bg-muted/40 px-2 py-1.5">
-                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Sisa Jarak</span>
+                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">{m.dmp06()}</span>
                 <span class="font-mono font-semibold text-foreground">{simTelemetry.distanceRemainingKm} km</span>
               </div>
               <div class="rounded-lg bg-muted/40 px-2 py-1.5">
-                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Baterai EV</span>
+                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">{m.dmp07()}</span>
                 <span class="font-mono font-semibold text-success-foreground">🔋 {simTelemetry.batteryPct}%</span>
               </div>
               <div class="rounded-lg bg-muted/40 px-2 py-1.5">
-                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">Hemat CO₂</span>
+                <span class="block text-[9.5px] uppercase tracking-wider text-muted-foreground">{m.dmp08()}</span>
                 <span class="font-mono font-semibold text-primary">{simTelemetry.co2SavedG} g</span>
               </div>
             </div>
@@ -805,7 +818,7 @@
             <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
               <div class="flex flex-wrap items-center gap-2">
                 <div class="flex items-center gap-1.5">
-                  <span class="text-[10.5px] text-muted-foreground">Cuaca:</span>
+                  <span class="text-[10.5px] text-muted-foreground">{m.dmp09()}</span>
                   <button
                     type="button"
                     onclick={() => (simWeather = simWeather === "cerah" ? "hujan" : "cerah")}
@@ -816,7 +829,7 @@
                 </div>
 
                 <div class="flex items-center gap-1.5">
-                  <span class="text-[10.5px] text-muted-foreground">Lalin:</span>
+                  <span class="text-[10.5px] text-muted-foreground">{m.dmp10()}</span>
                   <button
                     type="button"
                     onclick={() => (simTraffic = simTraffic === "lancar" ? "macet" : "lancar")}
@@ -834,7 +847,7 @@
                   aria-pressed={simDiverted}
                   class="rounded-md border px-2.5 py-0.5 text-[10.5px] font-semibold transition-all {simDiverted ? 'border-purple-500 bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold' : 'border-border text-foreground hover:bg-accent'}"
                 >
-                  {simDiverted ? "✓ Rute ke PUDO" : "Alihkan PUDO"}
+                  {simDiverted ? m.del2t13() : "Alihkan PUDO"}
                 </button>
               {/if}
             </div>
@@ -850,7 +863,7 @@
   <div
     class="mt-3 rounded-2xl border border-border bg-card/90 p-3.5 text-[12px] shadow-sm backdrop-blur transition-all"
     role="region"
-    aria-label="Panel jalur tercepat route intelligence"
+    aria-label={m.del2t14()}
   >
     <!-- Header Widget Route Intelligence: Judul + Penghematan + Tombol Buka/Tutup -->
     <div class="flex items-center justify-between gap-2 border-b border-border pb-2">
@@ -859,9 +872,9 @@
           <Icon name="compass" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" />
         </span>
         <div class="flex items-center gap-2">
-          <span class="font-bold text-foreground">Jalur tercepat</span>
+          <span class="font-bold text-foreground">{m.dmp11()}</span>
           {#if plan}
-            <span class="rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--bitcoin)]">−{plan.summary.timeSavedMin} mnt</span>
+            <span class="rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--bitcoin)]">−{plan.summary.timeSavedMin} menit</span>
           {/if}
         </div>
       </div>
@@ -871,7 +884,7 @@
         onclick={() => (routeIntelOpen = !routeIntelOpen)}
         aria-expanded={routeIntelOpen}
         aria-controls="route-intel-body"
-        aria-label={routeIntelOpen ? "Tutup jalur tercepat" : "Buka jalur tercepat"}
+        aria-label={routeIntelOpen ? m.del2t15() : m.del2t16()}
         class="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       >
         {#if routeIntelOpen}
@@ -885,24 +898,24 @@
     {#if routeIntelOpen}
       <div id="route-intel-body" class="mt-2.5 space-y-2.5">
         {#if planFailed}
-          <p class="text-muted-foreground">Gagal memuat analisis jalur (backend offline). Rute dasar tetap ditampilkan.</p>
+          <p class="text-muted-foreground">{m.dmp12()}</p>
         {:else if !plan}
           <div class="h-16 animate-pulse rounded-lg bg-muted/50"></div>
         {:else}
           <!-- Kontrol kepadatan (jam sibuk) -->
           <label class="block">
             <span class="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              <span>Kepadatan</span><span>{density == null ? "profil kasus" : `${Math.round(density * 100)}%`}</span>
+              <span>{m.dmp13()}</span><span>{density == null ? m.del2t17() : `${Math.round(density * 100)}%`}</span>
             </span>
             <input
               type="range" min="0" max="1" step="0.1"
               value={density ?? 0.5}
               oninput={(e) => (density = Number((e.currentTarget as HTMLInputElement).value))}
-              aria-label="Tingkat kepadatan jalur"
+              aria-label={m.del2t18()}
               class="mt-1 w-full accent-[var(--bitcoin)]"
             />
           </label>
-          <button type="button" onclick={() => (density = null)} class="text-[10px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">Reset ke profil kasus</button>
+          <button type="button" onclick={() => (density = null)} class="text-[10px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">{m.dmp14()}</button>
 
           <!-- Daftar kandidat jalur -->
           <ul class="space-y-1.5">
@@ -918,16 +931,16 @@
                   <span class="min-w-0 flex-1">
                     <span class="flex items-center gap-1.5">
                       <span class="truncate font-medium text-foreground">{c.label}</span>
-                      {#if c.key === plan.fastestKey}<span class="rounded bg-success px-1 text-[9px] font-bold text-success-foreground">tercepat</span>{/if}
-                      {#if c.key === plan.mostEfficientKey}<span class="rounded bg-[var(--gold)] px-1 text-[9px] font-bold text-[#030304]">efisien</span>{/if}
+                      {#if c.key === plan.fastestKey}<span class="rounded bg-success px-1 text-[9px] font-bold text-success-foreground">{m.dmp15()}</span>{/if}
+                      {#if c.key === plan.mostEfficientKey}<span class="rounded bg-[var(--gold)] px-1 text-[9px] font-bold text-[#030304]">{m.dmp16()}</span>{/if}
                     </span>
                     <span class="mt-0.5 block font-mono text-[10px] text-muted-foreground">
-                      {c.timeMin} mnt · {c.distanceKm} km · {c.effectiveSpeedKmh} km/j · padat {Math.round(c.density * 100)}%{#if c.toll} · tol{/if}
+                      {c.timeMin} menit · {c.distanceKm} km · {c.effectiveSpeedKmh} kilometer per jam · padat {Math.round(c.density * 100)}%{#if c.toll} · tol{/if}
                     </span>
                   </span>
                   <span class="shrink-0 text-right">
                     <span class="block font-mono text-[11px] font-semibold tabular-nums text-foreground">{(c.efficiencyScore * 100).toFixed(0)}</span>
-                    <span class="block font-mono text-[8px] uppercase tracking-wider text-muted-foreground">skor</span>
+                    <span class="block font-mono text-[8px] uppercase tracking-wider text-muted-foreground">{m.dmp17()}</span>
                   </span>
                 </button>
               </li>
@@ -937,10 +950,10 @@
           {#if selected}
             <p class="rounded-lg bg-muted/50 px-2.5 py-1.5 text-[11px] text-muted-foreground">
               <span class="font-medium text-foreground">Dipilih: {selected.label}.</span>
-              ETA {selected.timeMin} mnt · Rp{new Intl.NumberFormat("id-ID").format(selected.costIdr)} · {selected.co2G} g CO₂. Keandalan {(selected.reliability * 100).toFixed(0)}%.
+              ETA {selected.timeMin} {m.dm3f1()}{new Intl.NumberFormat("id-ID").format(selected.costIdr)} · {selected.co2G} g CO₂. Keandalan {(selected.reliability * 100).toFixed(0)}%.
             </p>
           {/if}
-          <p class="text-[10px] italic text-muted-foreground">Kepadatan/kecepatan/biaya = asumsi tim; bukan data lalu lintas live.</p>
+          <p class="text-[10px] italic text-muted-foreground">{m.dmp18()}</p>
         {/if}
       </div>
     {/if}
@@ -956,9 +969,9 @@
           <Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" />
         </span>
         <div>
-          <span class="font-bold text-foreground">Legenda peta</span>
+          <span class="font-bold text-foreground">{m.dmp19()}</span>
           <span class="ml-2 hidden rounded-full bg-muted px-2 py-0.5 font-mono text-[9.5px] text-muted-foreground sm:inline">
-            Semua penanda terlabel langsung di peta
+            {m.dmp20()}
           </span>
         </div>
       </div>
@@ -967,11 +980,11 @@
         onclick={() => (legendOpen = !legendOpen)}
         aria-expanded={legendOpen}
         aria-controls="map-legend-panel"
-        aria-label={legendOpen ? "Tutup legenda peta" : "Buka legenda peta"}
+        aria-label={legendOpen ? m.del2t19() : m.del2t20()}
         class="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       >
         {#if legendOpen}
-          <Icon name="x" cls="h-3 w-3" weight="bold" /> Tutup legenda peta
+          <Icon name="x" cls="h-3 w-3" weight="bold" /> {m.dm4t11()}
         {:else}
           <Icon name="map" cls="h-3 w-3 text-[var(--bitcoin)]" /> Buka legenda peta
         {/if}
@@ -982,12 +995,12 @@
       <div id="map-legend-panel" class="mt-2.5 space-y-2.5 border-t border-border pt-2.5">
         <!-- Penanda Titik -->
         <div>
-          <p class="mb-1.5 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Penanda Titik pada Peta</p>
+          <p class="mb-1.5 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{m.dmp21()}</p>
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             <div class="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
               <span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span>
               <div class="min-w-0">
-                <p class="truncate text-[11.5px] font-semibold text-foreground">Hub asal</p>
+                <p class="truncate text-[11.5px] font-semibold text-foreground">{m.dmp22()}</p>
                 <p class="truncate text-[10.5px] text-muted-foreground">{originLabel}</p>
               </div>
             </div>
@@ -995,15 +1008,15 @@
             <div class="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
               <span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#2563eb] bg-[#dbeafe]"></span>
               <div class="min-w-0">
-                <p class="truncate text-[11.5px] font-semibold text-foreground">Kurir</p>
-                <p class="truncate text-[10.5px] text-muted-foreground">Posisi saat ini &amp; telemetri bergerak</p>
+                <p class="truncate text-[11.5px] font-semibold text-foreground">{m.dmp23()}</p>
+                <p class="truncate text-[10.5px] text-muted-foreground">{m.dmp24()}</p>
               </div>
             </div>
 
             <div class="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
               <span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#fde4d8]"></span>
               <div class="min-w-0">
-                <p class="truncate text-[11.5px] font-semibold text-foreground">Tujuan</p>
+                <p class="truncate text-[11.5px] font-semibold text-foreground">{m.dmp25()}</p>
                 <p class="truncate text-[10.5px] text-muted-foreground">{destLabel}</p>
               </div>
             </div>
@@ -1012,8 +1025,8 @@
               <div class="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
                 <span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span>
                 <div class="min-w-0">
-                  <p class="truncate text-[11.5px] font-semibold text-foreground">PUDO mitra</p>
-                  <p class="truncate text-[10.5px] text-muted-foreground">Titik ambil/bayar alternatif</p>
+                  <p class="truncate text-[11.5px] font-semibold text-foreground">{m.dmp26()}</p>
+                  <p class="truncate text-[10.5px] text-muted-foreground">{m.dmp27()}</p>
                 </div>
               </div>
 
@@ -1022,9 +1035,9 @@
                   <span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#7c3aed] bg-[#ede9fe]"></span>
                   <div class="min-w-0">
                     <p class="truncate text-[11.5px] font-semibold text-foreground">
-                      {isCourier ? "Titik drop paket rekomendasi" : "PUDO terdekat"}
+                      {isCourier ? m.del2t21() : "PUDO terdekat"}
                     </p>
-                    <p class="truncate text-[10.5px] text-muted-foreground">{dropRec.pudo.name} (±{dropRec.distanceKm} km · ETA ±{dropRec.etaMin} mnt)</p>
+                    <p class="truncate text-[10.5px] text-muted-foreground">{dropRec.pudo.name} (±{dropRec.distanceKm} km · ETA ±{dropRec.etaMin} menit)</p>
                   </div>
                 </div>
               {/if}
@@ -1035,26 +1048,26 @@
         <!-- Garis Rute & Kategori Mitra -->
         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-2 text-[11px]">
           <div class="flex flex-wrap items-center gap-3">
-            <span class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis Rute:</span>
+            <span class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{m.dmp28()}</span>
             <span class="inline-flex items-center gap-1.5">
               <span class="h-0.5 w-5 rounded bg-[#94a3b8]"></span>
-              <span class="text-muted-foreground">Rencana rute (penuh)</span>
+              <span class="text-muted-foreground">{m.dmp29()}</span>
             </span>
             <span class="inline-flex items-center gap-1.5">
               <span class="h-1 w-5 rounded bg-[#16a34a]"></span>
-              <span class="text-muted-foreground">Sudah ditempuh</span>
+              <span class="text-muted-foreground">{m.dmp30()}</span>
             </span>
             {#if routeIntel}
               <span class="inline-flex items-center gap-1.5">
                 <span class="h-1 w-5 rounded bg-[var(--bitcoin)]"></span>
-                <span class="text-muted-foreground">Jalur terpilih (tebal)</span>
+                <span class="text-muted-foreground">{m.dmp31()}</span>
               </span>
             {/if}
           </div>
 
           {#if showPudo && pudos.length > 0}
             <div class="flex flex-wrap items-center gap-2">
-              <span class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Kategori Mitra:</span>
+              <span class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{m.dmp32()}</span>
               {#each kindCounts() as kc (kc.kind)}
                 <span class="inline-flex items-center gap-1 text-[10.5px] text-muted-foreground">
                   <span class="h-2.5 w-2.5 rounded-full border" style="border-color:{kc.color};background:{kc.fill}"></span>
@@ -1067,8 +1080,8 @@
 
         <!-- Atribusi Sumber & Catatan -->
         <p class="border-t border-border pt-1.5 text-[10px] italic leading-snug text-muted-foreground">
-          Jaringan PUDO nasional: {PUDO_POINTS.length} titik mitra · {pudoCityCount()} kota di 6 region. Ubin peta © OpenStreetMap (ODbL);
-          koordinat &amp; alamat diverifikasi dari OpenStreetMap; jam layanan &amp; kapasitas = asumsi operasional.
+          {m.dm4t9()} {m.pd4t1({ n: PUDO_POINTS.length })} · {pudoCityCount()} {m.dm3f2()}
+          {m.dmp49()}
         </p>
       </div>
     {/if}
@@ -1092,15 +1105,15 @@
         </span>
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-2">
-            <h2 class="truncate text-sm font-bold text-foreground">Peta pengantaran — layar penuh</h2>
+            <h2 class="truncate text-sm font-bold text-foreground">{m.dmp33()}</h2>
             <span class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary">
               Klaster {city}
             </span>
             <span class="rounded-full bg-success/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-success-foreground">
-              LIVE TELEMETRI
+              {m.dmp34()}
             </span>
             <span class="hidden rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground sm:inline">
-              Mode Penuh
+              {m.dmp35()}
             </span>
           </div>
           <p class="truncate text-xs text-muted-foreground">{originLabel} → {destLabel}{role ? ` · ${role}` : ""} · Simulasi pergerakan rute &amp; telemetri langsung</p>
@@ -1116,14 +1129,14 @@
           class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-accent"
         >
           <Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" />
-          <span>{legendOpenFs ? "Sembunyikan legenda" : "Tampilkan legenda"}</span>
+          <span>{legendOpenFs ? m.del2t22() : m.del2t23()}</span>
         </button>
 
         <button
           type="button"
           onclick={closeFullscreen}
-          aria-label="Tutup peta layar penuh"
-          title="Tutup peta layar penuh (Esc)"
+          aria-label={m.del2t24()}
+          title={m.del2t25()}
           class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive-foreground"
         >
           <Icon name="x" cls="h-4 w-4" />
@@ -1170,13 +1183,13 @@
           <div class="mb-3 flex items-center justify-between gap-2 border-b border-border pb-2.5">
             <p class="flex items-center gap-1.5 font-bold text-foreground">
               <Icon name="map" cls="h-4 w-4 text-[var(--bitcoin)]" weight="bold" />
-              Legenda peta
+              {m.dmp36()}
             </p>
             <button
               type="button"
               onclick={() => (legendOpenFs = false)}
-              aria-label="Tutup legenda peta"
-              title="Tutup panel legenda"
+              aria-label={m.del2t19()}
+              title={m.del2t26()}
               class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <Icon name="x" cls="h-3.5 w-3.5" weight="bold" />
@@ -1185,26 +1198,26 @@
 
           <div class="space-y-3">
             <div>
-              <p class="mb-1.5 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Penanda Titik</p>
+              <p class="mb-1.5 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{m.dmp37()}</p>
               <ul class="space-y-2">
                 <li class="flex items-start gap-2">
                   <span class="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span>
                   <div>
-                    <b class="text-foreground">Hub asal</b>
+                    <b class="text-foreground">{m.dmp38()}</b>
                     <p class="text-[11px] text-muted-foreground">{originLabel}</p>
                   </div>
                 </li>
                 <li class="flex items-start gap-2">
                   <span class="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#2563eb] bg-[#dbeafe]"></span>
                   <div>
-                    <b class="text-foreground">Kurir</b>
-                    <p class="text-[11px] text-muted-foreground">Posisi saat ini &amp; telemetri bergerak</p>
+                    <b class="text-foreground">{m.dmp39()}</b>
+                    <p class="text-[11px] text-muted-foreground">{m.dmp40()}</p>
                   </div>
                 </li>
                 <li class="flex items-start gap-2">
                   <span class="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#fde4d8]"></span>
                   <div>
-                    <b class="text-foreground">Tujuan</b>
+                    <b class="text-foreground">{m.dmp41()}</b>
                     <p class="text-[11px] text-muted-foreground">{destLabel}</p>
                   </div>
                 </li>
@@ -1212,8 +1225,8 @@
                   <li class="flex items-start gap-2">
                     <span class="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span>
                     <div>
-                      <b class="text-foreground">PUDO mitra</b>
-                      <p class="text-[11px] text-muted-foreground">Titik ambil/bayar alternatif</p>
+                      <b class="text-foreground">{m.dmp42()}</b>
+                      <p class="text-[11px] text-muted-foreground">{m.dmp43()}</p>
                     </div>
                   </li>
                   {#if dropRec}
@@ -1230,18 +1243,18 @@
             </div>
 
             <div class="border-t border-border pt-2.5">
-              <p class="mb-1.5 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis rute</p>
+              <p class="mb-1.5 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{m.dmp44()}</p>
               <ul class="space-y-1.5">
-                <li class="flex items-center gap-2"><span class="h-0.5 w-6 shrink-0 rounded bg-[#94a3b8]"></span> <span>Rencana rute (penuh)</span></li>
-                <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>Sudah ditempuh</span></li>
+                <li class="flex items-center gap-2"><span class="h-0.5 w-6 shrink-0 rounded bg-[#94a3b8]"></span> <span>{m.dmp45()}</span></li>
+                <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>{m.dmp46()}</span></li>
                 {#if routeIntel}
-                  <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[var(--bitcoin)]"></span> <span>Jalur terpilih (tebal)</span></li>
+                  <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[var(--bitcoin)]"></span> <span>{m.dmp47()}</span></li>
                 {/if}
               </ul>
             </div>
 
             <p class="border-t border-border pt-2.5 text-[10px] italic leading-snug text-muted-foreground">
-              Ubin peta © OpenStreetMap (ODbL). Jam/kapasitas & kepadatan = asumsi tim (prototipe).
+              {m.dmp48()}
             </p>
           </div>
         </aside>

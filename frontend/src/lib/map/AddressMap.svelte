@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { get } from "svelte/store";
   import L from "leaflet";
@@ -97,7 +98,7 @@
 
     // origin marker (vector, hindari 404 marker-icon.png)
     const originMk = L.circleMarker(origin, { radius: 9, color: "#16a34a", fillColor: "#dcfce7", fillOpacity: 0.7, weight: 2 }).addTo(map);
-    originMk.bindTooltip("Hub Jakarta (origin)", { permanent: false, direction: "top" });
+    originMk.bindTooltip(m.addt1(), { permanent: false, direction: "top" });
 
     // 3 kandidat alamat ambigu
     for (const loc of locations) {
@@ -156,7 +157,7 @@
         raf = requestAnimationFrame(tick);
       } else {
         try {
-          moving.setTooltipContent("Tiba: Jl. Raya Jakarta-Bogor No.12, Cibinong (target benar)").openTooltip();
+          moving.setTooltipContent(m.add2t1()).openTooltip();
         } catch {
           /* noop */
         }
@@ -187,7 +188,7 @@
 </script>
 
 <div class="relative isolate z-0 h-[340px] w-full overflow-hidden rounded-2xl border border-border">
-  <div bind:this={mapEl} aria-label="Peta Leaflet: 3 alamat ambigu, ML memetakan target, animasi kurir mengikuti rute jalan, ETA {etaMin} menit" role="application" class="absolute inset-0"></div>
+  <div bind:this={mapEl} aria-label={m.ax29({ eta: etaMin })} role="application" class="absolute inset-0"></div>
   <!-- Legenda peta lengkap & rinci (collapsible) -->
   <div class="absolute right-2 top-2 z-[1000] max-w-[min(16rem,calc(100%-1rem))] rounded-lg border border-border bg-background/92 text-[12px] shadow-pop backdrop-blur">
     <button
@@ -197,29 +198,29 @@
       aria-controls="addr-legend"
       class="flex w-full items-center justify-between gap-2 px-3 py-2 font-semibold text-foreground"
     >
-      <span class="flex items-center gap-1.5"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</span>
+      <span class="flex items-center gap-1.5"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> {m.am4t1()}</span>
       <Icon name={legendOpen ? "caret-down" : "arrow-right"} cls="h-3 w-3 shrink-0 text-muted-foreground" weight="bold" />
     </button>
     {#if legendOpen}
       <div id="addr-legend" class="max-h-[58%] space-y-2 overflow-y-auto border-t border-border px-3 py-2.5">
         <p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Penanda</p>
         <ul class="space-y-1.5">
-          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span> <span><b class="text-foreground">Hub Jakarta</b> — titik asal rute</span></li>
-          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#f7931a]"></span> <span><b class="text-foreground">Alamat terverifikasi</b> (target benar)</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span> <span><b class="text-foreground">{m.am3f1()}</b> · {m.am4t2()}</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#f7931a]"></span> <span><b class="text-foreground">{m.am3f2()}</b> (target benar)</span></li>
           <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#7f8c8d] bg-[#95a5a6]"></span> <span>Kandidat ambigu lain (skor rendah)</span></li>
-          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span> <span>PUDO mitra (drop/ambil alternatif)</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span> <span>{m.am4t3()}</span></li>
         </ul>
         <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis</p>
         <ul class="space-y-1.5">
-          <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>Rute kurir (mengikuti jalan)</span></li>
+          <li class="flex items-center gap-2"><span class="h-1 w-6 shrink-0 rounded bg-[#16a34a]"></span> <span>{m.am3f3()}</span></li>
         </ul>
         <p class="border-t border-border pt-2 text-[10px] italic leading-snug text-muted-foreground">
-          Ubin © OpenStreetMap. Rute ~{Math.round(routeTotal)} km · ETA ~{etaMin} mnt. Kandidat alamat: Cibinong/Depok/Tangsel (data kasus).
+          Ubin © OpenStreetMap. Rute ~{Math.round(routeTotal)} km · ETA ~{etaMin} {m.am3f4()}
         </p>
       </div>
     {/if}
   </div>
 </div>
 <p class="mt-2 text-[14px] text-muted-foreground">
-  Rute kurir mengikuti jalan (~{Math.round(routeTotal)} km) menuju Cibinong (Kab. Bogor) — ETA ~{etaMin} menit, dibandingkan 3 kandidat alamat ambigu.
+  {m.am3f5()}{Math.round(routeTotal)} {m.am3f6()}{etaMin} {m.am3f7()}
 </p>

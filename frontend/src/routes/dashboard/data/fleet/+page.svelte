@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { api } from "$lib/api";
   import EChart from "$lib/components/EChart.svelte";
@@ -85,77 +86,77 @@
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
-    <h1 class="font-heading text-xl font-semibold tracking-tight">Fleet &amp; Emissions</h1>
-    <span class="hub-label text-muted-foreground">DATA · motor dominan {numId(motorSharePct, 1)}%</span>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">{m.df01()}</h1>
+    <span class="hub-label text-muted-foreground">{m.df4t1({ pct: numId(motorSharePct, 1) })}</span>
   </div>
 
   {#if loaded && failed}
-    <PageState loading={false} error={true} errorTitle="Gagal memuat data armada" onretry={load} />
+    <PageState loading={false} error={true} errorTitle={m.fl2t1()} onretry={load} />
   {:else if loaded}
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div class="rounded-2xl border bg-card p-4 text-center">
         <p class="kpi-value text-2xl">{new Intl.NumberFormat("id-ID").format(totalAll)}</p>
-        <p class="text-xs text-muted-foreground">Total unit (line-haul + last-mile)</p>
+        <p class="text-xs text-muted-foreground">{m.df02()}</p>
       </div>
       <div class="rounded-2xl border border-primary/30 bg-card p-4 text-center">
         <p class="kpi-value text-2xl text-primary">{numId(motorSharePct, 1)}%</p>
-        <p class="text-xs text-muted-foreground">Motor (dari {new Intl.NumberFormat("id-ID").format(total)} last-mile)</p>
+        <p class="text-xs text-muted-foreground">{m.df3f1()} {new Intl.NumberFormat("id-ID").format(total)} last-mile)</p>
       </div>
       <div class="rounded-2xl border border-chart-3 bg-card p-4 text-center">
         <p class="kpi-value text-2xl text-chart-3">{fleet.lastMileMotorPct ?? 70}%</p>
-        <p class="text-xs text-muted-foreground">last-mile motor</p>
+        <p class="text-xs text-muted-foreground">{m.df03()}</p>
       </div>
       <div class="rounded-2xl border border-destructive/30 bg-card p-4 text-center">
         <p class="kpi-value text-2xl text-destructive-foreground">{fleet.evTarget ?? 200}</p>
-        <p class="text-xs text-muted-foreground">target EV 2026</p>
+        <p class="text-xs text-muted-foreground">{m.df04()}</p>
       </div>
     </div>
 
     <div class="rounded-2xl border border-primary/30 bg-primary/5 p-5">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p class="text-sm font-semibold">Simulasi transisi EV</p>
-          <p class="mt-1 text-xs text-muted-foreground">Geser % armada last-mile yang dikonversi ke EV → lihat bauran &amp; penurunan emisi (faktor emisi = asumsi tim, dilabel).</p>
+          <p class="text-sm font-semibold">{m.df05()}</p>
+          <p class="mt-1 text-xs text-muted-foreground">{m.df06()}</p>
         </div>
         <button
           type="button"
           onclick={() => { evAdoptionPct = 0; showSim = false; }}
           class="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold hover:border-primary/40"
-        >Reset</button>
+        >{m.df07()}</button>
       </div>
       <label class="mt-4 block">
         <span class="flex items-center justify-between text-xs font-medium text-muted-foreground">
-          <span>Adopsi EV (armada last-mile)</span><span class="kpi-value text-foreground">{evAdoptionPct}% · {new Intl.NumberFormat("id-ID").format(sim.convert)} unit</span>
+          <span>{m.df08()}</span><span class="kpi-value text-foreground">{evAdoptionPct}% · {new Intl.NumberFormat("id-ID").format(sim.convert)} unit</span>
         </span>
         <input
           type="range" min="0" max="100" step="5"
           bind:value={evAdoptionPct}
           oninput={() => (showSim = true)}
-          aria-label="Adopsi EV persen"
+          aria-label={m.ax15()}
           class="mt-2 w-full accent-[var(--color-primary)]"
         />
       </label>
       <div class="mt-4 grid gap-3 sm:grid-cols-3">
         <div class="rounded-xl bg-card/70 p-3">
-          <p class="text-xs text-muted-foreground">Porsi EV armada</p>
+          <p class="text-xs text-muted-foreground">{m.df09()}</p>
           <p class="kpi-value text-lg">{numId(sim.evSharePct, 1)}%</p>
-          <p class="text-[11px] text-muted-foreground">kasus awal {numId(((fleet.evTarget ?? 200) / (total || 1)) * 100, 2)}%</p>
+          <p class="text-[11px] text-muted-foreground">{m.df3f2()} {numId(((fleet.evTarget ?? 200) / (total || 1)) * 100, 2)}%</p>
         </div>
         <div class="rounded-xl bg-card/70 p-3">
-          <p class="text-xs text-muted-foreground">Emisi before → after</p>
+          <p class="text-xs text-muted-foreground">{m.df10()}</p>
           <p class="kpi-value text-lg">{numId(sim.co2Before / 1000, 1)} → {numId(sim.co2After / 1000, 1)} <span class="text-xs">t</span></p>
-          <p class="text-[11px] text-muted-foreground">proxy tahunan, unit last-mile</p>
+          <p class="text-[11px] text-muted-foreground">{m.df11()}</p>
         </div>
         <div class="rounded-xl bg-card/70 p-3">
-          <p class="text-xs text-muted-foreground">Penurunan emisi</p>
+          <p class="text-xs text-muted-foreground">{m.df12()}</p>
           <p class="kpi-value text-lg text-success-foreground">−{numId(sim.co2SavedPct, 1)}%</p>
-          <p class="text-[11px] text-muted-foreground">{numId(sim.co2SavedKg / 1000, 1)} t CO₂e/tahun</p>
+          <p class="text-[11px] text-muted-foreground">{numId(sim.co2SavedKg / 1000, 1)} {m.df3f3()}</p>
         </div>
       </div>
     </div>
 
     <div class="rounded-2xl border bg-card p-5">
-      <p class="mb-3 text-sm font-medium">Armada composition {showSim && evAdoptionPct > 0 ? `(simulasi EV ${evAdoptionPct}%)` : "(motor dominan)"}</p>
+      <p class="mb-3 text-sm font-medium">{m.df3f4()} {showSim && evAdoptionPct > 0 ? m.df4t2({ pct: evAdoptionPct }) : m.df4t3()}</p>
       <EChart option={donutChart(showSim && evAdoptionPct > 0 ? simPie : pieData)} height={220} />
       {#if showSim && evAdoptionPct > 0}
         <p class="mt-3 text-xs text-muted-foreground">
@@ -167,16 +168,16 @@
     </div>
 
     <div class="rounded-2xl border bg-card p-5">
-      <p class="mb-3 text-sm font-medium">Roadmap 3 Fase</p>
+      <p class="mb-3 text-sm font-medium">{m.df13()}</p>
       <ol class="space-y-3">
-        <li class="rounded-md bg-muted/50 p-3 text-sm"><span class="font-semibold">Fase 1</span> (2024-25): 50 EV pilot di rute urban Jawa. <span class="text-muted-foreground">Baseline emisi + reusable bags.</span></li>
-        <li class="rounded-md bg-muted/50 p-3 text-sm"><span class="font-semibold">Fase 2</span> (2025-26): 200 EV + infrastruktur charging. <span class="text-muted-foreground">Kemasan degradable penuh.</span></li>
-        <li class="rounded-md bg-muted/50 p-3 text-sm"><span class="font-semibold">Fase 3</span> (2026+): Ekspansi van/truk + replacement policy 8 tahun. <span class="text-muted-foreground">Emisi/paket -20%/2027.</span></li>
+        <li class="rounded-md bg-muted/50 p-3 text-sm"><span class="font-semibold">{m.df14()}</span> {m.df15()} <span class="text-muted-foreground">{m.df16()}</span></li>
+        <li class="rounded-md bg-muted/50 p-3 text-sm"><span class="font-semibold">{m.df17()}</span> {m.df18()} <span class="text-muted-foreground">{m.df19()}</span></li>
+        <li class="rounded-md bg-muted/50 p-3 text-sm"><span class="font-semibold">{m.df20()}</span> {m.df21()} <span class="text-muted-foreground">{m.df22()}</span></li>
       </ol>
     </div>
 
     <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm">
-      Motor {numId(motorSharePct, 1)}% dari armada last-mile ({new Intl.NumberFormat("id-ID").format(fleet.motorcycles ?? 0)} unit). Target {fleet.evTarget ?? 200} EV ≈ {numId(((fleet.evTarget ?? 200) / (totalAll || 1)) * 100, 2)}% dari {new Intl.NumberFormat("id-ID").format(totalAll)} unit. Perlu kebijakan penyusutan 8 tahun untuk transisi alami tanpa lonjakan capex.
+      {m.df4t4({ share: numId(motorSharePct, 1), n: new Intl.NumberFormat("id-ID").format(fleet.motorcycles ?? 0), target: fleet.evTarget ?? 200, pct: numId(((fleet.evTarget ?? 200) / (totalAll || 1)) * 100, 2), total: new Intl.NumberFormat("id-ID").format(totalAll) })}
     </div>
   {:else}
     <PageState loading={true} skeletonCards={4} skeletonHeight={220} />

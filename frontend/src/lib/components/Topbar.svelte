@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import type { Role } from "$lib/stores/role";
   import { resolveHref } from "$lib/utils";
@@ -7,6 +8,7 @@
   import { pnlSummary } from "$lib/shop/analytics";
   import { liveSummary } from "$lib/shop/orderbook";
   import ThemeToggle from "./ThemeToggle.svelte";
+  import LanguageSwitcher from "./LanguageSwitcher.svelte";
   import Icon from "./Icon.svelte";
 
   let { role = "PUSAT", onmenutoggle, sidenavOpen = true, sidenavVisible = true }: {
@@ -20,12 +22,12 @@
   } = $props();
 
   const roleMeta: Record<string, { name: string; sub: string; letter: string }> = {
-    PUSAT: { name: "Dalila", sub: "Manajer Pusat", letter: "D" },
-    HUB: { name: "Marwah", sub: "Manajer Hub Bandung", letter: "M" },
-    KURIR: { name: "Baits", sub: "Kurir Jakarta", letter: "B" },
+    PUSAT: { name: "Dalila", sub: m.top3t1(), letter: "D" },
+    HUB: { name: "Marwah", sub: m.topt1(), letter: "M" },
+    KURIR: { name: "Baits", sub: m.top3t2(), letter: "B" },
     DATA: { name: "Virgiawan", sub: "Data & IT", letter: "V" },
-    CUSTOMER: { name: "Sari", sub: "Pembeli", letter: "S" },
-    SELLER: { name: "Rina", sub: "Penjual", letter: "R" }
+    CUSTOMER: { name: "Sari", sub: m.top3t3(), letter: "S" },
+    SELLER: { name: "Rina", sub: m.top3t4(), letter: "R" }
   };
   const roleRoutes: Record<string, string> = {
     PUSAT: "/dashboard/pusat/overview",
@@ -41,16 +43,16 @@
   // Semua angka = dataset kasus ISCEA (2023, 12 titik). Filter rentang waktu
   // TIDAK bermakna di sini, jadi ditampilkan sebagai label periode yang jujur
   // (bukan dropdown yang tak mengubah apa pun).
-  const PERIOD_LABEL = "Data kasus 2023";
+  const PERIOD_LABEL = m.topt2();
   let openPop = $state<null | "notif" | "profile">(null);
 
   // Notifikasi statis per role (klaim umum, tanpa angka yang bisa bertentangan).
   const staticNotifs: Record<string, string[]> = {
-    PUSAT: ["Hub Jakarta utilisasi 90,4%, di atas ambang 65%.", "2 paket COD berisiko tinggi di rute Bandung.", "EBIT positif 2024 — fokus jaga cost-to-sales."],
-    HUB: ["Utilisasi Bandung 68,9% di atas ambang.", "Forecast: demand naik pada puncak promo.", "Buffer musiman siap diaktivasi."],
-    KURIR: ["3 paket COD perlu diarahkan ke PUDO.", "Slot konfirmasi: penerima sudah siap.", "Rute COD terpangkas dengan cluster terpisah."],
-    DATA: ["3 alamat ambigu baru perlu verifikasi.", "Geotag checkout mendorong alamat presisi.", "Pipeline ETA partner multimoda tersambung."],
-    GUEST: ["Selamat datang — pilih portal peran."]
+    PUSAT: [m.topt3(), m.topt4(), "EBIT positif 2024 — fokus jaga cost-to-sales."],
+    HUB: [m.topt5(), m.topt6(), m.top2t1()],
+    KURIR: [m.topt7(), m.top2t2(), m.topt8()],
+    DATA: [m.topt9(), m.topt10(), "Pipeline ETA partner multimoda tersambung."],
+    GUEST: [m.topt11()]
   };
 
   // Notifikasi live dari store (pesanan nyata) → tidak bertentangan dgn data turunan.
@@ -64,11 +66,11 @@
   const liveNotifs = $derived.by<string[]>(() => {
     if (role === "CUSTOMER") {
       const active = liveOrders.filter((o) => o.status !== "terkirim");
-      if (active.length === 0) return ["Belanja dulu — pesanan & pelacakan muncul di sini.", "Bayar COD bila reputasi akunmu baik.", "Lacak kurir realtime di Dashboard."];
+      if (active.length === 0) return [m.topt12(), "Bayar COD bila reputasi akunmu baik.", m.topt13()];
       return [
-        `Kamu punya ${active.length} pesanan aktif yang sedang diproses.`,
-        `Pesanan terbaru: ${active[0].address.recipient} · ${active[0].address.city}.`,
-        "Buka Dashboard untuk melacak kurir menuju alamatmu."
+        m.tp1({ n: active.length }),
+        m.tp2({ recipient: active[0].address.recipient, city: active[0].address.city }),
+        m.topbar_customer_track()
       ];
     }
     if (role === "SELLER") {
@@ -76,11 +78,11 @@
       const pnl = pnlSummary();
       const list = [`Margin kotor (katalog): ${pnl.grossMarginPct}% — sehat.`];
       if (live.orderCount > 0) {
-        list.unshift(`${live.orderCount} pesanan masuk dari pembeli (${live.activeCount} aktif).`);
+        list.unshift(m.tp3({ n: live.orderCount, active: live.activeCount }));
         list.push(`Nilai penjualan live: ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(live.revenue)}.`);
       } else {
-        list.push("Belum ada pesanan masuk dari pembeli.");
-        list.push("Pantau skor pelanggan untuk menekan risiko COD.");
+        list.push(m.topt14());
+        list.push(m.topt15());
       }
       return list.slice(0, 3);
     }
@@ -131,9 +133,9 @@
       a.download = "omnigistic-hubs.csv";
       a.click();
       URL.revokeObjectURL(url);
-      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `omnigistic-hubs.csv terunduh (${hubs.length} hub)`, type: "success", title: "Export" } }));
+      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: m.tp4({ n: hubs.length }), type: "success", title: "Export" } }));
     } catch {
-      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: "Export gagal — backend offline?", type: "error", title: "Export" } }));
+      window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: m.topt16(), type: "error", title: "Export" } }));
     } finally {
       exporting = false;
     }
@@ -148,9 +150,9 @@
       <button
         type="button"
         onclick={onmenutoggle}
-        aria-label={sidenavOpen ? "Tutup sidebar" : "Buka sidebar"}
+        aria-label={sidenavOpen ? m.topbar_sidebar_close() : m.topbar_sidebar_open()}
         aria-expanded={sidenavOpen}
-        title={sidenavOpen ? "Tutup sidebar" : "Buka sidebar"}
+        title={sidenavOpen ? m.topbar_sidebar_close() : m.topbar_sidebar_open()}
         class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary"
       >
         <Icon name={sidenavOpen ? "panel-left" : "menu"} cls="h-4.5 w-4.5" />
@@ -160,13 +162,13 @@
       <p class="truncate font-heading text-lg font-semibold tracking-tight text-foreground sm:text-xl">{meta.name} · <span class="text-muted-foreground">{meta.sub}</span></p>
       <p class="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
         <span class={"inline-block h-1.5 w-1.5 rounded-full " + ($online ? "bg-success-foreground animate-pulse" : "bg-warning-foreground")}></span>
-        <span class="truncate">{$online ? "Data studi kasus ISCEA 2026 · langsung" : "Data lokal (backend offline)"}</span>
+        <span class="truncate">{$online ? m.ax34() : m.ax35()}</span>
       </p>
     </div>
 
     <span
       class="ml-1 hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground sm:ml-2 sm:flex"
-      title="Seluruh angka berasal dari dataset studi kasus ISCEA (12 titik, 2023)"
+      title={m.top2t3()}
     >
       <Icon name="calendar" cls="h-3.5 w-3.5" />
       {PERIOD_LABEL}
@@ -180,7 +182,7 @@
       class="hidden items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-foreground transition-all duration-300 hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:text-[var(--bitcoin)] sm:flex"
     >
       <Icon name="plus" cls="h-3.5 w-3.5" weight="bold" />
-      Tambah widget
+      {m.topp01()}
     </button>
 
     <button
@@ -211,7 +213,7 @@
       {#if openPop === "notif"}
         <div class="absolute right-0 top-[calc(100%+8px)] z-[9999] w-72 rounded-xl border border-border bg-card shadow-pop">
           <div class="flex items-center justify-between border-b border-border px-4 py-2.5">
-            <span class="text-sm font-semibold">Pembaruan</span>
+            <span class="text-sm font-semibold">{m.topp02()}</span>
             <span class="text-xs text-muted-foreground">{notifs} item</span>
           </div>
           <ul class="max-h-64 overflow-y-auto text-xs">
@@ -220,14 +222,17 @@
                 <li class="flex gap-2 border-b border-border px-4 py-3 last:border-0"><span>{n}</span></li>
               {/each}
             {:else}
-              <li class="px-4 py-6 text-center text-muted-foreground">Belum ada pembaruan</li>
+              <li class="px-4 py-6 text-center text-muted-foreground">{m.topp03()}</li>
             {/if}
           </ul>
         </div>
       {/if}
     </div>
 
-    <ThemeToggle />
+    <span class="flex items-center gap-2">
+      <LanguageSwitcher />
+      <ThemeToggle />
+    </span>
 
     <div class="relative">
       <button
@@ -249,14 +254,14 @@
             </div>
           </div>
           <div class="border-b border-border px-4 py-2">
-            <p class="px-1 pb-1 pt-0.5 text-[13.5px] font-semibold uppercase tracking-wider text-muted-foreground">Ganti peran</p>
+            <p class="px-1 pb-1 pt-0.5 text-[13.5px] font-semibold uppercase tracking-wider text-muted-foreground">{m.topp04()}</p>
             {#each Object.entries(roleRoutes) as [slug, href] (slug)}
               <a href={resolveHref(href)} class="block rounded-md px-2 py-1.5 text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
                 {roleMeta[slug]?.name} · {slug}
               </a>
             {/each}
           </div>
-          <a href={resolveHref("/")} class="block px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">Kembali ke halaman utama</a>
+          <a href={resolveHref("/")} class="block px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">{m.topp05()}</a>
         </div>
       {/if}
     </div>

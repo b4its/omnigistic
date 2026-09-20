@@ -1,5 +1,6 @@
 import { browser } from "$app/environment";
 import { writable } from "svelte/store";
+import { m } from "$lib/paraglide/messages";
 
 /**
  * Widget dashboard yang dipilih pengguna (simulasi "Tambah widget").
@@ -18,15 +19,23 @@ export interface DashboardWidget {
 
 const STORAGE_KEY = "omnigistic-widgets-v1";
 
-/** Katalog widget yang tersedia (satu sumber untuk drawer & strip dashboard). */
-export const WIDGET_CATALOG: DashboardWidget[] = [
-  { id: "util-map", title: "Utilization Map", desc: "23 hub utilisasi dgn threshold overload.", tag: "Network", hue: "var(--color-chart-1)", metric: "JKT 90,4%" },
-  { id: "forecast", title: "Demand Forecast", desc: "Pola demand 2023 termasuk dampak TikTok.", tag: "Operations", hue: "var(--color-chart-2)", metric: "±105M/bln" },
-  { id: "cod-risk", title: "Predictive COD", desc: "Simulasi probabilitas sukses COD per paket.", tag: "Strategy", hue: "var(--color-chart-4)", metric: "138→100 mnt" },
-  { id: "fleet", title: "Fleet & Emissions", desc: "Komposisi armada & roadmap EV 3 fase.", tag: "Sustainability", hue: "var(--color-chart-3)", metric: "EV 1,41%" },
-  { id: "complain", title: "Complaint Monitor", desc: "5,5 komplain per juta paket dgn penurunan target.", tag: "Quality", hue: "var(--color-chart-5)", metric: "5,5→<3/juta" },
-  { id: "address", title: "Address Intelligence", desc: "3 alamat ambigu yang sama di kota beda.", tag: "Quality", hue: "var(--color-chart-1)", metric: "3 kandidat" }
-];
+/**
+ * Katalog widget yang tersedia (satu sumber untuk drawer & strip dashboard).
+ *
+ * Sengaja berupa FUNGSI, bukan konstanta modul: teksnya harus dievaluasi saat
+ * render agar mengikuti locale permintaan (konstanta modul akan membeku pada
+ * locale permintaan pertama).
+ */
+export function widgetCatalog(): DashboardWidget[] {
+  return [
+    { id: "util-map", title: "Utilization Map", desc: m.wg01(), tag: m.wt01(), hue: "var(--color-chart-1)", metric: m.wg02() },
+    { id: "forecast", title: "Demand Forecast", desc: m.wg03(), tag: m.wt02(), hue: "var(--color-chart-2)", metric: m.wg04() },
+    { id: "cod-risk", title: "Predictive COD", desc: m.wg05(), tag: m.wt03(), hue: "var(--color-chart-4)", metric: m.wg06() },
+    { id: "fleet", title: "Fleet & Emissions", desc: m.wg07(), tag: m.wt04(), hue: "var(--color-chart-3)", metric: m.wg08() },
+    { id: "complain", title: "Complaint Monitor", desc: m.wg09(), tag: m.wt05(), hue: "var(--color-chart-5)", metric: m.wg10() },
+    { id: "address", title: "Address Intelligence", desc: m.wg11(), tag: m.wt05(), hue: "var(--color-chart-1)", metric: m.wg12() }
+  ];
+}
 
 function createWidgets() {
   const { subscribe, set, update } = writable<string[]>([]);

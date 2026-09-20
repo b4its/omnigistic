@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { page } from "$app/state";
   import { windowClass } from "$lib/stores/window-class";
   import { cn, resolveHref } from "$lib/utils";
@@ -15,10 +16,12 @@
     fa?: "glitter";
   };
 
-  let { items = [], sharedItems = [], userName = "Guest", open = true, ontoggle }: {
+  let { items = [], sharedItems = [], userName = "Guest", homeHref, open = true, ontoggle }: {
     items?: NavItem[];
     sharedItems?: NavItem[];
     userName?: string;
+    /** Tautan beranda role (brand/logo = home). Bila kosong, brand tidak jadi tautan. */
+    homeHref?: string;
     /** Apakah rail/sidebar sedang terbuka (dikontrol layout). */
     open?: boolean;
     /** Callback tombol buka/tutup. */
@@ -58,7 +61,7 @@
 </script>
 
 {#if mode === "compact"}
-  <nav aria-label="Primary" class="fixed inset-x-0 bottom-0 z-40 flex h-20 items-stretch justify-around gap-1 border-t border-sidebar-border bg-sidebar" style="padding-bottom: env(safe-area-inset-bottom)">
+  <nav aria-label={m.nav_primary_aria()} data-testid="bottom-nav" class="fixed inset-x-0 bottom-0 z-40 flex h-20 items-stretch justify-around gap-1 border-t border-sidebar-border bg-sidebar" style="padding-bottom: env(safe-area-inset-bottom)">
     {#each items.slice(0, 4) as item (item.href)}
       <a
         href={resolveHref(item.href)}
@@ -77,13 +80,13 @@
       <div class="relative flex flex-col items-center justify-center gap-0.5" data-overflow>
         <button
           type="button"
-          aria-label="Menu lainnya"
+          aria-label={m.nav_overflow_aria()}
           aria-expanded={overflowOpen}
           onclick={() => (overflowOpen = !overflowOpen)}
           class="flex min-h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/50 hover:text-accent-foreground"
         >
           <Icon name="dots" cls="h-5 w-5" />
-          <span class="max-w-full truncate text-center text-[13.5px] font-medium">Lainnya</span>
+          <span class="max-w-full truncate text-center text-[13.5px] font-medium">{m.nav_more()}</span>
         </button>
         {#if overflowOpen}
           <div class="absolute bottom-[calc(100%+8px)] left-1/2 z-[9999] w-[min(14rem,calc(100vw-2rem))] -translate-x-1/2 rounded-xl border border-border bg-card p-1.5 shadow-pop">
@@ -105,7 +108,8 @@
 {:else}
   <!-- Rail/sidebar (medium & expanded) dengan tombol buka/tutup -->
   <aside
-    aria-label={mode === "expanded" ? "Sections" : "Primary"}
+    aria-label={mode === "expanded" ? m.nav_sections_aria() : m.nav_primary_aria()}
+    data-testid="sidebar"
     data-open={open}
     class={cn(
       "relative z-10 flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out",
@@ -114,19 +118,26 @@
   >
     {#if mode === "expanded"}
       <div class={cn("flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border", railCollapsed ? "justify-center px-2" : "px-5")}>
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] font-heading text-[13px] font-bold text-[var(--primary-foreground)]">GC</span>
-        {#if !railCollapsed}
-          <div class="min-w-0 flex-1">
-            <p class="truncate font-heading text-sm font-semibold tracking-tight text-foreground">Omnigistic <sup class="text-[13px] text-[var(--bitcoin)]">2.0</sup></p>
-            <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">ISCEA 2026</p>
-          </div>
-        {/if}
+        <a
+          href={resolveHref(homeHref ?? "/dashboard")}
+          aria-label={m.nav_home_aria()}
+          class="flex min-w-0 items-center gap-2 rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+        >
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] font-heading text-[13px] font-bold text-[var(--primary-foreground)]">{m.m3np01()}</span>
+          {#if !railCollapsed}
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-heading text-sm font-semibold tracking-tight text-foreground">{m.m3np02()} <sup class="text-[13px] text-[var(--bitcoin)]">2.0</sup></p>
+              <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{m.m3np03()}</p>
+            </div>
+          {/if}
+        </a>
         <button
           type="button"
           onclick={toggle}
-          aria-label={open ? "Tutup sidebar" : "Buka sidebar"}
+          data-testid="sidebar-toggle"
+          aria-label={open ? m.nav_collapse_aria() : m.nav_expand_aria()}
           aria-expanded={open}
-          title={open ? "Tutup sidebar" : "Buka sidebar"}
+          title={open ? m.m3n2t1() : m.m3n2t2()}
           class={cn(
             "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/50 hover:text-accent-foreground",
             railCollapsed && "mt-1"
@@ -141,9 +152,10 @@
         <button
           type="button"
           onclick={toggle}
-          aria-label={open ? "Tutup sidebar" : "Buka sidebar"}
+          data-testid="sidebar-toggle"
+          aria-label={open ? m.nav_collapse_aria() : m.nav_expand_aria()}
           aria-expanded={open}
-          title={open ? "Tutup sidebar" : "Buka sidebar"}
+          title={open ? m.m3n2t1() : m.m3n2t2()}
           class="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground transition-transform hover:scale-105"
         >
           <Icon name={open ? "panel-left" : "menu"} cls="h-4 w-4" weight={open ? "regular" : "bold"} />
@@ -184,7 +196,7 @@
       {/each}
       {#if sharedItems.length > 0}
         {#if !railCollapsed}
-          <p class="px-2 pb-1.5 pt-5 font-mono text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/60">Shared</p>
+          <p class="px-2 pb-1.5 pt-5 font-mono text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/60">{m.nav_shared()}</p>
         {:else}
           <div class="mx-auto my-2 h-px w-8 bg-sidebar-border"></div>
         {/if}

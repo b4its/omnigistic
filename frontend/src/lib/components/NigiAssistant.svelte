@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m as msg } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import { api, type Insights } from "$lib/api";
@@ -26,11 +27,7 @@
 
   const roleName: Record<string, string> = { PUSAT: "Dalila", HUB: "Marwah", KURIR: "Baits", DATA: "Virgiawan", CUSTOMER: "Sari", SELLER: "Rina" };
   const priorityDot: Record<string, string> = { high: "bg-destructive", medium: "bg-warning", low: "bg-success" };
-  const EMPTY_CHIPS = [
-    "Apa masalah utama GC Logistics?",
-    "Bagaimana solusi Omnigistic?",
-    "Berapa utilisasi Jakarta?"
-  ];
+  const EMPTY_CHIPS = [msg.na4t1(), msg.na4t2(), msg.nigs1()];
   /** Halaman kurasi pertanyaan per role (kunci sama dgn backend suggestedQuestions). */
   const ROLE_PAGE: Record<string, string> = {
     PUSAT: "pusat/executive",
@@ -109,7 +106,7 @@
   function titleFrom(msgs: Msg[]): string {
     const first = msgs.find((m) => m.role === "user")?.content ?? "";
     const clean = first.replace(/\s+/g, " ").trim();
-    if (!clean) return "Percakapan baru";
+    if (!clean) return msg.ngs2t1();
     return clean.length > 42 ? `${clean.slice(0, 42)}…` : clean;
   }
 
@@ -118,7 +115,7 @@
   }
 
   function newConversation() {
-    const c: Conversation = { id: uid(), title: "Percakapan baru", msgs: [], updatedAt: Date.now() };
+    const c: Conversation = { id: uid(), title: msg.ngs2t1(), msgs: [], updatedAt: Date.now() };
     conversations = [c, ...conversations];
     activeId = c.id;
     msgs = [];
@@ -127,7 +124,7 @@
     renameValue = c.title;
     sidebarOpen = false;
     persist();
-    notify({ message: "Percakapan baru dibuat", type: "success", title: "Nigi AI" });
+    notify({ message: msg.ngs2t2(), type: "success", title: "Nigi AI" });
   }
 
   function selectConversation(id: string) {
@@ -157,7 +154,7 @@
 
   function commitRename() {
     if (!renamingId) return;
-    const t = renameValue.trim() || "Percakapan baru";
+    const t = renameValue.trim() || msg.ngs2t1();
     conversations = conversations.map((c) => (c.id === renamingId ? { ...c, title: t } : c));
     renamingId = null;
     persist();
@@ -176,7 +173,7 @@
     const text = q.trim();
     if (!text || busy) return;
     if (!activeId) {
-      const c: Conversation = { id: uid(), title: "Percakapan baru", msgs: [], updatedAt: Date.now() };
+      const c: Conversation = { id: uid(), title: msg.ngs2t1(), msgs: [], updatedAt: Date.now() };
       conversations = [c, ...conversations];
       activeId = c.id;
     }
@@ -184,7 +181,7 @@
     input = "";
     busy = true;
     const conv = activeConv();
-    if (conv && (conv.title === "Percakapan baru" || !conv.msgs.some((m) => m.role === "user"))) {
+    if (conv && (conv.title === msg.ngs2t1() || !conv.msgs.some((m) => m.role === "user"))) {
       const t = titleFrom(msgs);
       conversations = conversations.map((c) => (c.id === activeId ? { ...c, title: t } : c));
     }
@@ -193,7 +190,7 @@
       const r = await api.chat(role, text);
       msgs = [...msgs, { role: "assistant", content: r.content, suggestions: r.suggestions }];
     } catch {
-      msgs = [...msgs, { role: "assistant", content: "Gagal terhubung ke Nigi AI. Coba lagi.", suggestions: [] }];
+      msgs = [...msgs, { role: "assistant", content: msg.nigs2(), suggestions: [] }];
     } finally {
       busy = false;
       syncActive();
@@ -229,7 +226,7 @@
         intro = {
           greeting: data.greeting
             ? `${timeGreeting}. ${data.greeting.replace(/^(Halo\w*,?|Salam,?)\s*/i, "")}`
-            : `${timeGreeting}. Tanyakan apa saja soal data GC Logistics.`,
+            : msg.na4t3({ greeting: timeGreeting }),
           insights: data.insights ?? []
         };
       })
@@ -260,7 +257,7 @@
       "absolute inset-y-0 left-0 z-30 flex w-72 shrink-0 flex-col rounded-2xl border border-border bg-card shadow-card transition-transform lg:static lg:translate-x-0",
       sidebarOpen ? "translate-x-0" : "-translate-x-[120%] lg:translate-x-0"
     )}
-    aria-label="Riwayat percakapan"
+    aria-label={msg.ngs2t3()}
   >
     <div class="flex items-center gap-2 border-b border-border/80 p-3">
       <button
@@ -269,12 +266,12 @@
         class="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[var(--primary)] px-3 py-2 text-[13px] font-semibold text-[var(--primary-foreground)] transition-transform hover:scale-[1.01] active:scale-[0.99]"
       >
         <Icon name="plus" cls="h-4 w-4" weight="bold" />
-        Percakapan baru
+        {msg.nas01()}
       </button>
       <button
         type="button"
         onclick={() => (sidebarOpen = false)}
-        aria-label="Tutup riwayat"
+        aria-label={msg.ngs2t4()}
         class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
       >
         <Icon name="x" cls="h-4 w-4" />
@@ -289,12 +286,12 @@
           enterkeyhint="search"
           bind:value={search}
           class="h-7 min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none"
-          placeholder="Cari percakapan…"
-          aria-label="Cari percakapan"
+          placeholder={msg.ngs2t5()}
+          aria-label={msg.ngs2t6()}
           autocomplete="off"
         />
         {#if search}
-          <button type="button" onclick={() => (search = "")} aria-label="Hapus pencarian" class="text-muted-foreground hover:text-foreground">
+          <button type="button" onclick={() => (search = "")} aria-label={msg.ax01()} class="text-muted-foreground hover:text-foreground">
             <Icon name="x" cls="h-3.5 w-3.5" />
           </button>
         {/if}
@@ -320,10 +317,10 @@
                 if (e.key === "Escape") renamingId = null;
               }}
               class="h-7 min-w-0 flex-1 rounded-lg border border-primary/50 bg-card px-2 text-[13px] text-foreground outline-none"
-              aria-label="Nama percakapan"
+              aria-label={msg.ngs2t7()}
               use:focusOnMount
             />
-            <button type="button" onclick={commitRename} aria-label="Simpan nama" class="text-muted-foreground hover:text-foreground">
+            <button type="button" onclick={commitRename} aria-label={msg.ax02()} class="text-muted-foreground hover:text-foreground">
               <Icon name="check" cls="h-3.5 w-3.5" weight="bold" />
             </button>
           {:else}
@@ -342,7 +339,7 @@
               <button
                 type="button"
                 onclick={() => startRename(c)}
-                aria-label="Ganti nama percakapan"
+                aria-label={msg.ngs2t8()}
                 class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-card hover:text-foreground"
               >
                 <Icon name="edit" cls="h-3.5 w-3.5" />
@@ -350,7 +347,7 @@
               <button
                 type="button"
                 onclick={() => deleteConversation(c.id)}
-                aria-label="Hapus percakapan"
+                aria-label={msg.ngs2t9()}
                 class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               >
                 <Icon name="trash" cls="h-3.5 w-3.5" />
@@ -360,7 +357,7 @@
         </div>
       {:else}
         <p class="px-3 py-6 text-center text-[13px] text-muted-foreground">
-          {search ? "Tidak ada percakapan yang cocok." : "Belum ada percakapan. Mulai tanya Nigi."}
+          {search ? msg.ngs2t10() : msg.ngs2t11()}
         </p>
       {/each}
     </nav>
@@ -369,7 +366,7 @@
   {#if sidebarOpen}
     <button
       type="button"
-      aria-label="Tutup riwayat"
+      aria-label={msg.ngs2t4()}
       class="absolute inset-0 z-20 cursor-default bg-black/30 lg:hidden"
       onclick={() => (sidebarOpen = false)}
     ></button>
@@ -380,15 +377,15 @@
       <button
         type="button"
         onclick={() => (sidebarOpen = true)}
-        aria-label="Buka riwayat percakapan"
+        aria-label={msg.ngs2t12()}
         class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
       >
         <Icon name="chat" cls="h-5 w-5" />
       </button>
-      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary)] text-sm font-extrabold text-[var(--primary-foreground)]">Nigi</span>
+      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary)] text-sm font-extrabold text-[var(--primary-foreground)]">{msg.nas02()}</span>
       <div class="min-w-0">
         <h1 class="font-heading text-2xl font-light tracking-tight">{activeConv()?.title ?? "Nigi AI"}</h1>
-        <p class="text-[13px] text-muted-foreground">Asisten Omnigistic · {roleName[role] ?? role} · data studi kasus GC Logistics</p>
+        <p class="text-[13px] text-muted-foreground">Asisten Omnigistic · {roleName[role] ?? role} {msg.na3f1()}</p>
       </div>
       <div class="ml-auto flex items-center gap-2">
         <button
@@ -397,13 +394,13 @@
           class="flex items-center gap-1.5 rounded-full border border-border px-3.5 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <Icon name="plus" cls="h-3.5 w-3.5" weight="bold" />
-          Baru
+          {msg.nas03()}
         </button>
         <a
           href="#composer"
           class="rounded-full bg-[var(--primary)] px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]"
         >
-          Tanya Nigi
+          {msg.nas04()}
         </a>
       </div>
     </header>
@@ -412,17 +409,17 @@
       <div bind:this={logEl} class="overscroll-isolate min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5" role="log" aria-live="polite" aria-label="Percakapan Nigi AI">
         {#if introLoading}
           <div class="flex gap-2.5">
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">Nigi</span>
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">{msg.nas05()}</span>
             <div class="h-16 w-2/3 animate-pulse rounded-2xl border border-border bg-muted/50"></div>
           </div>
         {:else if introError}
           <div class="rounded-2xl border border-destructive/30 bg-destructive/10 px-3.5 py-3 text-xs text-destructive-foreground">
-            Gagal memuat ringkasan Nigi AI.
+            {msg.nas06()}
           </div>
         {:else}
           <div class="space-y-3">
             <div class="flex gap-2.5">
-              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">Nigi</span>
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">{msg.nas07()}</span>
               <div class="rounded-2xl rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-[15px] leading-relaxed text-foreground">
                 {intro.greeting}
               </div>
@@ -464,7 +461,7 @@
         {#each msgs as m, i (i)}
           <div class={cn("flex gap-2.5", m.role === "user" && "justify-end")}>
             {#if m.role === "assistant"}
-              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">Nigi</span>
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">{msg.nas08()}</span>
             {/if}
             <div class={cn("max-w-[82%] rounded-2xl px-3.5 py-2.5 text-[15px] leading-relaxed", m.role === "user" ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm border border-border bg-card text-foreground")}>
               {#if m.role === "assistant"}
@@ -491,8 +488,8 @@
 
         {#if busy}
           <div class="flex gap-2.5">
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">Nigi</span>
-            <div class="rounded-2xl rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-[15px] text-muted-foreground">mengetik…</div>
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[10px] font-bold text-[var(--primary-foreground)]">{msg.nas09()}</span>
+            <div class="rounded-2xl rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-[15px] text-muted-foreground">{msg.nas10()}</div>
           </div>
         {/if}
       </div>
@@ -508,7 +505,7 @@
             bind:value={input}
             class="h-9 min-w-0 flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
             placeholder="Tanya apa saja soal data GC Logistics…"
-            aria-label="Pesan untuk Nigi AI"
+            aria-label={msg.ngs2t13()}
             autocomplete="off"
             enterkeyhint="send"
             disabled={busy}
@@ -516,7 +513,7 @@
           <button
             type="submit"
             disabled={busy || !input.trim()}
-            aria-label="Kirim pesan"
+            aria-label={msg.ngs2t14()}
             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] transition-transform hover:scale-105 disabled:scale-100 disabled:opacity-40"
           >
             <Icon name="send" cls="h-4 w-4" weight="fill" />

@@ -1,9 +1,14 @@
+import { deLocalizedPath } from "$lib/utils";
+
 export type Role = "PUSAT" | "HUB" | "KURIR" | "DATA" | "CUSTOMER" | "SELLER";
 const ROLES: Role[] = ["PUSAT", "HUB", "KURIR", "DATA", "CUSTOMER", "SELLER"];
 
-/** Ambil role dari segmen path ke-3 (`/dashboard/<role>/...`). */
+/**
+ * Ambil role dari segmen path ke-3 (`/dashboard/<role>/...`).
+ * Prefix locale dibuang lebih dulu, sehingga `/id/dashboard/pusat/...` tetap terbaca.
+ */
 export function roleFromPath(path: string): Role | null {
-  const seg = path.split("/")[2]?.toUpperCase();
+  const seg = deLocalizedPath(path).split("/")[2]?.toUpperCase();
   return ROLES.includes(seg as Role) ? (seg as Role) : null;
 }
 

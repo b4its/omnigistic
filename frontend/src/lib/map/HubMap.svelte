@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m as msg } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import type * as LeafletNS from "leaflet";
   import { get } from "svelte/store";
@@ -147,7 +148,7 @@
   let hubLayers: Record<string, LeafletNS.CircleMarker> = {};
   /** Registry marker PUDO (untuk dim saat filter region aktif). */
   let pudoLayers: Array<{ region: string; mk: LeafletNS.CircleMarker }> = [];
-  /** Semua koordinat hub (untuk tombol "lihat semua"). */
+  /** Semua koordinat hub (untuk tombol msg.hub2t1()). */
   let allBounds: Array<[number, number]> = [];
 
   function hubPopup(h: Hub): string {
@@ -156,13 +157,18 @@
     const pct = Math.round(h.utilizationPct * 10) / 10;
     const r = rankedAll.rank[h.code] ?? 0;
     const share = rankedAll.totalCap > 0 ? (h.capacityM / rankedAll.totalCap) * 100 : 0;
-    return (
-      `<strong>${esc(h.name)}</strong> · ${esc(h.region)}<br/>` +
-      `Utilisasi <strong>${pct}%</strong> <span style="opacity:.75">(${esc(label)})</span><br/>` +
-      `Peringkat <strong>#${r}</strong> / ${rankedAll.totalUtil} · pangsa kapasitas ${numId(share, 1)}%<br/>` +
-      `Kapasitas ${h.capacityM} juta paket/hari · ${h.outlets} outlet<br/>` +
-      `Headroom ± ${Math.round(headroom)} poin`
-    );
+    return msg.hm4t1({
+      name: esc(h.name),
+      region: esc(h.region),
+      pct,
+      label: esc(label),
+      rank: r,
+      total: rankedAll.totalUtil,
+      share: numId(share, 1),
+      capacity: h.capacityM,
+      outlets: h.outlets,
+      headroom: Math.round(headroom)
+    });
   }
 
   function teardown() {
@@ -231,12 +237,18 @@
             fillOpacity: 0.92,
             dashArray: "2 3"
           }).addTo(m);
-          mk.bindTooltip(`PUDO · ${esc(p.name)} (${esc(p.region)})`, { direction: "top" });
+          mk.bindTooltip(msg.hm4t4({ name: esc(p.name), region: esc(p.region) }), { direction: "top" });
           mk.bindPopup(
-            `<strong>${esc(p.name)}</strong> · ${esc(p.partner)}<br/>` +
-              `<span style="opacity:.8">${esc(p.address)}</span><br/>` +
-              `${esc(p.city)} · ${esc(p.region)}<br/>Jam ${esc(p.hours)} · kapasitas ${p.capacityPerDay} paket/hari<br/>` +
-              `<span style="opacity:.7;font-size:11px">Koordinat: ${p.source === "osm" ? "OpenStreetMap" : "asumsi tim"}</span>`
+            msg.hm4t2({
+              name: esc(p.name),
+              partner: esc(p.partner),
+              address: esc(p.address),
+              city: esc(p.city),
+              region: esc(p.region),
+              hours: esc(p.hours),
+              capacity: p.capacityPerDay,
+              source: p.source === "osm" ? "OpenStreetMap" : msg.hm4t3()
+            })
           );
           pudoLayers.push({ region: p.region, mk });
         }
@@ -372,8 +384,8 @@
   ];
 
   const SORTS: Array<{ key: SortKey; label: string }> = [
-    { key: "util", label: "Utilisasi" },
-    { key: "cap", label: "Kapasitas" },
+    { key: "util", label: msg.hm2t1() },
+    { key: "cap", label: msg.hm2t2() },
     { key: "name", label: "Nama" }
   ];
 </script>
@@ -387,12 +399,12 @@
         <input
           type="search"
           bind:value={q}
-          placeholder="Cari hub / kode / region…"
-          aria-label="Cari hub, kode, atau region"
+          placeholder={msg.hub2t2()}
+          aria-label={msg.hub2t3()}
           class="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-[var(--primary)] focus:outline-none"
         />
       </label>
-      <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter tingkat utilisasi">
+      <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label={msg.ax07()}>
         {#each TIER_CHIPS as c (c.key)}
           <button
             type="button"
@@ -405,37 +417,37 @@
         {/each}
       </div>
       <label class="flex items-center gap-2 text-[12.5px] text-muted-foreground">
-        <span class="font-mono text-[10px] uppercase tracking-wider">Region</span>
+        <span class="font-mono text-[10px] uppercase tracking-wider">{msg.hmp01()}</span>
         <select
           bind:value={region}
           aria-label="Filter region"
           class="rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground focus:border-[var(--primary)] focus:outline-none"
         >
-          <option value="all">Semua region</option>
+          <option value="all">{msg.hmp02()}</option>
           {#each regions as r (r)}<option value={r}>{r}</option>{/each}
         </select>
       </label>
       {#if q || tier !== "all" || region !== "all"}
-        <button type="button" onclick={resetFilters} class="rounded-full border border-border px-3 py-1.5 text-[12.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground">Reset</button>
+        <button type="button" onclick={resetFilters} class="rounded-full border border-border px-3 py-1.5 text-[12.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground">{msg.hmp03()}</button>
       {/if}
     </div>
 
     <!-- ── Statistik live (reaktif terhadap filter) ──────────────────── -->
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <div class="rounded-xl border border-border bg-card p-3">
-        <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Hub tampil</p>
+        <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{msg.hmp04()}</p>
         <p class="kpi-value mt-1 text-xl">{stats.n}<span class="text-sm text-muted-foreground"> / {all.length}</span></p>
       </div>
       <div class="rounded-xl border border-border bg-card p-3">
-        <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Kapasitas</p>
-        <p class="kpi-value mt-1 text-xl">{numId(stats.cap, 3)}<span class="text-sm text-muted-foreground"> jt/hari</span></p>
+        <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{msg.hmp05()}</p>
+        <p class="kpi-value mt-1 text-xl">{numId(stats.cap, 3)}<span class="text-sm text-muted-foreground"> {msg.hmp06()}</span></p>
       </div>
       <div class="rounded-xl border border-border bg-card p-3">
-        <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Utilisasi rata²</p>
+        <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{msg.hmp07()}</p>
         <p class="kpi-value mt-1 text-xl {stats.avgUtil > UTIL_THRESHOLD.critical ? 'text-destructive-foreground' : 'text-foreground'}">{numId(stats.avgUtil, 1)}%</p>
       </div>
       <div class="rounded-xl border border-border bg-card p-3">
-        <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Overload</p>
+        <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{msg.hmp08()}</p>
         <p class="kpi-value mt-1 text-xl {stats.overload > 0 ? 'text-destructive-foreground' : 'text-success-foreground'}">{stats.overload}</p>
       </div>
     </div>
@@ -445,8 +457,8 @@
       <p class="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-[12.5px] text-foreground">
         <Icon name="warn" cls="mt-0.5 h-4 w-4 shrink-0 text-destructive-foreground" weight="bold" />
         <span>
-          <b>{stats.overload} hub overload</b> — perkiraan <b>{numId(stats.deficit, 2)} juta paket/hari</b> kelebihan di atas ambang {UTIL_THRESHOLD.critical}% perlu dialihkan ke hub sekitar atau perluasan kapasitas.
-          {#if stats.n !== all.length}<span class="text-muted-foreground">(dihitung dari {stats.n} hub tersaring)</span>{/if}
+          <b>{stats.overload} {msg.hm3f1()}</b> {msg.hmp09()} <b>{numId(stats.deficit, 2)} {msg.hm3f2()}</b> {msg.hm4t5({ crit: UTIL_THRESHOLD.critical })}{msg.hm3f3()}
+          {#if stats.n !== all.length}<span class="text-muted-foreground">{msg.hm3f4()} {stats.n} {msg.hm3f5()}</span>{/if}
         </span>
       </p>
     {/if}
@@ -456,18 +468,18 @@
   <div class="grid gap-3 {interactive ? 'lg:grid-cols-[minmax(0,1fr)_20rem]' : ''}">
     <!-- Peta -->
     <div class="relative isolate z-0 w-full overflow-hidden rounded-xl border border-border" style="height:{height}px">
-      <div bind:this={mapEl} class="absolute inset-0" role="application" aria-label="Peta 23 hub GC Logistics dengan utilisasi berwarna (hijau, kuning, merah)"></div>
+      <div bind:this={mapEl} class="absolute inset-0" role="application" aria-label={msg.ax30()}></div>
 
       <!-- Kontrol peta: reset view -->
       {#if interactive}
         <button
           type="button"
           onclick={fitAll}
-          aria-label="Lihat semua hub (tampilan nasional)"
-          title="Lihat semua hub"
+          aria-label={msg.hub2t4()}
+          title={msg.hub2t5()}
           class="absolute left-2 top-2 z-[1000] inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/92 px-2.5 py-1.5 text-[12px] font-semibold text-foreground shadow-pop backdrop-blur transition-colors hover:bg-accent"
         >
-          <Icon name="globe" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Semua hub
+          <Icon name="globe" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> {msg.hmp10()}
         </button>
       {/if}
 
@@ -482,13 +494,13 @@
               <p class="truncate font-semibold text-foreground">{selected.name} <span class="font-mono text-muted-foreground">({selected.code})</span></p>
               <p class="text-muted-foreground">{selected.region} · peringkat <b class="text-foreground">#{rk}</b>/{rankedAll.totalUtil}</p>
             </div>
-            <button type="button" onclick={() => (selectedCode = null)} aria-label="Tutup detail hub" class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"><Icon name="x" cls="h-3.5 w-3.5" weight="bold" /></button>
+            <button type="button" onclick={() => (selectedCode = null)} aria-label={msg.ax08()} class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"><Icon name="x" cls="h-3.5 w-3.5" weight="bold" /></button>
           </div>
           <div class="mt-2 grid grid-cols-2 gap-2">
-            <div><p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Utilisasi</p><p class="kpi-value" style="color:{t.color}">{numId(selected.utilizationPct, 1)}%</p></div>
-            <div><p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Headroom</p><p class="kpi-value text-foreground">{numId(Math.max(0, 100 - selected.utilizationPct), 1)} pt</p></div>
-            <div><p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Kapasitas</p><p class="text-foreground">{selected.capacityM} jt/hari</p></div>
-            <div><p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Pangsa nasional</p><p class="text-foreground">{numId(share, 1)}%</p></div>
+            <div><p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{msg.hmp11()}</p><p class="kpi-value" style="color:{t.color}">{numId(selected.utilizationPct, 1)}%</p></div>
+            <div><p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{msg.hmp12()}</p><p class="kpi-value text-foreground">{numId(Math.max(0, 100 - selected.utilizationPct), 1)} pt</p></div>
+            <div><p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{msg.hmp13()}</p><p class="text-foreground">{selected.capacityM} jt/hari</p></div>
+            <div><p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{msg.hmp14()}</p><p class="text-foreground">{numId(share, 1)}%</p></div>
           </div>
           <div class="mt-2">
             <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -508,21 +520,21 @@
           aria-controls="hub-legend"
           class="flex w-full items-center justify-between gap-2 px-3 py-2 font-semibold text-foreground"
         >
-          <span class="flex items-center gap-1.5"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</span>
+          <span class="flex items-center gap-1.5"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> {msg.hmp15()}</span>
           <Icon name={legendOpen ? "caret-down" : "arrow-right"} cls="h-3 w-3 shrink-0 text-muted-foreground" weight="bold" />
         </button>
         {#if legendOpen}
           <div id="hub-legend" class="max-h-[60%] space-y-2 overflow-y-auto border-t border-border px-3 py-2.5">
-            <p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Utilisasi hub (warna)</p>
+            <p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{msg.hmp16()}</p>
             <ul class="space-y-1.5">
-              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:{TIER_COLOR.ok}"></span> <span><b class="text-foreground">Sehat</b> — utilisasi &lt; {UTIL_THRESHOLD.warn}%</span></li>
-              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:{TIER_COLOR.warn}"></span> <span><b class="text-foreground">Perhatian</b> — {UTIL_THRESHOLD.warn}–{UTIL_THRESHOLD.critical}%</span></li>
-              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:{TIER_COLOR.overload}"></span> <span><b class="text-foreground">Overload</b> — &gt; {UTIL_THRESHOLD.critical}%</span></li>
+              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:{TIER_COLOR.ok}"></span> <span><b class="text-foreground">{msg.hmp17()}</b> {msg.hm3f6()} {UTIL_THRESHOLD.warn}%</span></li>
+              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:{TIER_COLOR.warn}"></span> <span><b class="text-foreground">{msg.hmp18()}</b> — {UTIL_THRESHOLD.warn}–{UTIL_THRESHOLD.critical}%</span></li>
+              <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border border-black/20" style="background:{TIER_COLOR.overload}"></span> <span><b class="text-foreground">{msg.hmp19()}</b> — &gt; {UTIL_THRESHOLD.critical}%</span></li>
             </ul>
-            <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Ukuran &amp; simbol</p>
+            <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{msg.hmp20()}</p>
             <ul class="space-y-1.5">
-              <li class="flex items-center gap-2"><span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-foreground/40 bg-foreground/10"></span> <span>Bulatan besar = kapasitas hub lebih besar</span></li>
-              {#if interactive}<li class="flex items-center gap-2"><span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[var(--bitcoin)] bg-[var(--bitcoin)]/20"></span> <span>Klik hub/daftar untuk detail · redup = tersaring</span></li>{/if}
+              <li class="flex items-center gap-2"><span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-foreground/40 bg-foreground/10"></span> <span>{msg.hmp21()}</span></li>
+              {#if interactive}<li class="flex items-center gap-2"><span class="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[var(--bitcoin)] bg-[var(--bitcoin)]/20"></span> <span>{msg.hmp22()}</span></li>{/if}
             </ul>
             {#if showPudo}
               <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">PUDO mitra per region ({PUDO_POINTS.length} titik)</p>
@@ -534,8 +546,8 @@
               </ul>
             {/if}
             <p class="border-t border-border pt-2 text-[10px] italic leading-snug text-muted-foreground">
-              Ubin peta © OpenStreetMap. Warna hub = utilisasi Table 1 (kasus); ukuran = kapasitas harian.
-              Koordinat & alamat PUDO diverifikasi dari OpenStreetMap (ODbL); jam/kapasitas = asumsi tim.
+              {msg.hm3f7()}
+              {msg.hm3f8()}
             </p>
           </div>
         {/if}
@@ -553,16 +565,16 @@
             aria-controls="hub-list"
             class="flex items-center gap-1.5 text-[12.5px] font-semibold text-foreground"
           >
-            <Icon name="stack" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Daftar hub
+            <Icon name="stack" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> {msg.hmp23()}
             <span class="rounded-full bg-muted px-1.5 text-[11px] font-mono text-muted-foreground">{listed.length}</span>
             <Icon name={listOpen ? "caret-down" : "arrow-right"} cls="h-3 w-3 text-muted-foreground" weight="bold" />
           </button>
           <label class="flex items-center gap-1 text-[11px] text-muted-foreground">
             <Icon name="filter" cls="h-3 w-3" weight="bold" />
-            <span class="sr-only">Urutkan daftar hub</span>
+            <span class="sr-only">{msg.hmp24()}</span>
             <select
               bind:value={sortKey}
-              aria-label="Urutkan daftar hub"
+              aria-label={msg.hub2t6()}
               class="rounded-md border border-border bg-background px-1.5 py-1 text-[11px] text-foreground focus:border-[var(--primary)] focus:outline-none"
             >
               {#each SORTS as s (s.key)}<option value={s.key}>{s.label}</option>{/each}
@@ -598,7 +610,7 @@
               </li>
             {/each}
             {#if listed.length === 0}
-              <li class="px-3 py-6 text-center text-[12.5px] text-muted-foreground">Tidak ada hub yang cocok. <button type="button" onclick={resetFilters} class="font-semibold text-[var(--bitcoin)] underline-offset-2 hover:underline">Reset filter</button></li>
+              <li class="px-3 py-6 text-center text-[12.5px] text-muted-foreground">{msg.hmp25()} <button type="button" onclick={resetFilters} class="font-semibold text-[var(--bitcoin)] underline-offset-2 hover:underline">{msg.hmp26()}</button></li>
             {/if}
           </ul>
         {/if}
@@ -607,6 +619,6 @@
   </div>
 
   {#if interactive && stats.n === 0}
-    <p class="text-center text-[13px] text-muted-foreground">Tidak ada hub yang cocok dengan filter. <button type="button" onclick={resetFilters} class="font-semibold text-[var(--bitcoin)] underline-offset-2 hover:underline">Reset filter</button>.</p>
+    <p class="text-center text-[13px] text-muted-foreground">{msg.hmp27()} <button type="button" onclick={resetFilters} class="font-semibold text-[var(--bitcoin)] underline-offset-2 hover:underline">{msg.hmp28()}</button>.</p>
   {/if}
 </div>

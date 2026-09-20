@@ -1,8 +1,9 @@
 /**
  * Store marketplace customer — keranjang, alamat pengiriman, dan pesanan.
- * Persist ke localStorage (SSR-safe). Mengikuti pola `academy-progress.ts`.
+ * Persist ke localStorage (SSR-safe).
  */
 import { browser } from "$app/environment";
+import { m } from "$lib/paraglide/messages";
 import { writable, derived, type Readable } from "svelte/store";
 import { getProduct, type Product } from "$lib/shop/catalog";
 import { DEFAULT_PERSONA_ID, getPersona, computeReputation, type Reputation } from "$lib/shop/reputation";
@@ -96,7 +97,8 @@ export interface ShopState {
   buyerId: string;
 }
 
-export const DEFAULT_ORDERS: Order[] = [
+export function defaultOrders(): Order[] {
+  return [
   {
     id: "ORD-BDO-101",
     createdAt: Date.now() - 3600000,
@@ -119,13 +121,13 @@ export const DEFAULT_ORDERS: Order[] = [
     codScore: 0.35,
     codDecision: "antar-normal",
     status: "dikirim",
-    statusNote: "Kurir dalam perjalanan melintasi koridor Dago-Braga.",
+    statusNote: m.shp01(),
     courier: "Kurir Baits · BDO-02",
     updatedAt: Date.now() - 1800000,
     events: [
-      { at: Date.now() - 3600000, status: "dikemas", note: "Pesanan dikemas di Hub Bandung.", actor: "Sistem" },
-      { at: Date.now() - 2700000, status: "transit", note: "Sortir rute last-mile Bandung.", actor: "Kurir Baits · BDO-02" },
-      { at: Date.now() - 1800000, status: "dikirim", note: "Kurir dalam perjalanan melintasi koridor Dago-Braga.", actor: "Kurir Baits · BDO-02" }
+      { at: Date.now() - 3600000, status: "dikemas", note: m.shp02(), actor: "Sistem" },
+      { at: Date.now() - 2700000, status: "transit", note: m.shp03(), actor: "Kurir Baits · BDO-02" },
+      { at: Date.now() - 1800000, status: "dikirim", note: m.shp01(), actor: "Kurir Baits · BDO-02" }
     ],
     slot: "13:00-15:00",
     codCollected: false,
@@ -154,32 +156,35 @@ export const DEFAULT_ORDERS: Order[] = [
     codScore: 0.42,
     codDecision: "pudo",
     status: "transit",
-    statusNote: "Menunggu pemberangkatan ke titik klaster Bogor.",
+    statusNote: m.shp04(),
     courier: "Kurir Baits · JKT-04",
     updatedAt: Date.now() - 3600000,
     events: [
-      { at: Date.now() - 7200000, status: "dikemas", note: "Pesanan dikemas di Hub Jakarta.", actor: "Sistem" },
-      { at: Date.now() - 3600000, status: "transit", note: "Menunggu pemberangkatan ke titik klaster Bogor.", actor: "Kurir Baits · JKT-04" }
+      { at: Date.now() - 7200000, status: "dikemas", note: m.shp05(), actor: "Sistem" },
+      { at: Date.now() - 3600000, status: "transit", note: m.shp04(), actor: "Kurir Baits · JKT-04" }
     ],
     slot: "15:00-17:00",
     codCollected: false,
     routedToPudo: false,
     presenceStatus: null,
     presenceAt: null
-  }
-];
+    }
+  ];
+}
 
 const STORAGE_KEY = "omnigistic-shop-v1";
 
-const EMPTY: ShopState = { cart: [], address: null, orders: [], buyerId: DEFAULT_PERSONA_ID };
+function emptyState(): ShopState {
+  return { cart: [], address: null, orders: defaultOrders(), buyerId: DEFAULT_PERSONA_ID };
+}
 
 function load(): ShopState {
-  if (!browser) return { cart: [], address: null, orders: DEFAULT_ORDERS, buyerId: DEFAULT_PERSONA_ID };
+  if (!browser) return { cart: [], address: null, orders: defaultOrders(), buyerId: DEFAULT_PERSONA_ID };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { cart: [], address: null, orders: DEFAULT_ORDERS, buyerId: DEFAULT_PERSONA_ID };
+    if (!raw) return { cart: [], address: null, orders: defaultOrders(), buyerId: DEFAULT_PERSONA_ID };
     const parsed = JSON.parse(raw) as Partial<ShopState>;
-    const orders = Array.isArray(parsed.orders) ? parsed.orders.map(normalizeOrder) : DEFAULT_ORDERS;
+    const orders = Array.isArray(parsed.orders) ? parsed.orders.map(normalizeOrder) : defaultOrders();
     return {
       cart: Array.isArray(parsed.cart) ? parsed.cart : [],
       address: parsed.address ?? null,
@@ -187,7 +192,7 @@ function load(): ShopState {
       buyerId: typeof parsed.buyerId === "string" ? parsed.buyerId : DEFAULT_PERSONA_ID,
     };
   } catch {
-    return { cart: [], address: null, orders: DEFAULT_ORDERS, buyerId: DEFAULT_PERSONA_ID };
+    return { cart: [], address: null, orders: defaultOrders(), buyerId: DEFAULT_PERSONA_ID };
   }
 }
 
@@ -226,10 +231,10 @@ function normalizeOrder(o: Partial<Order>): Order {
     codScore: o.codScore ?? null,
     codDecision: o.codDecision ?? null,
     status,
-    statusNote: o.statusNote ?? DEFAULT_COURIER_NOTE[status] ?? "Pesanan diproses.",
+    statusNote: o.statusNote ?? defaultCourierNote(status) ?? m.shp33(),
     courier: o.courier ?? null,
     updatedAt: o.updatedAt ?? o.createdAt ?? now,
-    events: Array.isArray(o.events) && o.events.length ? o.events : [{ at: o.createdAt ?? now, status, note: o.statusNote ?? "Pesanan diproses.", actor: "Sistem" }],
+    events: Array.isArray(o.events) && o.events.length ? o.events : [{ at: o.createdAt ?? now, status, note: o.statusNote ?? m.shp33(), actor: "Sistem" }],
     slot: o.slot ?? null,
     codCollected: o.codCollected ?? false,
     routedToPudo: o.routedToPudo ?? false,
@@ -259,7 +264,7 @@ function formatIdr(n: number): string {
 }
 
 function createShop() {
-  const { subscribe, set, update } = writable<ShopState>({ ...EMPTY });
+  const { subscribe, set, update } = writable<ShopState>(emptyState());
   let started = false;
 
   return {
@@ -322,10 +327,10 @@ function createShop() {
           id,
           createdAt: now,
           status: "dikemas",
-          statusNote: "Pesanan diterima & sedang dikemas di hub.",
+          statusNote: m.shp15(),
           courier: null,
           updatedAt: now,
-          events: [{ at: now, status: "dikemas", note: "Pesanan diterima & sedang dikemas di hub.", actor: "Sistem" }],
+          events: [{ at: now, status: "dikemas", note: m.shp15(), actor: "Sistem" }],
           slot: null,
           codCollected: false,
           routedToPudo: false,
@@ -353,7 +358,7 @@ function createShop() {
           if (i < 0 || i >= flow.length - 1) return o;
           const nextStatus = flow[i + 1];
           const now = Date.now();
-          const mergedNote = note?.trim() ? note.trim() : DEFAULT_COURIER_NOTE[nextStatus];
+          const mergedNote = note?.trim() ? note.trim() : defaultCourierNote(nextStatus);
           result = nextStatus;
           return {
             ...o,
@@ -378,17 +383,17 @@ function createShop() {
      * PUDO / jadwalkan ulang). Kembalikan pesan error (string) atau null.
      */
     setPresence(orderId: string, presence: PresenceStatus): string | null {
-      if (!PRESENCE_LABEL[presence]) return "Status kehadiran tidak dikenal.";
+      if (!presenceLabel(presence)) return m.shp30();
       let err: string | null = null;
       update((s) => {
         const orders = s.orders.map((o) => {
           if (o.id !== orderId) return o;
           if (o.status !== "dikirim") {
-            err = "Kamu hanya bisa memberi tahu kehadiran saat paket sedang diantar.";
+            err = m.shp31();
             return o;
           }
           const now = Date.now();
-          const note = `Pemberitahuan pembeli: ${PRESENCE_LABEL[presence]} ${PRESENCE_HINT[presence]}`;
+          const note = `Pemberitahuan pembeli: ${presenceLabel(presence)} ${presenceHint(presence)}`;
           return {
             ...o,
             presenceStatus: presence,
@@ -452,7 +457,7 @@ function createShop() {
           if (o.id !== orderId) return o;
           found = true;
           const now = Date.now();
-          const note = `Slot pengantaran dikonfirmasi: ${clean}.`;
+          const note = m.shp34({ slot: clean });
           return {
             ...o,
             slot: clean,
@@ -466,7 +471,7 @@ function createShop() {
         persist(next);
         return next;
       });
-      return found ? null : "Pesanan tidak ditemukan.";
+      return found ? null : m.shp32();
     },
 
     /** Aksi kurir: tandai tunai COD sudah diterima (hanya bila payment COD). */
@@ -497,7 +502,7 @@ function createShop() {
         const orders = s.orders.map((o) => {
           if (o.id !== orderId || o.routedToPudo) return o;
           const now = Date.now();
-          const note = `Paket dialihkan ke PUDO ${partner}; penerima mengambil di gerai.`;
+          const note = m.shp35({ partner });
           return {
             ...o,
             routedToPudo: true,
@@ -568,38 +573,40 @@ export function shippingCost(items: ResolvedCartItem[], city: string): number {
 
 export const ORDER_STATUS_FLOW: OrderStatus[] = ["dikemas", "dijemput", "transit", "dikirim", "terkirim"];
 
-export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
-  dikemas: "Dikemas",
-  dijemput: "Dijemput kurir",
-  transit: "Transit hub",
-  dikirim: "Dalam pengantaran",
-  terkirim: "Terkirim",
-};
+export function orderStatusLabel(status: OrderStatus): string {
+  return {
+    dikemas: m.shp06(),
+    dijemput: m.shp07(),
+    transit: m.shp08(),
+    dikirim: m.shp09(),
+    terkirim: m.shp10(),
+  }[status];
+}
 
 /** Label pemberitahuan kehadiran dari CUSTOMER (dilihat kurir sebelum tiba). */
-export const PRESENCE_LABEL: Record<PresenceStatus, string> = {
-  "di-rumah": "Ada di rumah",
-  "tidak-di-rumah": "Tidak di rumah",
-};
+export function presenceLabel(presence: PresenceStatus): string {
+  return { "di-rumah": m.shp11(), "tidak-di-rumah": m.shp12() }[presence];
+}
 
 /** Petunjuk tindak lanjut untuk kurir per pemberitahuan kehadiran pembeli. */
-export const PRESENCE_HINT: Record<PresenceStatus, string> = {
-  "di-rumah": "— kurir boleh langsung antar.",
-  "tidak-di-rumah": "— kurir tawarkan PUDO atau jadwalkan ulang.",
-};
+export function presenceHint(presence: PresenceStatus): string {
+  return { "di-rumah": m.shp13(), "tidak-di-rumah": m.shp14() }[presence];
+}
 
 /**
  * Catatan kondisi paket bawaan per status — dipakai bila kurir majukan status
  * tanpa menulis keterangan manual. Satu sumber kebenaran agar teks yang dilihat
  * pembeli konsisten dengan aksi kurir.
  */
-export const DEFAULT_COURIER_NOTE: Record<OrderStatus, string> = {
-  dikemas: "Pesanan diterima & sedang dikemas di hub.",
-  dijemput: "Paket dijemput kurir dari hub.",
-  transit: "Paket tiba di hub transit, menunggu keberangkatan.",
-  dikirim: "Paket dalam perjalanan menuju alamat penerima.",
-  terkirim: "Paket diterima penerima.",
-};
+export function defaultCourierNote(status: OrderStatus): string {
+  return {
+    dikemas: m.shp15(),
+    dijemput: m.shp16(),
+    transit: m.shp17(),
+    dikirim: m.shp18(),
+    terkirim: m.shp19(),
+  }[status];
+}
 
 /**
  * Tugas kurir saat ini per status paket — menjelaskan apa yang harus dilakukan
@@ -614,33 +621,35 @@ export interface CourierTask {
   icon: string;
 }
 
-export const COURIER_TASK: Record<OrderStatus, CourierTask> = {
+export function courierTask(status: OrderStatus): CourierTask {
+  return {
   dikemas: {
-    title: "Jemput paket di hub",
-    detail: "Ambil paket yang sudah dikemas dari rak hub, lalu verifikasi label alamat.",
+    title: m.shp20(),
+    detail: m.shp21(),
     icon: "stack",
   },
   dijemput: {
-    title: "Serahkan ke transit hub",
-    detail: "Bawa paket ke hub transit untuk sortir rute pengantaran hari ini.",
+    title: m.shp22(),
+    detail: m.shp23(),
     icon: "compass",
   },
   transit: {
-    title: "Mulai pengantaran",
-    detail: "Keluar dari hub transit dan menuju alamat penerima sesuai rute.",
+    title: m.shp24(),
+    detail: m.shp25(),
     icon: "map",
   },
   dikirim: {
-    title: "Konfirmasi paket tiba",
-    detail: "Serahkan paket ke penerima. Untuk COD, terima pembayaran tunai sebelum selesai.",
+    title: m.shp26(),
+    detail: m.shp27(),
     icon: "check",
   },
   terkirim: {
-    title: "Tugas selesai",
-    detail: "Paket sudah diterima penerima. Siap lanjut ke paket berikutnya.",
+    title: m.shp28(),
+    detail: m.shp29(),
     icon: "check",
   },
-};
+  }[status];
+}
 
 /**
  * Fraksi perjalanan kurir (0..1) diturunkan dari status — satu sumber agar

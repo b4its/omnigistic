@@ -249,9 +249,10 @@ lv = _get("/ml/modalshift/levers")
 check("7 tuas biaya (kanonik, sama dgn P&L)", len(lv["levers"]) == 7, str(len(lv["levers"])))
 check("total saving > 0", lv["summary"]["totalSavingIdrT"] > 0, str(lv["summary"]["totalSavingIdrT"]))
 # REGRESI B3: cost_levers (multimodal) & cost_waterfall (pnl) HARUS sepakat —
-# dulu 20,4% vs 8,7% utk tuas yg sama. Kini satu sumber kanonik (pnl.LEVERS).
+# satu sumber kanonik (pnl.LEVERS + pnl.lever_portfolio). savingPctOfCost di
+# halaman levers == leverSavingPct di halaman waterfall.
 _pw = _get("/ml/pnl/waterfall")
-check("levers & waterfall sepakat (%)", lv["summary"]["savingPctOfCost"] == _pw["summary"]["totalSavingPct"], f"{lv['summary']['savingPctOfCost']} vs {_pw['summary']['totalSavingPct']}")
+check("levers & waterfall sepakat (%)", lv["summary"]["savingPctOfCost"] == _pw["summary"]["leverSavingPct"], f"{lv['summary']['savingPctOfCost']} vs {_pw['summary']['leverSavingPct']}")
 check("jumlah tuas sepakat", len(lv["levers"]) == len(_pw["waterfall"]), f"{len(lv['levers'])} vs {len(_pw['waterfall'])}")
 
 print("== 5d. Digital Twin & COD-impact (input dihormati) ==")
@@ -354,6 +355,62 @@ check("pnl waterfall monotonic turun", all(costs[i] >= costs[i + 1] for i in ran
 # Tanpa sustainability → lebih sedikit tuas.
 pn_ns = client.get("/ml/pnl/waterfall", params={"include_sustainability": "false"}).json()
 check("pnl tanpa sustainability lebih sedikit tuas", len(pn_ns["waterfall"]) < len(pn["waterfall"]), f"{len(pn_ns['waterfall'])} vs {len(pn['waterfall'])}")
+# Jembatan cost-to-sales harus persis model dokumen (Tantangan 6):
+# 31,34% -> 29,40% (absorpsi) -> 28,35% (tujuh tuas) -> 26,8% (sponsor).
+_br = {s["stage"]: s["costToSalesPct"] for s in pn["bridge"]}
+check("jembatan baseline 31,34%", abs(_br["Baseline 2023"] - 31.34) < 0.01, str(_br["Baseline 2023"]))
+check("jembatan absorpsi 29,40%", abs(_br["Setelah absorpsi volume"] - 29.40) < 0.01, str(_br["Setelah absorpsi volume"]))
+check("jembatan tujuh tuas 28,35%", abs(_br["Setelah tujuh tuas"] - 28.35) < 0.01, str(_br["Setelah tujuh tuas"]))
+check("jembatan sponsor 26,76%", abs(_br["Setelah sponsor selektif"] - 26.76) < 0.05, str(_br["Setelah sponsor selektif"]))
+check("absorpsi volume = 7,46T", abs(pn["absorption"]["benefitT"] - 7.456) < 0.01, str(pn["absorption"]["benefitT"]))
+check("tuas net = 4,08T", abs(pn["summary"]["leverNetT"] - 4.084) < 0.01, str(pn["summary"]["leverNetT"]))
+check("biaya dihindari tanpa sponsor ~11,54T", abs(pn["summary"]["costAvoidedWithoutSponsorT"] - 11.54) < 0.05, str(pn["summary"]["costAvoidedWithoutSponsorT"]))
+
+print("== 5h-2. Rencana kanonik per tantangan (selaras docs/hasil-analisis) ==")
+# T1: model hibrida tiga tingkat.
+_sp = _get("/ml/sponsor/compare")
+_tp = _sp.get("tierPlan", {})
+_tsum = _tp.get("summary", {})
+check("T1 tingkat = 3", len(_tp.get("tiers", [])) == 3, str(len(_tp.get("tiers", []))))
+check("T1 hub per tingkat 11/8/4", [t["hubCount"] for t in _tp.get("tiers", [])] == [11, 8, 4], str([t["hubCount"] for t in _tp.get("tiers", [])]))
+check("T1 hemat 2023 = 5,04T", abs(_tsum.get("saving2023T", 0) - 5.04) < 0.02, str(_tsum.get("saving2023T")))
+check("T1 hemat proyeksi = 6,12T", abs(_tsum.get("savingProjectedT", 0) - 6.12) < 0.02, str(_tsum.get("savingProjectedT")))
+check("T1 efek rasio 1,59 pp", abs(_tsum.get("ratioEffectPp", 0) - 1.59) < 0.01, str(_tsum.get("ratioEffectPp")))
+check("T1 CTS akhir 26,76%", abs(_tsum.get("costToSalesAfterSponsorPct", 0) - 26.76) < 0.05, str(_tsum.get("costToSalesAfterSponsorPct")))
+check("T1 guardrail = 6", len(_tp.get("guardrails", [])) == 6, str(len(_tp.get("guardrails", []))))
+
+# T2: lima lapis + load balancing + tabel amplifikasi.
+_sg = _get("/ml/sim/surge")
+_sp2 = _sg.get("plan", {})
+check("T2 tabel amplifikasi 1/1/3/14/21", [a["hubsBreached"] for a in _sp2.get("amplificationTable", [])] == [1, 1, 3, 14, 21], str([a["hubsBreached"] for a in _sp2.get("amplificationTable", [])]))
+check("T2 load balancing Rp90/paket", _sp2.get("loadBalancing", {}).get("costPerPackageIdr") == 90, str(_sp2.get("loadBalancing", {}).get("costPerPackageIdr")))
+check("T2 capex setara 10 th = Rp618", _sp2.get("newHubCapexPerPackageIdr", {}).get("horizon10") == 618, str(_sp2.get("newHubCapexPerPackageIdr")))
+check("T2 lima lapis", len(_sp2.get("layers", [])) == 5, str(len(_sp2.get("layers", []))))
+check("T2 Jakarta -> 72,6%", abs(_sp2.get("jakartaExample", {}).get("utilizationAfterPct", 0) - 72.6) < 0.1, str(_sp2.get("jakartaExample", {}).get("utilizationAfterPct")))
+
+# T3: insentif + intervensi + nilai.
+_cp = _get("/ml/cod/plan")
+check("T3 selisih 7,875 mnt", abs(_cp["timeBasis"]["gapPerPackageMin"] - 7.875) < 0.001, str(_cp["timeBasis"]["gapPerPackageMin"]))
+check("T3 produktivitas turun 45,7%", abs(_cp["timeBasis"]["productivityDropPct"] - 45.7) < 0.1, str(_cp["timeBasis"]["productivityDropPct"]))
+check("T3 pendapatan hilang Rp40.900-45.256", (_cp["incentive"]["lostIncomePerDayLowIdr"] == 40900 and _cp["incentive"]["lostIncomePerDayHighIdr"] == 45256), f"{_cp['incentive']['lostIncomePerDayLowIdr']}-{_cp['incentive']['lostIncomePerDayHighIdr']}")
+check("T3 intervensi total 7,5 mnt", abs(_cp["interventionTotalMin"] - 7.5) < 0.01, str(_cp["interventionTotalMin"]))
+check("T3 target 12,0 mnt", abs(_cp["realization"]["targetMinutesPerPackage"] - 12.0) < 0.02, str(_cp["realization"]["targetMinutesPerPackage"]))
+check("T3 nilai terderivasi Rp0,81T", abs(_cp["value"]["derivableIdrT"] - 0.81) < 0.01, str(_cp["value"]["derivableIdrT"]))
+check("T3 rekonsiliasi 3 arah", len(_cp["reconciliation"]["sources"]) == 3, str(len(_cp["reconciliation"]["sources"])))
+
+# T5: ruang kosong + skenario isi + gate.
+_ex = _get("/ml/expansion/roi")
+_pl = _ex.get("plan", {})
+check("T5 headroom basis 2024 ~401 jt", abs(_pl.get("headroom", {}).get("basis2024M", 0) - 401) < 2, str(_pl.get("headroom", {}).get("basis2024M")))
+check("T5 headroom basis Tabel 1 ~710 jt", abs(_pl.get("headroom", {}).get("basisTable1M", 0) - 710) < 2, str(_pl.get("headroom", {}).get("basisTable1M")))
+check("T5 kontribusi Rp3.000/paket", _pl.get("contribution", {}).get("perParcelIdr") == 3000, str(_pl.get("contribution", {}).get("perParcelIdr")))
+for _i, _v in ((0, 120), (1, 241), (2, 421)):
+    _val = _pl.get("fillScenarios", [{}])[_i].get("valueIdr", 0) / 1e9
+    check(f"T5 skenario isi {_pl.get('fillScenarios', [{}])[_i].get('fillPct')}% ~Rp{_v} miliar", abs(_val - _v) < 3, f"{_val:.1f}")
+check("T5 gate hub baru = 5", len(_pl.get("newHubGates", [])) == 5, str(len(_pl.get("newHubGates", []))))
+check("T5 stress tarif -> Rp2.000", _pl.get("tariffStress", {}).get("contributionAfterIdr") == 2000, str(_pl.get("tariffStress", {}).get("contributionAfterIdr")))
+check("T5 paket/outlet Jawa 1.052", _pl.get("outletProductivityPerDay", {}).get("Java") == 1052, str(_pl.get("outletProductivityPerDay", {}).get("Java")))
+check("T5 paket/outlet Maluku & Papua 420", _pl.get("outletProductivityPerDay", {}).get("Maluku & Papua") == 420, str(_pl.get("outletProductivityPerDay", {}).get("Maluku & Papua")))
 
 print("== 5i. Route Intelligence (jalur tercepat: kepadatan + efisiensi) ==")
 rt = _get("/ml/route/plan?distance_km=38.4")
@@ -808,6 +865,44 @@ check("digital-twin: note asumsi ada", "note" in _cdt({}))
 from app.ml.simulations import calculate_cod_impact as _cci2
 
 check("cod-impact: note asumsi ada", "note" in _cci2())
+
+# (9) BCA dokumen (Tantangan 4): angka wajib sama dengan docs/hasil-analisis-2026-09-19.md.
+from app.ml.ev_bca_doc import doc_bca as _doc_bca
+
+_doc = _doc_bca()
+_a, _b = _doc["modelA"], _doc["modelB"]
+
+check("doc BCA: Model A net (Rp175/km) = 2.655.774.479", _a["netAnnualSavingByTariffIdr"]["optimistic"] == 2_655_774_479, str(_a["netAnnualSavingByTariffIdr"]["optimistic"]))
+check("doc BCA: Model A net (Rp200/km) = 2.400.274.479", _a["netAnnualSavingByTariffIdr"]["market"] == 2_400_274_479)
+check("doc BCA: Model A net (Rp222/km) = 2.175.434.479", _a["netAnnualSavingByTariffIdr"]["upper"] == 2_175_434_479)
+check("doc BCA: Model A arus kas Tahun-0 = +1.814.506.447", _a["year0CashIdr"] == 1_814_506_447)
+check("doc BCA: Model A NPV (Rp200/km) = 10.913.435.187", abs(_a["npvByTariffIdr"]["market"] - 10_913_435_187) <= 1)
+check("doc BCA: Model A TCO ICE 94.764.935 / EV 51.450.000", (_a["tco5yIdr"]["ice"], _a["tco5yIdr"]["ev"]) == (94_764_935, 51_450_000))
+check("doc BCA: Model A BCR = 1,84", _a["bcr"] == 1.84, str(_a["bcr"]))
+check("doc BCA: Model A emisi turun ~266 ton", 265.5 <= _a["co2ReductionTonsYear"] <= 266.5)
+check("doc BCA: Model A tanpa payback (jujur)", _a["payback"]["valueYears"] == 0.0)
+
+_k = _b["kpi"]
+check("doc BCA: Model B net = 3.503.924.588", _k["netAnnualSavingIdr"] == 3_503_924_588)
+check("doc BCA: Model B prudent = 3.267.674.588", _k["netAnnualSavingPrudentIdr"] == 3_267_674_588)
+check("doc BCA: Model B arus kas Tahun-0 = +2.207.533.478", _k["year0CashIdr"] == 2_207_533_478)
+check("doc BCA: Model B NPV = 15.490.164.448", abs(_k["npvIdr"] - 15_490_164_448) <= 1, str(_k["npvIdr"]))
+check("doc BCA: Model B BCR 3,50 & ROI 250,45%", (_k["bcr"], _k["roi5yPct"]) == (3.50, 250.45))
+check("doc BCA: Model B total unit = 350", _b["totals"]["units"] == 350)
+check("doc BCA: Model B emisi turun 291,8 ton", _k["co2ReductionTonsYear"] == 291.8)
+check("doc BCA: Model B ditandai bersumber dokumen", "bcr" in _b.get("sourcedFromDoc", []))
+
+_be = _doc["breakEven"]["modelA"]
+check("doc BCA: titik kritis swap 366,92 / 424,45", (_be["swapTariffEnergyEqualIdrPerKm"], _be["swapTariffNetZeroIdrPerKm"]) == (366.92, 424.45))
+check("doc BCA: titik kritis Pertamax 7.752", _be["pertamaxWhenEqualSwap175IdrPerL"] == 7752)
+
+_rm5 = _doc["roadmap"]
+check("doc BCA: roadmap 5 fase", len(_rm5["phases"]) == 5, str(len(_rm5["phases"])))
+check("doc BCA: syarat penskalaan 6 butir", len(_rm5["scaleGates"]) == 6)
+check("doc BCA: fase 1 pilot 350 Zuzu vs 350 Scoopy", "350" in _rm5["phases"][0]["content"])
+
+_evd = _get("/ml/ev-bca/doc")
+check("endpoint /ml/ev-bca/doc 200 + sumber dokumen", _evd["source"] == "docs/hasil-analisis-2026-09-19.md")
 
 print(f"\n===== BACKEND {_passed}/{_passed + _failed} PASS =====")
 if _failed:

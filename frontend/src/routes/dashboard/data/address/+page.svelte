@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { api } from "$lib/api";
   import { notify } from "$lib/toast";
@@ -15,14 +16,14 @@
   async function analyze(text: string) {
     const q = text.trim();
     if (!q) {
-      notify("Isi alamat dulu untuk dianalisis.", "warn", "Address Intelligence");
+      notify(m.ad2t1(), "warn", "Address Intelligence");
       return;
     }
     loading = true;
     try {
       parsed = await api.addressParse(q);
     } catch {
-      notify("Backend offline — tak bisa menganalisis alamat.", "error", "Address Intelligence");
+      notify(m.ad2t2(), "error", "Address Intelligence");
       parsed = null;
     } finally {
       loading = false;
@@ -95,8 +96,8 @@
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
-    <h1 class="font-heading text-xl font-semibold tracking-tight">Address Intelligence</h1>
-    <span class="hub-label text-muted-foreground">DATA · Virgiawan</span>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">{m.da01()}</h1>
+    <span class="hub-label text-muted-foreground">{m.da02()}</span>
   </div>
 
   <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
@@ -105,27 +106,27 @@
         <GlitterIcon cls="h-5 w-5" />
       </span>
       <div class="min-w-0">
-        <p class="text-[13.5px] font-semibold uppercase tracking-wider text-primary">Saran Nigi AI</p>
+        <p class="text-[13.5px] font-semibold uppercase tracking-wider text-primary">{m.da03()}</p>
         <p class="mt-1.5 text-sm font-medium leading-relaxed text-foreground">
-          Paket COD di Cibinong (alamat benar terverifikasi geotag): hubungi penerima dulu untuk slot. Jika belum siap, pindahkan ke PUDO terdekat. Kurir diarahkan mengikuti rute jalan + ETA, agar tidak mencari-cari.
+          {m.da04()}
         </p>
         <button type="button" onclick={openChat} class="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-xs font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px active:translate-y-0">
-          Buka Nigi Chat <Icon name="arrow-up-right" cls="h-3.5 w-3.5" weight="bold" />
+          {m.da05()} <Icon name="arrow-up-right" cls="h-3.5 w-3.5" weight="bold" />
         </button>
       </div>
     </div>
   </div>
 
   <div class="rounded-2xl border-l-4 border-chart-4 bg-muted/30 p-4 text-sm">
-    Nama jalan yang sama muncul di <span class="font-medium">3 lokasi berbeda</span>, berjarak puluhan kilometer. Inilah akar komplain alamat.
+    {m.da06()} <span class="font-medium">{m.da07()}</span>{m.da08()}
   </div>
 
   <form
     class="rounded-2xl border border-border bg-card p-5"
     onsubmit={(e) => { e.preventDefault(); analyze(query); }}
   >
-    <label for="addr-input" class="text-sm font-medium text-foreground">Coba alamat bebas</label>
-    <p class="mt-1 text-xs text-muted-foreground">Ketik alamat (jalan/distrik/kota) → engine mencocokkan fuzzy ke 3 kandidat kasus &amp; menghitung ETA.</p>
+    <label for="addr-input" class="text-sm font-medium text-foreground">{m.da09()}</label>
+    <p class="mt-1 text-xs text-muted-foreground">{m.da10()}</p>
     <div class="mt-3 flex flex-col gap-2 sm:flex-row">
       <input
         id="addr-input"
@@ -141,7 +142,7 @@
         class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px active:translate-y-0 disabled:opacity-60"
       >
         {#if loading}<Icon name="dots" cls="h-4 w-4 animate-pulse" weight="bold" />{:else}<Icon name="search" cls="h-4 w-4" weight="bold" />{/if}
-        Analisis
+        {m.ad4t1()}
       </button>
     </div>
     <div class="mt-3 flex flex-wrap gap-2">
@@ -176,15 +177,15 @@
           <GlitterIcon cls="h-4 w-4" />
         </span>
         <div class="min-w-0">
-          <p class="text-sm font-semibold">Nigi AI</p>
-          <p class="text-xs text-muted-foreground">{analyzing ? "Menganalisis 3 kandidat alamat…" : "Analisis selesai · kandidat terskor"}</p>
+          <p class="text-sm font-semibold">{m.da11()}</p>
+          <p class="text-xs text-muted-foreground">{analyzing ? m.ad4t2() : m.ad4t3()}</p>
         </div>
         {#if analyzing}
           <span class="ml-auto flex items-center gap-1.5 text-[13.5px] font-semibold text-primary">
-            <Icon name="dots" cls="h-4 w-4 animate-pulse" weight="bold" /> menghitung
+            <Icon name="dots" cls="h-4 w-4 animate-pulse" weight="bold" /> {m.da12()}
           </span>
         {:else}
-          <span class="ml-auto rounded-full bg-success px-2.5 py-1 text-[13px] font-semibold text-success-foreground">selesai</span>
+          <span class="ml-auto rounded-full bg-success px-2.5 py-1 text-[13px] font-semibold text-success-foreground">{m.da13()}</span>
         {/if}
       </div>
 
@@ -207,24 +208,24 @@
       {#if decided && parsed.best}
         <p class="mt-4 flex items-center gap-2 text-[15px]">
           <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)]"><Icon name="check" cls="h-3.5 w-3.5" weight="bold" /></span>
-          <span><strong>Keputusan:</strong> target = {parsed.best.city} · {parsed.best.district} · ETA {parsed.etaMin ?? "—"} menit{parsed.distanceKm != null ? ` · ${parsed.distanceKm} km` : ""}.</span>
+          <span><strong>{m.da14()}</strong> target = {parsed.best.city} · {parsed.best.district} · ETA {parsed.etaMin ?? "—"} menit{parsed.distanceKm != null ? ` · ${parsed.distanceKm} km` : ""}.</span>
         </p>
       {:else if decided && !parsed.best}
         <p class="mt-4 flex items-center gap-2 text-[15px]">
           <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warning text-warning-foreground"><Icon name="warn" cls="h-3.5 w-3.5" weight="bold" /></span>
-          <span><strong>Belum ada kecocokan.</strong> Coba sebut distrik/kota (Cibinong, Depok, atau Tangsel).</span>
+          <span><strong>{m.da15()}</strong> {m.da16()}</span>
         </p>
       {/if}
     </div>
   {/if}
 
   <div class="rounded-2xl border border-border bg-card p-5">
-    <p class="mb-2 text-sm font-medium">Bagaimana NLP membantu</p>
+    <p class="mb-2 text-sm font-medium">{m.da17()}</p>
     <ol class="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-      <li>Parse alamat jadi komponen terstruktur</li>
-      <li>Fuzzy matching ke koordinat</li>
-      <li>Geotag wajib saat checkout</li>
-      <li>Disambiguasi lokasi serupa (mis. Cibinong vs Depok vs Tangsel)</li>
+      <li>{m.da18()}</li>
+      <li>{m.da19()}</li>
+      <li>{m.da20()}</li>
+      <li>{m.da21()}</li>
     </ol>
   </div>
 </div>

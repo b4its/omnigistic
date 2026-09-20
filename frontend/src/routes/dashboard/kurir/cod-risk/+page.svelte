@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { api, type CodImpact, type CodRiskPkg, type CodFactor } from "$lib/api";
   import Icon from "$lib/components/Icon.svelte";
@@ -37,7 +38,7 @@
       packages = [];
       sim = null;
       errored = true;
-      notify({ message: "Gagal memuat preset risk scoring (backend offline)", type: "error", title: "Predictive COD" });
+      notify({ message: m.cr2t1(), type: "error", title: "Predictive COD" });
     }
     loaded = true;
   }
@@ -47,7 +48,7 @@
 
   function reroute(o: Order) {
     shop.routeToPudo(o.id, COURIER.actor);
-    notify({ message: `Paket ${o.id} dialihkan ke PUDO`, type: "info", title: "Predictive COD" });
+    notify({ message: m.cr4t1({ id: o.id }), type: "info", title: "Predictive COD" });
   }
 
   /** Ambang & tier dari satu sumber (logistics) — bukan hardcode. */
@@ -56,14 +57,14 @@
 
   const TIERS = [
     { key: "hijau", label: "Hijau · Cepat", color: "var(--color-chart-3)",
-      crit: `Skor < ${numId(T_NORMAL, 2)}. Penerima siap bayar, ambil paket cepat (≈ 2-6 menit).`,
+      crit: m.cr4t2({ score: numId(T_NORMAL, 2) }),
       action: "Antar normal." },
     { key: "kuning", label: "Kuning · Sedang", color: "var(--color-chart-2)",
       crit: `Skor ${numId(T_NORMAL, 2)}-${numId(T_PUDO, 2)}. Kadang belum siap, ekspektasi tunggu ≈ 6-10 menit.`,
-      action: "Konfirmasi slot atau tawarkan PUDO." },
+      action: m.cr2t2() },
     { key: "merah", label: "Merah · Lambat", color: "var(--color-chart-5)",
-      crit: `Skor ≥ ${numId(T_PUDO, 2)}. Uang belum siap atau alamat sulit, tunggu > 10 menit.`,
-      action: "PUDO atau pre-payment." }
+      crit: m.cr4t3({ score: numId(T_PUDO, 2) }),
+      action: m.cr2t3() }
   ];
 
   const counts = $derived(TIERS.map((t) => ({ ...t, n: packages.filter((p) => p.cluster === t.key).length })));
@@ -94,36 +95,36 @@
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
-    <h1 class="font-heading text-xl font-semibold tracking-tight">Predictive COD</h1>
-    <span class="hub-label text-muted-foreground">Risk scoring · triase nyata</span>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">{m.cr01()}</h1>
+    <span class="hub-label text-muted-foreground">{m.cr02()}</span>
   </div>
 
   <!-- Paket COD NYATA dari pesanan pembeli (dipenuhi lewat store bersama) -->
   <section class="rounded-2xl border border-border bg-card p-5">
     <div class="flex flex-wrap items-end justify-between gap-2">
       <div>
-        <p class="text-base font-semibold">Paket COD pembeli (nyata)</p>
-        <p class="text-[13.5px] text-muted-foreground">Pesanan dari checkout Customer yang dibayar di tempat, diurutkan dari risiko tertinggi. Aksi kurir langsung tersimpan untuk pembeli.</p>
+        <p class="text-base font-semibold">{m.cr03()}</p>
+        <p class="text-[13.5px] text-muted-foreground">{m.cr04()}</p>
       </div>
-      <a href={resolveHref("/dashboard/kurir/tasks")} class="rounded-full border border-border px-3 py-1 text-[13px] font-semibold text-foreground transition-colors hover:bg-accent">Buka tugas pengantaran</a>
+      <a href={resolveHref("/dashboard/kurir/tasks")} class="rounded-full border border-border px-3 py-1 text-[13px] font-semibold text-foreground transition-colors hover:bg-accent">{m.cr05()}</a>
     </div>
     {#if realCod.length === 0}
       <div class="mt-4 rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
-        <p class="text-sm font-semibold text-foreground">Belum ada pesanan COD dari pembeli</p>
-        <p class="mt-1 text-xs text-muted-foreground">Buat pesanan COD di portal Customer; skor &amp; keputusan model akan muncul di sini untuk ditriase kurir.</p>
+        <p class="text-sm font-semibold text-foreground">{m.cr06()}</p>
+        <p class="mt-1 text-xs text-muted-foreground">{m.cr07()}</p>
       </div>
     {:else}
       <div class="mt-4 overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b bg-muted/50 text-left text-[13px] text-muted-foreground">
-              <th scope="col" class="px-3 py-2">Pesanan</th>
-              <th scope="col" class="px-3 py-2">Penerima</th>
-              <th scope="col" class="px-3 py-2 text-right">Nilai</th>
-              <th scope="col" class="px-3 py-2 text-center">Skor risiko</th>
-              <th scope="col" class="px-3 py-2">Keputusan</th>
-              <th scope="col" class="px-3 py-2">Status</th>
-              <th scope="col" class="px-3 py-2 text-right">Aksi</th>
+              <th scope="col" class="px-3 py-2">{m.cr08()}</th>
+              <th scope="col" class="px-3 py-2">{m.cr09()}</th>
+              <th scope="col" class="px-3 py-2 text-right">{m.cr10()}</th>
+              <th scope="col" class="px-3 py-2 text-center">{m.cr11()}</th>
+              <th scope="col" class="px-3 py-2">{m.cr12()}</th>
+              <th scope="col" class="px-3 py-2">{m.cr13()}</th>
+              <th scope="col" class="px-3 py-2 text-right">{m.cr14()}</th>
             </tr>
           </thead>
           <tbody>
@@ -142,7 +143,7 @@
                 <td class="px-3 py-2 text-[13px] text-muted-foreground">{o.codCollected ? "Tunai diterima" : o.routedToPudo ? "Ke PUDO" : "Belum dibayar"}</td>
                 <td class="px-3 py-2 text-right">
                   {#if !o.routedToPudo && score >= T_NORMAL}
-                    <button type="button" onclick={() => reroute(o)} class="rounded-lg border border-warning/50 px-3 py-1.5 text-[13px] font-semibold text-warning-foreground transition-colors hover:bg-warning/10">Alihkan PUDO</button>
+                    <button type="button" onclick={() => reroute(o)} class="rounded-lg border border-warning/50 px-3 py-1.5 text-[13px] font-semibold text-warning-foreground transition-colors hover:bg-warning/10">{m.cr15()}</button>
                   {:else}
                     <span class="text-[13px] text-muted-foreground">—</span>
                   {/if}
@@ -157,9 +158,9 @@
 
   {#if errored}
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
-      <p class="text-sm font-semibold text-foreground">Gagal memuat preset demo risk scoring</p>
-      <p class="mt-1 text-xs text-muted-foreground">Backend offline? Data pesanan nyata di atas tetap tersedia.</p>
-      <button type="button" onclick={() => loadDemo()} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
+      <p class="text-sm font-semibold text-foreground">{m.cr16()}</p>
+      <p class="mt-1 text-xs text-muted-foreground">{m.cr17()}</p>
+      <button type="button" onclick={() => loadDemo()} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">{m.cr18()}</button>
     </div>
   {:else if loaded && sim && packages.length}
     <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
@@ -168,14 +169,14 @@
           <GlitterIcon cls="h-5 w-5" />
         </span>
         <div class="min-w-0">
-          <p class="text-[13.5px] font-semibold uppercase tracking-wider text-primary">Saran Nigi AI untuk kurir</p>
+          <p class="text-[13.5px] font-semibold uppercase tracking-wider text-primary">{m.cr19()}</p>
           <ul class="mt-2 space-y-1.5 text-[15px] leading-relaxed text-foreground">
-            <li>• <strong>Hubungi customer dulu</strong> untuk konfirmasi kesiapan COD, jika siap antar normal.</li>
-            <li>• Jika customer <strong>belum siap</strong>, arahkan paket ke <strong>cluster COD aman</strong> atau jadwalkan ulang ke slot lain.</li>
-            <li>• Paket berisiko tinggi ({packages.filter((p) => p.decision !== "antar-normal").length} dari {packages.length}) dialihkan ke PUDO atau pre-payment, kurir tidak jadi kasir keliling.</li>
+            <li>• <strong>{m.cr20()}</strong> {m.cr21()}</li>
+            <li>{m.cr22()} <strong>{m.cr23()}</strong>{m.cr24()} <strong>{m.cr25()}</strong> {m.cr26()}</li>
+            <li>{m.cr3f1()}{m.cr4t4({ n: packages.filter((p) => p.decision !== "antar-normal").length, total: packages.length })}{m.cr3f2()}</li>
           </ul>
           <button type="button" onclick={openChat} class="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-xs font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px active:translate-y-0">
-            Buka Nigi Chat <Icon name="arrow-up-right" cls="h-3.5 w-3.5" weight="bold" />
+            {m.cr27()} <Icon name="arrow-up-right" cls="h-3.5 w-3.5" weight="bold" />
           </button>
         </div>
       </div>
@@ -184,10 +185,10 @@
     <section class="rounded-2xl border border-border bg-card p-5">
       <div class="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <p class="text-base font-semibold">Klaster pelanggan COD</p>
-          <p class="text-[13.5px] text-muted-foreground">Hijau, kuning, merah, berdasarkan skor risiko dan kecepatan penerima mengambil paket. Prototipe presentasi.</p>
+          <p class="text-base font-semibold">{m.cr28()}</p>
+          <p class="text-[13.5px] text-muted-foreground">{m.cr29()}</p>
         </div>
-        <span class="rounded-full bg-muted px-3 py-1 text-[13px] font-semibold text-muted-foreground">{packages.length} paket</span>
+        <span class="rounded-full bg-muted px-3 py-1 text-[13px] font-semibold text-muted-foreground">{m.cr4t5({ n: packages.length })}</span>
       </div>
       <div class="mt-4 grid gap-4 lg:grid-cols-[1fr_260px]">
         <div class="grid gap-3 sm:grid-cols-3">
@@ -196,7 +197,7 @@
               <p class="text-sm font-semibold text-foreground">{t.label}</p>
               <p class="mt-1 text-[14px] leading-relaxed text-muted-foreground">{t.crit}</p>
               <p class="mt-2 text-[13.5px] font-semibold text-foreground">Aksi: {t.action}</p>
-              <p class="mt-2 text-2xl font-bold tabular-nums text-foreground">{t.n} <span class="text-sm font-medium text-muted-foreground">paket</span></p>
+              <p class="mt-2 text-2xl font-bold tabular-nums text-foreground">{t.n} <span class="text-sm font-medium text-muted-foreground">{m.cr30()}</span></p>
             </div>
           {/each}
         </div>
@@ -210,46 +211,46 @@
 
     <div class="grid gap-4 sm:grid-cols-3">
       <div class="rounded-2xl border border-border bg-card p-4 text-center">
-        <p class="text-[13.5px] text-muted-foreground">Rute sebelum</p>
+        <p class="text-[13.5px] text-muted-foreground">{m.cr31()}</p>
         <p class="kpi-value text-xl text-muted-foreground">{sim.currentTime} menit</p>
-        <p class="text-[13.5px] text-muted-foreground">{sim.currentPerHour}/jam</p>
+        <p class="text-[13.5px] text-muted-foreground">{sim.currentPerHour} {m.cr3f3()}</p>
       </div>
       <div class="rounded-2xl border border-primary/40 bg-card p-4 text-center">
-        <p class="text-[13.5px] text-muted-foreground">Rute setelah (60% digital)</p>
+        <p class="text-[13.5px] text-muted-foreground">{m.cr32()}</p>
         <p class="kpi-value text-xl text-primary">{sim.newTime} menit</p>
-        <p class="text-[13.5px] text-muted-foreground">{sim.newPerHour}/jam</p>
+        <p class="text-[13.5px] text-muted-foreground">{sim.newPerHour} {m.cr3f3()}</p>
       </div>
       <div class="rounded-2xl border border-chart-2 bg-card p-4 text-center">
-        <p class="text-[13.5px] text-muted-foreground">Kapasitas naik</p>
+        <p class="text-[13.5px] text-muted-foreground">{m.cr33()}</p>
         <p class="kpi-value text-xl text-chart-2">+{sim.capacityGainPct}%</p>
-        <p class="text-[13.5px] text-muted-foreground">{sim.packagesFreed} paket terselamatkan</p>
+        <p class="text-[13.5px] text-muted-foreground">{sim.packagesFreed} {m.cr3f4()}</p>
       </div>
     </div>
 
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="mb-3 text-base font-semibold">Skor risiko per paket</p>
-      <p class="mb-3 text-[13.5px] text-muted-foreground">Logistic Regression · data sintetik ber-logika kasus. Klik Detail untuk melihat alasan (why) dan cara hitung (how).</p>
+      <p class="mb-3 text-base font-semibold">{m.cr34()}</p>
+      <p class="mb-3 text-[13.5px] text-muted-foreground">{m.cr35()}</p>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b bg-muted/50 text-left text-[13px] text-muted-foreground">
-              <th scope="col" class="px-3 py-2">Paket</th>
-              <th scope="col" class="px-3 py-2 text-right">Nilai</th>
-              <th scope="col" class="px-3 py-2 text-right">Jam</th>
-              <th scope="col" class="px-3 py-2 text-center">Alamat ambigu</th>
-              <th scope="col" class="px-3 py-2 text-center">Skor risiko</th>
-              <th scope="col" class="px-3 py-2">Klaster</th>
-              <th scope="col" class="px-3 py-2">Keputusan</th>
-              <th scope="col" class="px-3 py-2 text-right">Aksi</th>
+              <th scope="col" class="px-3 py-2">{m.cr36()}</th>
+              <th scope="col" class="px-3 py-2 text-right">{m.cr37()}</th>
+              <th scope="col" class="px-3 py-2 text-right">{m.cr38()}</th>
+              <th scope="col" class="px-3 py-2 text-center">{m.cr39()}</th>
+              <th scope="col" class="px-3 py-2 text-center">{m.cr40()}</th>
+              <th scope="col" class="px-3 py-2">{m.cr41()}</th>
+              <th scope="col" class="px-3 py-2">{m.cr42()}</th>
+              <th scope="col" class="px-3 py-2 text-right">{m.cr43()}</th>
             </tr>
           </thead>
           <tbody>
             {#each packages as p (p.id)}
               <tr class="border-b last:border-0">
                 <td class="px-3 py-2 font-medium">{p.id}</td>
-                <td class="px-3 py-2 text-right tabular-nums">Rp{p.value}rb</td>
+                <td class="px-3 py-2 text-right tabular-nums">{m.cr4t6({ value: p.value })}</td>
                 <td class="px-3 py-2 text-right tabular-nums">{Math.round(p.hour)}.00</td>
-                <td class="px-3 py-2 text-center">{p.ambiguous === 1 ? "Ya" : "Tidak"}</td>
+                <td class="px-3 py-2 text-center">{p.ambiguous === 1 ? m.cr4t7() : m.cr4t8()}</td>
                 <td class="px-3 py-2 text-center">
                   <span class="inline-block w-16 rounded-full bg-muted px-2 py-0.5 text-[13px] font-semibold tabular-nums">{(p.score * 100).toFixed(0)}%</span>
                 </td>
@@ -262,7 +263,7 @@
                     aria-expanded={openId === p.id}
                     class="rounded-lg border border-border px-3 py-1.5 text-[13px] font-semibold text-foreground transition-colors hover:border-primary/50 hover:text-primary"
                   >
-                    {openId === p.id ? "Tutup" : "Detail"}
+                    {openId === p.id ? m.cr2t4() : "Detail"}
                   </button>
                 </td>
               </tr>
@@ -271,7 +272,7 @@
                   <td colspan="8" class="bg-muted/30 px-4 py-4">
                     <div class="grid gap-5 lg:grid-cols-2">
                       <div>
-                        <p class="text-[13px] font-semibold uppercase tracking-wider text-primary">Kenapa · kontribusi tiap faktor</p>
+                        <p class="text-[13px] font-semibold uppercase tracking-wider text-primary">{m.cr44()}</p>
                         <ul class="mt-3 space-y-2.5">
                           {#each sortedFactors(p) as f (f.key)}
                             <li>
@@ -290,16 +291,16 @@
                         </ul>
                       </div>
                       <div>
-                        <p class="text-[13px] font-semibold uppercase tracking-wider text-primary">Bagaimana · cara hitung</p>
+                        <p class="text-[13px] font-semibold uppercase tracking-wider text-primary">{m.cr45()}</p>
                         <div class="mt-3 space-y-1.5 text-[14.5px] text-muted-foreground">
-                          <p>Model: <span class="text-foreground">{p.model ?? "Logistic Regression"}</span>{p.accuracy != null ? ` · akurasi uji ${(p.accuracy * 100).toFixed(0)}%` : ""}</p>
+                          <p>{m.cr46()} <span class="text-foreground">{p.model ?? "Logistic Regression"}</span>{p.accuracy != null ? ` · akurasi uji ${(p.accuracy * 100).toFixed(0)}%` : ""}</p>
                           <p>logit = intercept ({p.intercept != null ? numId(p.intercept, 2) : "-"}) + Σ (koef × fitur) = <span class="text-foreground">{p.logit != null ? numId(p.logit, 2) : "-"}</span></p>
-                          <p>P(gagal COD) = 1 / (1 + e^−logit) = <span class="font-semibold text-foreground">{(p.score * 100).toFixed(0)}%</span></p>
+                          <p>{m.cr47()} <span class="font-semibold text-foreground">{(p.score * 100).toFixed(0)}%</span></p>
                           <p>Ambang: &lt; {(T_NORMAL * 100).toFixed(0)}% antar-normal · {(T_NORMAL * 100).toFixed(0)}-{(T_PUDO * 100).toFixed(0)}% PUDO · ≥ {(T_PUDO * 100).toFixed(0)}% pre-payment.</p>
                         </div>
                         <div class="mt-3 rounded-lg bg-muted/50 p-3 text-[14.5px]">
-                          <p>Klaster: <strong class="text-foreground">{p.clusterLabel}</strong> · ekspektasi penerima ambil paket ≈ <strong class="text-foreground">{p.pickupWaitMin} menit</strong></p>
-                          <p class="mt-1 text-muted-foreground">Keputusan: <strong class="text-foreground">{p.decision}</strong> · {p.clusterAction}</p>
+                          <p>{m.cr48()} <strong class="text-foreground">{p.clusterLabel}</strong> {m.cr49()} <strong class="text-foreground">{p.pickupWaitMin} menit</strong></p>
+                          <p class="mt-1 text-muted-foreground">{m.cr50()} <strong class="text-foreground">{p.decision}</strong> · {p.clusterAction}</p>
                         </div>
                       </div>
                     </div>

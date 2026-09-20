@@ -6,6 +6,7 @@
   import { roleFromPath, roleFromValue, setRoleCookie, type Role } from "$lib/stores/role";
   import { sidebarStore } from "$lib/stores/sidebar";
   import { cn, resolveHref } from "$lib/utils";
+  import { m } from "$lib/paraglide/messages";
   import Icon from "$lib/components/Icon.svelte";
   import M3Nav, { type NavItem } from "$lib/components/M3Nav.svelte";
   import Topbar from "$lib/components/Topbar.svelte";
@@ -26,53 +27,57 @@
   const titleMap: Record<string, string> = {
     overview: "Portal", executive: "Executive Dashboard", "digital-twin": "Digital Twin",
     utilization: "Utilization Map", network: "Network Expansion", expansion: "Market-Expansion ROI", roi: "ROI & Benefit-Cost", pnl: "Cost-Waterfall & P&L", "ev-bca": "EV Fleet BCA",
-    dashboard: "Hub Dashboard", forecast: "Demand Forecast", "load-balance": "Load Balancing",
+    dashboard: m.ly2t1(), forecast: "Demand Forecast", "load-balance": "Load Balancing",
     capacity: "Capacity Alert", surge: "Peak-Surge Test", routes: "Route Clustering", "cod-risk": "Predictive COD",
     "cod-intel": "COD Decision Intelligence", "cod-cash": "COD Cash-Reconciliation Risk",
-    slot: "Slot Confirmation", payment: "Digital Payment", pudo: "PUDO Network",
+    slot: m.ly2t2(), payment: "Digital Payment", pudo: "PUDO Network",
     address: "Address Intelligence", complaint: "Complaint Monitor", multimodal: "Control Tower",
     fleet: "Fleet & Emissions", "ev-sites": "EV Site Selection", methodology: "Methodology",
-    academy: "Nigi Academy", kpi: "KPI Tracker", assistant: "Nigi AI", "": "Dashboard",
-    tasks: "Tugas Pengantaran",
-    shop: "Belanja", orders: "Pesanan Saya", checkout: "Checkout", cart: "Keranjang",
-    analytics: "Analitik Penjualan", products: "Produk Saya", customers: "Analisis Pelanggan", "seller-orders": "Pesanan Masuk",
+    kpi: "KPI Tracker", assistant: "Nigi AI", "": "Dashboard",
     "predictive-cod": "Predictive COD"
   };
+
+  // Judul yang bergantung bahasa: dipanggil saat render (bukan level modul) supaya
+  // locale yang benar dipakai per permintaan.
+  const titleIdFor = (seg: string): string | undefined =>
+    ({
+      tasks: m.nav_tasks(),
+      shop: m.nav_shop(),
+      orders: m.nav_orders(),
+      cart: m.nav_cart(),
+      analytics: m.title_analytics(),
+      products: m.nav_products(),
+      customers: m.title_customers(),
+      "seller-orders": m.nav_incoming_orders()
+    })[seg];
   const seg3 = (path: string) => {
     const parts = path.split("/").filter(Boolean);
     return parts.length <= 1 ? (parts[0] ?? "") : parts[parts.length - 1];
   };
 
-  // Predictive COD = visibilitas internal. Pembeli (CUSTOMER) TIDAK melihat skor
-  // prediktif pelanggan, jadi item ini disembunyikan untuk role CUSTOMER.
-  const sharedNavFor = (r: Role | null): NavItem[] => {
-    const base: NavItem[] = [
-      { label: "Kerangka & Analisis", href: "/analisis", icon: "book" },
-      { label: "Whitepaper", href: "/whitepaper", icon: "book" },
-      { label: "Methodology", href: "/dashboard/methodology", icon: "book" },
-      { label: "KPI Tracker", href: "/dashboard/kpi", icon: "chart" },
-      { label: "Nigi Academy", href: "/dashboard/academy", icon: "grad" }
-    ];
-    if (r && r !== "CUSTOMER") base.push({ label: "Predictive COD", href: "/dashboard/predictive-cod", icon: "shield" });
-    return base;
-  };
+  // Shared = artefak lintas-role (bukan milik satu role). Beranda role tetap
+  // terjangkau lewat brand sidebar (logo = home) dan hub Overview.
+  const sharedNavFor = (): NavItem[] => [
+    { label: m.nav_framework(), href: "/analisis", icon: "book" },
+    { label: "Whitepaper", href: "/whitepaper", icon: "book" },
+    { label: "Methodology", href: "/dashboard/methodology", icon: "book" },
+    { label: "KPI Tracker", href: "/dashboard/kpi", icon: "chart" }
+  ];
 
-  const roleNav: Record<Role, NavItem[]> = {
+  // Maks 5 destinasi per role (M3: 3-7). Nigi AI SELALU terakhir supaya di
+  // bottom bar mobile (4 item pertama + "Lainnya") yang tampil adalah 4 halaman
+  // inti role, bukan asisten.
+  // Fungsi (bukan konstanta level modul) agar label diterjemahkan saat render.
+  const roleNavFor = (r: Role): NavItem[] => {
+    const nav: Record<Role, NavItem[]> = {
     PUSAT: [
-      { label: "Overview", href: "/dashboard/pusat/overview", icon: "circle" },
-      { label: "Executive Dashboard", href: "/dashboard/pusat/executive", icon: "grid" },
       { label: "Digital Twin", href: "/dashboard/pusat/digital-twin", icon: "compass" },
-      { label: "Utilization Map", href: "/dashboard/pusat/utilization", icon: "chart" },
-      { label: "Network Expansion", href: "/dashboard/pusat/network", icon: "stack" },
-      { label: "Market Expansion ROI", href: "/dashboard/pusat/expansion", icon: "target" },
+      { label: "Market-Expansion ROI", href: "/dashboard/pusat/expansion", icon: "target" },
       { label: "EV Fleet BCA", href: "/dashboard/pusat/ev-bca", icon: "chart" },
-      { label: "ROI & BCA", href: "/dashboard/pusat/roi", icon: "currency" },
       { label: "Cost-Waterfall P&L", href: "/dashboard/pusat/pnl", icon: "coins" },
       { label: "Nigi AI", href: "/dashboard/pusat/assistant", icon: "chat", fa: "glitter" },
     ],
     HUB: [
-      { label: "Overview", href: "/dashboard/hub/overview", icon: "circle" },
-      { label: "Hub Dashboard", href: "/dashboard/hub/dashboard", icon: "globe" },
       { label: "Demand Forecast", href: "/dashboard/hub/forecast", icon: "chart" },
       { label: "Load Balancing", href: "/dashboard/hub/load-balance", icon: "compass" },
       { label: "Capacity Alert", href: "/dashboard/hub/capacity", icon: "bell" },
@@ -80,50 +85,46 @@
       { label: "Nigi AI", href: "/dashboard/hub/assistant", icon: "chat", fa: "glitter" },
     ],
     KURIR: [
-      { label: "Overview", href: "/dashboard/kurir/overview", icon: "circle" },
-      { label: "Tugas Pengantaran", href: "/dashboard/kurir/tasks", icon: "map" },
-      { label: "Route Clustering", href: "/dashboard/kurir/routes", icon: "compass" },
+      { label: m.nav_tasks(), href: "/dashboard/kurir/tasks", icon: "map" },
       { label: "Predictive COD", href: "/dashboard/kurir/cod-risk", icon: "currency" },
       { label: "COD Intelligence", href: "/dashboard/kurir/cod-intel", icon: "trend" },
-      { label: "COD Cash Risk", href: "/dashboard/kurir/cod-cash", icon: "wallet" },
-      { label: "Slot Confirmation", href: "/dashboard/kurir/slot", icon: "bell" },
-      { label: "Digital Payment", href: "/dashboard/kurir/payment", icon: "shield" },
-      { label: "PUDO Network", href: "/dashboard/kurir/pudo", icon: "map" },
+      { label: m.nav_buyer_cod_score(), href: "/dashboard/predictive-cod", icon: "users" },
       { label: "Nigi AI", href: "/dashboard/kurir/assistant", icon: "chat", fa: "glitter" },
     ],
     DATA: [
-      { label: "Overview", href: "/dashboard/data/overview", icon: "circle" },
       { label: "Address Intelligence", href: "/dashboard/data/address", icon: "map" },
-      { label: "Complaint Monitor", href: "/dashboard/data/complaint", icon: "users" },
       { label: "Control Tower", href: "/dashboard/data/multimodal", icon: "compass" },
+      { label: "Complaint Monitor", href: "/dashboard/data/complaint", icon: "users" },
       { label: "Fleet & Emissions", href: "/dashboard/data/fleet", icon: "stack" },
-      { label: "EV Site Selection", href: "/dashboard/data/ev-sites", icon: "grad" },
       { label: "Nigi AI", href: "/dashboard/data/assistant", icon: "chat", fa: "glitter" },
     ],
     CUSTOMER: [
       { label: "Dashboard", href: "/dashboard/customer/dashboard", icon: "chart", short: "Dashboard" },
-      { label: "Belanja", href: "/dashboard/customer/overview", icon: "grid", short: "Belanja" },
-      { label: "Keranjang", href: "/dashboard/customer/cart", icon: "stack", short: "Keranjang" },
-      { label: "Pesanan Saya", href: "/dashboard/customer/orders", icon: "map", short: "Pesanan" },
+      { label: m.nav_shop(), href: "/dashboard/customer/overview", icon: "grid", short: m.nav_shop() },
+      { label: m.nav_cart(), href: "/dashboard/customer/cart", icon: "stack", short: m.nav_cart() },
+      { label: m.nav_orders(), href: "/dashboard/customer/orders", icon: "map", short: m.nav_orders_short() },
       { label: "Nigi AI", href: "/dashboard/customer/assistant", icon: "chat", short: "Nigi AI", fa: "glitter" }
     ],
     SELLER: [
-      { label: "Analitik", href: "/dashboard/seller/overview", icon: "chart", short: "Analitik" },
-      { label: "Produk Saya", href: "/dashboard/seller/products", icon: "stack", short: "Produk" },
-      { label: "Pelanggan", href: "/dashboard/seller/customers", icon: "users", short: "Pelanggan" },
-      { label: "Pesanan Masuk", href: "/dashboard/seller/orders", icon: "globe", short: "Pesanan" },
+      { label: m.nav_analytics(), href: "/dashboard/seller/overview", icon: "chart", short: m.nav_analytics() },
+      { label: m.nav_products(), href: "/dashboard/seller/products", icon: "stack", short: m.nav_products_short() },
+      { label: m.nav_customers(), href: "/dashboard/seller/customers", icon: "users", short: m.nav_customers() },
+      { label: m.nav_incoming_orders(), href: "/dashboard/seller/orders", icon: "globe", short: m.nav_incoming_orders_short() },
       { label: "Nigi AI", href: "/dashboard/seller/assistant", icon: "chat", short: "Nigi AI", fa: "glitter" }
     ]
+    };
+    return nav[r];
   };
 
-  const userNameFor: Record<string, string> = {
-    PUSAT: "Dalila · Pusat",
-    HUB: "Marwah · Hub Bandung",
-    KURIR: "Baits · Kurir Jakarta",
-    DATA: "Virgiawan · Data & IT",
-    CUSTOMER: "Sari · Pembeli",
-    SELLER: "Rina · Penjual"
-  };
+  const userNameFor = (r: Role): string =>
+    ({
+      PUSAT: m.user_pusat(),
+      HUB: m.user_hub(),
+      KURIR: m.user_kurir(),
+      DATA: m.user_data(),
+      CUSTOMER: m.user_customer(),
+      SELLER: m.user_seller()
+    })[r] ?? m.title_guest();
 
   // role DERIVED dari path+cookie → SSR pertama kali render sudah pasangkan shell (CLS 0), tanpa onMount
   const pathname = $derived(String(page.url.pathname));
@@ -151,11 +152,11 @@
   // Judul halaman: utamakan label nav role (mis. "Belanja" utk customer overview,
   // "Dashboard" utk customer dashboard), lalu titleMap global.
   const navLabelFor = (r: Role | null, seg: string): string | undefined =>
-    r ? roleNav[r]?.find((i) => i.href.endsWith(`/${seg}`))?.label : undefined;
+    r ? roleNavFor(r).find((i) => i.href.endsWith(`/${seg}`))?.label : undefined;
 
   let routeLabel = $derived.by(() => {
     const seg = seg3(pathname);
-    return navLabelFor(role, seg) ?? titleMap[seg] ?? "Omnigistic";
+    return navLabelFor(role, seg) ?? titleIdFor(seg) ?? titleMap[seg] ?? "Omnigistic";
   });
 
   const questionMap: Record<string, string> = {
@@ -168,16 +169,17 @@
     shop: "3", cart: "3", checkout: "3", orders: "3",
     analytics: "5", products: "5", customers: "6", "seller-orders": "3"
   };
-  const roleQuestion: Record<Role, string> = { PUSAT: "1 dan 5", HUB: "2", KURIR: "3", DATA: "6", CUSTOMER: "3", SELLER: "5 dan 6" };
+  const roleQuestionFor = (r: Role): string =>
+    ({ PUSAT: m.q_pair_15(), HUB: m.q_pair_2(), KURIR: m.q_pair_3(), DATA: m.q_pair_6(), CUSTOMER: m.q_pair_3(), SELLER: m.q_pair_56() })[r];
   const questionLabel = $derived.by(() => {
     const seg = seg3(pathname);
-    if (seg === "overview") return role ? `Menjawab pertanyaan #${roleQuestion[role as Role]}` : undefined;
+    if (seg === "overview") return role ? m.q_answers({ n: roleQuestionFor(role) }) : undefined;
     const q = questionMap[seg];
-    return q ? `Menjawab pertanyaan #${q}` : undefined;
+    return q ? m.q_answers({ n: q }) : undefined;
   });
 
-  const navItems = $derived(role ? roleNav[role] : []);
-  const userLabel = $derived(role && userNameFor[role] ? userNameFor[role] : "Guest");
+  const navItems = $derived(role ? roleNavFor(role) : []);
+  const userLabel = $derived(role ? userNameFor(role) : m.title_guest());
 </script>
 
 <svelte:head>
@@ -194,7 +196,7 @@
     >Lewati ke konten</a
   >
   {#if role}
-    <M3Nav items={navItems} sharedItems={sharedNavFor(role)} userName={userLabel} open={sidebarOpen} ontoggle={() => sidebarStore.toggleDesktop()} />
+    <M3Nav items={navItems} sharedItems={sharedNavFor()} userName={userLabel} homeHref={`/dashboard/${role.toLowerCase()}/overview`} open={sidebarOpen} ontoggle={() => sidebarStore.toggleDesktop()} />
   {/if}
 
   <div class="relative z-10 flex min-w-0 flex-1 flex-col">

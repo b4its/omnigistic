@@ -136,8 +136,8 @@ def calculate_cod_impact(cod_packets: int = 8, prob_digital: float = 60, cod_sha
         # Label kejujuran: durasi dasar dari Figure 2 (kasus); waiting & porsi
         # digital = asumsi tim.
         "note": (
-            "SIMULASI/prototipe: durasi dasar dari Figure 2 (8 pkg: 75 mnt non-COD, "
-            "138 mnt COD) = data kasus; waiting COD & porsi digital dihilangkan = "
+            "SIMULASI/prototipe: durasi dasar dari Figure 2 (8 paket: 75 menit non-COD, "
+            "138 menit COD) = data kasus; waiting COD & porsi digital dihilangkan = "
             "ASUMSI TIM."
         ),
     }

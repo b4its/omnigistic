@@ -10,6 +10,11 @@ import { mkdirSync } from "node:fs";
 mkdirSync("/tmp/opencode/shots", { recursive: true });
 
 const BASE = process.env.SHOT_BASE || "http://127.0.0.1:3077";
+/**
+ * Prefix locale untuk uji: asersi skrip ini berbahasa Indonesia,
+ * jadi default-nya halaman /id. Set E2E_LANG=en untuk uji asap versi Inggris.
+ */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const path = process.env.SHOT_PATH || "/dashboard/pusat/executive";
 const tag = process.env.SHOT_TAG || "resp";
 
@@ -31,7 +36,7 @@ for (const vp of VIEWPORTS) {
   const p = await ctx.newPage();
   const errs = [];
   p.on("pageerror", (e) => errs.push(String(e.message).slice(0, 120)));
-  await p.goto(BASE + path, { waitUntil: "load", timeout: 40000 }).catch(() => {});
+  await p.goto(BASE + LANG_PREFIX + path, { waitUntil: "load", timeout: 40000 }).catch(() => {});
   await p.waitForTimeout(1800);
   const out = `/tmp/opencode/shots/${tag}-${vp.name}.png`;
   await p.screenshot({ path: out, fullPage: false });

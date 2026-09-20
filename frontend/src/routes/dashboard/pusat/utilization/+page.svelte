@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { api, type Hub } from "$lib/api";
   import { UTIL_THRESHOLD } from "$lib/logistics";
@@ -32,16 +33,16 @@
 
 <div class="space-y-6">
   <div class="flex flex-wrap items-center justify-between gap-3">
-    <h1 class="font-heading text-xl font-semibold tracking-tight">Utilization Map · 23 Hub</h1>
-    <span class="hub-label text-muted-foreground">ambang overload &gt; {UTIL_THRESHOLD.critical}%</span>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">{m.pu01()}</h1>
+    <span class="hub-label text-muted-foreground">{m.uz4t1({ crit: UTIL_THRESHOLD.critical })}</span>
   </div>
 
   {#if loaded && hubs.length}
     <section class="rounded-2xl border border-border bg-card p-5">
       <div class="mb-3 flex flex-wrap items-end justify-between gap-2">
         <div>
-          <p class="text-base font-semibold">Peta 23 hub · utilisasi</p>
-          <p class="text-[13.5px] text-muted-foreground">Warna menandai utilisasi: hijau &lt; {UTIL_THRESHOLD.warn}%, kuning {UTIL_THRESHOLD.warn}-{UTIL_THRESHOLD.critical}%, merah &gt; {UTIL_THRESHOLD.critical}%. Ukuran bulatan = kapasitas. Klik hub untuk detail.</p>
+          <p class="text-base font-semibold">{m.pu02()}</p>
+          <p class="text-[13.5px] text-muted-foreground">{m.uz3f1()} {UTIL_THRESHOLD.warn}%, kuning {UTIL_THRESHOLD.warn}-{UTIL_THRESHOLD.critical}%, merah &gt; {UTIL_THRESHOLD.critical}{m.uz3f2()}</p>
         </div>
         <span class="rounded-full bg-muted px-3 py-1 text-[13px] font-semibold text-muted-foreground">{hubs.length} hub</span>
       </div>
@@ -52,17 +53,17 @@
       <div class="rounded-2xl border border-destructive/30 bg-card p-4">
         <p class="text-[13.5px] text-muted-foreground">Tertinggi · {top.name} ({top.code})</p>
         <p class="kpi-value text-2xl text-destructive-foreground">{top.utilizationPct}%</p>
-        <p class="text-[13.5px] text-muted-foreground">{top.capacityM} juta/hari · {top.outlets} outlet</p>
+        <p class="text-[13.5px] text-muted-foreground">{top.capacityM} {m.uz3f3()} {top.outlets} outlet</p>
       </div>
       <div class="rounded-2xl border border-success/40 bg-card p-4">
         <p class="text-[13.5px] text-muted-foreground">Terendah · {low.name} ({low.code})</p>
         <p class="kpi-value text-2xl text-success-foreground">{low.utilizationPct}%</p>
-        <p class="text-[13.5px] text-muted-foreground">{low.capacityM} juta/hari · {low.outlets} outlet</p>
+        <p class="text-[13.5px] text-muted-foreground">{low.capacityM} {m.uz3f3()} {low.outlets} outlet</p>
       </div>
     </div>
 
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="mb-3 text-base font-semibold">Utilisasi per hub (% urut menurun)</p>
+      <p class="mb-3 text-base font-semibold">{m.pu03()}</p>
       <EChart
         option={horizontalBar(
           sorted.map((h) => h.name),
@@ -76,6 +77,6 @@
       />
     </div>
   {:else}
-    <PageState loading={!loaded && !failed} error={failed} errorTitle="Gagal memuat peta utilisasi" onretry={load} skeletonCards={0} skeletonHeight={320} />
+    <PageState loading={!loaded && !failed} error={failed} errorTitle={m.uz2t1()} onretry={load} skeletonCards={0} skeletonHeight={320} />
   {/if}
 </div>

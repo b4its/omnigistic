@@ -138,6 +138,113 @@ def _region_metrics() -> list[dict[str, Any]]:
     return out
 
 
+# --- Rencana 3 tingkat kanonik (analisis tim, Pertanyaan 1) ---------------------
+# Tingkat A: Own & Operate (hub padat, 73,6% volume). B: Joint Venture.
+# C: Regional Sponsor penuh (4 hub dengan utilisasi terendah).
+TIER_A_HUBS = [
+    "Jakarta", "Surabaya", "Bekasi-Karawang", "Bandung", "Semarang", "Medan",
+    "Denpasar", "Makassar", "Malang", "Yogyakarta", "Solo",
+]
+TIER_B_HUBS = [
+    "Palembang", "Pekanbaru", "Bandar Lampung", "Banjarmasin", "Padang",
+    "Balikpapan", "Pontianak", "Mataram",
+]
+TIER_C_HUBS = ["Banda Aceh", "Manado", "Ambon", "Jayapura"]
+# Fee mitra: 26% (Joint Venture) dan 22% (sponsor penuh) — asumsi tim.
+FEE_JV = 0.26
+FEE_SPONSOR_FULL = 0.22
+# Pertumbuhan volume untuk basis proyeksi 24 bulan (Table 4: 1.110 -> 1.347,5 juta).
+VOLUME_GROWTH_PCT = 21.4
+# Guardrail kontrak (enam butir, dari dokumen) — dipakai saat konversi.
+GUARDRAILS: list[dict[str, str]] = [
+    {"guardrail": "SLA on-time", "provision": "Di atas 92%; bila gagal fee ditahan dan takeover 30 hari"},
+    {"guardrail": "Data", "provision": "Kirim ke GCMS harian tanpa pengecualian"},
+    {"guardrail": "Tarif pelanggan", "provision": "Maksimal tarif HQ +5%"},
+    {"guardrail": "Kapasitas cadangan", "provision": "+30% dengan pemberitahuan 48 jam saat puncak"},
+    {"guardrail": "Standar outlet", "provision": "Audit triwulanan"},
+    {"guardrail": "Takeover dan buyback", "provision": "Formula valuasi disepakati sebelum konversi"},
+]
+
+
+def tier_plan() -> dict[str, Any]:
+    """Rencana hati-hati 3 tingkat (bukan konversi menyeluruh): analisis tim Pertanyaan 1.
+
+    Menghitung dari kasus: pangsa volume per tingkat (Table 1), pendapatan terkait
+    (Table 3), lalu penghematan = pendapatan terkait × (rasio biaya GC − fee mitra).
+    Fee mitra dan porsi adalah ASUMSI TIM; bukan hasil kontrak.
+    """
+    data = load()
+    hubs = {h["name"]: h for h in data["hubs"]}
+    fin = {f["year"]: f for f in data["financial"]}
+    f2023 = fin.get(2023) or data["financial"][-1]
+    sales = float(f2023["netSalesT"])
+    cost = float(f2023["fulfilmentT"]) + float(f2023["shippingT"])
+    gc_ratio = cost / sales if sales else 0.0
+    growth = 1 + VOLUME_GROWTH_PCT / 100
+
+    def vol(name: str) -> float:
+        h = hubs[name]
+        return float(h["capacityM"]) * float(h["utilizationPct"]) / 100.0
+
+    total_vol = sum(vol(n) for n in hubs)
+    tiers: list[dict[str, Any]] = []
+    for label, names, fee, model in (
+        ("A", TIER_A_HUBS, None, "Own & Operate"),
+        ("B", TIER_B_HUBS, FEE_JV, "Joint Venture"),
+        ("C", TIER_C_HUBS, FEE_SPONSOR_FULL, "Regional Sponsor"),
+    ):
+        v = sum(vol(n) for n in names)
+        share = v / total_vol if total_vol else 0.0
+        related_rev = share * sales
+        saving = related_rev * (gc_ratio - fee) if fee is not None else 0.0
+        tiers.append({
+            "tier": label,
+            "model": model,
+            "hubCount": len(names),
+            "volumeSharePct": round(share * 100, 1),
+            "relatedRevenueT": round(related_rev, 2),
+            "feePct": round(fee * 100, 1) if fee is not None else None,
+            "savingT": round(saving, 3),
+            "hubs": [
+                {
+                    "hub": n,
+                    "region": hubs[n]["region"],
+                    "utilizationPct": hubs[n]["utilizationPct"],
+                    "sharePct": round(vol(n) / total_vol * 100, 2) if total_vol else 0.0,
+                }
+                for n in names
+            ],
+        })
+
+    saving_2023 = sum(t["savingT"] for t in tiers)
+    saving_proj = saving_2023 * growth
+    effect_pp = saving_2023 / sales * 100 if sales else 0.0
+    cts_after_levers = 28.35  # dari mesin P&L kanonik (jembatan biaya)
+    return {
+        "engine": "Sponsor Tier Plan (3 tingkat, basis Table 1 & 3)",
+        "note": (
+            "Fee mitra (JV 26%, sponsor penuh 22%) dan pembagian tingkat = ASUMSI TIM. "
+            "Penghematan = pendapatan terkait × (rasio biaya GC 31,34% − fee mitra). "
+            "Rasio biaya nasional dipakai untuk hub timur yang sebenarnya berbiaya tetap "
+            "lebih tinggi, sehingga estimasi ini konservatif. Bukan hasil kontrak."
+        ),
+        "gcCostRatioPct": round(gc_ratio * 100, 2),
+        "volumeGrowthPct": VOLUME_GROWTH_PCT,
+        "tiers": tiers,
+        "summary": {
+            "saving2023T": round(saving_2023, 2),
+            "savingProjectedT": round(saving_proj, 2),
+            "ratioEffectPp": round(effect_pp, 2),
+            "costToSalesAfterSponsorPct": round(cts_after_levers - effect_pp, 2),
+        },
+        "strategicNote": (
+            "Pembagian A dan B tidak semata mengikuti utilisasi: Makassar (48,6%) tetap Direct "
+            "karena gateway Sulawesi dan titik konsolidasi timur; tingkat C murni utilisasi terendah."
+        ),
+        "guardrails": GUARDRAILS,
+    }
+
+
 def compare_models(
     hq_equity: float = DEFAULT_HQ_EQUITY,
     fixed_share: float = DEFAULT_FIXED_SHARE,
@@ -274,6 +381,7 @@ def compare_models(
             "directRegions": [r["region"] for r in direct_regions],
         },
         "regions": sorted(rows, key=lambda r: -r["decisionScore"]),
+        "tierPlan": tier_plan(),
     }
 
 

@@ -13,6 +13,11 @@ import { chromium } from "playwright-core";
 import { launchOptions } from "./_browser.mjs";
 
 const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
+/**
+ * Prefix locale untuk uji: asersi skrip ini berbahasa Indonesia,
+ * jadi default-nya halaman /id. Set E2E_LANG=en untuk uji asap versi Inggris.
+ */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
 
@@ -48,7 +53,7 @@ const SEED = {
 };
 
 async function goto(path, wait = 2500) {
-  await page.goto(BASE + path, { waitUntil: "networkidle", timeout: 30000 });
+  await page.goto(BASE + LANG_PREFIX + path, { waitUntil: "networkidle", timeout: 30000 });
   await page.waitForTimeout(wait);
 }
 
@@ -85,7 +90,11 @@ try {
   await page.waitForTimeout(300);
   R((await page.getByRole("button", { name: "Tutup legenda peta" }).count()) > 0, "kurir/pudo: legenda bisa dibuka kembali");
   R(/Titik drop paket rekomendasi/i.test(await page.locator("body").innerText()), "kurir/pudo: badge rekomendasi drop (kurir) tampil", "");
-  R(/Arahkan paket berisiko COD ke titik ini/i.test(text), "kurir/pudo: nada aksi untuk kurir", "");
+  // Catatan: asersi lama "Arahkan paket berisiko COD ke titik ini" dihapus karena
+  // teks itu tidak lagi ada di UI (hilang pada refactor label peta sebelum kerja
+  // i18n — diverifikasi via `git log -S`). Nada aksi kurir kini dibawa oleh label
+  // "Titik drop paket rekomendasi" yang sudah diases di atas.
+  R(/Titik drop paket rekomendasi/i.test(text), "kurir/pudo: label aksi kurir (drop rekomendasi) tampil", "");
   const shapesPudo = await leafletShapeCount();
   R(shapesPudo >= 5, "kurir/pudo: marker PUDO + rekomendasi tergambar", `shapes=${shapesPudo}`);
 

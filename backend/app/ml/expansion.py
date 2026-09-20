@@ -33,6 +33,36 @@ _TARGET_UTIL = 0.75
 # Untuk ROI tahun-1 hanya porsi ini yang dianggap terealisasi.
 _CAPTURE_RATE_PER_YEAR = 0.12
 
+# --- Konstanta rencana ekspansi kanonik (analisis tim, Pertanyaan 5) ------------
+# Kontribusi per paket: ASUMSI TIM (dokumen memakai rentang Rp2.000 sampai 6.000).
+CONTRIB_PER_PARCEL_IDR = 3_000
+CONTRIB_RANGE_IDR = (2_000, 6_000)
+# Skenario pengisian ruang kosong (dokumen: 10/20/35 persen).
+FILL_SCENARIOS_PCT = (10, 20, 35)
+# Stress perang harga: tarif turun 10 persen.
+TARIFF_CUT_STRESS_PCT = 10
+# Struktur tarif/biaya per paket (ASUMSI TIM, dinyatakan agar stress bisa diaudit):
+# tarif rata-rata Rp10.000, biaya variabel Rp7.000 -> kontribusi Rp3.000.
+# Tarif turun 10 persen = Rp1.000, sehingga kontribusi jatuh ke sekitar Rp2.000.
+TARIFF_PER_PARCEL_IDR = 10_000
+VARIABLE_COST_PER_PARCEL_IDR = 7_000
+# Volume 2024 dari kasus (1,46 miliar paket) → basis konservatif headroom.
+VOLUME_2024_M = 1_460.0
+# Tiga jalur ekspansi + estimasi payback (ESTIMASI TIM, bukan data kasus).
+PATHWAYS: list[dict[str, Any]] = [
+    {"path": "Isi ruang kosong hub eksisting", "paybackYears": "di bawah 1,5", "decision": "Prioritas utama"},
+    {"path": "Sponsor atau Joint Venture di kota tier-2 dan tier-3", "paybackYears": "2 sampai 3", "decision": "Jalankan paralel"},
+    {"path": "Kota baru model Direct", "paybackYears": "3 sampai 5", "decision": "Tunda"},
+]
+# Lima syarat pembangunan hub baru (semua harus terpenuhi).
+NEW_HUB_GATES: list[dict[str, str]] = [
+    {"gate": "Utilisasi hub", "threshold": "78% atau lebih selama tiga bulan berturut-turut"},
+    {"gate": "Load balancing", "threshold": "Sudah dijalankan"},
+    {"gate": "SLA on-time", "threshold": "Di atas 90%"},
+    {"gate": "Konsentrasi pelanggan", "threshold": "Tidak ada pelanggan di atas 35% volume"},
+    {"gate": "Pertumbuhan pasar", "threshold": "Minimal 8% per tahun"},
+]
+
 
 def _unit_economics() -> dict[str, float]:
     """Revenue & biaya per paket dari Table 3 & 4 (angka kasus).
@@ -56,6 +86,85 @@ def _unit_economics() -> dict[str, float]:
         "variableCostPerParcelIdr": variable_cost_per,
         "grossMarginPerParcelIdr": gross_margin,
         "marginPerParcelIdr": contrib_margin,
+    }
+
+
+def expansion_plan() -> dict[str, Any]:
+    """Rencana ekspansi kanonik: analisis tim Pertanyaan 5.
+
+    Model dokumen menolak "buka kota baru dulu" dan memakai tiga besaran yang
+    dihitung dari kasus:
+      1. Ruang kosong jaringan: (kapasitas − permintaan) × 365 hari, pada dua basis.
+      2. Kontribusi per paket = Rp3.000 (ASUMSI TIM, rentang Rp2.000 sampai 6.000).
+      3. Skenario pengisian 10% / 20% / 35% dari basis konservatif.
+
+    Semua porsi non-kasus dilabeli. Ini pelengkap `expansion_roi` (per-hub).
+    """
+    data = load()
+    hubs = data["hubs"]
+    capacity_m = sum(float(h["capacityM"]) for h in hubs)
+    demand_case_m = sum(float(h["capacityM"]) * float(h["utilizationPct"]) / 100.0 for h in hubs)
+    demand_2024_m = VOLUME_2024_M / 365.0
+
+    def headroom(demand: float) -> float:
+        return max(0.0, capacity_m - demand) * 365.0
+
+    headroom_2024 = headroom(demand_2024_m)   # basis konservatif (dipakai keputusan)
+    headroom_case = headroom(demand_case_m)   # basis Tabel 1
+
+    fill = [
+        {
+            "fillPct": pct,
+            "volumeM": round(headroom_2024 * pct / 100.0, 1),
+            "valueIdr": round(headroom_2024 * pct / 100.0 * 1e6 * CONTRIB_PER_PARCEL_IDR),
+        }
+        for pct in FILL_SCENARIOS_PCT
+    ]
+
+    # Produktivitas outlet per region (paket/outlet/hari) — dari Tabel 1.
+    per_region: dict[str, dict[str, float]] = {}
+    for h in hubs:
+        reg = h["region"]
+        acc = per_region.setdefault(reg, {"volumeM": 0.0, "outlets": 0.0})
+        acc["volumeM"] += float(h["capacityM"]) * float(h["utilizationPct"]) / 100.0
+        acc["outlets"] += float(h["outlets"])
+    outlet = {r: round(v["volumeM"] * 1e6 / v["outlets"]) if v["outlets"] else 0 for r, v in per_region.items()}
+
+    tariff_after = CONTRIB_PER_PARCEL_IDR - TARIFF_PER_PARCEL_IDR * TARIFF_CUT_STRESS_PCT / 100.0
+
+    return {
+        "engine": "Market-Expansion Plan (ruang kosong jaringan × kontribusi per paket)",
+        "note": (
+            "Headroom = (kapasitas − permintaan) × 365 pada dua basis: konservatif 2024 "
+            "(1,46 miliar paket) dan Tabel 1. Kontribusi per paket Rp3.000 = ASUMSI TIM "
+            "(rentang Rp2.000 sampai 6.000). Payback per jalur = ESTIMASI TIM, bukan data kasus."
+        ),
+        "capacityPerDayM": round(capacity_m, 3),
+        "demandPerDayM": {"basisTable1": round(demand_case_m, 3), "basis2024": round(demand_2024_m, 3)},
+        "headroom": {
+            "basis2024M": round(headroom_2024, 1),
+            "basisTable1M": round(headroom_case, 1),
+            "basisUsed": "basis2024M (konservatif)",
+        },
+        "contribution": {
+            "perParcelIdr": CONTRIB_PER_PARCEL_IDR,
+            "rangeIdr": list(CONTRIB_RANGE_IDR),
+            "note": "ASUMSI TIM; dokumen memakai basis konservatif untuk keputusan investasi.",
+        },
+        "fillScenarios": fill,
+        "pathways": PATHWAYS,
+        "newHubGates": NEW_HUB_GATES,
+        "outletProductivityPerDay": outlet,
+        "tariffStress": {
+            "cutPct": TARIFF_CUT_STRESS_PCT,
+            "tariffPerParcelIdr": TARIFF_PER_PARCEL_IDR,
+            "variableCostPerParcelIdr": VARIABLE_COST_PER_PARCEL_IDR,
+            "contributionAfterIdr": round(tariff_after),
+            "note": (
+                "Tarif rata-rata Rp10.000 dan biaya variabel Rp7.000 memberi kontribusi "
+                "Rp3.000; tarif turun 10 persen (Rp1.000) memotong kontribusi ke sekitar Rp2.000."
+            ),
+        },
     }
 
 
@@ -157,4 +266,5 @@ def expansion_roi(capex_per_hub_idr: float | None = None, target_util: float | N
             "paybackYears": round(total_capex / total_add_margin, 2) if total_add_margin else 0.0,
         },
         "hubs": rows,
+        "plan": expansion_plan(),
     }

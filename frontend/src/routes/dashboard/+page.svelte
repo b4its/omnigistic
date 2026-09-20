@@ -1,30 +1,32 @@
 <script lang="ts">
+  import { roleLabel } from "$lib/i18n/labels";
+  import { m } from "$lib/paraglide/messages";
   import { resolveHref } from "$lib/utils";
 
   const roles = [
-    { slug: "pusat", initials: "D", name: "Dalila", role: "Decision Maker Pusat", desc: "KPI finansial, Digital Twin, utilisasi 23 hub, ekspansi." },
-    { slug: "hub", initials: "M", name: "Marwah", role: "Hub Manager Bandung", desc: "Forecast, load balancing, kapasitas, alert dini." },
-    { slug: "kurir", initials: "B", name: "Baits", role: "Courier Jakarta", desc: "Clustering rute, Predictive COD, slot, pembayaran digital." },
-    { slug: "data", initials: "V", name: "Virgiawan", role: "Data & IT", desc: "Address Intelligence, komplain, control tower, emisi." },
-    { slug: "customer", initials: "S", name: "Sari", role: "Pembeli", desc: "Belanja di e-commerce, checkout COD, lacak pengantaran." },
-    { slug: "seller", initials: "R", name: "Rina", role: "Penjual", desc: "Analitik laba/rugi, margin produk, skor pelanggan." }
+    { slug: "pusat", initials: "D", name: "Dalila", role: "Decision Maker Pusat", desc: m.db2t1() },
+    { slug: "hub", initials: "M", name: "Marwah", role: m.db2t2(), desc: m.db2t3() },
+    { slug: "kurir", initials: "B", name: "Baits", role: "Courier Jakarta", desc: m.db2t4() },
+    { slug: "data", initials: "V", name: "Virgiawan", role: "Data & IT", desc: m.db2t5() },
+    { slug: "customer", initials: "S", name: "Sari", role: m.db2t8(), desc: m.db2t6() },
+    { slug: "seller", initials: "R", name: "Rina", role: m.db2t9(), desc: m.db2t7() }
   ];
 </script>
 
-<svelte:head><title>Pilih Portal · Omnigistic</title></svelte:head>
+<svelte:head><title>{m.dsh01()}</title></svelte:head>
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
-    <h1 class="font-heading text-xl font-semibold tracking-tight">Pilih <span class="text-gradient">portal peran</span></h1>
-    <a href={resolveHref("/")} class="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">&larr; Halaman utama</a>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">{m.dsh02()} <span class="text-gradient">{m.dsh03()}</span></h1>
+    <a href={resolveHref("/")} class="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">{m.dsh04()}</a>
   </div>
-  <p class="text-sm text-muted-foreground">Enam sudut pandang atas satu sumber kebenaran kasus GC Logistics.</p>
+  <p class="text-sm text-muted-foreground">{m.dsh05()}</p>
   <div class="grid gap-4 sm:grid-cols-2">
     {#each roles as r (r.slug)}
       <a href={resolveHref(`/dashboard/${r.slug}/overview`)} class="group flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)]">
         <div class="flex items-center gap-2">
           <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)] font-heading text-sm font-bold text-[var(--primary-foreground)]">{r.initials}</span>
-          <span class="font-mono text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{r.slug}</span>
+          <span class="font-mono text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{roleLabel(r.slug)}</span>
         </div>
         <p class="font-heading text-sm font-semibold text-foreground">{r.name} · <span class="font-normal text-muted-foreground">{r.role}</span></p>
         <p class="text-[15px] leading-relaxed text-muted-foreground">{r.desc}</p>

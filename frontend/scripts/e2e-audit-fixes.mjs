@@ -18,12 +18,17 @@ import { chromium } from "playwright-core";
 import { launchOptions } from "./_browser.mjs";
 
 const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
+/**
+ * Prefix locale untuk uji: asersi skrip ini berbahasa Indonesia,
+ * jadi default-nya halaman /id. Set E2E_LANG=en untuk uji asap versi Inggris.
+ */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
 
 let browser;
 async function goto(page, path, wait = 2600) {
-  await page.goto(BASE + path, { waitUntil: "networkidle", timeout: 40000 });
+  await page.goto(BASE + LANG_PREFIX + path, { waitUntil: "networkidle", timeout: 40000 });
   await page.waitForTimeout(wait);
 }
 

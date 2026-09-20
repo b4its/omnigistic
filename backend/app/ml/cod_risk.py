@@ -99,7 +99,7 @@ def _get_model():
 
 FEATURE_META = [
     ("hub_util", "Utilisasi hub"),
-    ("value", "Nilai paket (rb)"),
+    ("value", "Nilai paket (ribu)"),
     ("hour", "Jam antar"),
     ("ambiguous", "Alamat ambigu"),
     ("zone", "Zona sulit"),

@@ -1,11 +1,12 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { page } from "$app/state";
   import { resolve } from "$app/paths";
   const status = $derived(page.status);
   const message = $derived(page.error?.message ?? "");
 </script>
 
-<svelte:head><title>Halaman tidak ditemukan · Omnigistic</title></svelte:head>
+<svelte:head><title>{m.er2f1()}</title></svelte:head>
 
 <main class="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
   <p class="hub-label text-muted-foreground">Omnigistic · ISCEA 2026</p>

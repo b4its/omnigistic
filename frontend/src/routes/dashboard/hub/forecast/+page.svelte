@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { api } from "$lib/api";
   import { notify } from "$lib/toast";
@@ -43,7 +44,7 @@
       forecast = null;
       actual = null;
       failed = true;
-      if (userTriggered) notify({ message: "Gagal memuat forecast", type: "error", title: "Demand Forecast" });
+      if (userTriggered) notify({ message: m.hf2t1(), type: "error", title: "Demand Forecast" });
     }
     loaded = true;
   }
@@ -68,7 +69,7 @@
       forecast = await api.forecastCustom({ event_scale: { ...scales } });
       notify({ message: "Proyeksi diperbarui sesuai skenario event", type: "success", title: "Demand Forecast" });
     } catch {
-      notify({ message: "Gagal menjalankan simulasi event", type: "error", title: "Demand Forecast" });
+      notify({ message: m.hf2t2(), type: "error", title: "Demand Forecast" });
     } finally {
       simulating = false;
     }
@@ -96,7 +97,7 @@
 
 <div class="space-y-6">
   <div class="flex flex-wrap items-center justify-between gap-3">
-    <h1 class="font-heading text-xl font-semibold tracking-tight">Demand Forecast</h1>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">{m.hf01()}</h1>
     {#if forecast}
       <span class="hub-label text-muted-foreground">{forecast.model}</span>
     {/if}
@@ -111,7 +112,7 @@
     </div>
 
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="mb-3 text-sm font-medium">Demand bulanan (juta paket) · actual 2023 &amp; proyeksi 2024</p>
+      <p class="mb-3 text-sm font-medium">{m.hf02()}</p>
       {#if chart}
         <EChart option={chart} height={300} />
       {/if}
@@ -121,10 +122,10 @@
       <div class="rounded-2xl border border-primary/30 bg-primary/5 p-5">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p class="text-sm font-semibold">Simulasi event (what-if)</p>
-            <p class="mt-1 text-xs text-muted-foreground">Atur kekuatan tiap event (1,0 = asumsi kasus, 0 = dimatikan) → proyeksi &amp; fluktuasi dihitung ulang.</p>
+            <p class="text-sm font-semibold">{m.hf03()}</p>
+            <p class="mt-1 text-xs text-muted-foreground">{m.hf04()}</p>
           </div>
-          <button type="button" onclick={resetSim} class="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold hover:border-primary/40">Reset</button>
+          <button type="button" onclick={resetSim} class="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold hover:border-primary/40">{m.hf05()}</button>
         </div>
         <div class="mt-4 grid gap-5 sm:grid-cols-3">
           {#each forecast.eventCatalog as e (e.label)}
@@ -153,7 +154,7 @@
 
     <div class="grid gap-4 md:grid-cols-2">
       <div class="rounded-2xl border border-border bg-card p-5">
-        <h2 class="text-sm font-semibold">Event flags terpasang</h2>
+        <h2 class="text-sm font-semibold">{m.hf06()}</h2>
         <ul class="mt-3 space-y-2 text-sm">
           {#each forecast.projection.filter((p) => p.events.length > 0) as p (p.label)}
             <li class="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
@@ -168,23 +169,23 @@
         </ul>
       </div>
       <div class="rounded-2xl border border-border bg-card p-5">
-        <h2 class="text-sm font-semibold">Catatan jujur model</h2>
+        <h2 class="text-sm font-semibold">{m.hf07()}</h2>
         <p class="mt-2 text-[15px] leading-relaxed text-muted-foreground">{forecast.note}</p>
         {#if forecast.inSampleFit}
           <p class="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-            Galat <span class="font-semibold text-foreground">in-sample (rekonstruksi)</span>, bukan backtest hold-out: MAPE {new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(forecast.inSampleFit.mapePct)}%. Angka ini mengukur seberapa baik model mereproduksi 12 titik yang sama (tautologis) — hanya tersedia 12 titik sehingga validasi hold-out belum dimungkinkan. <span class="italic">Jujur dilabeli prototipe.</span>
+            {m.hf08()} <span class="font-semibold text-foreground">{m.hf09()}</span>, bukan backtest hold-out: MAPE {new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(forecast.inSampleFit.mapePct)}{m.hf3f1()} <span class="italic">{m.hf10()}</span>
           </p>
         {/if}
       </div>
     </div>
   {:else if loaded && failed}
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
-      <p class="text-sm font-semibold text-foreground">Gagal memuat forecast demand</p>
-      <p class="mt-1 text-xs text-muted-foreground">Backend offline. Coba lagi setelah backend aktif.</p>
-      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
+      <p class="text-sm font-semibold text-foreground">{m.hf11()}</p>
+      <p class="mt-1 text-xs text-muted-foreground">{m.hf12()}</p>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">{m.hf13()}</button>
     </div>
   {:else if loaded}
-    <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">Data forecast tidak tersedia.</div>
+    <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">{m.hf14()}</div>
   {:else}
     <div class="h-64 animate-pulse rounded-2xl border border-border bg-card/60"></div>
   {/if}

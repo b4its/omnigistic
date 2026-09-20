@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { api, type KpiRow } from "$lib/api";
   import PageState from "$lib/components/PageState.svelte";
@@ -23,20 +24,20 @@
 </script>
 
 <div class="space-y-6">
-  <h1 class="font-heading text-xl font-semibold tracking-tight">KPI Tracker</h1>
-  <p class="text-sm text-muted-foreground">Baseline → target, sistem yang diusulkan · sumber: <code class="font-mono text-xs">/api/kpi-targets</code></p>
+  <h1 class="font-heading text-xl font-semibold tracking-tight">{m.kp01()}</h1>
+  <p class="text-sm text-muted-foreground">{m.kp02()} <code class="font-mono text-xs">{m.kp03()}</code></p>
 
   {#if loaded && failed}
-    <PageState loading={false} error={true} errorTitle="Gagal memuat target KPI" errorHint="Backend offline — angka KPI diturunkan dari data studi kasus." onretry={load} />
+    <PageState loading={false} error={true} errorTitle={m.kq2t1()} errorHint={m.kq2t2()} onretry={load} />
   {:else if loaded && rows.length > 0}
     <div class="overflow-x-auto rounded-2xl border bg-card">
       <table class="w-full text-sm">
-        <caption class="sr-only">KPI Omnigistic baseline dan target studi kasus</caption>
+        <caption class="sr-only">{m.kp04()}</caption>
         <thead>
           <tr class="border-b bg-muted/50 text-left font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-            <th scope="col" class="px-4 py-3">KPI</th>
-            <th scope="col" class="px-4 py-3 text-right">Baseline</th>
-            <th scope="col" class="px-4 py-3 text-right">Target</th>
+            <th scope="col" class="px-4 py-3">{m.kp05()}</th>
+            <th scope="col" class="px-4 py-3 text-right">{m.kp06()}</th>
+            <th scope="col" class="px-4 py-3 text-right">{m.kp07()}</th>
           </tr>
         </thead>
         <tbody>
@@ -51,7 +52,7 @@
       </table>
     </div>
   {:else if loaded}
-    <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">Data KPI tidak tersedia.</div>
+    <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">{m.kp08()}</div>
   {:else}
     <PageState loading={true} skeletonCards={0} skeletonHeight={280} />
   {/if}

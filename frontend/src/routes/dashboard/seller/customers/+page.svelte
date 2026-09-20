@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import Icon from "$lib/components/Icon.svelte";
-  import { customerScores, segmentCounts, avgCustomerScore, type CustomerScore } from "$lib/shop/analytics";
+  import { customerScores, segmentCounts, avgCustomerScore, segmentLabel, type CustomerScore } from "$lib/shop/analytics";
   import { shop, type Order } from "$lib/stores/shop";
   import { liveCustomers } from "$lib/shop/orderbook";
   import { notify } from "$lib/toast";
@@ -25,7 +26,7 @@
     { label: "Recency", val: c.recency },
     { label: "Frequency", val: c.frequency },
     { label: "Monetary", val: c.monetary },
-    { label: "Risiko", val: c.risk }
+    { label: m.sc2t1(), val: c.risk }
   ];
 
   const SEGMENTS = ["Champion", "Loyal", "Potensial", "Berisiko", "Pasif"] as const;
@@ -33,7 +34,7 @@
 
   function setFilter(f: typeof filter) {
     filter = f;
-    notify({ message: `Filter segmen: ${f}`, type: "info", title: "Pelanggan" });
+    notify({ message: m.sgc01({ seg: f === "Semua" ? m.ct01() : segmentLabel(f) }), type: "info", title: m.sc01() });
   }
 
   const filtered = $derived(filter === "Semua" ? customers : customers.filter((c) => c.segment === filter));
@@ -56,26 +57,26 @@
 
 <div class="space-y-6">
   <header class="space-y-1">
-    <h1 class="font-heading text-xl font-semibold tracking-tight">Analisis Pelanggan</h1>
-    <p class="text-sm text-muted-foreground">Skor 0–100 dari Recency, Frequency, Monetary, dan risiko gagal antar.</p>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">{m.sc01()}</h1>
+    <p class="text-sm text-muted-foreground">{m.sc02()}</p>
   </header>
 
   <!-- Ringkasan -->
   <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="text-xs font-medium text-muted-foreground">Rata-rata skor</p>
+      <p class="text-xs font-medium text-muted-foreground">{m.sc03()}</p>
       <p class="mt-2 text-2xl font-bold tabular-nums text-foreground">{avgScore}<span class="text-base font-medium text-muted-foreground">/100</span></p>
     </div>
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="text-xs font-medium text-muted-foreground">Total pelanggan</p>
+      <p class="text-xs font-medium text-muted-foreground">{m.sc04()}</p>
       <p class="mt-2 text-2xl font-bold tabular-nums text-foreground">{customers.length}</p>
     </div>
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="text-xs font-medium text-muted-foreground">Champion + Loyal</p>
+      <p class="text-xs font-medium text-muted-foreground">{m.sc05()}</p>
       <p class="mt-2 text-2xl font-bold tabular-nums text-success-foreground">{segments.Champion + segments.Loyal}</p>
     </div>
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="text-xs font-medium text-muted-foreground">Berisiko</p>
+      <p class="text-xs font-medium text-muted-foreground">{m.sc06()}</p>
       <p class="mt-2 text-2xl font-bold tabular-nums text-destructive-foreground">{segments.Berisiko}</p>
     </div>
   </section>
@@ -94,13 +95,13 @@
         onclick={() => setFilter(s)}
         aria-pressed={filter === s}
         class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {filter === s ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
-      >{s} ({segments[s]})</button>
+      >{segmentLabel(s)} ({segments[s]})</button>
     {/each}
   </div>
 
   <!-- Daftar pelanggan -->
   {#if filtered.length === 0}
-    <div class="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-sm text-muted-foreground">Tidak ada pelanggan di segmen ini.</div>
+    <div class="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-sm text-muted-foreground">{m.sc07()}</div>
   {:else}
     <ul class="space-y-3">
       {#each filtered as c (c.record.id)}
@@ -115,10 +116,10 @@
               <div class="min-w-0">
                 <p class="flex items-center gap-2 text-sm font-semibold text-foreground">
                   {c.record.name}
-                  <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {segmentTone[c.segment]}">{c.segment}</span>
+                  <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {segmentTone[c.segment]}">{segmentLabel(c.segment)}</span>
                 </p>
-                <p class="text-xs text-muted-foreground">{c.record.city} · {c.record.orders} pesanan · {rupiah(c.record.spend)}</p>
-                <p class="mt-1 text-xs text-muted-foreground">Terakhir belanja {c.record.daysSinceLast} hari lalu · bayar {c.record.payMethod}</p>
+                <p class="text-xs text-muted-foreground">{c.record.city} · {m.sc3t2({ count: c.record.orders })} · {rupiah(c.record.spend)}</p>
+                <p class="mt-1 text-xs text-muted-foreground">{m.sc3t1({ days: c.record.daysSinceLast, method: c.record.payMethod })}</p>
               </div>
             </div>
 
@@ -139,7 +140,7 @@
           <!-- Rekomendasi aksi -->
           <div class="mt-4 flex items-start gap-2 rounded-xl bg-accent/50 px-4 py-3 text-sm">
             <Icon name="chat" cls="h-4 w-4 mt-0.5 shrink-0 text-primary" />
-            <span class="text-foreground"><strong class="font-semibold">Rekomendasi:</strong> {c.action}</span>
+            <span class="text-foreground"><strong class="font-semibold">{m.sc08()}</strong> {c.action}</span>
           </div>
         </li>
       {/each}
@@ -147,6 +148,6 @@
   {/if}
 
   <p class="text-xs text-muted-foreground">
-    Skor = 25% Recency + 25% Frequency + 35% Monetary − 15% risiko gagal antar. Data pelanggan bersifat demo untuk presentasi.
+    {m.sc09()}
   </p>
 </div>

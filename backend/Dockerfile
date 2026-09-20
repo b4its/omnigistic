@@ -18,6 +18,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
 COPY --from=deps /usr/local /usr/local
 COPY backend/app ./app
 COPY shared/data-kas.json /shared/data-kas.json
+COPY shared/data-kas.en.json /shared/data-kas.en.json
 EXPOSE 8077
 HEALTHCHECK --interval=25s --timeout=3s --start-period=6s --retries=3 \
   CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8077/openapi.json', timeout=3)"]

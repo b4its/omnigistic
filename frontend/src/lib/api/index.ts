@@ -2,24 +2,36 @@
 import { browser } from "$app/environment";
 import { writable } from "svelte/store";
 import { PUBLIC_API_BASE_URL } from "$env/static/public";
+import { getLocale } from "$lib/paraglide/runtime";
 
 /** Default 127.0.0.1 buat lokal dev; Docker/browser override ini ke localhost:8077 (exposed) via env build. */
 export const API_BASE = PUBLIC_API_BASE_URL || "http://127.0.0.1:8077";
+
+/**
+ * Sisipkan locale aktif ke setiap permintaan API. Backend default Indonesia
+ * (kontrak lama tetap utuh) dan menerjemahkan respons bila `lang=en`.
+ * Cache dikunci per-URL sehingga berpindah bahasa tidak menyajikan respons basi.
+ */
+function withLang(path: string): string {
+  const sep = path.includes("?") ? "&" : "?";
+  return `${path}${sep}lang=${getLocale()}`;
+}
 
 const cache = new Map<string, { t: number; data: unknown }>();
 const inflight = new Map<string, Promise<unknown>>();
 const TTL = 60_000;
 
 async function get<T>(path: string): Promise<T> {
-  const hit = cache.get(path);
+  const url = withLang(path);
+  const hit = cache.get(url);
   if (hit && Date.now() - hit.t < TTL) return hit.data as T;
-  const pending = inflight.get(path);
+  const pending = inflight.get(url);
   if (pending) return pending as Promise<T>;
-  const req = fetch(`${API_BASE}${path}`, { headers: { Accept: "application/json" } })
+  const req = fetch(`${API_BASE}${url}`, { headers: { Accept: "application/json" } })
     .then(async (res) => {
       if (!res.ok) throw new Error(`GET ${path} -> ${res.status}`);
       const data = await res.json();
-      cache.set(path, { t: Date.now(), data });
+      cache.set(url, { t: Date.now(), data });
       inflight.delete(path);
       return data as T;
     })
@@ -32,7 +44,7 @@ async function get<T>(path: string): Promise<T> {
 }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${withLang(path)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
@@ -258,6 +270,8 @@ export interface OptimizeResult {
 
 /* ── COD Decision Intelligence ───────────────────────────────────────────── */
 export interface CodIntelResult {
+  /** Nama skenario dari backend; kunci dict tidak diterjemahkan oleh i18n. */
+  label?: string;
   engine: string;
   note: string;
   caseFigures: {
@@ -369,6 +383,107 @@ export interface SponsorRegionRow {
   decisionScore: number;
   recommendation: string;
 }
+/* ── Rencana kanonik per tantangan (analisis tim) ── */
+export interface TierPlan {
+  engine: string;
+  note: string;
+  gcCostRatioPct: number;
+  volumeGrowthPct: number;
+  tiers: Array<{
+    tier: string;
+    model: string;
+    hubCount: number;
+    volumeSharePct: number;
+    relatedRevenueT: number;
+    feePct: number | null;
+    savingT: number;
+    hubs: Array<{ hub: string; region: string; utilizationPct: number; sharePct: number }>;
+  }>;
+  summary: { saving2023T: number; savingProjectedT: number; ratioEffectPp: number; costToSalesAfterSponsorPct: number };
+  strategicNote: string;
+  guardrails: Array<{ guardrail: string; provision: string }>;
+}
+
+export interface ExpansionPlan {
+  engine: string;
+  note: string;
+  capacityPerDayM: number;
+  demandPerDayM: { basisTable1: number; basis2024: number };
+  headroom: { basis2024M: number; basisTable1M: number; basisUsed: string };
+  contribution: { perParcelIdr: number; rangeIdr: number[]; note: string };
+  fillScenarios: Array<{ fillPct: number; volumeM: number; valueIdr: number }>;
+  pathways: Array<{ path: string; paybackYears: string; decision: string }>;
+  newHubGates: Array<{ gate: string; threshold: string }>;
+  outletProductivityPerDay: Record<string, number>;
+  tariffStress: { cutPct: number; tariffPerParcelIdr: number; variableCostPerParcelIdr: number; contributionAfterIdr: number; note: string };
+}
+
+export interface SurgePlan {
+  engine: string;
+  note: string;
+  amplificationTable: Array<{ amplification: number; hubsBreached: number; hubs: string[]; nationalUtilPct: number }>;
+  loadBalancing: { costPerPackageIdr: number; derivation: string; note: string };
+  newHubCapexPerPackageIdr: Record<string, number>;
+  capexNote: string;
+  layers: Array<{ layer: string; content: string }>;
+  downturnPlaybook: Array<{ when: string; action: string }>;
+  jakartaExample: {
+    movedTotalM: number;
+    utilizationBeforePct: number;
+    utilizationAfterPct: number;
+    receivers: Array<{ hub: string; movedM: number; utilizationBeforePct: number; utilizationAfterPct: number }>;
+  };
+}
+
+export interface CodPlan {
+  engine: string;
+  note: string;
+  timeBasis: {
+    packages: number;
+    nonCodMinutes: number;
+    codMinutes: number;
+    nonCodPerPackageMin: number;
+    codPerPackageMin: number;
+    gapPerPackageMin: number;
+    productiveMinutesPerDay: number;
+    productivityNonCodPerDay: number;
+    productivityCodPerDay: number;
+    productivityDropPct: number;
+  };
+  incentive: {
+    courierRateLowIdr: number;
+    courierRateHighIdr: number;
+    lostDeliveriesPerDay: number;
+    lostIncomePerDayLowIdr: number;
+    lostIncomePerDayHighIdr: number;
+    note: string;
+  };
+  interventions: Array<{ key: string; label: string; minutes: number; mechanism: string }>;
+  interventionTotalMin: number;
+  realization: {
+    realizationPct: number;
+    realizedMinutesPerPackage: number;
+    targetMinutesPerPackage: number;
+    productivityTargetPerDay: number;
+    productivityUpliftPct: number;
+  };
+  targets: Array<{ metric: string; baseline: string; target: string }>;
+  processComparison: Array<{ stage: string; nonCod: string; cod: string }>;
+  reconciliation: { sources: string[]; note: string };
+  value: {
+    courierCostPerMinuteIdr: number;
+    valuePerCodPackageIdr: number;
+    codMixPct: number;
+    codPackagesPerYearM: number;
+    derivableIdrT: number;
+    rangeIdrT: Record<string, number>;
+    workingValueIdrT: number;
+    workingExtraPerPackageIdr: number;
+    note: string;
+  };
+  assumptions: { umpDki2026Idr: number; codMixRangePct: number[]; realizationRangePct: number[] };
+}
+
 export interface SponsorResult {
   engine: string;
   note: string;
@@ -390,6 +505,7 @@ export interface SponsorResult {
     directRegions: string[];
   };
   regions: SponsorRegionRow[];
+  tierPlan: TierPlan;
 }
 export interface SponsorSensitivity {
   engine: string;
@@ -630,6 +746,46 @@ export interface EvBcaProgramCashflow {
   npvIdr: number;
   finalDeployedUnits: number;
 }
+/** BCA armada listrik sesuai dokumen analisis (Tantangan 4). */
+export interface EvBcaDocResult {
+  engine: string;
+  source: string;
+  note: string;
+  coverage: string;
+  modelA: {
+    label: string;
+    units: number;
+    assumptions: Record<string, number | string>;
+    derivation: { step: number; label: string; value: number; unit: string }[];
+    netAnnualSavingByTariffIdr: Record<string, number>;
+    year0CashIdr: number;
+    npvByTariffIdr: Record<string, number>;
+    tco5yIdr: { ice: number; ev: number };
+    bcr: number;
+    co2ReductionTonsYear: number;
+    co2KgPerKm: { ice: number; ev: number };
+    payback: { valueYears: number; note: string };
+  };
+  modelB: {
+    label: string;
+    classes: {
+      class: string; units: number; ice: string; ev: string; mode: string;
+      effectiveKmPerL: number; energyCostIceIdrPerKm: number; energyCostEvIdrPerKm: number;
+      energySavingIdr: number; maintenanceSavingIdr: number; pkbSavingIdr: number;
+      capexSavingIdr: number; bbnkbSavingIdr: number; co2ReductionTonsYear: number;
+    }[];
+    totals: { units: number; energySavingIdr: number; maintenanceSavingIdr: number; pkbSavingIdr: number; capexSavingIdr: number; bbnkbSavingIdr: number; co2ReductionTonsYear: number };
+    kpi: { netAnnualSavingIdr: number; netAnnualSavingPrudentIdr: number; year0CashIdr: number; bcr: number; roi5yPct: number; npvIdr: number; tcoRatio: number; co2ReductionTonsYear: number };
+    note: string;
+  };
+  breakEven: {
+    modelA: { swapTariffEnergyEqualIdrPerKm: number; swapTariffEnergyEqualMultiple: number; swapTariffNetZeroIdrPerKm: number; pertamaxWhenEqualSwap175IdrPerL: number };
+    modelB: { class: string; energyEqual: string; netZero: string }[];
+    note: string;
+  };
+  roadmap: { phases: { phase: number; label: string; period: string; content: string; condition: string }[]; scaleGates: string[]; note: string };
+}
+
 export interface EvBcaResult {
   engine: string;
   note: string;
@@ -734,6 +890,7 @@ export interface SurgeResult {
     nationalUtilPct: number;
   };
   hubs: SurgeHub[];
+  plan: SurgePlan;
   spillover: { from: string; fromCode: string; to: string; toCode: string; quantityM: number }[];
 }
 
@@ -783,21 +940,63 @@ export interface ExpansionResult {
   unitEconomics: { revenuePerParcelIdr: number; costPerParcelIdr: number; variableCostPerParcelIdr: number; grossMarginPerParcelIdr: number; contributionMarginPerParcelIdr: number };
   summary: { priorityHubs: number; totalAddAnnualM: number; totalRealizedAnnualM: number; totalAddMarginIdrPerYear: number; totalCapexIdr: number; portfolioRoiX: number; paybackYears: number };
   hubs: ExpansionHub[];
+  plan: ExpansionPlan;
 }
 
 // ── Unified Cost-Waterfall & P&L (Pertanyaan 6) ──
 export interface PnlResult {
   engine: string;
   note: string;
-  inputs: { includeSustainability: boolean };
+  inputs: { includeSustainability: boolean; includeSponsor: boolean };
+  params: {
+    volumeGrowthPct: number;
+    fixedSharePct: number;
+    overlapCorrectionPp: number;
+    sponsorNetT: number;
+    horizonYears: number;
+    discountRatePct: number;
+  };
   basis: { year: number; fulfilmentT: number; shippingT: number; costT: number; netSalesT: number; costToSalesPct: number };
-  waterfall: { lever: string; dimension: string; savingPct: number; savingT: number; costAfterT: number }[];
+  absorption: {
+    volumeGrowthPct: number;
+    fixedSharePct: number;
+    fixedCostT: number;
+    variableCostT: number;
+    variableGrownT: number;
+    salesGrownT: number;
+    costNoActionT: number;
+    costAfterAbsorptionT: number;
+    benefitT: number;
+  };
+  waterfall: {
+    lever: string;
+    dimension: string;
+    savingPct: number;
+    savingPctOfCost: number;
+    savingT: number;
+    costAfterT: number;
+    co2Pct: number;
+    mechanism: string;
+    evidence: string;
+  }[];
+  overlapCorrectionT: number;
+  sponsor: { netSavingT: number };
+  bridge: { stage: string; costT: number; costToSalesPct: number }[];
   summary: {
     baseCostT: number;
-    optimizedCostT: number;
+    costNoActionT: number;
+    absorptionBenefitT: number;
+    leverNetT: number;
+    leverSavingPct: number;
+    sponsorSavingT: number;
+    finalCostT: number;
+    costAvoidedWithoutSponsorT: number;
+    costAvoidedT: number;
     totalSavingT: number;
     totalSavingPct: number;
     costToSalesBeforePct: number;
+    costToSalesAfterAbsorptionPct: number;
+    costToSalesAfterLeversPct: number;
     costToSalesAfterPct: number;
     ebitProxyBeforeT: number;
     ebitProxyAfterT: number;
@@ -923,6 +1122,7 @@ export const api = {
   codIntel: (body: { cod_share_pct?: number; interventions?: string[]; packages_per_shift?: number }) =>
     post<CodIntelResult>("/ml/cod-intel", body),
   codIntelScenarios: () => get<Record<string, CodIntelResult>>("/ml/cod-intel/scenarios"),
+  codPlan: () => get<CodPlan>("/ml/cod/plan"),
   metricRegions: () => get<RegionSummary[]>("/ml/metrics/regions"),
   metricFinancial: () => get<FinancialSummary>("/ml/metrics/financial"),
   metricDemand: () => get<DemandSummary>("/ml/metrics/demand"),
@@ -936,6 +1136,7 @@ export const api = {
   costLevers: () => get<CostLeverResult>("/ml/modalshift/levers"),
   surge: (body?: { peak_multiplier?: number; surge_capacity_factor?: number; allow_spillover?: boolean }) =>
     body ? post<SurgeResult>("/ml/sim/surge", body) : get<SurgeResult>("/ml/sim/surge"),
+  evBcaDoc: () => get<EvBcaDocResult>("/ml/ev-bca/doc"),
   evBca: (body?: {
     units?: number;
     pertamax_override?: number;

@@ -1,10 +1,11 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { api } from "$lib/api";
   import Icon from "$lib/components/Icon.svelte";
   import EChart from "$lib/components/EChart.svelte";
   import { barChart } from "$lib/charts/options";
-  import { shop, ORDER_STATUS_LABEL, type Order } from "$lib/stores/shop";
+  import { shop, orderStatusLabel, type Order } from "$lib/stores/shop";
   import { COURIER, CITIES, HUB_LABEL, etaForCity, distanceForCity, type City } from "$lib/logistics";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { notify } from "$lib/toast";
@@ -37,7 +38,7 @@
       route = [];
       quotes = [];
       failed = true;
-      if (userTriggered) notify({ message: "Gagal memuat data rute", type: "error", title: "Route Clustering" });
+      if (userTriggered) notify({ message: m.kr2t1(), type: "error", title: "Route Clustering" });
     }
     loaded = true;
   }
@@ -45,10 +46,10 @@
   // Cluster nyata: kelompokkan pesanan aktif per status menjadi "rute" kurir.
   const active = $derived(orders.filter((o) => o.status !== "terkirim"));
   const STAGE_KEYS: Array<{ k: Order["status"]; l: string }> = [
-    { k: "dikemas", l: ORDER_STATUS_LABEL.dikemas },
-    { k: "dijemput", l: ORDER_STATUS_LABEL.dijemput },
-    { k: "transit", l: ORDER_STATUS_LABEL.transit },
-    { k: "dikirim", l: ORDER_STATUS_LABEL.dikirim }
+    { k: "dikemas", l: orderStatusLabel("dikemas") },
+    { k: "dijemput", l: orderStatusLabel("dijemput") },
+    { k: "transit", l: orderStatusLabel("transit") },
+    { k: "dikirim", l: orderStatusLabel("dikirim") }
   ];
   const byStatus = $derived(
     STAGE_KEYS.map((s) => ({ type: s.l, n: active.filter((o) => o.status === s.k).length })).filter((x) => x.n > 0)
@@ -57,21 +58,21 @@
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
-    <h1 class="font-heading text-xl font-semibold tracking-tight">Route Clustering</h1>
-    <span class="hub-label text-muted-foreground">KURIR · {COURIER.name}</span>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">{m.kr01()}</h1>
+    <span class="hub-label text-muted-foreground">{m.kr4t2({ name: COURIER.name })}</span>
   </div>
 
   <!-- Cluster pengantaran nyata -->
   {#if byStatus.length > 0}
     <section class="rounded-2xl border border-border bg-card p-5">
-      <p class="text-base font-semibold">Cluster pengantaran aktif (nyata)</p>
-      <p class="text-[13.5px] text-muted-foreground">Pesanan yang sedang kamu tangani, dikelompokkan per tahap rute.</p>
+      <p class="text-base font-semibold">{m.kr02()}</p>
+      <p class="text-[13.5px] text-muted-foreground">{m.kr03()}</p>
       <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {#each byStatus as b (b.type)}
           <div class="rounded-xl border border-border bg-background/40 p-4">
             <p class="hub-label text-xs text-muted-foreground">{b.type}</p>
             <p class="kpi-value mt-1 text-2xl">{b.n}</p>
-            <p class="text-xs text-muted-foreground">paket</p>
+            <p class="text-xs text-muted-foreground">{m.kr04()}</p>
           </div>
         {/each}
       </div>
@@ -83,13 +84,13 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <div class="flex items-center gap-2">
-          <p class="text-base font-semibold">Peta Rute &amp; Simulasi Pengantaran Kurir</p>
+          <p class="text-base font-semibold">{m.kr05()}</p>
           <span class="rounded-full bg-primary/10 px-2.5 py-0.5 font-mono text-[10.5px] font-semibold text-primary">
             Klaster {selectedCity}
           </span>
         </div>
         <p class="text-[13.5px] text-muted-foreground">
-          Eksplorasi koridor pengantaran last-mile per wilayah. Jalankan simulasi untuk menganalisis waktu tempuh, kepadatan jalan, dan titik PUDO.
+          {m.kr06()}
         </p>
       </div>
 
@@ -113,11 +114,11 @@
           type="button"
           onclick={() => (showRouteMapSection = !showRouteMapSection)}
           aria-expanded={showRouteMapSection}
-          aria-label={showRouteMapSection ? "Tutup Peta Rute & Simulasi" : "Buka Peta Rute & Simulasi"}
+          aria-label={showRouteMapSection ? m.kr2t2() : m.kr2t3()}
           class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-accent"
         >
           <Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" />
-          <span>{showRouteMapSection ? "Tutup Peta Rute" : "Buka Peta Rute"}</span>
+          <span>{showRouteMapSection ? m.kr2t4() : m.kr2t5()}</span>
         </button>
       </div>
     </div>
@@ -131,45 +132,45 @@
         destLabel={`Klaster ${selectedCity}`}
         etaMin={etaForCity(selectedCity)}
         height={400}
-        role="KURIR"
+        role={m.kr2t6()}
         routeIntel
         showSimulation={true}
         compact={false}
       />
       <p class="text-[11px] text-muted-foreground">
         Rute {HUB_LABEL} → {selectedCity} ({distanceForCity(selectedCity)} km · perkiraan waktu tempuh normal {etaForCity(selectedCity)} menit).
-        Bilah simulasi, analisis rute, dan legenda dapat dibuka-tutup secara mandiri di bawah peta.
+        {m.kr3f1()}
       </p>
     {/if}
   </section>
 
   {#if failed && !route.length}
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
-      <p class="text-sm font-semibold text-foreground">Gagal memuat data rute studi kasus</p>
-      <p class="mt-1 text-xs text-muted-foreground">Backend offline. Cluster pengantaran nyata di atas tetap tampil bila ada pesanan.</p>
-      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
+      <p class="text-sm font-semibold text-foreground">{m.kr07()}</p>
+      <p class="mt-1 text-xs text-muted-foreground">{m.kr08()}</p>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">{m.kr09()}</button>
     </div>
   {:else if loaded && route.length}
     <div class="grid gap-6 sm:grid-cols-2">
       {#each route as t (t.type)}
         <div class="rounded-2xl border border-border bg-card p-5 {t.type === 'COD' ? 'border-l-4 border-l-chart-4' : ''}">
-          <p class="hub-label text-xs text-muted-foreground">{t.type} · studi kasus</p>
+          <p class="hub-label text-xs text-muted-foreground">{t.type} {m.kr3f2()}</p>
           <p class="kpi-value mt-2 text-3xl">{t.durationMin} min</p>
-          <p class="mt-1 text-sm text-muted-foreground">{t.packages} paket · {t.distanceKm} km</p>
-          <p class="kpi-value mt-2 text-lg text-primary">{t.productivity}/jam</p>
+          <p class="mt-1 text-sm text-muted-foreground">{m.kr4t1({ packages: t.packages, km: t.distanceKm })}</p>
+          <p class="kpi-value mt-2 text-lg text-primary">{t.productivity} {m.kr3f3()}</p>
         </div>
       {/each}
     </div>
 
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="mb-3 text-sm font-medium">COD vs Non-COD, selisih (studi kasus)</p>
+      <p class="mb-3 text-sm font-medium">{m.kr10()}</p>
       <EChart
         option={barChart(
           route.map((r) => r.type),
           [{ name: "Durasi (menit)", data: route.map((r) => r.durationMin) }]
         )}
         height={200}
-        label="Perbandingan durasi rute COD dan Non-COD"
+        label={m.kr2t7()}
       />
     </div>
   {:else if !failed}
@@ -180,11 +181,11 @@
     {#each quotes as q (q.city)}
       <blockquote class="rounded-2xl border-l-4 border-primary bg-muted/30 p-4 text-sm italic">
         &ldquo;{q.quote}&rdquo;
-        <span class="mt-1 block text-xs not-italic text-muted-foreground">dari Kurir {q.city}</span>
+        <span class="mt-1 block text-xs not-italic text-muted-foreground">{m.kr3f4()} {q.city}</span>
       </blockquote>
     {/each}
     {#if loaded && quotes.length === 0}
-      <p class="flex items-center gap-2 rounded-2xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center text-xs text-muted-foreground"><Icon name="bell" cls="h-4 w-4" /> Kutipan kurir tidak tersedia (backend offline).</p>
+      <p class="flex items-center gap-2 rounded-2xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center text-xs text-muted-foreground"><Icon name="bell" cls="h-4 w-4" /> {m.kr11()}</p>
     {/if}
   </div>
 </div>

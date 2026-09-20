@@ -223,7 +223,7 @@ def data_audit() -> dict[str, Any]:
             },
             {
                 "id": "demand-total",
-                "label": "Total demand 2023 = 1.110 jt",
+                "label": "Total demand 2023 = 1.110 juta",
                 "ok": d["totalM"] == 1110,
                 "value": d["totalM"],
             },

@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { resolveHref } from "$lib/utils";
-  import { widgetsStore, WIDGET_CATALOG, type DashboardWidget } from "$lib/stores/widgets";
+  import { widgetsStore, widgetCatalog, type DashboardWidget } from "$lib/stores/widgets";
   import Icon from "./Icon.svelte";
 
   // Peta widget → halaman terkait agar kartu bisa diklik (deep-link).
@@ -18,14 +19,14 @@
 
   onMount(() => {
     const unsub = widgetsStore.subscribe((ids) => {
-      active = WIDGET_CATALOG.filter((w) => ids.includes(w.id));
+      active = widgetCatalog().filter((w) => ids.includes(w.id));
     });
     return unsub;
   });
 
   function remove(id: string, title: string) {
     widgetsStore.remove(id);
-    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `Widget "${title}" dilepas`, type: "info", title: "Widget" } }));
+    window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `Widget "${title}" dilepas`, type: "info", title: m.ws2t1() } }));
   }
 </script>
 
@@ -33,7 +34,7 @@
   <section class="mb-5" aria-label="Widget dashboard">
     <div class="mb-2 flex items-center justify-between">
       <p class="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Widget dashboard ({active.length})</p>
-      <button type="button" onclick={() => widgetsStore.clear()} class="text-xs font-semibold text-muted-foreground transition-colors hover:text-destructive-foreground">Bersihkan</button>
+      <button type="button" onclick={() => widgetsStore.clear()} class="text-xs font-semibold text-muted-foreground transition-colors hover:text-destructive-foreground">{m.ws301()}</button>
     </div>
     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {#each active as w (w.id)}

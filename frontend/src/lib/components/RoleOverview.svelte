@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount, untrack } from "svelte";
   import { api, type Insights } from "$lib/api";
   import { greetingByTime, cn, priorityCls } from "$lib/utils";
@@ -42,7 +43,7 @@
       if (userTriggered) notify({ message: "Insight dimuat ulang", type: "success", title: "Insight" });
     } catch {
       failed = true;
-      if (userTriggered) notify({ message: "Gagal memuat insight Nigi AI", type: "error", title: "Insight" });
+      if (userTriggered) notify({ message: m.rolt1(), type: "error", title: "Insight" });
     }
     settled = true;
   }
@@ -71,7 +72,7 @@
       <p class="mt-1 text-sm font-semibold leading-snug sm:text-base">{grt}</p>
     </div>
     <button type="button" onclick={openChat} class="ml-auto shrink-0 rounded-full bg-black/10 px-3.5 py-2 text-xs font-semibold text-[color:var(--banner-fg)] transition-colors hover:bg-black/15 active:scale-[0.98]">
-      Buka chat
+      {m.rolp01()}
     </button>
   </div>
 
@@ -107,10 +108,10 @@
   {:else if settled && failed}
     <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-destructive/5 p-5">
       <div>
-        <p class="text-sm font-semibold text-foreground">Insight Nigi AI tidak tersedia</p>
-        <p class="mt-0.5 text-xs text-muted-foreground">Backend tampaknya offline. Kartu KPI &amp; grafik tetap tampil dari data lokal.</p>
+        <p class="text-sm font-semibold text-foreground">{m.rolp02()}</p>
+        <p class="mt-0.5 text-xs text-muted-foreground">{m.rolp03()}</p>
       </div>
-      <button type="button" onclick={() => load(true)} class="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Coba lagi</button>
+      <button type="button" onclick={() => load(true)} class="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">{m.rolp04()}</button>
     </div>
   {:else if !settled}
     <div class="grid gap-3 lg:grid-cols-3">
@@ -121,6 +122,6 @@
 
 
   <div class="rounded-2xl border border-border bg-card p-4 text-[15.5px] leading-relaxed text-muted-foreground">
-    <span class="font-medium text-foreground">Tip:</span> Nigi AI (tombol bulat kanan bawah) menjawab hanya dengan angka studi kasus. Coba <span class="font-heading italic">"Apa itu Digital Twin?"</span>
+    <span class="font-medium text-foreground">{m.rolp05()}</span> {m.rolp06()} <span class="font-heading italic">{m.rolp07()}</span>
   </div>
 </div>

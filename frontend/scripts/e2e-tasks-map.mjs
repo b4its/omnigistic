@@ -15,6 +15,8 @@ import { mkdirSync } from "node:fs";
 import { launchOptions } from "./_browser.mjs";
 
 const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
+/** Prefix locale uji: asersi berbahasa Indonesia → default /id (E2E_LANG=en untuk Inggris). */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const STORAGE_KEY = "omnigistic-shop-v1";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
@@ -92,7 +94,7 @@ try {
   page.on("pageerror", (e) => errs.push(String(e.message).slice(0, 140)));
   await page.addInitScript(([k, v]) => localStorage.setItem(k, v), [STORAGE_KEY, JSON.stringify(seededState)]);
 
-  await page.goto(BASE + "/dashboard/kurir/tasks", { waitUntil: "load", timeout: 40000 });
+  await page.goto(BASE + LANG_PREFIX + "/dashboard/kurir/tasks", { waitUntil: "load", timeout: 40000 });
   await page.waitForTimeout(3400);
 
   const txt = await page.locator("body").innerText();

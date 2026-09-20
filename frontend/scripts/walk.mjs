@@ -20,8 +20,7 @@ const shots = [
   ["/dashboard/pusat/roi", "14-pusat-roi"],
   ["/dashboard/pusat/digital-twin", "15-pusat-twin"],
   ["/dashboard/kpi", "16-kpi"],
-  ["/dashboard/methodology", "17-method"],
-  ["/dashboard/academy", "18-academy"]
+  ["/dashboard/methodology", "17-method"]
 ];
 const errs = [];
 p.on("pageerror", e => errs.push(e.message.slice(0, 120)));

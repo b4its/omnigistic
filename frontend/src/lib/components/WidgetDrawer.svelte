@@ -1,11 +1,12 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import Icon from "./Icon.svelte";
   import { cn } from "$lib/utils";
-  import { widgetsStore, WIDGET_CATALOG } from "$lib/stores/widgets";
+  import { widgetsStore, widgetCatalog } from "$lib/stores/widgets";
 
-  const WIDGETS = WIDGET_CATALOG;
+  const WIDGETS = $derived(widgetCatalog());
 
   let open = $state(false);
   let q = $state("");
@@ -44,10 +45,10 @@
     const w = WIDGETS.find((x) => x.id === id);
     if (sel.has(id)) {
       sel.delete(id);
-      if (w) window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `Widget "${w.title}" dilepas`, type: "info", title: "Widget" } }));
+      if (w) window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `Widget "${w.title}" dilepas`, type: "info", title: m.we2t1() } }));
     } else {
       sel.add(id);
-      if (w) window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `Widget "${w.title}" dipilih`, type: "success", title: "Widget" } }));
+      if (w) window.dispatchEvent(new CustomEvent("omnigistic-toast", { detail: { message: `Widget "${w.title}" dipilih`, type: "success", title: m.wid2t1() } }));
     }
   }
 
@@ -58,28 +59,28 @@
     window.dispatchEvent(
       new CustomEvent("omnigistic-toast", {
         detail: ids.length
-          ? { message: `${ids.length} widget ditambahkan ke dashboard`, type: "success", title: "Widget" }
-          : { message: "Tidak ada widget dipilih", type: "warn", title: "Widget" }
+          ? { message: `${ids.length} widget ditambahkan ke dashboard`, type: "success", title: m.wid2t1() }
+          : { message: m.widt1(), type: "warn", title: m.we2t1() }
       })
     );
   }
 </script>
 
 {#if open}
-  <button type="button" aria-label="Tutup drawer" class="fixed inset-0 z-[60] cursor-pointer bg-black/40 transition-opacity" onclick={() => (open = false)}></button>
+  <button type="button" aria-label={m.ax04()} class="fixed inset-0 z-[60] cursor-pointer bg-black/40 transition-opacity" onclick={() => (open = false)}></button>
 {/if}
 <div
   role="dialog"
   aria-modal="true"
-  aria-label="Tambah widget"
+  aria-label={m.wid2t2()}
   tabindex="-1"
   class="fixed right-0 top-0 z-[70] flex h-full w-[400px] max-w-[92vw] flex-col bg-card shadow-pop transition-transform duration-300"
   style="transform: {open ? 'translateX(0)' : 'translateX(100%)'}; visibility: {open ? 'visible' : 'hidden'}"
   inert={!open}
 >
   <div class="flex items-center justify-between border-b border-border px-5 py-4">
-    <h2 class="text-base font-semibold">Tambah widget</h2>
-    <button type="button" aria-label="Tutup" onclick={() => (open = false)} class="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+    <h2 class="text-base font-semibold">{m.wd301()}</h2>
+    <button type="button" aria-label={m.ax05()} onclick={() => (open = false)} class="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
       <Icon name="x" cls="h-4 w-4" />
     </button>
   </div>
@@ -89,8 +90,8 @@
       type="search"
       enterkeyhint="search"
       bind:value={q}
-      placeholder="Cari widget"
-      aria-label="Cari widget"
+      placeholder={m.wid2t3()}
+      aria-label={m.wid2t3()}
       class="flex-1 bg-transparent text-sm outline-none [&::-webkit-search-cancel-button]:appearance-none"
     />
   </label>
@@ -110,14 +111,14 @@
               onclick={() => toggle(w.id)}
               class={cn("rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all", sel.has(w.id) ? "border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]" : "border-border text-foreground hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)]")}
             >
-              {sel.has(w.id) ? "Dipilih" : "Pilih"}
+              {sel.has(w.id) ? m.wd3t1() : m.wd3t2()}
             </button>
           </div>
         </div>
       </div>
     {/each}
     {#if filtered.length === 0}
-      <p class="py-8 text-center text-sm text-muted-foreground">Tidak ada widget yang cocok.</p>
+      <p class="py-8 text-center text-sm text-muted-foreground">{m.wd302()}</p>
     {/if}
   </div>
   <div class="flex items-center justify-between border-t border-border px-5 py-3.5">
@@ -127,7 +128,7 @@
       class="rounded-full bg-[var(--primary)] px-5 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)] transition-all duration-300 hover:scale-[1.03] active:scale-100"
       onclick={apply}
     >
-      Tambah ke dashboard
+      {m.wd303()}
     </button>
   </div>
 </div>

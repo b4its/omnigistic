@@ -67,15 +67,34 @@ export function legendOption(): Record<string, unknown> {
 /** Line/AreaChart generik. */
 export function lineChart(
   x: string[],
-  seriesDef: Array<{ name: string; data: number[]; color: string; smooth?: boolean; area?: boolean }>,
-  opts: { rotate?: number } = {}
+  seriesDef: Array<{
+    name: string;
+    /** Angka lepas (sumbu kategori) atau pasangan [x, y] (sumbu nilai). */
+    data: Array<number | [number, number]>;
+    color: string;
+    smooth?: boolean;
+    area?: boolean;
+    /** 0..1 — dipakai untuk meredupkan seri yang tidak sedang aktif. */
+    opacity?: number;
+    /** Garis bantu per seri: `x` (vertikal) / `y` (horizontal) + label. */
+    markLines?: Array<{ x?: number; y?: number; label?: string }>;
+  }>,
+  opts: { rotate?: number; xAxisType?: "category" | "value"; valueFormatter?: (v: number) => string } = {}
 ): EChartsOption {
   const multi = seriesDef.length > 1;
+  const valueAxis = opts.xAxisType === "value";
   return {
-    tooltip: baseTooltip(),
+    // `valueFormatter` meneruskan pemformat (mis. idr) ke tooltip agar angka di
+    // grafik berbunyi sama persis dengan tabel di sebelahnya.
+    tooltip: {
+      ...baseTooltip(),
+      ...(opts.valueFormatter ? { valueFormatter: opts.valueFormatter } : {})
+    } as EChartsOption["tooltip"],
     legend: multi ? { top: 0, left: "center", ...legendOption() } : { show: false },
     grid: { left: 8, right: 16, top: multi ? 38 : 16, bottom: 8, containLabel: true },
-    xAxis: { type: "category", data: x, boundaryGap: false, ...axisStyle({ rotate: opts.rotate }) },
+    xAxis: valueAxis
+      ? { type: "value", scale: true, ...axisStyle({ rotate: opts.rotate }) }
+      : { type: "category", data: x, boundaryGap: false, ...axisStyle({ rotate: opts.rotate }) },
     yAxis: { type: "value", scale: true, ...axisStyle() },
     series: seriesDef.map((s) => ({
       name: s.name,
@@ -83,9 +102,26 @@ export function lineChart(
       data: s.data,
       smooth: s.smooth ?? true,
       showSymbol: false,
-      lineStyle: { width: 2.5, color: s.color },
+      lineStyle: { width: 2.5, color: s.color, opacity: s.opacity ?? 1 },
       areaStyle: s.area ? { opacity: 0.12, color: s.color } : undefined,
-      itemStyle: { color: s.color }
+      itemStyle: { color: s.color, opacity: s.opacity ?? 1 },
+      ...(s.markLines?.length
+        ? {
+            markLine: {
+              silent: true,
+              symbol: "none",
+              label: { fontSize: 11 },
+              lineStyle: { type: "dashed", width: 1 },
+              data: s.markLines.map((m) => ({
+                ...(m.x !== undefined ? { xAxis: m.x } : {}),
+                ...(m.y !== undefined ? { yAxis: m.y } : {}),
+                label: m.label
+                  ? { formatter: m.label, fontSize: 11, position: "insideEndTop" as const }
+                  : { show: false }
+              }))
+            }
+          }
+        : {})
     }))
   };
 }

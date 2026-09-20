@@ -24,9 +24,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.db.loader import load
 from app.ml.metrics import clamp
-from app.ml.pnl import LEVERS
+from app.ml.pnl import lever_portfolio
 
 # ── Profil moda (asumsi tim — dapat di-override via API) ────────────────────
 # costIdrPerPkgKm : biaya per paket per km (IDR)
@@ -238,40 +237,27 @@ def _mode_mix(rows: list[dict[str, Any]]) -> dict[str, int]:
 def cost_levers() -> dict[str, Any]:
     """Tuas pengurangan biaya (Pertanyaan 6) dengan potensi & dampak sustainability.
 
-    **Satu sumber kebenaran**: memakai tabel tuas kanonik `pnl.LEVERS` (sama dgn
-    yang dipakai Cost-Waterfall & P&L) agar kedua halaman TIDAK saling
-    bertentangan. Angka potensi = ASUMSI TIM sebagai fraksi biaya kasus (Table 3),
-    disintesis dari modul COD, modal-shift, address, load-balancing, sustainability.
+    **Satu sumber kebenaran**: memakai portofolio tuas kanonik `pnl.lever_portfolio`
+    (model jembatan Tantangan 6), sehingga halaman Cost-Lever dan Cost-Waterfall
+    TIDAK saling bertentangan. Porsi tuas = ASUMSI TIM sebagai persentase biaya
+    variabel setelah tumbuh; basis biaya & volume dari kasus (Table 3, Table 4).
     """
-    # Ambil angka dari data kasus.
-    data = load()
-    fin = {f["year"]: f for f in data["financial"]}
-    f2023 = fin.get(2023) or data["financial"][-1]
-    shipping_t = float(f2023.get("shippingT", 49.46))
-    fulfilment_t = float(f2023.get("fulfilmentT", 50.08))
-    total_cost_t = shipping_t + fulfilment_t
-
-    levers = []
-    for lv in LEVERS:
-        base = shipping_t if lv["dim"] == "shipping" else fulfilment_t if lv["dim"] == "fulfilment" else total_cost_t
-        levers.append({
-            "lever": lv["lever"],
-            "mechanism": lv["mechanism"],
-            "costImpactIdrT": round(base * lv["frac"], 2),
-            "costPct": round(lv["frac"] * 100, 1),
-            "co2Pct": lv["co2Pct"],
-            "evidence": lv["evidence"],
-        })
-    total_saving = round(sum(lv["costImpactIdrT"] for lv in levers), 2)
+    p = lever_portfolio()
+    levers = p["levers"]
     return {
         "engine": "Cost-Lever Portfolio (Pertanyaan 6)",
-        "note": "Potensi per tuas = ASUMSI TIM sebagai fraksi biaya kasus; dipakai untuk prioritisasi relatif, bukan proyeksi pasti. Tabel tuas = kanonik (sama dgn P&L Waterfall).",
-        "basisYear": f2023.get("year"),
-        "totalCostT": round(total_cost_t, 2),
+        "note": (
+            "Porsi per tuas = ASUMSI TIM sebagai persentase biaya variabel setelah "
+            "tumbuh (volume +21,4%); dipakai untuk prioritisasi relatif, bukan "
+            "proyeksi pasti. Tabel tuas = kanonik (sama dgn P&L Waterfall)."
+        ),
+        "basisYear": p["basisYear"],
+        "totalCostT": p["totalCostT"],
+        "variableGrownT": p["variableGrownT"],
         "levers": levers,
         "summary": {
-            "totalSavingIdrT": total_saving,
-            "savingPctOfCost": round(total_saving / total_cost_t * 100, 1) if total_cost_t else 0.0,
-            "avgCo2Pct": round(sum(lv["co2Pct"] for lv in levers) / len(levers), 1),
+            "totalSavingIdrT": p["totalSavingIdrT"],
+            "savingPctOfCost": p["savingPctOfCost"],
+            "avgCo2Pct": round(sum(lv["co2Pct"] for lv in levers) / len(levers), 1) if levers else 0.0,
         },
     }
