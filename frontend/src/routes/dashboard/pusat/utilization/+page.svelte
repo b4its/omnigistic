@@ -34,7 +34,7 @@
 <div class="space-y-6">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <h1 class="font-heading text-xl font-semibold tracking-tight">{m.pu01()}</h1>
-    <span class="hub-label text-muted-foreground">ambang overload &gt; {UTIL_THRESHOLD.critical}%</span>
+    <span class="hub-label text-muted-foreground">{m.uz4t1({ crit: UTIL_THRESHOLD.critical })}</span>
   </div>
 
   {#if loaded && hubs.length}

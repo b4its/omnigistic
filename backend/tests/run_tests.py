@@ -866,6 +866,44 @@ from app.ml.simulations import calculate_cod_impact as _cci2
 
 check("cod-impact: note asumsi ada", "note" in _cci2())
 
+# (9) BCA dokumen (Tantangan 4): angka wajib sama dengan docs/hasil-analisis-2026-09-19.md.
+from app.ml.ev_bca_doc import doc_bca as _doc_bca
+
+_doc = _doc_bca()
+_a, _b = _doc["modelA"], _doc["modelB"]
+
+check("doc BCA: Model A net (Rp175/km) = 2.655.774.479", _a["netAnnualSavingByTariffIdr"]["optimistic"] == 2_655_774_479, str(_a["netAnnualSavingByTariffIdr"]["optimistic"]))
+check("doc BCA: Model A net (Rp200/km) = 2.400.274.479", _a["netAnnualSavingByTariffIdr"]["market"] == 2_400_274_479)
+check("doc BCA: Model A net (Rp222/km) = 2.175.434.479", _a["netAnnualSavingByTariffIdr"]["upper"] == 2_175_434_479)
+check("doc BCA: Model A arus kas Tahun-0 = +1.814.506.447", _a["year0CashIdr"] == 1_814_506_447)
+check("doc BCA: Model A NPV (Rp200/km) = 10.913.435.187", abs(_a["npvByTariffIdr"]["market"] - 10_913_435_187) <= 1)
+check("doc BCA: Model A TCO ICE 94.764.935 / EV 51.450.000", (_a["tco5yIdr"]["ice"], _a["tco5yIdr"]["ev"]) == (94_764_935, 51_450_000))
+check("doc BCA: Model A BCR = 1,84", _a["bcr"] == 1.84, str(_a["bcr"]))
+check("doc BCA: Model A emisi turun ~266 ton", 265.5 <= _a["co2ReductionTonsYear"] <= 266.5)
+check("doc BCA: Model A tanpa payback (jujur)", _a["payback"]["valueYears"] == 0.0)
+
+_k = _b["kpi"]
+check("doc BCA: Model B net = 3.503.924.588", _k["netAnnualSavingIdr"] == 3_503_924_588)
+check("doc BCA: Model B prudent = 3.267.674.588", _k["netAnnualSavingPrudentIdr"] == 3_267_674_588)
+check("doc BCA: Model B arus kas Tahun-0 = +2.207.533.478", _k["year0CashIdr"] == 2_207_533_478)
+check("doc BCA: Model B NPV = 15.490.164.448", abs(_k["npvIdr"] - 15_490_164_448) <= 1, str(_k["npvIdr"]))
+check("doc BCA: Model B BCR 3,50 & ROI 250,45%", (_k["bcr"], _k["roi5yPct"]) == (3.50, 250.45))
+check("doc BCA: Model B total unit = 350", _b["totals"]["units"] == 350)
+check("doc BCA: Model B emisi turun 291,8 ton", _k["co2ReductionTonsYear"] == 291.8)
+check("doc BCA: Model B ditandai bersumber dokumen", "bcr" in _b.get("sourcedFromDoc", []))
+
+_be = _doc["breakEven"]["modelA"]
+check("doc BCA: titik kritis swap 366,92 / 424,45", (_be["swapTariffEnergyEqualIdrPerKm"], _be["swapTariffNetZeroIdrPerKm"]) == (366.92, 424.45))
+check("doc BCA: titik kritis Pertamax 7.752", _be["pertamaxWhenEqualSwap175IdrPerL"] == 7752)
+
+_rm5 = _doc["roadmap"]
+check("doc BCA: roadmap 5 fase", len(_rm5["phases"]) == 5, str(len(_rm5["phases"])))
+check("doc BCA: syarat penskalaan 6 butir", len(_rm5["scaleGates"]) == 6)
+check("doc BCA: fase 1 pilot 350 Zuzu vs 350 Scoopy", "350" in _rm5["phases"][0]["content"])
+
+_evd = _get("/ml/ev-bca/doc")
+check("endpoint /ml/ev-bca/doc 200 + sumber dokumen", _evd["source"] == "docs/hasil-analisis-2026-09-19.md")
+
 print(f"\n===== BACKEND {_passed}/{_passed + _failed} PASS =====")
 if _failed:
     print(f"  {_failed} GAGAL")

@@ -162,7 +162,7 @@
       <MetricCard label="Unit Cost Nasional" value={rp(res.nationalBasis.unitCostIdr)} sub={m.dt3t1({ trillion: res.nationalBasis.totalCostT, million: res.nationalBasis.parcelsM })} accent />
       <MetricCard label="Rekomendasi Sponsor" value={`${res.summary.recommendSponsor} region`} sub={res.summary.sponsorRegions.join(", ") || "—"} />
       <MetricCard label="Pertahankan Direct" value={`${res.summary.recommendDirect} region`} sub={res.summary.directRegions.join(", ") || "—"} />
-      <MetricCard label="Penghematan Capex" value={rpShort(res.summary.totalCapexSavingPerDayIdr)} sub={m.dt2t5()} />
+      <MetricCard label={m.dt4t1()} value={rpShort(res.summary.totalCapexSavingPerDayIdr)} sub={m.dt2t5()} />
     </div>
 
     <!-- Kontrol parameter -->

@@ -693,7 +693,7 @@
         class="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       >
         {#if simWidgetOpen}
-          <Icon name="x" cls="h-3 w-3" weight="bold" /> Tutup Bilah Simulasi
+          <Icon name="x" cls="h-3 w-3" weight="bold" /> {m.dm4t10()}
         {:else}
           <Icon name="route" cls="h-3 w-3 text-[var(--bitcoin)]" /> Buka Bilah Simulasi
         {/if}
@@ -984,7 +984,7 @@
         class="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       >
         {#if legendOpen}
-          <Icon name="x" cls="h-3 w-3" weight="bold" /> Tutup legenda peta
+          <Icon name="x" cls="h-3 w-3" weight="bold" /> {m.dm4t11()}
         {:else}
           <Icon name="map" cls="h-3 w-3 text-[var(--bitcoin)]" /> Buka legenda peta
         {/if}
@@ -1080,7 +1080,7 @@
 
         <!-- Atribusi Sumber & Catatan -->
         <p class="border-t border-border pt-1.5 text-[10px] italic leading-snug text-muted-foreground">
-          Jaringan PUDO nasional: {PUDO_POINTS.length} titik mitra · {pudoCityCount()} {m.dm3f2()}
+          {m.dm4t9()} {m.pd4t1({ n: PUDO_POINTS.length })} · {pudoCityCount()} {m.dm3f2()}
           {m.dmp49()}
         </p>
       </div>

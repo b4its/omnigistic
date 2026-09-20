@@ -107,11 +107,19 @@ def analyze_cod_impact(
 
 
 def default_scenarios() -> dict[str, Any]:
-    """Skenario preset untuk auto-demo (non-interaktif)."""
-    return {
+    """Skenario preset untuk auto-demo (non-interaktif).
+
+    Setiap skenario membawa `label` sendiri: kunci dict tidak ikut diterjemahkan
+    oleh lapisan i18n (hanya nilai), sehingga klien memakai `label` untuk
+    menampilkan nama skenario.
+    """
+    scenarios = {
         "Tanpa intervensi (baseline)": analyze_cod_impact(60.0, []),
         "Pre-payment + slot": analyze_cod_impact(60.0, ["prepayment_link", "slot_confirmation"]),
         "Semua intervensi aktif": analyze_cod_impact(
             60.0, ["prepayment_link", "pudo_pickup", "slot_confirmation", "cod_cluster"]
         ),
     }
+    for name, payload in scenarios.items():
+        payload["label"] = name
+    return scenarios

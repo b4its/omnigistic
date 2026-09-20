@@ -19,7 +19,7 @@ const ROUTES = readFileSync(new URL("./_routes.txt", import.meta.url), "utf8")
   .split("\n").map((s) => s.trim()).filter(Boolean);
 const USE_BROWSER = process.argv.includes("--browser");
 
-const ID_WORDS = /\b(yang|dan|atau|untuk|dengan|tidak|adalah|berapa|kenapa|bagaimana|paket|kurir|biaya|alamat|kapasitas|utilisasi|komplain|armada|pengantaran|keranjang|pembeli|penjual|jumlah|hari|kota|dari|pada|juga|hanya)\b/gi;
+const ID_WORDS = /\b(yang|dan|atau|untuk|dengan|tidak|adalah|berapa|kenapa|bagaimana|paket|kurir|pesanan|biaya|alamat|kapasitas|utilisasi|komplain|armada|pengantaran|keranjang|pembeli|penjual|jumlah|dari|pada|juga|hanya|analisis|arus|kas|fase|rollout|dokumen|asumsi|skenario|sensitivitas|ringkasan|distribusi|kumulatif|skala|moderat|agresif|turun|hemat|penghematan|tarif|jarak|bulan|juta|miliar|triliun|tanpa|seluruh|setiap|sampai|selama|lebih|kurang|studi|kasus|ambang|porsi|sisa|urutan|daftar|tombol|peta|legenda|percakapan|simulasi|jadwal|rekonsiliasi|mitra|gerai|listrik|bensin|motor|naik)\b/gi;
 const LEFTOVER = /m\.[a-z0-9_]+\(\)|\$\{/;
 // Kata fungsi Inggris yang TIDAK muncul wajar di halaman Indonesia. Istilah kasus
 // (hub, COD, P&L, Cost-Waterfall, Direct Operation, dll.) sengaja tidak termasuk.

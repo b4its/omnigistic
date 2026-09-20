@@ -142,7 +142,7 @@
         class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px active:translate-y-0 disabled:opacity-60"
       >
         {#if loading}<Icon name="dots" cls="h-4 w-4 animate-pulse" weight="bold" />{:else}<Icon name="search" cls="h-4 w-4" weight="bold" />{/if}
-        Analisis
+        {m.ad4t1()}
       </button>
     </div>
     <div class="mt-3 flex flex-wrap gap-2">
@@ -178,7 +178,7 @@
         </span>
         <div class="min-w-0">
           <p class="text-sm font-semibold">{m.da11()}</p>
-          <p class="text-xs text-muted-foreground">{analyzing ? "Menganalisis 3 kandidat alamat…" : "Analisis selesai · kandidat terskor"}</p>
+          <p class="text-xs text-muted-foreground">{analyzing ? m.ad4t2() : m.ad4t3()}</p>
         </div>
         {#if analyzing}
           <span class="ml-auto flex items-center gap-1.5 text-[13.5px] font-semibold text-primary">

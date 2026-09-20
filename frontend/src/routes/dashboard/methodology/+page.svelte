@@ -16,9 +16,9 @@
   ];
   // Fallback bila backend offline (nilai identik dgn data-kas.json).
   const rootsFallback: Root[] = [
-    { n: "1", name: "Ekspansi tak selaras", theory: THEORY[0], solution: m.mt2t1(), kpi: "Timur ≥55% (24 bulan)" },
+    { n: "1", name: "Ekspansi tak selaras", theory: THEORY[0], solution: m.mt2t1(), kpi: m.mt4t1() },
     { n: "2", name: m.mt2t2(), theory: THEORY[1], solution: m.mt2t3(), kpi: "MAPE <10%; eksposur <20%/platform" },
-    { n: "3", name: m.mt2t4(), theory: THEORY[2], solution: "Predictive COD + clustering rute + PUDO + rekonsiliasi digital", kpi: m.mt2t5() },
+    { n: "3", name: m.mt2t4(), theory: THEORY[2], solution: m.mt4t2(), kpi: m.mt2t5() },
     { n: "4", name: m.mt2t6(), theory: THEORY[3], solution: "Address Intelligence + Control Tower + modal shift", kpi: m.mt2t7() },
     { n: "5", name: m.mt2t8(), theory: THEORY[4], solution: "Nigi Academy + tim data internal + Digital Twin", kpi: "100% manajer tersertifikasi" },
     { n: "6", name: "Keberlanjutan sebagai pembelian, bukan desain sistem", theory: THEORY[5], solution: m.mt2t9(), kpi: m.mt2t10() }
@@ -65,7 +65,7 @@
     { step: "Collect", problem: m.me2t1(), solution: "Address Intelligence · geotag wajib" },
     { step: "Sort", problem: m.mt2t11(), solution: m.mt2t12() },
     { step: "Transport", problem: m.me2t2(), solution: "Modal shift · Control Tower · load balancing" },
-    { step: "Deliver", problem: "COD 138 menit · tunggu 10-20 menit · human error kas", solution: m.me2t3() }
+    { step: "Deliver", problem: m.mt4t3(), solution: m.me2t3() }
   ];
 </script>
 
@@ -154,10 +154,10 @@
         <p class="font-medium">{m.me19()}</p>
         <p class="mt-1 text-muted-foreground">{audit.demand.reconciliation.note}</p>
         <p class="mt-2 text-muted-foreground">
-          {m.me20()} <span class="text-foreground">dokumen {fmt(audit.demand.reconciliation.totalM.document)} jt</span> =
-          <span class="text-foreground">hitung {fmt(audit.demand.reconciliation.totalM.computed)} jt</span> {m.me21()} <span class="text-foreground">dokumen {fmt(audit.demand.reconciliation.ecommerceM.document)} jt</span> {m.me22()}
-          <span class="text-foreground">hitung {fmt(audit.demand.reconciliation.ecommerceM.computed)} jt</span>
-          (selisih {fmt(audit.demand.reconciliation.ecommerceM.delta)} jt).
+          {m.me20()} <span class="text-foreground">{m.me4t1({ v: fmt(audit.demand.reconciliation.totalM.document) })}</span> =
+          <span class="text-foreground">{m.me4t2({ v: fmt(audit.demand.reconciliation.totalM.computed) })}</span> {m.me21()} <span class="text-foreground">{m.me4t1({ v: fmt(audit.demand.reconciliation.ecommerceM.document) })}</span> {m.me22()}
+          <span class="text-foreground">{m.me4t2({ v: fmt(audit.demand.reconciliation.ecommerceM.computed) })}</span>
+          {m.me4t3({ v: fmt(audit.demand.reconciliation.ecommerceM.delta) })}
         </p>
       </div>
 

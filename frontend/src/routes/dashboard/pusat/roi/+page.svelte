@@ -27,9 +27,9 @@
   const INFRA_T = 5; // infrastruktur charging (asumsi tim, tetap)
 
   const scenarios = $derived([
-    { name: "Konservatif", tag: "Asumsi tim", codShiftPct: 0.3, codSavedPct: 0.18, forecastMapePct: 9, evUnits: 50, evFuelSavingPct: 0.12, addressComplaintCut: 0.15 },
-    { name: "Dasar", tag: "Asumsi tim", codShiftPct: 0.5, codSavedPct: 0.28, forecastMapePct: 8, evUnits: 120, evFuelSavingPct: 0.2, addressComplaintCut: 0.25 },
-    { name: "Optimis", tag: "Asumsi tim", codShiftPct: 0.65, codSavedPct: 0.34, forecastMapePct: 7, evUnits: 200, evFuelSavingPct: 0.28, addressComplaintCut: 0.35 }
+    { name: "Konservatif", tag: m.ro4t5(), codShiftPct: 0.3, codSavedPct: 0.18, forecastMapePct: 9, evUnits: 50, evFuelSavingPct: 0.12, addressComplaintCut: 0.15 },
+    { name: "Dasar", tag: m.ro4t5(), codShiftPct: 0.5, codSavedPct: 0.28, forecastMapePct: 8, evUnits: 120, evFuelSavingPct: 0.2, addressComplaintCut: 0.25 },
+    { name: "Optimis", tag: m.ro4t5(), codShiftPct: 0.65, codSavedPct: 0.34, forecastMapePct: 7, evUnits: 200, evFuelSavingPct: 0.28, addressComplaintCut: 0.35 }
   ]);
 
   // Pool penghematan dari angka kasus (Table 3).
@@ -60,7 +60,7 @@
   const custom = $derived.by(() => {
     const s = {
       name: "Kustom (interaktif)",
-      tag: "Asumsi tim",
+      tag: m.ro4t5(),
       codShiftPct: cCodSavedPct / 100,
       codSavedPct: cCodSavedPct / 100,
       forecastMapePct: 0,
@@ -89,7 +89,7 @@
   {/if}
 
   <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm">
-    <span class="font-medium">{m.ro06()}</span> Fulfilment expense 2023 Rp{numId(fulfilment2023, 1)} triliun · Shipping expense 2023 Rp{numId(shipping2023, 1)} {m.ro3f1()}
+    <span class="font-medium">{m.ro06()}</span> {m.ro4t6({ f: numId(fulfilment2023, 1), u: m.ro4t2() })} · Shipping expense 2023 Rp{numId(shipping2023, 1)} {m.ro3f1()}
   </div>
 
   <!-- Kustom interaktif -->
@@ -116,7 +116,7 @@
       </label>
       <label class="block">
         <span class="flex items-center justify-between text-xs font-medium text-muted-foreground"><span>{m.ro12()}</span><span class="kpi-value text-foreground">{cFuelSavingPct}%</span></span>
-        <input type="range" min="0" max="40" step="1" bind:value={cFuelSavingPct} aria-label="Hemat BBM persen" class="mt-2 w-full accent-[var(--color-primary)]" />
+        <input type="range" min="0" max="40" step="1" bind:value={cFuelSavingPct} aria-label={m.ro4t4()} class="mt-2 w-full accent-[var(--color-primary)]" />
       </label>
       <label class="block">
         <span class="flex items-center justify-between text-xs font-medium text-muted-foreground"><span>{m.ro13()}</span><span class="kpi-value text-foreground">{cAddressCut}%</span></span>
@@ -124,8 +124,8 @@
       </label>
     </div>
     <div class="mt-4 grid gap-3 sm:grid-cols-4">
-      <div class="rounded-xl bg-card/70 p-3"><p class="text-xs text-muted-foreground">{m.ro14()}</p><p class="kpi-value text-lg text-success-foreground">Rp{numId(custom.totalSave, 2)} triliun</p></div>
-      <div class="rounded-xl bg-card/70 p-3"><p class="text-xs text-muted-foreground">{m.ro15()}</p><p class="kpi-value text-lg">Rp{numId(custom.capexT, 2)} triliun</p></div>
+      <div class="rounded-xl bg-card/70 p-3"><p class="text-xs text-muted-foreground">{m.ro14()}</p><p class="kpi-value text-lg text-success-foreground">Rp{numId(custom.totalSave, 2)} {m.ro4t2()}</p></div>
+      <div class="rounded-xl bg-card/70 p-3"><p class="text-xs text-muted-foreground">{m.ro15()}</p><p class="kpi-value text-lg">Rp{numId(custom.capexT, 2)} {m.ro4t2()}</p></div>
       <div class="rounded-xl bg-card/70 p-3"><p class="text-xs text-muted-foreground">{m.ro16()}</p><p class="kpi-value text-lg">{numId(custom.payback, 1)} thn</p></div>
       <div class="rounded-xl bg-card/70 p-3"><p class="text-xs text-muted-foreground">{m.ro17()}</p><p class="kpi-value text-lg text-primary">{numId(custom.roiYr, 1)}x</p></div>
     </div>
@@ -141,10 +141,10 @@
         <div class="mt-4 space-y-2 text-sm">
           <div class="flex justify-between"><span class="text-muted-foreground">{m.ro18()}</span><span class="kpi-value">{numId(s.codShiftPct * 100, 0)}%</span></div>
           <div class="flex justify-between"><span class="text-muted-foreground">{m.ro19()}</span><span class="kpi-value text-primary">Rp{numId(s.codSave, 1)} {m.ro3f2()}</span></div>
-          <div class="flex justify-between"><span class="text-muted-foreground">Hemat BBM (EV {s.evUnits} unit)</span><span class="kpi-value">Rp{numId(s.fuelSave, 1)} {m.ro3f2()}</span></div>
+          <div class="flex justify-between"><span class="text-muted-foreground">{m.ro4t3({ n: s.evUnits })}</span><span class="kpi-value">Rp{numId(s.fuelSave, 1)} {m.ro3f2()}</span></div>
           <div class="flex justify-between"><span class="text-muted-foreground">{m.ro20()}</span><span class="kpi-value">Rp{numId(s.compSave, 1)} {m.ro3f2()}</span></div>
-          <div class="flex justify-between border-t border-border pt-2"><span class="font-medium">{m.ro21()}</span><span class="kpi-value text-success-foreground">Rp{numId(s.totalSave, 1)} triliun</span></div>
-          <div class="flex justify-between border-t border-border pt-2"><span class="font-medium">Capex (EV {s.evUnits} {m.ro3f3()}</span><span class="kpi-value">Rp{numId(s.capexT, 2)} triliun</span></div>
+          <div class="flex justify-between border-t border-border pt-2"><span class="font-medium">{m.ro21()}</span><span class="kpi-value text-success-foreground">Rp{numId(s.totalSave, 1)} {m.ro4t2()}</span></div>
+          <div class="flex justify-between border-t border-border pt-2"><span class="font-medium">Capex (EV {s.evUnits} {m.ro3f3()}</span><span class="kpi-value">Rp{numId(s.capexT, 2)} {m.ro4t2()}</span></div>
           <div class="flex justify-between"><span class="font-medium">{m.ro22()}</span><span class="kpi-value">{numId(s.payback, 1)} thn</span></div>
           <div class="flex justify-between"><span class="font-medium">{m.ro23()}</span><span class="kpi-value text-primary">{numId(s.roiYr, 1)}x</span></div>
         </div>

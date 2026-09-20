@@ -49,7 +49,7 @@
     if (userTriggered) notify({ message: m.ci2t2(), type: "info", title: "COD Intelligence" });
     try {
       scenarios = await api.codIntelScenarios();
-      res = scenarios["Tanpa intervensi (baseline)"] ?? Object.values(scenarios)[0] ?? null;
+      res = Object.values(scenarios)[0] ?? null;
       plan = await api.codPlan();
       if (userTriggered) notify({ message: m.ci2t3(), type: "success", title: "COD Intelligence" });
     } catch {
@@ -100,12 +100,12 @@
       <div class="rounded-2xl border border-border bg-card p-4">
         <p class="text-xs text-muted-foreground">{m.ci04()}</p>
         <p class="kpi-value text-xl">{res.caseFigures.nonCod.durationMin} menit</p>
-        <p class="text-xs text-muted-foreground">{res.caseFigures.nonCod.packages} paket · {res.caseFigures.nonCod.distanceKm} km</p>
+        <p class="text-xs text-muted-foreground">{m.ci4t2({ n: res.caseFigures.nonCod.packages, km: res.caseFigures.nonCod.distanceKm })}</p>
       </div>
       <div class="rounded-2xl border border-border bg-card p-4">
         <p class="text-xs text-muted-foreground">{m.ci05()}</p>
         <p class="kpi-value text-xl text-destructive-foreground">{res.caseFigures.cod.durationMin} menit</p>
-        <p class="text-xs text-muted-foreground">+{Math.round((res.caseFigures.cod.durationMin / res.caseFigures.nonCod.durationMin - 1) * 100)}% lebih lambat</p>
+        <p class="text-xs text-muted-foreground">{m.ci4t3({ pct: Math.round((res.caseFigures.cod.durationMin / res.caseFigures.nonCod.durationMin - 1) * 100) })}</p>
       </div>
       <div class="rounded-2xl border border-border bg-card p-4">
         <p class="text-xs text-muted-foreground">{m.ci06()}</p>
@@ -250,9 +250,9 @@
           <tbody>
             {#each Object.entries(scenarios) as [name, s] (name)}
               <tr class="border-b last:border-0">
-                <td class="px-3 py-2">{name}</td>
-                <td class="px-3 py-2 text-right tabular-nums">{fmt(s.optimized.shiftDurationMin)} menit</td>
-                <td class="px-3 py-2 text-right tabular-nums text-primary">{s.impact.minutesSavedPerShift > 0 ? "+" : ""}{fmt(s.impact.minutesSavedPerShift)} menit</td>
+                <td class="px-3 py-2">{s.label ?? name}</td>
+                <td class="px-3 py-2 text-right tabular-nums">{fmt(s.optimized.shiftDurationMin)} {m.ci4t4()}</td>
+                <td class="px-3 py-2 text-right tabular-nums text-primary">{s.impact.minutesSavedPerShift > 0 ? "+" : ""}{fmt(s.impact.minutesSavedPerShift)} {m.ci4t4()}</td>
                 <td class="px-3 py-2 text-right tabular-nums">+{fmt(s.impact.extraPackagesPerShift)}</td>
                 <td class="px-3 py-2 text-right tabular-nums">+{fmt(s.impact.extraCapacityPct)}%</td>
               </tr>

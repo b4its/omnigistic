@@ -270,6 +270,8 @@ export interface OptimizeResult {
 
 /* ── COD Decision Intelligence ───────────────────────────────────────────── */
 export interface CodIntelResult {
+  /** Nama skenario dari backend; kunci dict tidak diterjemahkan oleh i18n. */
+  label?: string;
   engine: string;
   note: string;
   caseFigures: {
@@ -744,6 +746,46 @@ export interface EvBcaProgramCashflow {
   npvIdr: number;
   finalDeployedUnits: number;
 }
+/** BCA armada listrik sesuai dokumen analisis (Tantangan 4). */
+export interface EvBcaDocResult {
+  engine: string;
+  source: string;
+  note: string;
+  coverage: string;
+  modelA: {
+    label: string;
+    units: number;
+    assumptions: Record<string, number | string>;
+    derivation: { step: number; label: string; value: number; unit: string }[];
+    netAnnualSavingByTariffIdr: Record<string, number>;
+    year0CashIdr: number;
+    npvByTariffIdr: Record<string, number>;
+    tco5yIdr: { ice: number; ev: number };
+    bcr: number;
+    co2ReductionTonsYear: number;
+    co2KgPerKm: { ice: number; ev: number };
+    payback: { valueYears: number; note: string };
+  };
+  modelB: {
+    label: string;
+    classes: {
+      class: string; units: number; ice: string; ev: string; mode: string;
+      effectiveKmPerL: number; energyCostIceIdrPerKm: number; energyCostEvIdrPerKm: number;
+      energySavingIdr: number; maintenanceSavingIdr: number; pkbSavingIdr: number;
+      capexSavingIdr: number; bbnkbSavingIdr: number; co2ReductionTonsYear: number;
+    }[];
+    totals: { units: number; energySavingIdr: number; maintenanceSavingIdr: number; pkbSavingIdr: number; capexSavingIdr: number; bbnkbSavingIdr: number; co2ReductionTonsYear: number };
+    kpi: { netAnnualSavingIdr: number; netAnnualSavingPrudentIdr: number; year0CashIdr: number; bcr: number; roi5yPct: number; npvIdr: number; tcoRatio: number; co2ReductionTonsYear: number };
+    note: string;
+  };
+  breakEven: {
+    modelA: { swapTariffEnergyEqualIdrPerKm: number; swapTariffEnergyEqualMultiple: number; swapTariffNetZeroIdrPerKm: number; pertamaxWhenEqualSwap175IdrPerL: number };
+    modelB: { class: string; energyEqual: string; netZero: string }[];
+    note: string;
+  };
+  roadmap: { phases: { phase: number; label: string; period: string; content: string; condition: string }[]; scaleGates: string[]; note: string };
+}
+
 export interface EvBcaResult {
   engine: string;
   note: string;
@@ -1094,6 +1136,7 @@ export const api = {
   costLevers: () => get<CostLeverResult>("/ml/modalshift/levers"),
   surge: (body?: { peak_multiplier?: number; surge_capacity_factor?: number; allow_spillover?: boolean }) =>
     body ? post<SurgeResult>("/ml/sim/surge", body) : get<SurgeResult>("/ml/sim/surge"),
+  evBcaDoc: () => get<EvBcaDocResult>("/ml/ev-bca/doc"),
   evBca: (body?: {
     units?: number;
     pertamax_override?: number;

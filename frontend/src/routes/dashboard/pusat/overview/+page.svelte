@@ -47,8 +47,8 @@
           const fulfilG = numId(pct(latest.fulfilmentT, first.fulfilmentT), 1);
           const ratio = latest.netSalesT ? ((latest.fulfilmentT + latest.shippingT) / latest.netSalesT) * 100 : 0;
           return [
-            { label: "Net Sales", value: `Rp${latest.netSalesT} triliun`, sub: `+${salesG}% vs 2020`, spark: fin.map((f) => f.netSalesT) },
-            { label: "Fulfilment Expense", value: `Rp${latest.fulfilmentT} triliun`, sub: `+${fulfilG}% vs 2020`, accent: "var(--color-destructive-foreground)", spark: fin.map((f) => f.fulfilmentT) },
+            { label: "Net Sales", value: `Rp${latest.netSalesT} ${m.ro4t2()}`, sub: `+${salesG}% vs 2020`, spark: fin.map((f) => f.netSalesT) },
+            { label: "Fulfilment Expense", value: `Rp${latest.fulfilmentT} ${m.ro4t2()}`, sub: `+${fulfilG}% vs 2020`, accent: "var(--color-destructive-foreground)", spark: fin.map((f) => f.fulfilmentT) },
             { label: "Cost-to-Sales", value: `${numId(ratio, 1)}%`, sub: "fulfilment+shipping / sales" },
             // Angka kasus (bukan turunan JSON) → label sumber agar tak tampak "live".
             { label: "Market Share", value: "20,6%", sub: m.po2t1() }

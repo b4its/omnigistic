@@ -162,7 +162,7 @@
       <p class="truncate font-heading text-lg font-semibold tracking-tight text-foreground sm:text-xl">{meta.name} · <span class="text-muted-foreground">{meta.sub}</span></p>
       <p class="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
         <span class={"inline-block h-1.5 w-1.5 rounded-full " + ($online ? "bg-success-foreground animate-pulse" : "bg-warning-foreground")}></span>
-        <span class="truncate">{$online ? "Data studi kasus ISCEA 2026 · langsung" : "Data lokal (backend offline)"}</span>
+        <span class="truncate">{$online ? m.ax34() : m.ax35()}</span>
       </p>
     </div>
 

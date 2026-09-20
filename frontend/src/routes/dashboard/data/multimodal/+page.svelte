@@ -183,10 +183,10 @@
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p class="text-base font-semibold">{m.mm15()}</p>
-              <p class="text-[13.5px] text-muted-foreground">{m.mm3f1()} {levers.basisYear}: {levers.totalCostT} triliun IDR.</p>
+              <p class="text-[13.5px] text-muted-foreground">{m.mm3f1()} {levers.basisYear}: {levers.totalCostT} {m.ro4t2()} IDR.</p>
             </div>
             <div class="text-right">
-              <p class="text-2xl font-bold tabular-nums text-primary">{levers.summary.totalSavingIdrT} triliun</p>
+              <p class="text-2xl font-bold tabular-nums text-primary">{levers.summary.totalSavingIdrT} {m.ro4t2()}</p>
               <p class="text-xs text-muted-foreground">≈ {levers.summary.savingPctOfCost}{m.mm3f2()}</p>
             </div>
           </div>
@@ -208,7 +208,7 @@
               </div>
               <p class="mt-1 text-[13.5px] text-muted-foreground">{l.mechanism}</p>
               <div class="mt-2 flex flex-wrap gap-3 text-[12px] text-muted-foreground">
-                <span>{m.mm17()} <span class="font-medium text-foreground">Rp{l.costImpactIdrT} triliun</span></span>
+                <span>{m.mm17()} <span class="font-medium text-foreground">Rp{l.costImpactIdrT} {m.ro4t2()}</span></span>
                 <span>{m.mm18()} <span class="font-medium text-[color:var(--color-chart-3)]">−{l.co2Pct}%</span></span>
               </div>
               <p class="mt-2 text-[12px] italic text-muted-foreground">{l.evidence}</p>

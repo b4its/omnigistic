@@ -1,7 +1,7 @@
 <script lang="ts">
   import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
-  import { api, type EvBcaResult, type EvBcaScenario } from "$lib/api";
+  import { api, type EvBcaDocResult, type EvBcaResult, type EvBcaScenario } from "$lib/api";
   import { notify } from "$lib/toast";
   import Icon from "$lib/components/Icon.svelte";
   import PageState from "$lib/components/PageState.svelte";
@@ -25,7 +25,9 @@
   let icePrice = $state<number | null>(null); // IDR/unit
   let scenarioKey = $state<"conservative" | "base" | "upside">("base");
   let view = $state<"replacement" | "incremental">("replacement");
-  let tab = $state<"kpi" | "cashflow" | "roadmap" | "advanced">("kpi");
+  let tab = $state<"kpi" | "cashflow" | "roadmap" | "doc" | "advanced">("kpi");
+  // BCA versi dokumen analisis (Tantangan 4): Model A, Model B, roadmap 5 fase.
+  let docRes = $state<EvBcaDocResult | null>(null);
   // Eskalasi harga tahunan (%) & kontrol Monte Carlo.
   let fuelGrowth = $state(0); // %/th
   let elecGrowth = $state(0); // %/th
@@ -56,6 +58,11 @@
       res = null;
       failed = true;
       if (userTriggered) notify({ message: m.eb2t2(), type: "error", title: "EV BCA" });
+    }
+    try {
+      docRes = await api.evBcaDoc();
+    } catch {
+      docRes = null;
     }
     loaded = true;
   }
@@ -152,7 +159,7 @@
                 markLines: [{ y: 0 }]
               },
               {
-                name: "NPV fleet tambahan",
+                name: m.eb4t1(),
                 data: u.incrementalRows.map((r) => [r.distanceKmPerUnitDay, r.npvIdr] as [number, number]),
                 color: "var(--color-chart-3)",
                 smooth: true,
@@ -175,7 +182,7 @@
           ["Konservatif", "Base", "Upside"],
           [
             {
-              name: "CO₂ turun (t/th)",
+              name: m.eb4t2(),
               data: (["conservative", "base", "upside"] as const).map((k) => res!.scenarios[k].co2.reductionTonsYear),
               color: "var(--color-success, #16a34a)"
             }
@@ -209,7 +216,7 @@
           res.tornadoSensitivity.rows.map((r) => r.lever),
           [
             {
-              name: "Ayunan NPV (Rp M)",
+              name: m.eb4t3(),
               data: res.tornadoSensitivity.rows.map((r) => Math.round(r.swingIdr / 1e6)),
               color: "var(--bitcoin)"
             }
@@ -245,10 +252,10 @@
 
   const PRESETS = [
     { label: m.eb2t6(), u: 200, p: null, m: false, dr: 10, t: null, b: null, ev: null, ice: null },
-    { label: "Skala 500 unit", u: 500, p: null, m: false, dr: 10, t: null, b: null, ev: null, ice: null },
-    { label: "Pertamax premium Rp18.000", u: 200, p: 18000, m: false, dr: 10, t: null, b: null, ev: null, ice: null },
-    { label: "Listrik naik Rp2.000/kWh", u: 200, p: null, m: false, dr: 10, t: 2000, b: null, ev: null, ice: null },
-    { label: "Tanpa sewa baterai (beli)", u: 200, p: null, m: false, dr: 10, t: null, b: 0, ev: null, ice: null },
+    { label: m.eb4t4(), u: 500, p: null, m: false, dr: 10, t: null, b: null, ev: null, ice: null },
+    { label: m.eb4t35(), u: 200, p: 18000, m: false, dr: 10, t: null, b: null, ev: null, ice: null },
+    { label: m.eb4t36(), u: 200, p: null, m: false, dr: 10, t: 2000, b: null, ev: null, ice: null },
+    { label: m.eb4t37(), u: 200, p: null, m: false, dr: 10, t: null, b: 0, ev: null, ice: null },
     { label: "Diskon 15% + maintenance", u: 200, p: null, m: true, dr: 15, t: null, b: null, ev: null, ice: null }
   ];
 
@@ -284,8 +291,8 @@
   // Preset laju eskalasi harga (fraksi → dikonversi ke % di kontrol).
   const GROWTH_PRESETS = [
     { label: "Datar (0%/th)", f: 0, e: 0, b: 0 },
-    { label: "Moderat (BBM+3% · listrik+2%)", f: 3, e: 2, b: 0 },
-    { label: "Agresif (BBM+6% · listrik+3%)", f: 6, e: 3, b: 1 }
+    { label: m.eb4t5(), f: 3, e: 2, b: 0 },
+    { label: m.eb4t6(), f: 6, e: 3, b: 1 }
   ];
   function applyGrowth(p: (typeof GROWTH_PRESETS)[number]) {
     fuelGrowth = p.f;
@@ -371,7 +378,7 @@
           <input type="range" min="0" max="3000" step="50" value={tariff ?? 0} oninput={(e) => (tariff = (e.currentTarget as HTMLInputElement).valueAsNumber === 0 ? null : (e.currentTarget as HTMLInputElement).valueAsNumber)} aria-label="Tarif listrik" class="mt-2 w-full accent-[var(--bitcoin)]" />
         </label>
         <label class="block">
-          <span class="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground"><span>{m.eb28()}</span><span class="kpi-value text-foreground">{batteryLease == null ? "Rp1,5 juta" : idr(batteryLease)}</span></span>
+          <span class="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground"><span>{m.eb28()}</span><span class="kpi-value text-foreground">{batteryLease == null ? m.eb4t7() : idr(batteryLease)}</span></span>
           <input type="range" min="0" max="3000000" step="100000" value={batteryLease ?? 0} oninput={(e) => (batteryLease = (e.currentTarget as HTMLInputElement).valueAsNumber === 0 ? null : (e.currentTarget as HTMLInputElement).valueAsNumber)} aria-label="Sewa baterai" class="mt-2 w-full accent-[var(--bitcoin)]" />
         </label>
         <label class="block">
@@ -453,18 +460,18 @@
         <div class="rounded-2xl border border-border bg-card p-4">
           <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{m.eb42()}</p>
           <p class="kpi-value mt-2 font-heading text-2xl">{numId(scen.kpi.bcrSimple, 2)}× <span class="text-sm text-muted-foreground">· {numId(scen.kpi.bcrDiscounted, 2)}×</span></p>
-          <p class="mt-1 text-xs text-muted-foreground">ROI 5-th {numId(scen.kpi.roi5yPct, 0)}%</p>
+          <p class="mt-1 text-xs text-muted-foreground">{m.eb4t14({ pct: numId(scen.kpi.roi5yPct, 0) })}</p>
         </div>
         <div class="rounded-2xl border border-border bg-card p-4">
           <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{m.eb43()}</p>
-          <p class="kpi-value mt-2 font-heading text-2xl">{scen.kpi.paybackYears == null ? "—" : numId(scen.kpi.paybackMonths ?? 0, 2) + " bln"}</p>
-          <p class="mt-1 text-xs text-muted-foreground">CO₂ turun {numId(scen.co2.reductionTonsYear, 1)} t/th · 5-th {numId(scen.co2.reductionTons5y, 0)} t</p>
+          <p class="kpi-value mt-2 font-heading text-2xl">{scen.kpi.paybackYears == null ? "—" : m.eb4t16({ v: numId(scen.kpi.paybackMonths ?? 0, 2) })}</p>
+          <p class="mt-1 text-xs text-muted-foreground">{m.eb4t15({ t: numId(scen.co2.reductionTonsYear, 1), t5: numId(scen.co2.reductionTons5y, 0) })}</p>
         </div>
       </div>
 
       <!-- Tab: KPI / Arus kas / Roadmap / Simulasi lanjut -->
       <div class="inline-flex flex-wrap rounded-full border border-border bg-card p-1">
-        {#each ([["kpi", "Analisis KPI"], ["cashflow", "Arus Kas"], ["roadmap", "Roadmap Rollout"], ["advanced", m.eb2t8()]] as const) as [k, label] (k)}
+        {#each ([["kpi", m.eb4t8()], ["cashflow", m.eb4t9()], ["roadmap", m.eb4t10()], ["doc", m.eb4t17()], ["advanced", m.eb2t8()]] as const) as [k, label] (k)}
           <button type="button" onclick={() => (tab = k)} class="rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors {tab === k ? 'bg-[var(--bitcoin)] text-[var(--primary-foreground)]' : 'text-muted-foreground hover:text-foreground'}">{label}</button>
         {/each}
       </div>
@@ -607,7 +614,7 @@
         <div class="grid gap-6 lg:grid-cols-2">
           <div class="rounded-2xl border border-border bg-card p-5">
             <p class="mb-3 text-sm font-medium">Arus kas kumulatif — {scen.label} ({view === "replacement" ? "replacement" : "fleet tambahan"})</p>
-            {#if cashflowChart}<EChart option={cashflowChart} height={300} label="Arus kas kumulatif" />{/if}
+            {#if cashflowChart}<EChart option={cashflowChart} height={300} label={m.eb4t11()} />{/if}
           </div>
           <div class="overflow-x-auto rounded-2xl border border-border bg-card">
             <table class="w-full text-sm">
@@ -655,8 +662,8 @@
           {#each res.roadmap.phases as p (p.phase)}
             <div class="rounded-2xl border border-border bg-card p-5">
               <div class="flex items-center justify-between">
-                <p class="font-heading text-lg font-semibold">Fase {p.phase} · {p.label}</p>
-                <span class="font-mono text-[11px] text-muted-foreground">bln {p.monthFrom}–{p.monthTo}</span>
+                <p class="font-heading text-lg font-semibold">{m.eb4t32({ n: p.phase, label: p.label })}</p>
+                <span class="font-mono text-[11px] text-muted-foreground">{m.eb4t33({ a: p.monthFrom, b: p.monthTo })}</span>
               </div>
               <p class="mt-3 kpi-value font-heading text-2xl">{numId(p.cumulativeUnits, 0)}<span class="text-sm text-muted-foreground"> {m.eb106()}</span></p>
               <p class="text-xs text-muted-foreground">{numId(p.cumulativeUnitsPctOfMotor, 1)}% basis motor · +{numId(p.addedUnits, 0)} {m.eb3f11()}</p>
@@ -673,6 +680,111 @@
         <div class="rounded-xl border-l-4 border-[var(--bitcoin)] bg-muted/30 p-4 text-sm">
           <span class="font-medium">{m.eb111()}</span> {m.eb112()}
         </div>
+      {:else if tab === "doc"}
+        <!-- ===== BCA dokumen analisis: Model A, Model B, titik kritis, roadmap ===== -->
+        {#if docRes}
+          <div class="rounded-2xl border-l-4 border-[var(--bitcoin)] bg-muted/30 p-4 text-sm">
+            <span class="font-medium">{docRes.engine}</span> · {docRes.note}
+          </div>
+
+          <!-- Model A -->
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <p class="text-sm font-semibold">{m.eb4t20()} · {docRes.modelA.units} {m.eb4t34()}</p>
+            <div class="mt-3 grid gap-3 sm:grid-cols-3">
+              <div class="rounded-xl bg-muted/50 p-3">
+                <p class="text-[11px] uppercase tracking-wider text-muted-foreground">{m.eb4t22()} (Rp175/km)</p>
+                <p class="kpi-value text-lg text-success-foreground">{idr(docRes.modelA.netAnnualSavingByTariffIdr.optimistic)}</p>
+              </div>
+              <div class="rounded-xl bg-muted/50 p-3">
+                <p class="text-[11px] uppercase tracking-wider text-muted-foreground">{m.eb4t23()}</p>
+                <p class="kpi-value text-lg">{idr(docRes.modelA.year0CashIdr)}</p>
+              </div>
+              <div class="rounded-xl bg-muted/50 p-3">
+                <p class="text-[11px] uppercase tracking-wider text-muted-foreground">BCR · CO₂</p>
+                <p class="kpi-value text-lg">{numId(docRes.modelA.bcr, 2)}× · {numId(docRes.modelA.co2ReductionTonsYear, 0)} t</p>
+              </div>
+            </div>
+            <p class="mt-4 text-xs font-medium">{m.eb4t24()}</p>
+            <table class="mt-2 w-full text-xs">
+              <thead class="text-muted-foreground">
+                <tr><th class="text-left">—</th><th class="text-right">Rp175/km</th><th class="text-right">Rp200/km</th><th class="text-right">Rp222/km</th></tr>
+              </thead>
+              <tbody class="kpi-value">
+                <tr><td class="text-muted-foreground">NPV</td><td class="text-right">{idr(docRes.modelA.npvByTariffIdr.optimistic)}</td><td class="text-right">{idr(docRes.modelA.npvByTariffIdr.market)}</td><td class="text-right">{idr(docRes.modelA.npvByTariffIdr.upper)}</td></tr>
+                <tr><td class="text-muted-foreground">{m.eb4t22()}</td><td class="text-right">{idr(docRes.modelA.netAnnualSavingByTariffIdr.optimistic)}</td><td class="text-right">{idr(docRes.modelA.netAnnualSavingByTariffIdr.market)}</td><td class="text-right">{idr(docRes.modelA.netAnnualSavingByTariffIdr.upper)}</td></tr>
+              </tbody>
+            </table>
+            <details class="mt-3">
+              <summary class="cursor-pointer text-xs text-muted-foreground">{m.eb4t18()} 1–14</summary>
+              <table class="mt-2 w-full text-xs">
+                <thead class="text-muted-foreground"><tr><th class="text-left">#</th><th class="text-left">{m.eb4t18()}</th><th class="text-right">{m.eb4t19()}</th></tr></thead>
+                <tbody>
+                  {#each docRes.modelA.derivation as d (d.step)}
+                    <tr><td class="text-muted-foreground">{d.step}</td><td>{d.label}</td><td class="text-right tabular-nums">{numId(d.value, d.unit === "Rp" ? 0 : 2)} <span class="text-muted-foreground">{d.unit}</span></td></tr>
+                  {/each}
+                </tbody>
+              </table>
+            </details>
+          </div>
+
+          <!-- Titik kritis -->
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <p class="text-sm font-semibold">{m.eb4t25()}</p>
+            <div class="mt-3 grid gap-2 text-xs sm:grid-cols-3">
+              <p class="rounded-xl bg-muted/50 p-3">swap = energi: <strong>{numId(docRes.breakEven.modelA.swapTariffEnergyEqualIdrPerKm, 2)}</strong> Rp/km</p>
+              <p class="rounded-xl bg-muted/50 p-3">swap = net nol: <strong>{numId(docRes.breakEven.modelA.swapTariffNetZeroIdrPerKm, 2)}</strong> Rp/km</p>
+              <p class="rounded-xl bg-muted/50 p-3">Pertamax setara: <strong>{numId(docRes.breakEven.modelA.pertamaxWhenEqualSwap175IdrPerL, 0)}</strong> Rp/liter</p>
+            </div>
+            <p class="mt-2 text-xs text-muted-foreground">{docRes.breakEven.note}</p>
+          </div>
+
+          <!-- Model B -->
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <p class="text-sm font-semibold">{m.eb4t21()} · {docRes.modelB.totals.units} {m.eb4t34()}</p>
+            <div class="mt-3 overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead class="text-muted-foreground">
+                  <tr><th class="text-left">{m.eb4t27()}</th><th class="text-left">{m.eb4t28()}</th><th class="text-left">{m.eb4t29()}</th><th class="text-right">{m.eb4t30()}</th><th class="text-right">CO₂</th></tr>
+                </thead>
+                <tbody>
+                  {#each docRes.modelB.classes as c (c.class)}
+                    <tr><td class="font-medium">{c.class} ({c.units})</td><td>{c.ice} → {c.ev}</td><td>{c.mode}</td><td class="text-right tabular-nums">{idr(c.energySavingIdr)}</td><td class="text-right tabular-nums">{numId(c.co2ReductionTonsYear, 1)} t</td></tr>
+                  {/each}
+                  <tr class="border-t border-border font-semibold"><td colspan="3">{m.eb4t31()}</td><td class="text-right tabular-nums">{idr(docRes.modelB.totals.energySavingIdr)}</td><td class="text-right tabular-nums">{numId(docRes.modelB.totals.co2ReductionTonsYear, 1)} t</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-3 grid gap-3 sm:grid-cols-4">
+              <div class="rounded-xl bg-muted/50 p-3"><p class="text-[11px] uppercase tracking-wider text-muted-foreground">{m.eb4t22()}</p><p class="kpi-value text-lg text-success-foreground">{idr(docRes.modelB.kpi.netAnnualSavingIdr)}</p></div>
+              <div class="rounded-xl bg-muted/50 p-3"><p class="text-[11px] uppercase tracking-wider text-muted-foreground">{m.eb4t23()}</p><p class="kpi-value text-lg">{idr(docRes.modelB.kpi.year0CashIdr)}</p></div>
+              <div class="rounded-xl bg-muted/50 p-3"><p class="text-[11px] uppercase tracking-wider text-muted-foreground">NPV · BCR</p><p class="kpi-value text-lg">{idr(docRes.modelB.kpi.npvIdr)} · {numId(docRes.modelB.kpi.bcr, 2)}×</p></div>
+              <div class="rounded-xl bg-muted/50 p-3"><p class="text-[11px] uppercase tracking-wider text-muted-foreground">ROI · TCO</p><p class="kpi-value text-lg">{numId(docRes.modelB.kpi.roi5yPct, 1)}% · {numId(docRes.modelB.kpi.tcoRatio, 2)}×</p></div>
+            </div>
+            <p class="mt-2 text-xs text-muted-foreground">{docRes.modelB.note}</p>
+          </div>
+
+          <!-- Roadmap 5 fase + syarat penskalaan -->
+          <div class="grid gap-4 lg:grid-cols-3">
+            {#each docRes.roadmap.phases as p (p.phase)}
+              <div class="rounded-2xl border border-border bg-card p-5">
+                <p class="font-heading text-lg font-semibold">{m.eb4t32({ n: p.phase, label: p.label })}</p>
+                <p class="mt-1 font-mono text-[11px] text-muted-foreground">{p.period}</p>
+                <p class="mt-2 text-xs">{p.content}</p>
+                <p class="mt-2 text-[11px] text-muted-foreground">{p.condition}</p>
+              </div>
+            {/each}
+          </div>
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <p class="text-sm font-semibold">{m.eb4t26()}</p>
+            <ul class="mt-2 grid gap-1 text-xs sm:grid-cols-2">
+              {#each docRes.roadmap.scaleGates as g (g)}<li class="rounded-md bg-muted/50 p-2">{g}</li>{/each}
+            </ul>
+            <p class="mt-2 text-xs text-muted-foreground">{docRes.roadmap.note}</p>
+          </div>
+          <div class="rounded-xl bg-muted/30 p-4 text-xs text-muted-foreground">{docRes.coverage}</div>
+        {:else}
+          <div class="rounded-xl bg-muted/30 p-4 text-xs text-muted-foreground">{m.pdxt1()}</div>
+        {/if}
       {:else}
         <!-- ===== Simulasi Lanjutan (Monte Carlo, tornado, breakeven, TCO, hub, lifecycle) ===== -->
         <div class="rounded-2xl border-l-4 border-[var(--bitcoin)] bg-muted/30 p-4 text-sm">
@@ -684,7 +796,7 @@
           <div class="rounded-2xl border border-border bg-card p-5">
             <p class="mb-1 text-sm font-medium">{m.eb115()}</p>
             <p class="mb-3 text-xs text-muted-foreground">{numId(res.monteCarlo.runs, 0)} iterasi · seed {res.monteCarlo.seed} · {res.monteCarlo.assumptionNote}</p>
-            {#if mcChart}<EChart option={mcChart} height={280} label="Distribusi NPV Monte Carlo" />{/if}
+            {#if mcChart}<EChart option={mcChart} height={280} label={m.eb4t12()} />{/if}
           </div>
           <div class="rounded-2xl border border-border bg-card p-5">
             <p class="mb-3 text-sm font-medium">{m.eb116()}</p>
@@ -837,7 +949,7 @@
           <div class="rounded-2xl border border-border bg-card p-5">
             <p class="mb-1 text-sm font-medium">{m.eb162()}</p>
             <p class="mb-3 text-xs text-muted-foreground">{res.roadmapProgramCashflow.note}</p>
-            {#if programChart}<EChart option={programChart} height={280} label="Arus kas program rollout" />{/if}
+            {#if programChart}<EChart option={programChart} height={280} label={m.eb4t13()} />{/if}
           </div>
           <div class="overflow-x-auto rounded-2xl border border-border bg-card">
             <table class="w-full text-sm">

@@ -198,17 +198,17 @@
       aria-controls="addr-legend"
       class="flex w-full items-center justify-between gap-2 px-3 py-2 font-semibold text-foreground"
     >
-      <span class="flex items-center gap-1.5"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> Legenda peta</span>
+      <span class="flex items-center gap-1.5"><Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" weight="bold" /> {m.am4t1()}</span>
       <Icon name={legendOpen ? "caret-down" : "arrow-right"} cls="h-3 w-3 shrink-0 text-muted-foreground" weight="bold" />
     </button>
     {#if legendOpen}
       <div id="addr-legend" class="max-h-[58%] space-y-2 overflow-y-auto border-t border-border px-3 py-2.5">
         <p class="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Penanda</p>
         <ul class="space-y-1.5">
-          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span> <span><b class="text-foreground">{m.am3f1()}</b> — titik asal rute</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#16a34a] bg-[#dcfce7]"></span> <span><b class="text-foreground">{m.am3f1()}</b> · {m.am4t2()}</span></li>
           <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#f7931a] bg-[#f7931a]"></span> <span><b class="text-foreground">{m.am3f2()}</b> (target benar)</span></li>
           <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#7f8c8d] bg-[#95a5a6]"></span> <span>Kandidat ambigu lain (skor rendah)</span></li>
-          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span> <span>PUDO mitra (drop/ambil alternatif)</span></li>
+          <li class="flex items-center gap-2"><span class="h-3 w-3 shrink-0 rounded-full border-2 border-[#8b5cf6] bg-[#ddd6fe]"></span> <span>{m.am4t3()}</span></li>
         </ul>
         <p class="pt-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">Garis</p>
         <ul class="space-y-1.5">

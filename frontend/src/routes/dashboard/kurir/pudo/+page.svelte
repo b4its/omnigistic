@@ -10,21 +10,21 @@
   import { notify } from "$lib/toast";
 
   const network = [
-    { label: m.pd2t1(), value: "3.200 titik", sub: "self-built + agen" },
-    { label: "Indomaret (kandidat mitra)", value: "20.000+ gerai", sub: m.pd2t2() },
-    { label: m.pd2t3(), value: "10x lipat", sub: "tanpa membangun satu outlet pun" }
+    { label: m.pd2t1(), value: m.pd4t3(), sub: m.pd4t4() },
+    { label: m.pd4t5(), value: m.pd4t6(), sub: m.pd2t2() },
+    { label: m.pd2t3(), value: m.pd4t7(), sub: m.pd4t8() }
   ];
 
   const kpi = [
     { kpi: m.pd2t4(), baseline: "138 menit", target: "≤100 menit" },
     { kpi: m.pd2t5(), baseline: m.pd2t6(), target: m.pd2t7() },
-    { kpi: m.pd2t8(), baseline: "baseline", target: "+38% tanpa rekrutmen" }
+    { kpi: m.pd2t8(), baseline: "baseline", target: m.pd4t9() }
   ];
 
   const steps = [
     { n: 1, t: "Predictive COD memberi skor", d: m.pd2t9() },
-    { n: 2, t: m.pd2t10(), d: "Penerima memilih gerai mitra terdekat via aplikasi (notifikasi tahap 3)." },
-    { n: 3, t: "Mitra ritel jadi node bayar-ambil", d: m.pd2t11() }
+    { n: 2, t: m.pd2t10(), d: m.pd4t10() },
+    { n: 3, t: m.pd4t11(), d: m.pd2t11() }
   ];
 
   /** Pesanan NYATA yang dialihkan ke PUDO (dari store bersama). */
@@ -66,10 +66,10 @@
           {m.kp204()} <span class="font-semibold" style="color:#7c3aed">{m.kp205()}</span> {m.kp206()}
         </p>
       </div>
-      <span class="rounded-full bg-muted px-3 py-1 text-[13px] font-semibold text-muted-foreground">{PUDO_POINTS.length} titik mitra</span>
+      <span class="rounded-full bg-muted px-3 py-1 text-[13px] font-semibold text-muted-foreground">{m.pd4t1({ n: PUDO_POINTS.length })}</span>
     </div>
     <DeliveryMap progress={mapProgress} city={mapCity} originLabel={HUB_LABEL} destLabel={m.pdm1({ city: mapCity })} height={380} role={m.pd2t12()} routeIntel />
-    <p class="text-[11px] text-muted-foreground">{m.pd3f1()} {mapCity} ({pudosForCity(mapCity).length} PUDO). Angka &amp; koordinat bersifat simulasi presentasi.</p>
+    <p class="text-[11px] text-muted-foreground">{m.pd3f1()} {mapCity} ({pudosForCity(mapCity).length} PUDO). {m.pd4t2()}</p>
   </section>
 
   <!-- Paket nyata untuk PUDO -->

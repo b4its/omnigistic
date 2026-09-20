@@ -69,8 +69,8 @@
   <div class="space-y-6">
     <h1 class="font-heading text-xl font-semibold tracking-tight">{m.pe01()}</h1>
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <MetricCard label="Net Sales 2023" value={latest ? `Rp${latest.netSalesT} triliun` : "-"} delta={`+${salesG}%`} deltaTone="up" sub="dibanding Rp213,64 triliun (2020)" />
-      <MetricCard label="Fulfilment Expense" value={latest ? `Rp${latest.fulfilmentT} triliun` : "-"} delta={`+${fulfilG}%`} deltaTone="warn" sub={m.ee2t1()} />
+      <MetricCard label="Net Sales 2023" value={latest ? `Rp${latest.netSalesT} ${m.ro4t2()}` : "-"} delta={`+${salesG}%`} deltaTone="up" sub={m.ee4t1({ v: numId(213.64, 2) })} />
+      <MetricCard label="Fulfilment Expense" value={latest ? `Rp${latest.fulfilmentT} ${m.ro4t2()}` : "-"} delta={`+${fulfilG}%`} deltaTone="warn" sub={m.ee2t1()} />
       <MetricCard label="Cost-to-Sales Ratio" value={`${numId(costSales, 1)}%`} delta={m.ee3t1({ sign: costSalesDeltaPt >= 0 ? "+" : "", v: numId(costSalesDeltaPt, 1) })} deltaTone={costSalesDeltaPt >= 0 ? "warn" : "up"} sub={m.ee3t2({ pct: numId(costSalesFirst, 1) })} />
       <MetricCard label={m.ex2t5()} value={busiestHub ? `${busiestHub.code} ${busiestHub.utilizationPct}%` : "-"} delta={busiestHub ? `${busiestHub.utilizationPct}%` : ""} deltaTone="warn" sub={quietestHub ? `vs ${quietestHub.name} ${quietestHub.utilizationPct}%` : ""} />
     </div>
@@ -81,7 +81,7 @@
           <div>
             <h2 class="text-sm font-semibold text-muted-foreground">{m.pe02()}</h2>
             <div class="mt-1 flex items-baseline gap-2">
-              <span class="text-2xl font-bold tracking-tight text-foreground">Rp{latest.netSalesT} triliun</span>
+              <span class="text-2xl font-bold tracking-tight text-foreground">Rp{latest.netSalesT} {m.ro4t2()}</span>
               <span class="rounded-md bg-success px-1.5 py-0.5 text-[13px] font-bold text-success-foreground">+{salesG}%</span>
             </div>
           </div>

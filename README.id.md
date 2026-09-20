@@ -215,7 +215,7 @@ omnigistic/
 │   ├── app/
 │   │   ├── main.py                # aplikasi FastAPI + Swagger di /docs
 │   │   ├── api/                   # chat, qa, insights, data, ml_routes, localized_route
-│   │   ├── ml/                    # 16 modul mesin (lihat Mesin dan model)
+│   │   ├── ml/                    # 17 modul mesin (lihat Mesin dan model)
 │   │   ├── security/              # guard, prompts (pembungkus injeksi), quota, formatter
 │   │   ├── db/                    # loader (JSON + penggabungan overlay), seed, session (Postgres opsional)
 │   │   ├── i18n.py                # translate() + localize() untuk respons API
@@ -392,6 +392,7 @@ Semua endpoint terdokumentasi dan dapat dijalankan dari Swagger di `/docs`. Seti
 | Predictive COD risk | `GET /ml/cod-risk/demo`, `POST /ml/cod-risk` | Q3 | Atribut paket (nilai, jam, ambiguitas, zona) | Data latih sintetik, ambang = asumsi tim |
 | Route intelligence | `GET\|POST /ml/route/plan` | Q2, Q3 | Jarak, override kepadatan, kecepatan dasar | Model BPR, asumsi tim |
 | EV benefit-cost analysis | `GET /ml/ev-bca` | Q4 | Skenario, jarak, eskalasi, Monte Carlo | Benchmark pasar, asumsi tim |
+| BCA dokumen (Model A dan B) | `GET /ml/ev-bca/doc` | Q4 | Hanya baca; mengunci angka dokumen analisis | Dokumen analisis Tantangan 4 |
 | Armada dan emisi | `GET /ml/metrics/fleet` | Q4 | Slider adopsi EV (frontend) | Data armada kasus |
 | ROI ekspansi | `GET\|POST /ml/expansion/roi` | Q5 | Capex per hub, target utilisasi | Table 3 dan 4, kapasitas Table 1 |
 | Waterfall biaya dan P&L | `GET /ml/pnl/waterfall` | Q6 | Toggle tuas keberlanjutan | Table 3 dan 4 |
@@ -517,6 +518,19 @@ Angka turunan dihitung di `backend/app/ml/metrics.py` dan disajikan lewat `/ml/m
 | Temuan rekonsiliasi | Baris e-commerce Table 4 berjumlah 651 juta sementara dokumen menulis 641 juta (selisih 10 juta). Hasil jumlah baris dipakai sebagai kanonik dan selisihnya dilaporkan `/ml/metrics/audit` serta halaman Methodology | Audit kasus |
 
 Angka kasus ditampilkan di antarmuka dan di [`docs/hasil-analisis-2026-09-19.md`](docs/hasil-analisis-2026-09-19.md). Asumsi tim (porsi, tarif, faktor emisi, ambang model) dilabeli sebagai asumsi di tempat kemunculannya.
+
+BCA armada listrik dari dokumen analisis (endpoint `/ml/ev-bca/doc`, tampil di halaman EV):
+
+| Angka | Model A (sederhana, 350 unit) | Model B (rinci, tiga kelas) |
+|---|---|---|
+| Net benefit per tahun | Rp2,66 miliar (acuan Rp200 per km), Rp2,40 miliar di acuan pasar, Rp2,18 miliar di batas atas | Rp3,50 miliar (prudent Rp3,27 miliar, termasuk cadangan baterai) |
+| Arus kas Tahun-0 | +Rp1,81 miliar | +Rp2,21 miliar |
+| NPV @10% (5 tahun) | Rp11,88 miliar (Rp175 per km), Rp10,91 miliar (Rp200), Rp10,06 miliar (Rp222) | Rp15,49 miliar |
+| BCR | 1,84 kali (EV sekitar 46% lebih murah dimiliki) | 3,50 kali, ROI 250,45%, TCO 2,227 kali |
+| Penurunan CO₂ | 266 ton per tahun | 291,8 ton per tahun |
+| Titik kritis | swap Rp366,92 per km, swap net-nol Rp424,45 per km, Pertamax Rp7.752 per liter | per kelas: M1 swap Rp359,68 / Rp417,21, M2 listrik Rp14.600 / Rp16.518, M3 Rp12.216 / Rp14.134 |
+
+Roadmap investasinya lima fase (pilot 350 unit, keputusan skala menuju 3.000 unit, solar rooftop, van listrik, armada berat) dengan enam syarat penskalaan, dan pilot 350 unit secara sadar dilabeli 2,8% armada.
 
 Endpoint audit yang hidup melaporkan pemeriksaan ini, semuanya lulus:
 

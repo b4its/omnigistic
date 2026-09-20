@@ -457,7 +457,7 @@
       <p class="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-[12.5px] text-foreground">
         <Icon name="warn" cls="mt-0.5 h-4 w-4 shrink-0 text-destructive-foreground" weight="bold" />
         <span>
-          <b>{stats.overload} {msg.hm3f1()}</b> {msg.hmp09()} <b>{numId(stats.deficit, 2)} {msg.hm3f2()}</b> kelebihan di atas ambang {UTIL_THRESHOLD.critical}{msg.hm3f3()}
+          <b>{stats.overload} {msg.hm3f1()}</b> {msg.hmp09()} <b>{numId(stats.deficit, 2)} {msg.hm3f2()}</b> {msg.hm4t5({ crit: UTIL_THRESHOLD.critical })}{msg.hm3f3()}
           {#if stats.n !== all.length}<span class="text-muted-foreground">{msg.hm3f4()} {stats.n} {msg.hm3f5()}</span>{/if}
         </span>
       </p>

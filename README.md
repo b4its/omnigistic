@@ -215,7 +215,7 @@ omnigistic/
 │   ├── app/
 │   │   ├── main.py                # FastAPI app + Swagger at /docs
 │   │   ├── api/                   # chat, qa, insights, data, ml_routes, localized_route
-│   │   ├── ml/                    # 16 engine modules (see Engines and models)
+│   │   ├── ml/                    # 17 engine modules (see Engines and models)
 │   │   ├── security/              # guard, prompts (prompt-injection wrap), quota, formatter
 │   │   ├── db/                    # loader (JSON + overlay merge), seed, session (optional Postgres)
 │   │   ├── i18n.py                # translate() + localize() for API responses
@@ -392,6 +392,7 @@ All endpoints are documented and runnable from Swagger at `/docs`. Every engine 
 | Predictive COD risk | `GET /ml/cod-risk/demo`, `POST /ml/cod-risk` | Q3 | Parcel attributes (value, hour, ambiguity, zone) | Synthetic training data, thresholds are team assumptions |
 | Route intelligence | `GET\|POST /ml/route/plan` | Q2, Q3 | Distance, density override, base speed | BPR delay model, team assumptions |
 | EV benefit-cost analysis | `GET /ml/ev-bca` | Q4 | Scenario, distance, escalation, Monte Carlo | Market benchmarks, BAU assumptions |
+| Document BCA (Model A and B) | `GET /ml/ev-bca/doc` | Q4 | Read-only; pins the analysis document numbers | Challenge 4 analysis document |
 | Fleet and emissions | `GET /ml/metrics/fleet` | Q4 | EV adoption slider (frontend) | Case fleet figures |
 | Expansion ROI | `GET\|POST /ml/expansion/roi` | Q5 | Capex per hub, target utilisation | Tables 3 and 4, Table 1 capacity |
 | Cost waterfall and P&L | `GET /ml/pnl/waterfall` | Q6 | Sustainability levers on or off | Tables 3 and 4 |
@@ -517,6 +518,19 @@ Derived figures are computed in `backend/app/ml/metrics.py` and exposed through 
 | Reconciliation finding | Table 4 e-commerce rows sum to 651 million while the document prints 641 million (10 million gap). The row sum is treated as canonical and the gap is reported by `/ml/metrics/audit` and on the Methodology page | Case audit |
 
 Case figures are shown in the interface and in [`docs/hasil-analisis-2026-09-19.md`](docs/hasil-analisis-2026-09-19.md). Team assumptions (shares, tariffs, emission factors, model thresholds) are labelled as assumptions wherever they appear.
+
+Electric-fleet BCA from the analysis document (endpoint `/ml/ev-bca/doc`, rendered on the EV page):
+
+| Figure | Model A (simple, 350 units) | Model B (detailed, three classes) |
+|---|---|---|
+| Net benefit per year | Rp2.66 billion (Rp200 per km reference); Rp2.40 billion at market reference; Rp2.18 billion at the upper bound | Rp3.50 billion (Rp3.27 billion prudent, battery reserve included) |
+| Year-0 cash flow | +Rp1.81 billion | +Rp2.21 billion |
+| NPV at 10% (5 years) | Rp11.88 billion (Rp175 per km), Rp10.91 billion (Rp200), Rp10.06 billion (Rp222) | Rp15.49 billion |
+| BCR | 1.84 times (EV about 46% cheaper to own) | 3.50 times, ROI 250.45%, TCO 2.227 times |
+| CO₂ reduction | 266 tonnes per year | 291.8 tonnes per year |
+| Break-even | swap Rp366.92 per km, net-zero swap Rp424.45 per km, Pertamax Rp7,752 per litre | per class: M1 swap Rp359.68 / Rp417.21, M2 electricity Rp14,600 / Rp16,518, M3 Rp12,216 / Rp14,134 |
+
+The investment roadmap is five phases (pilot 350 units, scale decision towards 3,000 units, solar rooftop, electric vans, heavy fleet) with six scaling gates, and the pilot is deliberately labelled as 2.8% of the fleet.
 
 The live audit endpoint reports these checks, all passing:
 

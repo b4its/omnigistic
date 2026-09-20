@@ -87,7 +87,7 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <h1 class="font-heading text-xl font-semibold tracking-tight">{m.df01()}</h1>
-    <span class="hub-label text-muted-foreground">DATA · motor dominan {numId(motorSharePct, 1)}%</span>
+    <span class="hub-label text-muted-foreground">{m.df4t1({ pct: numId(motorSharePct, 1) })}</span>
   </div>
 
   {#if loaded && failed}
@@ -156,7 +156,7 @@
     </div>
 
     <div class="rounded-2xl border bg-card p-5">
-      <p class="mb-3 text-sm font-medium">{m.df3f4()} {showSim && evAdoptionPct > 0 ? `(simulasi EV ${evAdoptionPct}%)` : "(motor dominan)"}</p>
+      <p class="mb-3 text-sm font-medium">{m.df3f4()} {showSim && evAdoptionPct > 0 ? m.df4t2({ pct: evAdoptionPct }) : m.df4t3()}</p>
       <EChart option={donutChart(showSim && evAdoptionPct > 0 ? simPie : pieData)} height={220} />
       {#if showSim && evAdoptionPct > 0}
         <p class="mt-3 text-xs text-muted-foreground">
@@ -177,7 +177,7 @@
     </div>
 
     <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm">
-      Motor {numId(motorSharePct, 1)}{m.df3f5()}{new Intl.NumberFormat("id-ID").format(fleet.motorcycles ?? 0)} unit). Target {fleet.evTarget ?? 200} EV ≈ {numId(((fleet.evTarget ?? 200) / (totalAll || 1)) * 100, 2)}% dari {new Intl.NumberFormat("id-ID").format(totalAll)} {m.df3f6()}
+      {m.df4t4({ share: numId(motorSharePct, 1), n: new Intl.NumberFormat("id-ID").format(fleet.motorcycles ?? 0), target: fleet.evTarget ?? 200, pct: numId(((fleet.evTarget ?? 200) / (totalAll || 1)) * 100, 2), total: new Intl.NumberFormat("id-ID").format(totalAll) })}
     </div>
   {:else}
     <PageState loading={true} skeletonCards={4} skeletonHeight={220} />

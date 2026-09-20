@@ -16,6 +16,7 @@ from app.ml.cod_intel import analyze_cod_impact, default_scenarios
 from app.ml.cod_plan import cod_plan
 from app.ml.cod_risk import demo_packages, score_package
 from app.ml.ev_bca import ev_bca
+from app.ml.ev_bca_doc import doc_bca as ev_bca_doc
 from app.ml.expansion import expansion_roi
 from app.ml.forecast import demand_actual_tiktok, forecast_next_12
 from app.ml.modalshift import cost_levers, optimize_corridors
@@ -344,6 +345,12 @@ class EvBcaBody(BaseModel):
     battery_growth: float | None = None
     monte_carlo_runs: int | None = None
     seed: int | None = None
+
+
+@router.get("/ev-bca/doc")
+def ev_bca_doc_models():
+    """BCA armada listrik sesuai dokumen analisis (Model A, Model B, roadmap)."""
+    return ev_bca_doc()
 
 
 @router.get("/ev-bca")
