@@ -17,6 +17,11 @@ import { mkdirSync } from "node:fs";
 import { launchOptions } from "./_browser.mjs";
 
 const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
+/**
+ * Prefix locale untuk uji: asersi skrip ini berbahasa Indonesia,
+ * jadi default-nya halaman /id. Set E2E_LANG=en untuk uji asap versi Inggris.
+ */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
 mkdirSync("/tmp/opencode/shots", { recursive: true });
@@ -29,7 +34,7 @@ async function openPage(path, onRequest) {
   const errs = [];
   page.on("pageerror", (e) => errs.push(String(e.message).slice(0, 120)));
   if (onRequest) page.on("request", onRequest);
-  await page.goto(BASE + path, { waitUntil: "load", timeout: 40000 });
+  await page.goto(BASE + LANG_PREFIX + path, { waitUntil: "load", timeout: 40000 });
   await page.waitForTimeout(2500);
   return { ctx, page, errs };
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import Icon from "$lib/components/Icon.svelte";
@@ -26,7 +27,7 @@
     else activeModes.delete(mode);
     if (activeModes.size === 0) {
       activeModes.add(mode); // jangan sampai kosong
-      notify({ message: "Minimal satu moda harus aktif", type: "warn", title: "Modal Shift" });
+      notify({ message: m.mm2t1(), type: "warn", title: "Modal Shift" });
       return;
     }
     void recompute();
@@ -41,7 +42,7 @@
         sla_hours: slaHours
       });
     } catch {
-      notify({ message: "Gagal menghitung ulang optimizer", type: "error", title: "Modal Shift" });
+      notify({ message: m.mm2t2(), type: "error", title: "Modal Shift" });
     }
     busy = false;
   }
@@ -63,7 +64,7 @@
       res = null;
       levers = null;
       failed = true;
-      if (userTriggered) notify({ message: "Gagal memuat optimizer", type: "error", title: "Control Tower" });
+      if (userTriggered) notify({ message: m.mm2t3(), type: "error", title: "Control Tower" });
     }
     loaded = true;
   }
@@ -92,54 +93,54 @@
 <div class="space-y-6">
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="font-heading text-xl font-semibold tracking-tight">Multimodal Control Tower</h1>
+      <h1 class="font-heading text-xl font-semibold tracking-tight">{m.mm01()}</h1>
       <p class="text-sm text-muted-foreground">
-        Optimizer modal-shift: pilih moda per koridor menurut biaya, emisi, & SLA. Menjawab Pertanyaan 6 (reduce cost + sustainability).
+        {m.mm02()}
       </p>
     </div>
-    <span class="hub-label text-muted-foreground">Interaktif</span>
+    <span class="hub-label text-muted-foreground">{m.mm03()}</span>
   </div>
 
   {#if loaded && res}
     <!-- Ringkasan -->
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <MetricCard label="Penghematan Biaya" value={`${res.summary.costSavingPct}%`} sub="vs baseline ekspres (tercepat)" accent delta={`${res.summary.costSavingPct}%`} deltaTone="up" />
-      <MetricCard label="Penghematan Emisi" value={`${res.summary.co2SavingPct}%`} sub="gram CO₂ per paket" delta={`${res.summary.co2SavingPct}%`} deltaTone="up" />
+      <MetricCard label={m.mm2t4()} value={`${res.summary.costSavingPct}%`} sub="vs baseline ekspres (tercepat)" accent delta={`${res.summary.costSavingPct}%`} deltaTone="up" />
+      <MetricCard label={m.mm2t5()} value={`${res.summary.co2SavingPct}%`} sub={m.mm2t6()} delta={`${res.summary.co2SavingPct}%`} deltaTone="up" />
       <MetricCard label="Koridor Teroptimasi" value={`${res.summary.routes}`} sub="antar-region" />
-      <MetricCard label="Biaya Optimasi" value={rp(res.summary.totalCostPerPkgIdr)} sub={`baseline ${rp(res.summary.baselineCostPerPkgIdr)}`} />
+      <MetricCard label={m.mm2t7()} value={rp(res.summary.totalCostPerPkgIdr)} sub={`baseline ${rp(res.summary.baselineCostPerPkgIdr)}`} />
     </div>
 
     <!-- Kontrol -->
     <section class="rounded-2xl border border-border bg-card p-5">
-      <p class="text-base font-semibold">Parameter optimizer</p>
-      <p class="text-[13.5px] text-muted-foreground">Tarif moda = asumsi tim (dokumen kasus tidak memuat tarif). Ubah bobot & SLA untuk menguji strategi.</p>
+      <p class="text-base font-semibold">{m.mm04()}</p>
+      <p class="text-[13.5px] text-muted-foreground">{m.mm05()}</p>
       <div class="mt-4 grid gap-5 lg:grid-cols-2">
         <div class="space-y-4">
           <label class="block">
-            <span class="flex items-center justify-between text-sm font-medium"><span>Bobot biaya</span><span class="kpi-value text-primary">{wCost}%</span></span>
-            <input type="range" min="0" max="100" step="5" value={wCost} oninput={(e) => (wCost = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label="Bobot biaya" class="mt-2 w-full accent-[var(--color-primary)]" />
+            <span class="flex items-center justify-between text-sm font-medium"><span>{m.mm06()}</span><span class="kpi-value text-primary">{wCost}%</span></span>
+            <input type="range" min="0" max="100" step="5" value={wCost} oninput={(e) => (wCost = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label={m.ax16()} class="mt-2 w-full accent-[var(--color-primary)]" />
           </label>
           <label class="block">
-            <span class="flex items-center justify-between text-sm font-medium"><span>Bobot emisi (CO₂)</span><span class="kpi-value text-primary">{wCo2}%</span></span>
-            <input type="range" min="0" max="100" step="5" value={wCo2} oninput={(e) => (wCo2 = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label="Bobot emisi" class="mt-2 w-full accent-[var(--color-primary)]" />
+            <span class="flex items-center justify-between text-sm font-medium"><span>{m.mm07()}</span><span class="kpi-value text-primary">{wCo2}%</span></span>
+            <input type="range" min="0" max="100" step="5" value={wCo2} oninput={(e) => (wCo2 = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label={m.ax17()} class="mt-2 w-full accent-[var(--color-primary)]" />
           </label>
           <label class="block">
-            <span class="flex items-center justify-between text-sm font-medium"><span>Bobot kecepatan (SLA)</span><span class="kpi-value text-primary">{wSpeed}%</span></span>
-            <input type="range" min="0" max="100" step="5" value={wSpeed} oninput={(e) => (wSpeed = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label="Bobot kecepatan" class="mt-2 w-full accent-[var(--color-primary)]" />
+            <span class="flex items-center justify-between text-sm font-medium"><span>{m.mm08()}</span><span class="kpi-value text-primary">{wSpeed}%</span></span>
+            <input type="range" min="0" max="100" step="5" value={wSpeed} oninput={(e) => (wSpeed = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label={m.ax18()} class="mt-2 w-full accent-[var(--color-primary)]" />
           </label>
           <label class="block">
-            <span class="flex items-center justify-between text-sm font-medium"><span>Batas SLA (jam)</span><span class="kpi-value text-primary">{slaHours} jam</span></span>
-            <input type="range" min="6" max="120" step="6" value={slaHours} oninput={(e) => (slaHours = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label="Batas SLA jam" class="mt-2 w-full accent-[var(--color-primary)]" />
+            <span class="flex items-center justify-between text-sm font-medium"><span>{m.mm09()}</span><span class="kpi-value text-primary">{slaHours} jam</span></span>
+            <input type="range" min="6" max="120" step="6" value={slaHours} oninput={(e) => (slaHours = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label={m.ax19()} class="mt-2 w-full accent-[var(--color-primary)]" />
           </label>
         </div>
         <div class="space-y-2">
-          <p class="text-sm font-medium">Moda diizinkan</p>
+          <p class="text-sm font-medium">{m.mm10()}</p>
           {#each Object.entries(res.modes) as [key, m] (key)}
             <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background/40 p-3 transition-colors hover:border-primary/40">
               <input type="checkbox" checked={activeModes.has(key)} onchange={(e) => toggleMode(key, (e.currentTarget as HTMLInputElement).checked)} class="mt-0.5 h-4 w-4 accent-[var(--color-primary)]" />
               <span class="min-w-0">
                 <span class="block text-sm font-medium">{m.label}</span>
-                <span class="block text-xs text-muted-foreground">{m.owned ? "Dikelola GC" : "Pihak ketiga"} · Rp{m.costIdrPerPkgKm}/pkg-km · {m.co2GPerPkgKm} g CO₂ · {m.speedKmh} km/j</span>
+                <span class="block text-xs text-muted-foreground">{m.owned ? "Dikelola GC" : "Pihak ketiga"} · Rp{m.costIdrPerPkgKm}/pkg-km · {m.co2GPerPkgKm} g CO₂ · {m.speedKmh} kilometer per jam</span>
               </span>
             </label>
           {/each}
@@ -149,7 +150,7 @@
 
     <div class="grid gap-6 lg:grid-cols-[1fr_300px]" class:opacity-60={busy}>
       <div class="rounded-2xl border border-border bg-card p-5">
-        <p class="mb-3 text-sm font-medium">Pilihan moda per koridor (vs baseline ekspres)</p>
+        <p class="mb-3 text-sm font-medium">{m.mm11()}</p>
         <div class="max-h-[380px] space-y-2 overflow-y-auto pr-1">
           {#each res.routes as r, i (`${r.dest}-${i}`)}
             <div class="rounded-xl border border-border bg-background/40 p-3">
@@ -161,8 +162,8 @@
                 <span class="text-xs text-muted-foreground">{r.chosen.etaHours} jam {r.chosen.withinSla ? "" : "(di luar SLA→dipaksa)"}</span>
               </div>
               <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-muted-foreground">
-                <span>Biaya: <span class="font-medium text-foreground">{rp(r.chosen.costPerPkgIdr)}</span> <span class="text-primary">({r.saving.costPct > 0 ? "−" : "+"}{Math.abs(r.saving.costPct)}%)</span></span>
-                <span>CO₂: <span class="font-medium text-foreground">{r.chosen.co2GPerPkg} g</span> <span class="text-primary">({r.saving.co2Pct > 0 ? "−" : "+"}{Math.abs(r.saving.co2Pct)}%)</span></span>
+                <span>{m.mm12()} <span class="font-medium text-foreground">{rp(r.chosen.costPerPkgIdr)}</span> <span class="text-primary">({r.saving.costPct > 0 ? "−" : "+"}{Math.abs(r.saving.costPct)}%)</span></span>
+                <span>{m.mm13()} <span class="font-medium text-foreground">{r.chosen.co2GPerPkg} g</span> <span class="text-primary">({r.saving.co2Pct > 0 ? "−" : "+"}{Math.abs(r.saving.co2Pct)}%)</span></span>
                 <span class="text-muted-foreground/80">alternatif: {r.options.map((o) => modalLabel(o.mode)).join(" / ")}</span>
               </div>
             </div>
@@ -170,7 +171,7 @@
         </div>
       </div>
       <div class="rounded-2xl border border-border bg-card p-4">
-        <p class="mb-2 text-sm font-medium">Bauran moda terpilih</p>
+        <p class="mb-2 text-sm font-medium">{m.mm14()}</p>
         {#if modeMixDonut.length}<EChart option={donutChart(modeMixDonut)} height={220} label="Bauran moda terpilih" />{/if}
       </div>
     </div>
@@ -181,20 +182,20 @@
         <div class="rounded-2xl border border-border bg-card p-5">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p class="text-base font-semibold">Portofolio tuas pengurangan biaya</p>
-              <p class="text-[13.5px] text-muted-foreground">6 strategi (Pertanyaan 6): potensi hemat + dampak sustainability. Basis biaya {levers.basisYear}: {levers.totalCostT}T IDR.</p>
+              <p class="text-base font-semibold">{m.mm15()}</p>
+              <p class="text-[13.5px] text-muted-foreground">{m.mm3f1()} {levers.basisYear}: {levers.totalCostT} triliun IDR.</p>
             </div>
             <div class="text-right">
-              <p class="text-2xl font-bold tabular-nums text-primary">{levers.summary.totalSavingIdrT}T</p>
-              <p class="text-xs text-muted-foreground">≈ {levers.summary.savingPctOfCost}% dari total biaya</p>
+              <p class="text-2xl font-bold tabular-nums text-primary">{levers.summary.totalSavingIdrT} triliun</p>
+              <p class="text-xs text-muted-foreground">≈ {levers.summary.savingPctOfCost}{m.mm3f2()}</p>
             </div>
           </div>
         </div>
 
         {#if leverChart}
           <div class="rounded-2xl border border-border bg-card p-5">
-            <p class="mb-3 text-sm font-medium">Potensi penghematan per tuas (T IDR)</p>
-            <EChart option={leverChart} height={280} label="Potensi penghematan per tuas biaya" />
+            <p class="mb-3 text-sm font-medium">{m.mm16()}</p>
+            <EChart option={leverChart} height={280} label={m.mm2t8()} />
           </div>
         {/if}
 
@@ -207,8 +208,8 @@
               </div>
               <p class="mt-1 text-[13.5px] text-muted-foreground">{l.mechanism}</p>
               <div class="mt-2 flex flex-wrap gap-3 text-[12px] text-muted-foreground">
-                <span>Hemat: <span class="font-medium text-foreground">Rp{l.costImpactIdrT}T</span></span>
-                <span>CO₂: <span class="font-medium text-[color:var(--color-chart-3)]">−{l.co2Pct}%</span></span>
+                <span>{m.mm17()} <span class="font-medium text-foreground">Rp{l.costImpactIdrT} triliun</span></span>
+                <span>{m.mm18()} <span class="font-medium text-[color:var(--color-chart-3)]">−{l.co2Pct}%</span></span>
               </div>
               <p class="mt-2 text-[12px] italic text-muted-foreground">{l.evidence}</p>
             </div>
@@ -218,15 +219,14 @@
     {/if}
 
     <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm">
-      <span class="font-medium">Insight:</span> strategi ini menurunkan biaya <strong>tanpa</strong> memotong layanan — dengan menggeser paket non-ekspres ke moda laut/darat yang lebih murah & rendah emisi,
-      sambil menjaga SLA. Control Tower mengendalikan moda lewat <strong>data</strong>, bukan kepemilikan aset (laut & udara tetap mitra).
+      <span class="font-medium">{m.mm19()}</span> {m.mm20()} <strong>{m.mm21()}</strong> {m.mm22()} <strong>{m.mm23()}</strong>{m.mm24()}
     </div>
   {:else if loaded && failed}
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
       <Icon name="warn" cls="mx-auto h-6 w-6" />
-      <p class="mt-2 text-sm font-semibold text-foreground">Gagal memuat optimizer</p>
-      <p class="mt-1 text-xs text-muted-foreground">Backend offline. Coba lagi setelah backend aktif.</p>
-      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
+      <p class="mt-2 text-sm font-semibold text-foreground">{m.mm25()}</p>
+      <p class="mt-1 text-xs text-muted-foreground">{m.mm26()}</p>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">{m.mm27()}</button>
     </div>
   {:else}
     <div class="grid gap-4 sm:grid-cols-4">{#each Array(4) as _, i (i)}<div class="h-28 animate-pulse rounded-2xl border border-border bg-card/60"></div>{/each}</div>

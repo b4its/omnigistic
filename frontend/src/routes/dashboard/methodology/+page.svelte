@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import Icon from "$lib/components/Icon.svelte";
   import { api, type AuditResult } from "$lib/api";
@@ -15,12 +16,12 @@
   ];
   // Fallback bila backend offline (nilai identik dgn data-kas.json).
   const rootsFallback: Root[] = [
-    { n: "1", name: "Ekspansi tak selaras", theory: THEORY[0], solution: "Hibrida Direct vs Regional Sponsor berbasis utilisasi", kpi: "Timur ≥55% (24 bulan)" },
-    { n: "2", name: "Kapasitas fixed vs demand fluktuatif", theory: THEORY[1], solution: "Kapasitas elastis 3 tingkat + forecast per hub", kpi: "MAPE <10%; eksposur <20%/platform" },
-    { n: "3", name: "Last-mile manual dan cash-based", theory: THEORY[2], solution: "Predictive COD + clustering rute + PUDO + rekonsiliasi digital", kpi: "Rute COD ≤100 menit; ≥4,8 paket/jam" },
-    { n: "4", name: "Data tidak terstandar dan buta multimoda", theory: THEORY[3], solution: "Address Intelligence + Control Tower + modal shift", kpi: "Komplain <3/juta; geotag ≥95%" },
-    { n: "5", name: "Kapabilitas tertinggal dari pertumbuhan", theory: THEORY[4], solution: "Nigi Academy + tim data internal + Digital Twin", kpi: "100% manajer tersertifikasi" },
-    { n: "6", name: "Keberlanjutan sebagai pembelian, bukan desain sistem", theory: THEORY[5], solution: "Carbon per rute + roadmap 3 fase + penyusutan 8 tahun", kpi: "Emisi/paket −20% per 2027" }
+    { n: "1", name: "Ekspansi tak selaras", theory: THEORY[0], solution: m.mt2t1(), kpi: "Timur ≥55% (24 bulan)" },
+    { n: "2", name: m.mt2t2(), theory: THEORY[1], solution: m.mt2t3(), kpi: "MAPE <10%; eksposur <20%/platform" },
+    { n: "3", name: m.mt2t4(), theory: THEORY[2], solution: "Predictive COD + clustering rute + PUDO + rekonsiliasi digital", kpi: m.mt2t5() },
+    { n: "4", name: m.mt2t6(), theory: THEORY[3], solution: "Address Intelligence + Control Tower + modal shift", kpi: m.mt2t7() },
+    { n: "5", name: m.mt2t8(), theory: THEORY[4], solution: "Nigi Academy + tim data internal + Digital Twin", kpi: "100% manajer tersertifikasi" },
+    { n: "6", name: "Keberlanjutan sebagai pembelian, bukan desain sistem", theory: THEORY[5], solution: m.mt2t9(), kpi: m.mt2t10() }
   ];
 
   let roots = $state<Root[]>(rootsFallback);
@@ -46,7 +47,7 @@
       if (Array.isArray(rc) && rc.length) {
         roots = rc.map((r, i) => ({
           n: String(i + 1),
-          name: r.titleId || r.title,
+          name: r.title,
           theory: THEORY[i] ?? "—",
           solution: r.solution,
           kpi: r.kpiTarget
@@ -61,21 +62,21 @@
   const fmt = (n: number) => new Intl.NumberFormat("id-ID", { maximumFractionDigits: 2 }).format(n);
 
   const steps = [
-    { step: "Collect", problem: "Alamat ambigu · 62% dari merchant · 38% individu", solution: "Address Intelligence · geotag wajib" },
-    { step: "Sort", problem: "Hub overload (JKT 90,4%) · sortasi lambat saat puncak", solution: "WMS + kapasitas elastis 3 tingkat" },
-    { step: "Transport", problem: "Biaya naik 54,9% · empty run · 2 dari 3 moda via pihak ketiga", solution: "Modal shift · Control Tower · load balancing" },
-    { step: "Deliver", problem: "COD 138 menit · tunggu 10-20 menit · human error kas", solution: "Predictive COD · PUDO · slot confirmation" }
+    { step: "Collect", problem: m.me2t1(), solution: "Address Intelligence · geotag wajib" },
+    { step: "Sort", problem: m.mt2t11(), solution: m.mt2t12() },
+    { step: "Transport", problem: m.me2t2(), solution: "Modal shift · Control Tower · load balancing" },
+    { step: "Deliver", problem: "COD 138 menit · tunggu 10-20 menit · human error kas", solution: m.me2t3() }
   ];
 </script>
 
 <div class="space-y-8">
   <header class="space-y-2">
-    <h1 class="font-heading text-xl font-semibold tracking-tight">Methodology</h1>
-    <p class="text-sm text-muted-foreground">Kerangka analisis problem-first: gejala → akar → solusi berbasis teori → KPI. Setiap angka dari Table 1-4 dan Figure 1-2; asumsi tim berlabel.</p>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">{m.me01()}</h1>
+    <p class="text-sm text-muted-foreground">{m.me02()}</p>
   </header>
 
   <section class="space-y-3">
-    <h2 class="text-sm font-semibold text-muted-foreground">Enam akar, teori jangkar, solusi, KPI</h2>
+    <h2 class="text-sm font-semibold text-muted-foreground">{m.me03()}</h2>
     <div class="grid gap-3 md:grid-cols-2">
       {#each roots as r (r.n)}
         <article class="rounded-2xl border border-border bg-card p-5">
@@ -84,9 +85,9 @@
             <h3 class="text-sm font-semibold text-foreground">{r.name}</h3>
           </div>
           <dl class="mt-3 space-y-1.5 text-[15px]">
-            <div class="flex gap-2"><dt class="w-24 shrink-0 text-muted-foreground">Teori</dt><dd class="text-foreground">{r.theory}</dd></div>
-            <div class="flex gap-2"><dt class="w-24 shrink-0 text-muted-foreground">Solusi</dt><dd class="text-foreground">{r.solution}</dd></div>
-            <div class="flex gap-2"><dt class="w-24 shrink-0 text-muted-foreground">KPI</dt><dd class="font-medium text-primary">{r.kpi}</dd></div>
+            <div class="flex gap-2"><dt class="w-24 shrink-0 text-muted-foreground">{m.me04()}</dt><dd class="text-foreground">{r.theory}</dd></div>
+            <div class="flex gap-2"><dt class="w-24 shrink-0 text-muted-foreground">{m.me05()}</dt><dd class="text-foreground">{r.solution}</dd></div>
+            <div class="flex gap-2"><dt class="w-24 shrink-0 text-muted-foreground">{m.me06()}</dt><dd class="font-medium text-primary">{r.kpi}</dd></div>
           </dl>
         </article>
       {/each}
@@ -94,7 +95,7 @@
   </section>
 
   <section class="space-y-3">
-    <h2 class="text-sm font-semibold text-muted-foreground">Alur operasi: Collect, Sort, Transport, Deliver</h2>
+    <h2 class="text-sm font-semibold text-muted-foreground">{m.me07()}</h2>
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {#each steps as s, i (s.step)}
         <div class="rounded-2xl border border-border bg-card p-5">
@@ -103,8 +104,8 @@
             <span class="font-heading text-base font-semibold">{s.step}</span>
           </div>
           <div class="mt-4 space-y-2">
-            <div class="rounded-sm bg-destructive/10 p-2 text-xs text-destructive-foreground"><span class="font-medium">Masalah:</span> {s.problem}</div>
-            <div class="rounded-sm bg-success/10 p-2 text-xs text-success-foreground"><span class="font-medium">Omnigistic:</span> {s.solution}</div>
+            <div class="rounded-sm bg-destructive/10 p-2 text-xs text-destructive-foreground"><span class="font-medium">{m.me08()}</span> {s.problem}</div>
+            <div class="rounded-sm bg-success/10 p-2 text-xs text-success-foreground"><span class="font-medium">{m.me09()}</span> {s.solution}</div>
           </div>
         </div>
       {/each}
@@ -112,19 +113,18 @@
   </section>
 
   <section class="rounded-2xl border border-border bg-card p-5">
-    <h2 class="text-sm font-semibold">Sumber &amp; batasan</h2>
+    <h2 class="text-sm font-semibold">{m.me10()}</h2>
     <ul class="mt-3 space-y-1.5 text-[15px] text-muted-foreground">
-      <li>Angka operasional dan finansial dari Table 1-4 serta Figure 1-2 studi kasus ISCEA 2026.</li>
-      <li>Harga EV, harga BBM, tarif listrik, dan proyeksi ROI adalah asumsi tim (tidak ada di kasus) dan selalu berlabel.</li>
-      <li>Model forecast, COD risk, dan address intelligence adalah prototipe presentasi, bukan sistem produksi.</li>
+      <li>{m.me11()}</li>
+      <li>{m.me12()}</li>
+      <li>{m.me13()}</li>
     </ul>
   </section>
 
   <section class="space-y-3">
-    <h2 class="text-sm font-semibold text-muted-foreground">Audit &amp; Rekonsiliasi Angka</h2>
+    <h2 class="text-sm font-semibold text-muted-foreground">{m.me14()}</h2>
     <p class="text-sm text-muted-foreground">
-      Semua angka aplikasi dihitung ulang dari <code>shared/data-kas.json</code> oleh mesin metrik backend, bukan hardcode.
-      Berikut hasil trace otomatis: hijau = cocok dengan dokumen kasus, kuning = temuan ketidaksesuaian pada dokumen.
+      {m.me15()} <code>{m.me16()}</code> {m.me17()}
     </p>
     {#if audit}
       <div class="grid gap-3 md:grid-cols-2">
@@ -142,7 +142,7 @@
             <div class="min-w-0">
               <p class="text-sm font-medium text-foreground">{c.label}</p>
               <p class="mt-0.5 text-xs text-muted-foreground">
-                Nilai: <span class="font-mono">{typeof c.value === "object" ? JSON.stringify(c.value) : fmt(Number(c.value))}</span>
+                {m.me18()} <span class="font-mono">{typeof c.value === "object" ? JSON.stringify(c.value) : fmt(Number(c.value))}</span>
               </p>
               {#if c.note}<p class="mt-1 text-xs text-muted-foreground">{c.note}</p>{/if}
             </div>
@@ -151,12 +151,11 @@
       </div>
 
       <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm">
-        <p class="font-medium">Temuan rekonsiliasi (Tabel 4):</p>
+        <p class="font-medium">{m.me19()}</p>
         <p class="mt-1 text-muted-foreground">{audit.demand.reconciliation.note}</p>
         <p class="mt-2 text-muted-foreground">
-          Total demand: <span class="text-foreground">dokumen {fmt(audit.demand.reconciliation.totalM.document)} jt</span> =
-          <span class="text-foreground">hitung {fmt(audit.demand.reconciliation.totalM.computed)} jt</span> (cocok) ·
-          E-commerce: <span class="text-foreground">dokumen {fmt(audit.demand.reconciliation.ecommerceM.document)} jt</span> vs
+          {m.me20()} <span class="text-foreground">dokumen {fmt(audit.demand.reconciliation.totalM.document)} jt</span> =
+          <span class="text-foreground">hitung {fmt(audit.demand.reconciliation.totalM.computed)} jt</span> {m.me21()} <span class="text-foreground">dokumen {fmt(audit.demand.reconciliation.ecommerceM.document)} jt</span> {m.me22()}
           <span class="text-foreground">hitung {fmt(audit.demand.reconciliation.ecommerceM.computed)} jt</span>
           (selisih {fmt(audit.demand.reconciliation.ecommerceM.delta)} jt).
         </p>
@@ -167,10 +166,10 @@
           <div class="rounded-2xl border border-border bg-card p-4">
             <div class="flex items-center justify-between">
               <p class="text-sm font-semibold">{r.region}</p>
-              {#if r.sponsorCandidate}<span class="rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-2 py-0.5 text-[10px] font-semibold text-[var(--bitcoin)]">kandidat sponsor</span>{/if}
+              {#if r.sponsorCandidate}<span class="rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-2 py-0.5 text-[10px] font-semibold text-[var(--bitcoin)]">{m.me23()}</span>{/if}
             </div>
             <p class="mt-2 text-2xl font-bold tabular-nums">{fmt(r.avgUtilizationPct)}%</p>
-            <p class="text-xs text-muted-foreground">{r.hubs} hub · kapasitas {fmt(r.capacityM)}M/hari · {r.outlets} outlet</p>
+            <p class="text-xs text-muted-foreground">{r.hubs} {m.me4f1()} {fmt(r.capacityM)}{m.me4f2()} {r.outlets} outlet</p>
           </div>
         {/each}
       </div>
@@ -179,10 +178,10 @@
     {:else if auditFailed}
       <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-destructive/5 p-5">
         <div>
-          <p class="text-sm font-semibold text-foreground">Gagal memuat audit angka</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">Backend offline. Audit &amp; rekonsiliasi diturunkan dari data kasus.</p>
+          <p class="text-sm font-semibold text-foreground">{m.me24()}</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">{m.me25()}</p>
         </div>
-        <button type="button" onclick={loadAudit} class="rounded-full bg-[var(--primary)] px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)]">Coba lagi</button>
+        <button type="button" onclick={loadAudit} class="rounded-full bg-[var(--primary)] px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)]">{m.me26()}</button>
       </div>
     {/if}
   </section>

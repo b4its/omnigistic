@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import Icon from "./Icon.svelte";
 
   /**
@@ -24,8 +25,8 @@
   let {
     loading,
     error = false,
-    errorTitle = "Gagal memuat data",
-    errorHint = "Backend offline. Muat ulang setelah backend aktif.",
+    errorTitle = m.pagt1(),
+    errorHint = m.pagt2(),
     onretry,
     skeletonCards = 4,
     skeletonHeight = 288
@@ -38,7 +39,7 @@
     <p class="mt-3 font-heading text-sm font-semibold text-foreground">{errorTitle}</p>
     <p class="mt-1 text-xs text-muted-foreground">{errorHint}</p>
     {#if onretry}
-      <button type="button" onclick={onretry} class="mt-3 rounded-full bg-[var(--primary)] px-5 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)] transition-all duration-300 hover:scale-[1.03]">Coba lagi</button>
+      <button type="button" onclick={onretry} class="mt-3 rounded-full bg-[var(--primary)] px-5 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)] transition-all duration-300 hover:scale-[1.03]">{m.pagp01()}</button>
     {/if}
   </div>
 {:else if loading}

@@ -17,6 +17,8 @@ import { mkdirSync } from "node:fs";
 import { launchOptions } from "./_browser.mjs";
 
 const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
+/** Prefix locale uji: asersi berbahasa Indonesia → default /id (E2E_LANG=en untuk Inggris). */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const STORAGE_KEY = "omnigistic-shop-v1";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
@@ -67,7 +69,7 @@ try {
   page.on("pageerror", (e) => errs.push(String(e.message).slice(0, 140)));
   await page.addInitScript(([k, v]) => localStorage.setItem(k, v), [STORAGE_KEY, JSON.stringify(seededState)]);
 
-  await page.goto(BASE + "/dashboard/kurir/tasks", { waitUntil: "load", timeout: 40000 });
+  await page.goto(BASE + LANG_PREFIX + "/dashboard/kurir/tasks", { waitUntil: "load", timeout: 40000 });
   await page.waitForTimeout(3400);
 
   // ── 1. Tombol perbesar ada & modal awalnya tertutup ──
@@ -107,7 +109,7 @@ try {
   const modalSlider = dialog.locator('input[type="range"][aria-label*="Scrubber"]').first();
   R((await modalSlider.count()) > 0, "modal: scrubber slider hadir di peta layar penuh");
   const dialogTxt = await dialog.innerText();
-  R(/km\/j/i.test(dialogTxt), "modal: speedometer live hadir di peta layar penuh");
+  R(/kilometer per jam/i.test(dialogTxt), "modal: speedometer live hadir di peta layar penuh");
   R(/LIVE TELEMETRI/i.test(dialogTxt), "modal: badge live telemetri hadir di header modal");
   await modalSimBtn.click();
   await page.waitForTimeout(1200);

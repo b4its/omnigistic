@@ -19,6 +19,8 @@ import { mkdirSync } from "node:fs";
 import { launchOptions } from "./_browser.mjs";
 
 const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
+/** Prefix locale uji: asersi berbahasa Indonesia → default /id (E2E_LANG=en untuk Inggris). */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const STORAGE_KEY = "omnigistic-shop-v1";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
@@ -68,7 +70,7 @@ try {
     },
     [STORAGE_KEY, JSON.stringify(seededState)]
   );
-  await page.goto(BASE + "/dashboard/customer/dashboard", { waitUntil: "networkidle", timeout: 40000 });
+  await page.goto(BASE + LANG_PREFIX + "/dashboard/customer/dashboard", { waitUntil: "networkidle", timeout: 40000 });
   await page.waitForTimeout(2500);
 
   const focusBtn = page.locator('button[aria-controls="pesanan-detail-ORD-BBB-2"]');
@@ -118,7 +120,7 @@ try {
   const ctx2 = await browser.newContext({ viewport: { width: 1360, height: 1000 } });
   const p2 = await ctx2.newPage();
   await p2.addInitScript(([key, val]) => window.localStorage.setItem(key, val), [STORAGE_KEY, JSON.stringify(seeded2)]);
-  await p2.goto(BASE + "/dashboard/customer/dashboard", { waitUntil: "networkidle", timeout: 40000 });
+  await p2.goto(BASE + LANG_PREFIX + "/dashboard/customer/dashboard", { waitUntil: "networkidle", timeout: 40000 });
   await p2.waitForTimeout(2200);
   const transitBtn = p2.locator('button[aria-controls="pesanan-detail-ORD-DDD-4"]');
   const doneBtn = p2.locator('button[aria-controls="pesanan-detail-ORD-EEE-5"]');
@@ -136,7 +138,7 @@ try {
   const ctx3 = await browser.newContext({ viewport: { width: 1360, height: 1000 } });
   const p3 = await ctx3.newPage();
   await p3.addInitScript(([key, val]) => window.localStorage.setItem(key, val), [STORAGE_KEY, JSON.stringify(seeded3)]);
-  await p3.goto(BASE + "/dashboard/customer/dashboard", { waitUntil: "networkidle", timeout: 40000 });
+  await p3.goto(BASE + LANG_PREFIX + "/dashboard/customer/dashboard", { waitUntil: "networkidle", timeout: 40000 });
   await p3.waitForTimeout(2200);
   const onlyBtn = p3.locator('button[aria-controls="pesanan-detail-ORD-FFF-6"]');
   R((await onlyBtn.getAttribute("aria-expanded")) === "false", "semua terkirim: semua panel tertutup");

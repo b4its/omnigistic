@@ -15,6 +15,8 @@ import { mkdirSync } from "node:fs";
 import { launchOptions } from "./_browser.mjs";
 
 const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
+/** Prefix locale uji: asersi berbahasa Indonesia → default /id (E2E_LANG=en untuk Inggris). */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
 mkdirSync("/tmp/opencode/shots", { recursive: true });
@@ -24,7 +26,7 @@ let browser;
 /** Ambil waktu tempuh (mnt) kandidat pertama yang tampil di panel. */
 async function firstTime(page) {
   const t = await page.locator("body").innerText();
-  const m = t.match(/(\d+(?:[.,]\d+)?) mnt ·/);
+  const m = t.match(/(\d+(?:[.,]\d+)?) menit ·/);
   return m ? m[1] : null;
 }
 
@@ -35,7 +37,7 @@ try {
   const errs = [];
   page.on("pageerror", (e) => errs.push(String(e.message).slice(0, 140)));
 
-  await page.goto(BASE + "/dashboard/kurir/pudo", { waitUntil: "load", timeout: 40000 });
+  await page.goto(BASE + LANG_PREFIX + "/dashboard/kurir/pudo", { waitUntil: "load", timeout: 40000 });
   await page.waitForTimeout(3200);
 
   const txt = await page.locator("body").innerText();

@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 /**
  * Katalog produk marketplace Omnigistic (role CUSTOMER).
  *
@@ -138,7 +139,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "P-FA-03",
-    name: "Tas Ransel Anti Air 25L",
+    name: "Tas Ransel Anti Air 25 liter",
     category: "Fashion",
     price: 179000,
     rating: 4.6,
@@ -307,6 +308,91 @@ export const PRODUCTS: Product[] = [
 ];
 
 /** Cari produk berdasarkan kata kunci (nama, kategori, store, deskripsi). */
+
+/* ── Lapisan lokalisasi tampilan ─────────────────────────────────────────
+   Data katalog sengaja tetap statis (id, harga, stok) agar logika filter dan
+   turunan penjual tidak ikut berubah. Hanya teks yang dilihat pengguna yang
+   diselesaikan saat render, memakai id produk sebagai kunci stabil.
+   ──────────────────────────────────────────────────────────────────────── */
+const NAME_BY_ID: Record<string, () => string> = {
+  "P-EL-01": () => m.prdn01(),
+  "P-EL-02": () => m.prdn02(),
+  "P-EL-03": () => m.prdn03(),
+  "P-EL-04": () => m.prdn04(),
+  "P-FA-01": () => m.prdn05(),
+  "P-FA-02": () => m.prdn06(),
+  "P-FA-03": () => m.prdn07(),
+  "P-RT-01": () => m.prdn08(),
+  "P-RT-02": () => m.prdn09(),
+  "P-RT-03": () => m.prdn10(),
+  "P-KS-01": () => m.prdn11(),
+  "P-KS-02": () => m.prdn12(),
+  "P-OR-01": () => m.prdn13(),
+  "P-OR-02": () => m.prdn14(),
+  "P-HB-01": () => m.prdn15(),
+  "P-HB-02": () => m.prdn16(),
+  "P-HB-03": () => m.prdn17()
+};
+
+const DESC_BY_ID: Record<string, () => string> = {
+  "P-EL-01": () => m.prdd01(),
+  "P-EL-02": () => m.prdd02(),
+  "P-EL-03": () => m.prdd03(),
+  "P-EL-04": () => m.prdd04(),
+  "P-FA-01": () => m.prdd05(),
+  "P-FA-02": () => m.prdd06(),
+  "P-FA-03": () => m.prdd07(),
+  "P-RT-01": () => m.prdd08(),
+  "P-RT-02": () => m.prdd09(),
+  "P-RT-03": () => m.prdd10(),
+  "P-KS-01": () => m.prdd11(),
+  "P-KS-02": () => m.prdd12(),
+  "P-OR-01": () => m.prdd13(),
+  "P-OR-02": () => m.prdd14(),
+  "P-HB-01": () => m.prdd15(),
+  "P-HB-02": () => m.prdd16(),
+  "P-HB-03": () => m.prdd17()
+};
+
+const TAG_LABEL: Record<string, () => string> = {
+  Terlaris: () => m.tg01(),
+  COD: () => m.tg02(),
+  Hemat: () => m.tg03(),
+  Berat: () => m.tg04(),
+  Kolektor: () => m.tg05(),
+  Premium: () => m.tg06()
+};
+
+const CATEGORY_LABEL: Record<string, () => string> = {
+  Semua: () => m.ct01(),
+  Elektronik: () => m.ct02(),
+  Fashion: () => m.ct03(),
+  "Rumah Tangga": () => m.ct04(),
+  Kesehatan: () => m.ct05(),
+  Olahraga: () => m.ct06(),
+  Hobi: () => m.ct07()
+};
+
+/** Nama produk sesuai locale; `fallback` dipakai untuk produk di luar katalog. */
+export function productName(id: string, fallback = ""): string {
+  return NAME_BY_ID[id]?.() ?? fallback;
+}
+
+/** Deskripsi produk sesuai locale. */
+export function productDesc(id: string, fallback = ""): string {
+  return DESC_BY_ID[id]?.() ?? fallback;
+}
+
+/** Label tag produk sesuai locale (nilai tag tetap sebagai ID data). */
+export function tagLabel(tag: string): string {
+  return TAG_LABEL[tag]?.() ?? tag;
+}
+
+/** Label kategori sesuai locale (nilai kategori tetap sebagai ID data). */
+export function categoryLabel(category: string): string {
+  return CATEGORY_LABEL[category]?.() ?? category;
+}
+
 export function searchProducts(query: string, category: string = "Semua"): Product[] {
   const q = query.trim().toLowerCase();
   return PRODUCTS.filter((p) => {

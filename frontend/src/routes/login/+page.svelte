@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { portalLabel } from "$lib/i18n/labels";
   import Icon from "$lib/components/Icon.svelte";
+  import LanguageSwitcher from "$lib/components/LanguageSwitcher.svelte";
   import type { IconName } from "$lib/icon-names";
   import { resolveHref } from "$lib/utils";
+  import { loginContent } from "$lib/i18n/content";
 
   const routes: Record<string, string> = {
     PUSAT: "/dashboard/pusat/overview",
@@ -12,43 +15,16 @@
     SELLER: "/dashboard/seller/overview"
   };
 
-  const roles: { slug: string; name: string; sub: string; initials: string; desc: string; icon: IconName }[] = [
-    {
-      slug: "PUSAT", name: "Dalila", sub: "Manajer Pusat", initials: "D",
-      desc: "Analisa tren finansial, Digital Twin untuk skenario sponsor vs langsung, utilisasi 23 hub.",
-      icon: "grid"
-    },
-    {
-      slug: "HUB", name: "Marwah", sub: "Manajer Hub Bandung", initials: "M",
-      desc: "Kesehatan hub sendiri vs peer 22 hub. Forecast demand, simulasi load balancer, kapasitas dini.",
-      icon: "shield"
-    },
-    {
-      slug: "KURIR", name: "Baits", sub: "Kurir Jakarta", initials: "B",
-      desc: "Rute terkluster, skor COD risk, slot confirmation, pembayaran digital.",
-      icon: "compass"
-    },
-    {
-      slug: "DATA", name: "Virgiawan", sub: "Data & IT", initials: "V",
-      desc: "Address intelligence 3 alamat ambigu, monitoring komplain, control tower multimoda, emisi armada.",
-      icon: "map"
-    },
-    {
-      slug: "CUSTOMER", name: "Sari", sub: "Pembeli", initials: "S",
-      desc: "Belanja di e-commerce Omnigistic: cari produk, keranjang, checkout COD, lalu lacak pengantaran.",
-      icon: "globe"
-    },
-    {
-      slug: "SELLER", name: "Rina", sub: "Penjual", initials: "R",
-      desc: "Dashboard penjual: analitik laba/rugi & margin produk, pesanan masuk, dan skor pelanggan.",
-      icon: "currency"
-    }
-  ];
+  const c = $derived(loginContent());
+  const roles = $derived(c.roles);
 </script>
 
-<svelte:head><title>Masuk Portal · Omnigistic</title></svelte:head>
+<svelte:head><title>{c.t.title}</title></svelte:head>
 
 <div class="landing grid min-h-dvh lg:grid-cols-2" style="background: var(--lnd-bg); color: var(--lnd-ink)">
+  <div class="fixed right-4 top-4 z-20 sm:right-6 sm:top-6">
+    <LanguageSwitcher variant="landing" />
+  </div>
   <div class="relative hidden flex-col justify-between overflow-hidden rounded-l-none bg-[var(--lnd-ink)] p-[clamp(2rem,5vw,4rem)] text-[var(--lnd-bg)] lg:flex">
     <div class="landing-grid" aria-hidden="true"></div>
     <div class="pointer-events-none absolute -bottom-32 -right-24 h-[32rem] w-[32rem] rounded-full opacity-[0.16] blur-[130px]" style="background: radial-gradient(circle, var(--lnd-accent), transparent 70%)" aria-hidden="true"></div>
@@ -56,21 +32,21 @@
       Omnigistic<span class="text-[var(--lnd-accent)]">.</span>
     </div>
     <p class="relative max-w-[12ch] font-heading text-[clamp(2.4rem,4.6vw,4.4rem)] font-light leading-[1.12] tracking-[-0.015em]">
-      Angka yang tidak <em class="accent-gradient font-semibold italic">berteriak</em><span class="text-[var(--lnd-accent)]">.</span>
+      {c.t.heroA} <em class="accent-gradient font-semibold italic">{c.t.heroEm}</em><span class="text-[var(--lnd-accent)]">.</span>
     </p>
     <div class="relative flex justify-between gap-4 font-mono text-[13px] font-semibold uppercase tracking-[0.09em] text-[var(--lnd-on-ink)]">
-      <span>Enam portal</span><span>ISCEA 2026</span>
+      <span>{c.t.sixPortals}</span><span>{c.t.brand}</span>
     </div>
   </div>
 
   <div class="grid place-items-center px-[clamp(1.5rem,4vw,3rem)] py-12">
     <div class="w-full min-[400px]:max-w-[560px]">
-      <p class="eyebrow">Masuk</p>
+      <p class="eyebrow">{c.t.signIn}</p>
       <h1 class="mt-4 font-heading text-[clamp(2.2rem,4vw,3.2rem)] font-light leading-[1.08] tracking-tight">
-        Pilih <em class="italic text-[var(--lnd-accent-ink)]">portal</em> Anda
+        {c.t.chooseA} <em class="italic text-[var(--lnd-accent-ink)]">{c.t.chooseEm}</em> {c.t.chooseB}
       </h1>
       <p class="mt-3 max-w-lg text-sm leading-relaxed text-[var(--lnd-soft)]">
-        Tidak perlu akun, pilih portal untuk pratinjau langsung. Data studi kasus GC Logistics, dijawab lewat Nigi AI.
+        {c.t.intro}
       </p>
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2">
@@ -90,14 +66,14 @@
             </div>
             <div class="mt-auto flex items-center gap-2 border-t border-dashed border-[var(--lnd-line-soft)] pt-3 text-[13.5px] uppercase tracking-wider text-[var(--lnd-soft)]">
               <span class="flex h-4 w-4 items-center justify-center rounded-full bg-[var(--lnd-accent)] text-[13px] font-bold text-[var(--lnd-bg)]">{r.initials}</span>
-              Portal {r.slug}
+              {portalLabel(r.slug)}
             </div>
           </a>
         {/each}
       </div>
 
       <div class="mt-8 flex justify-center">
-        <a href={resolveHref("/")} class="text-xs text-[var(--lnd-soft)] underline-offset-4 hover:text-[color:var(--lnd-accent-ink)] hover:underline">&larr; Kembali ke halaman utama</a>
+        <a href={resolveHref("/")} class="text-xs text-[var(--lnd-soft)] underline-offset-4 hover:text-[color:var(--lnd-accent-ink)] hover:underline">{c.t.backHome}</a>
       </div>
     </div>
   </div>

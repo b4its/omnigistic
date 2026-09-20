@@ -6,10 +6,14 @@ from typing import Any
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from app.api.localized_route import LocalizedRoute
+
 from app.ml import metrics
 from app.ml.address_parse import demo_address, parse_address
-from app.ml.cod_cash import cod_cash_risk, default_scenarios as cod_cash_scenarios
+from app.ml.cod_cash import cod_cash_risk
+from app.ml.cod_cash import default_scenarios as cod_cash_scenarios
 from app.ml.cod_intel import analyze_cod_impact, default_scenarios
+from app.ml.cod_plan import cod_plan
 from app.ml.cod_risk import demo_packages, score_package
 from app.ml.ev_bca import ev_bca
 from app.ml.expansion import expansion_roi
@@ -22,7 +26,7 @@ from app.ml.simulations import DIGITAL_TWIN_SCENARIOS, calculate_cod_impact, cal
 from app.ml.sponsor import compare_models, sensitivity
 from app.ml.surge import stress_test
 
-router = APIRouter(prefix="/ml", tags=["ml"])
+router = APIRouter(prefix="/ml", tags=["ml"], route_class=LocalizedRoute)
 
 
 @router.get("/forecast")
@@ -81,6 +85,12 @@ def digital_twin():
     for name, shares in DIGITAL_TWIN_SCENARIOS.items():
         out[name] = calculate_digital_twin(shares)
     return out
+
+
+@router.get("/cod/plan")
+def cod_plan_endpoint():
+    """Rencana COD kanonik (Pertanyaan 3): waktu, insentif, intervensi, dampak, nilai."""
+    return cod_plan()
 
 
 @router.get("/sim/cod-impact")

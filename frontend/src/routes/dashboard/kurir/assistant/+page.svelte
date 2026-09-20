@@ -1,5 +1,6 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import NigiAssistant from "$lib/components/NigiAssistant.svelte";
 </script>
 
-<NigiAssistant role="KURIR" />
+<NigiAssistant role={m.as2t1()} />

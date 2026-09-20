@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m as msg } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { api, type SurgeResult } from "$lib/api";
   import { notify } from "$lib/toast";
@@ -26,7 +27,7 @@
     } catch {
       res = null;
       failed = true;
-      if (userTriggered) notify({ message: "Gagal menjalankan stress-test", type: "error", title: "Peak-Surge" });
+      if (userTriggered) notify({ message: msg.sg2t1(), type: "error", title: "Peak-Surge" });
     }
     loaded = true;
   }
@@ -58,8 +59,8 @@
   const PRESETS = [
     { label: "Musiman 1,15×", pm: 1.15, cf: 1.0, note: "Puncak bulanan Table 4" },
     { label: "Festival 2×", pm: 2.0, cf: 1.0, note: "Harbolnas / 11.11" },
-    { label: "Double 12 3×", pm: 3.0, cf: 1.0, note: "Kasus historis 2022" },
-    { label: "Double 12 + buffer", pm: 3.0, cf: 1.3, note: "+30% armada sewa" }
+    { label: "Double 12 3×", pm: 3.0, cf: 1.0, note: msg.sg2t2() },
+    { label: "Double 12 + buffer", pm: 3.0, cf: 1.3, note: msg.sg2t3() }
   ];
 
   function applyPreset(p: (typeof PRESETS)[number]) {
@@ -72,9 +73,9 @@
 <div class="space-y-6">
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="font-heading text-xl font-semibold tracking-tight">Peak-Surge Stress-Test</h1>
+      <h1 class="font-heading text-xl font-semibold tracking-tight">{msg.sg01()}</h1>
       <p class="text-sm text-muted-foreground">
-        Uji beban puncak terhadap kapasitas 23 hub. Kasus: Double 12 2022 (Jakarta 1 overload) · puncak jaringan &gt;3 juta paket/hari.
+        {msg.sg02()}
       </p>
     </div>
     <button type="button" onclick={() => run()} disabled={busy} class="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] disabled:opacity-60">
@@ -83,20 +84,20 @@
   </div>
 
   {#if loaded && failed}
-    <PageState loading={false} error={true} errorTitle="Gagal menjalankan stress-test" errorHint="Backend offline. Coba lagi setelah backend aktif." onretry={() => run()} />
+    <PageState loading={false} error={true} errorTitle=msg.sg2t1() errorHint=msg.sg2t4() onretry={() => run()} />
   {:else if loaded && res}
     <!-- Panel simulasi -->
     <div class="rounded-2xl border border-[color-mix(in_oklab,var(--bitcoin)_30%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_6%,transparent)] p-5">
-      <p class="text-sm font-semibold">Simulasi amplifikasi puncak</p>
-      <p class="mt-1 text-xs text-muted-foreground">Geser & jalankan — engine menghitung ulang beban tiap hub, breach, spillover, dan waktu pemulihan.</p>
+      <p class="text-sm font-semibold">{msg.sg03()}</p>
+      <p class="mt-1 text-xs text-muted-foreground">{msg.sg04()}</p>
       <div class="mt-4 grid gap-5 sm:grid-cols-2">
         <label class="block">
-          <span class="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground"><span>Amplifikasi puncak</span><span class="kpi-value text-foreground">{numId(peak, 2)}×</span></span>
-          <input type="range" min="1" max="4" step="0.05" bind:value={peak} aria-label="Amplifikasi puncak" class="mt-2 w-full accent-[var(--bitcoin)]" />
+          <span class="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground"><span>{msg.sg05()}</span><span class="kpi-value text-foreground">{numId(peak, 2)}×</span></span>
+          <input type="range" min="1" max="4" step="0.05" bind:value={peak} aria-label={msg.ax20()} class="mt-2 w-full accent-[var(--bitcoin)]" />
         </label>
         <label class="block">
-          <span class="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground"><span>Kapasitas elastis</span><span class="kpi-value text-foreground">{numId(surgeCap, 2)}×</span></span>
-          <input type="range" min="1" max="1.5" step="0.05" bind:value={surgeCap} aria-label="Kapasitas elastis" class="mt-2 w-full accent-[var(--bitcoin)]" />
+          <span class="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground"><span>{msg.sg06()}</span><span class="kpi-value text-foreground">{numId(surgeCap, 2)}×</span></span>
+          <input type="range" min="1" max="1.5" step="0.05" bind:value={surgeCap} aria-label={msg.ax21()} class="mt-2 w-full accent-[var(--bitcoin)]" />
         </label>
       </div>
       <div class="mt-4 flex flex-wrap gap-2">
@@ -105,44 +106,44 @@
         {/each}
       </div>
       <button type="button" onclick={run} disabled={busy} class="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--primary-foreground)] transition-all duration-300 hover:scale-[1.03] disabled:opacity-60">
-        <Icon name="activity" cls="h-3.5 w-3.5" weight="bold" /> Jalankan stress-test
+        <Icon name="activity" cls="h-3.5 w-3.5" weight="bold" /> {msg.sg07()}
       </button>
     </div>
 
     <!-- KPI -->
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <div class="rounded-2xl border border-border bg-card p-4">
-        <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Beban puncak nasional</p>
-        <p class="kpi-value mt-2 font-heading text-2xl">{numId(res.summary.totalPeakLoadM, 2)}<span class="text-sm text-muted-foreground"> jt/hari</span></p>
-        <p class="mt-1 text-xs text-muted-foreground">vs kapasitas {numId(res.reference.totalCapacityPerDayM, 2)} jt/hari</p>
+        <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{msg.sg08()}</p>
+        <p class="kpi-value mt-2 font-heading text-2xl">{numId(res.summary.totalPeakLoadM, 2)}<span class="text-sm text-muted-foreground"> {msg.sg09()}</span></p>
+        <p class="mt-1 text-xs text-muted-foreground">{msg.sg3f1()} {numId(res.reference.totalCapacityPerDayM, 2)} jt/hari</p>
       </div>
       <div class="rounded-2xl border border-border bg-card p-4">
-        <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Hub melampaui kapasitas</p>
+        <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{msg.sg10()}</p>
         <p class="kpi-value mt-2 font-heading text-2xl {res.summary.hubBreached > 0 ? 'text-destructive-foreground' : 'text-success-foreground'}">{res.summary.hubBreached}<span class="text-sm text-muted-foreground"> / {res.summary.hubCount}</span></p>
         <p class="mt-1 text-xs text-muted-foreground">util nasional {numId(res.summary.nationalUtilPct, 1)}%</p>
       </div>
       <div class="rounded-2xl border border-border bg-card p-4">
-        <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Overflow tak tertangani</p>
+        <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{msg.sg11()}</p>
         <p class="kpi-value mt-2 font-heading text-2xl">{numId(res.summary.residualOverflowM, 3)}<span class="text-sm text-muted-foreground">M</span></p>
-        <p class="mt-1 text-xs text-muted-foreground">dialihkan {numId(res.summary.spilloverMovedM, 3)}M antar-hub</p>
+        <p class="mt-1 text-xs text-muted-foreground">dialihkan {numId(res.summary.spilloverMovedM, 3)}{msg.sg3f2()}</p>
       </div>
       <div class="rounded-2xl border border-border bg-card p-4">
-        <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Waktu pemulihan</p>
-        <p class="kpi-value mt-2 font-heading text-2xl">{numId(res.summary.recoveryDays, 1)}<span class="text-sm text-muted-foreground"> hari</span></p>
-        <p class="mt-1 text-xs text-muted-foreground">drain 20% kapasitas/hari (asumsi)</p>
+        <p class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{msg.sg12()}</p>
+        <p class="kpi-value mt-2 font-heading text-2xl">{numId(res.summary.recoveryDays, 1)}<span class="text-sm text-muted-foreground"> {msg.sg13()}</span></p>
+        <p class="mt-1 text-xs text-muted-foreground">{msg.sg14()}</p>
       </div>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
       <div class="rounded-2xl border border-border bg-card p-5">
-        <p class="mb-3 text-sm font-medium">Utilisasi puncak (hub teratas)</p>
-        {#if utilChart}<EChart option={utilChart} height={280} label="Utilisasi puncak per hub" />{/if}
+        <p class="mb-3 text-sm font-medium">{msg.sg15()}</p>
+        {#if utilChart}<EChart option={utilChart} height={280} label={msg.sg2t5()} />{/if}
       </div>
       <div class="rounded-2xl border border-border bg-card p-5">
-        <p class="mb-3 text-sm font-medium">Rencana spillover (hub → headroom)</p>
+        <p class="mb-3 text-sm font-medium">{msg.sg16()}</p>
         <div class="max-h-[280px] space-y-2 overflow-y-auto pr-1">
           {#if res.spillover.length === 0}
-            <p class="text-sm text-muted-foreground">Tidak ada spillover — beban terserap tanpa pengalihan.</p>
+            <p class="text-sm text-muted-foreground">{msg.sg17()}</p>
           {/if}
           {#each res.spillover as m (m.fromCode + m.toCode)}
             <div class="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
@@ -161,14 +162,14 @@
     <!-- Tabel hub -->
     <div class="overflow-x-auto rounded-2xl border border-border bg-card">
       <table class="w-full text-sm">
-        <caption class="sr-only">Utilisasi puncak per hub</caption>
+        <caption class="sr-only">{msg.sg18()}</caption>
         <thead>
           <tr class="border-b border-border bg-muted/50 text-left font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            <th class="px-4 py-2.5">Hub</th>
-            <th class="px-4 py-2.5 text-right">Kap. efektif</th>
-            <th class="px-4 py-2.5 text-right">Beban puncak</th>
-            <th class="px-4 py-2.5 text-right">Util</th>
-            <th class="px-4 py-2.5 text-right">Overflow</th>
+            <th class="px-4 py-2.5">{msg.sg19()}</th>
+            <th class="px-4 py-2.5 text-right">{msg.sg20()}</th>
+            <th class="px-4 py-2.5 text-right">{msg.sg21()}</th>
+            <th class="px-4 py-2.5 text-right">{msg.sg22()}</th>
+            <th class="px-4 py-2.5 text-right">{msg.sg23()}</th>
           </tr>
         </thead>
         <tbody>
@@ -186,7 +187,78 @@
     </div>
 
     <div class="rounded-2xl border-l-4 border-[var(--bitcoin)] bg-muted/30 p-4 text-sm">
-      <span class="font-medium">Insight:</span> puncak musiman (1,15×) hanya menekan <strong>1 hub</strong> — persis peristiwa "Jakarta 1 overload" pada Double 12. Pada festival/Double 12 (2–3×), belasan hub melampaui kapasitas & butuh pengalihan + buffer armada. {res.note}
+      <span class="font-medium">{msg.sg24()}</span> {msg.sg25()} <strong>{msg.sg26()}</strong> {msg.sg3f3()} {res.note}
+    </div>
+
+    <!-- Rencana kanonik (analisis tim) -->
+    <div class="rounded-2xl border border-border bg-card p-5">
+      <p class="text-sm font-medium">{msg.sg27()}</p>
+      <p class="mt-1 text-xs text-muted-foreground">
+        {msg.sg28()} <span class="font-medium text-foreground">{msg.sg29()}</span> (Rp{numId(res.plan.loadBalancing.costPerPackageIdr, 0)} {msg.sg3f4()}
+        {msg.sg3f5()} {res.plan.loadBalancing.derivation}.
+      </p>
+
+      <div class="mt-4 overflow-x-auto">
+        <table class="w-full text-sm">
+          <caption class="sr-only">{msg.sg30()}</caption>
+          <thead>
+            <tr class="border-b border-border text-left font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              <th class="py-2">{msg.sg31()}</th>
+              <th class="py-2 text-right">{msg.sg32()}</th>
+              <th class="py-2 text-right">{msg.sg33()}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each res.plan.amplificationTable as a (a.amplification)}
+              <tr class="border-b border-border/60 last:border-0">
+                <td class="py-2">{numId(a.amplification, 2)}×</td>
+                <td class="py-2 text-right tabular-nums font-medium">{a.hubsBreached}</td>
+                <td class="py-2 text-right tabular-nums text-muted-foreground">{numId(a.nationalUtilPct, 1)}%</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-4 grid gap-3 sm:grid-cols-3">
+        <div class="rounded-xl bg-muted/40 p-3">
+          <p class="text-xs text-muted-foreground">{msg.sg34()}</p>
+          <p class="kpi-value text-lg text-success-foreground">Rp{numId(res.plan.loadBalancing.costPerPackageIdr, 0)}<span class="text-sm text-muted-foreground"> {msg.sg35()}</span></p>
+        </div>
+        <div class="rounded-xl bg-muted/40 p-3">
+          <p class="text-xs text-muted-foreground">{msg.sg36()}</p>
+          <p class="kpi-value text-lg">Rp{numId(res.plan.newHubCapexPerPackageIdr.horizon10 ?? 0, 0)}<span class="text-sm text-muted-foreground"> {msg.sg37()}</span></p>
+        </div>
+        <div class="rounded-xl bg-muted/40 p-3">
+          <p class="text-xs text-muted-foreground">{msg.sg38()}</p>
+          <p class="kpi-value text-lg">Rp{numId(res.plan.newHubCapexPerPackageIdr.horizon5 ?? 0, 0)}<span class="text-sm text-muted-foreground"> {msg.sg39()}</span></p>
+        </div>
+      </div>
+
+      <div class="mt-4 grid gap-4 lg:grid-cols-2">
+        <div>
+          <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{msg.sg40()}</p>
+          <ul class="mt-2 space-y-1 text-xs">
+            {#each res.plan.layers as l (l.layer)}
+              <li><span class="font-medium">{l.layer}:</span> {l.content}</li>
+            {/each}
+          </ul>
+        </div>
+        <div>
+          <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{msg.sg41()}</p>
+          <ul class="mt-2 space-y-1 text-xs">
+            {#each res.plan.downturnPlaybook as d (d.when)}
+              <li><span class="font-medium">{d.when}:</span> {d.action}</li>
+            {/each}
+          </ul>
+        </div>
+      </div>
+
+      <p class="mt-4 text-xs text-muted-foreground">
+        Contoh Jakarta: mengalihkan {numId(res.plan.jakartaExample.movedTotalM, 2)} {msg.sg3f6()}
+        {numId(res.plan.jakartaExample.utilizationBeforePct, 1)}% ke {numId(res.plan.jakartaExample.utilizationAfterPct, 1)}%, sementara penerima naik ke
+        {res.plan.jakartaExample.receivers.map((r) => `${r.hub} ${numId(r.utilizationAfterPct, 1)}%`).join(", ")}.
+      </p>
     </div>
   {:else}
     <PageState loading={true} skeletonCards={4} skeletonHeight={280} />

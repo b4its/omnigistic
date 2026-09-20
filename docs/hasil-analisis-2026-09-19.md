@@ -30,7 +30,7 @@ Kedua model tidak saling mengalahkan mutlak. Masing-masing unggul pada kondisi b
 | B | Joint Venture | 8 hub: Palembang, Pekanbaru, Bandar Lampung, Banjarmasin, Padang, Balikpapan, Pontianak, Mataram | 22,1% |
 | C | Regional Sponsor | 4 hub: Banda Aceh, Manado, Ambon, Jayapura | 4,4% |
 
-Empat hub Tingkat C adalah empat hub dengan utilisasi terendah dari 23 hub: 40,5%, 41,2%, 32,1%, dan 28,1%.
+Empat hub Tingkat C adalah empat hub dengan utilisasi terendah dari 23 hub: 40,5%, 41,2%, 32,1%, dan 28,1%. Pembagian A dan B tidak semata mengikuti utilisasi: Makassar (48,6%) tetap Direct karena berperan sebagai gateway Sulawesi dan titik konsolidasi wilayah timur, sedangkan kota tier-2 Sumatra dan Kalimantan berbagi risiko lewat Joint Venture. Tingkat C murni mengikuti utilisasi terendah.
 
 **Langkah 4. Hitung nilainya.**
 
@@ -65,7 +65,7 @@ Pertama, menyerahkan semua hub berarti menjual keunggulan sendiri. Sebelas hub i
 
 **Kelola fluktuasi dengan sistem lima lapis, dengan tuas terbesar berupa load balancing antar-hub, bukan penambahan kapasitas.**
 
-Load balancing berbiaya sekitar Rp 90 per paket, jauh di bawah capex hub baru yang diasumsikan Rp 500 miliar. Sistem ini juga mencakup playbook untuk penurunan volume, karena kasus menceritakan keruntuhan Q4 2023, bukan hanya lonjakan.
+Load balancing berbiaya sekitar Rp 90 per paket. Bandingkan pada satuan yang setara: hub baru butuh capex Rp 500 miliar sekali bayar; dengan kapasitas hub rata-rata 0,22 juta paket per hari (5,098 juta ÷ 23 hub), capex itu setara sekitar Rp 618 per paket pada horizon 10 tahun, atau Rp 1.236 per paket pada horizon 5 tahun. Jadi load balancing tetap jauh lebih murah, dan perbandingannya kini sejenis. Sistem ini juga mencakup playbook untuk penurunan volume, karena kasus menceritakan keruntuhan Q4 2023, bukan hanya lonjakan.
 
 ## BAGAIMANA
 
@@ -92,7 +92,7 @@ Pada 1,45×, utilisasi nasional baru sekitar 89,6%, dan Ambon serta Jayapura tid
 
 **Langkah 3. Hitung biaya load balancing.** Truk 8 ton berkapasitas sekitar 4.000 paket, jarak 120 km, biaya Rp 3.000 per km: (120 × Rp 3.000) ÷ 4.000 = Rp 90 per paket. Angka kapasitas truk dan biaya per km adalah asumsi.
 
-**Langkah 4. Contoh Jakarta.** Mengalihkan sekitar 0,10 juta paket per hari ke Bekasi-Karawang (0,05), Bandung (0,03), dan Yogyakarta (0,02) menurunkan utilisasi Jakarta dari 90,4% menjadi sekitar 81,5%, sementara hub penerima naik ke kisaran 73 sampai 81%.
+**Langkah 4. Contoh Jakarta.** Mengalihkan sekitar 0,10 juta paket per hari ke Bekasi-Karawang (0,05), Bandung (0,03), dan Yogyakarta (0,02) menurunkan utilisasi Jakarta dari 90,4% menjadi sekitar 72,6%, sementara hub penerima naik ke kisaran 73 sampai 81%.
 
 **Langkah 5. Playbook penurunan.**
 
@@ -114,7 +114,7 @@ Pertama, kasus sendiri menunjukkan solusinya sudah pernah berhasil: saat Double 
 
 **Masalah COD adalah kegagalan insentif, bukan sekadar masalah proses.**
 
-Kurir dengan bayaran flat per paket kehilangan sekitar Rp 40.900 sampai Rp 45.256 per hari setiap kali mengantar COD dengan benar. Solusinya tiga lapis: perbaiki insentif, tambahkan empat intervensi digital, dan lakukan rekonsiliasi kas tiga arah. Targetnya waktu per paket COD turun dari 17,25 menjadi 12,0 menit, dengan nilai sekitar Rp 1,95 triliun per tahun.
+Kurir dengan bayaran flat per paket kehilangan sekitar Rp 40.900 sampai Rp 45.256 per hari setiap kali mengantar COD dengan benar. Solusinya tiga lapis: perbaiki insentif, tambahkan empat intervensi digital, dan lakukan rekonsiliasi kas tiga arah. Targetnya waktu per paket COD turun dari 17,25 menjadi 12,0 menit, dengan nilai kerja sekitar Rp 1,95 triliun per tahun (turunan angkanya diuraikan di Langkah 5).
 
 ## BAGAIMANA
 
@@ -167,9 +167,9 @@ C. Rekonsiliasi kas tiga arah antara bukti serah-terima, mutasi dompet kurir, da
 | Produktivitas COD | 24,3 per hari | 35 per hari (+44%) |
 | Retur COD | 10% | 6,5% |
 | Selisih rekonsiliasi kas | 0,10% | 0,02% |
-| Nilai tahunan |  | sekitar Rp 1,95 T |
+| Nilai tahunan |  | sekitar Rp 1,95 T (turunan di bawah) |
 
-Retur 10%, selisih kas 0,10%, dan bauran COD 35% adalah asumsi tim (tidak ada di kasus). Nilai Rp 1,95 T harus disajikan sebagai rentang mengikuti bauran COD 25 sampai 45%.
+**Turunan angka.** Penghematan waktu kurir: 5,25 menit per paket COD (70% dari 7,5 menit) × biaya kurir Rp 398 per menit (UMP DKI Rp 5.729.876 ÷ 30 hari ÷ 8 jam ÷ 60 menit) = Rp 2.089 per paket. Pada bauran COD 35% (sekitar 388 juta paket per tahun dari basis 1.110 juta paket 2023) nilainya Rp 0,81 triliun, dengan rentang Rp 0,58 sampai 1,04 triliun untuk bauran 25% sampai 45%. Angka kerja Rp 1,95 triliun memakai tambahan sekitar Rp 5.000 per paket COD untuk retur yang dicegah dan selisih rekonsiliasi; komponen itu berlabel asumsi tim, karena biaya retur dan nilai kas tidak tersedia di kasus. Retur 10%, selisih kas 0,10%, dan bauran COD 35% juga asumsi tim.
 
 ## MENGAPA
 
@@ -183,7 +183,7 @@ Kurir menjawab sesuai insentifnya. Bila COD membuat pendapatan hariannya turun h
 
 **Mulai dengan pilot 350 motor listrik, tunda armada berat, dan pasang solar sebelum mengelektrifikasi truk.**
 
-Dua model disajikan, keduanya pada siklus penggantian kendaraan, horizon 5 tahun, diskonto 10%, dan dengan pembebasan pajak EV dimasukkan ke base case. **Model A (sederhana)** membandingkan 350 Honda Scoopy Fashion (bensin) dengan 350 Smoot Zuzu (listrik, tukar baterai): net benefit Rp 2,66 miliar per tahun, arus kas Tahun-0 +Rp 1,81 miliar, BCR 1,84 kali, NPV Rp 11,88 miliar, emisi turun 266 ton CO₂ per tahun. **Model B (rinci, mengikuti campuran armada nyata)** memakai tiga kelas kendaraan: net benefit Rp 3,50 miliar per tahun, arus kas Tahun-0 +Rp 2,21 miliar, BCR 3,50 kali, ROI 250,45%, NPV Rp 15,49 miliar, emisi turun 292 ton CO₂ per tahun. Penskalaan hanya bila lolos syarat pilot. Program ini pilot pembuktian, bukan penggerak laba utama.
+Dua model disajikan, keduanya pada siklus penggantian kendaraan, horizon 5 tahun, diskonto 10%, dan dengan pembebasan pajak EV dimasukkan ke base case. **Model A (sederhana)** membandingkan 350 Honda Scoopy Fashion (bensin) dengan 350 Smoot Zuzu (listrik, tukar baterai): net benefit Rp 2,66 miliar per tahun, arus kas Tahun-0 +Rp 1,81 miliar, BCR 1,84 kali, NPV Rp 11,88 miliar, emisi turun 266 ton CO₂ per tahun. Pada acuan pasar tarif swap Rp 200 per km, net benefit Rp 2,40 miliar dan NPV Rp 10,91 miliar; pada batas atas pasar Rp 222 per km, net benefit Rp 2,18 miliar dan NPV Rp 10,06 miliar. **Model B (rinci, mengikuti campuran armada nyata)** memakai tiga kelas kendaraan: net benefit Rp 3,50 miliar per tahun, arus kas Tahun-0 +Rp 2,21 miliar, BCR 3,50 kali, ROI 250,45%, NPV Rp 15,49 miliar, emisi turun 292 ton CO₂ per tahun. Penskalaan hanya bila lolos syarat pilot. Program ini pilot pembuktian, bukan penggerak laba utama.
 
 ## BAGAIMANA
 
@@ -193,13 +193,15 @@ Dua model disajikan, keduanya pada siklus penggantian kendaraan, horizon 5 tahun
 | --- | --- | --- |
 | Jumlah unit | 350 (2,8% dari 12.500) | Pilihan tim |
 | Jarak | 80 km per hari, 365 hari | Asumsi |
-| Harga Scoopy Fashion | Rp 23.376.000 | Eksternal, cek ulang |
-| Harga Smoot Zuzu | Rp 19.900.000 | Eksternal, cek ulang |
-| Harga Pertamax (rata-rata provinsi) | Rp 16.253,95 per liter | Eksternal, cek ulang |
-| Konsumsi Scoopy (pabrikan) | 59,0 km per liter | Eksternal, cek ulang |
+| Harga Scoopy Fashion | Rp 23.376.000 | Eksternal, terverifikasi (Sep 2026) |
+| Harga Smoot Zuzu | Rp 19.900.000 | Eksternal, terverifikasi (Sep 2026) |
+| Harga Pertamax (rata-rata provinsi) | Rp 16.253,95 per liter | Eksternal, belum terkonfirmasi (lihat catatan) |
+| Konsumsi Scoopy (pabrikan) | 59,0 km per liter | Eksternal, klaim pabrikan |
 | Tambahan idle | 3 menit per paket, 45 paket, 0,20 liter per jam | Asumsi |
-| Tarif swap | Rp 175 per km (prudent Rp 200) | Eksternal, cek ulang |
+| Tarif swap | Rp 175 per km (asumsi swap.id); acuan pasar Rp 200 per km | Eksternal, belum terkonfirmasi; acuan pasar dipakai di Langkah 3 |
 | Pemeliharaan Scoopy / Zuzu | Rp 2,88 juta / Rp 1,20 juta per unit per tahun | Asumsi |
+
+**Status verifikasi pasar (2026-09-19).** Terverifikasi lewat sumber publik: UMP DKI Jakarta 2026 Rp 5.729.876; Honda Scoopy Fashion Rp 23.376.000; Smoot Zuzu Rp 19.900.000; United MX-1200 Rp 16.800.000; tarif listrik bisnis B-2/TR Rp 1.444,70 per kWh; faktor emisi grid 0,87 kg CO₂ per kWh. Keputusan atas angka yang belum terkonfirmasi: (a) **Pertamax dipertahankan** pada Rp 16.253,95 (rata-rata 38 provinsi); harga nasional Rp 15.950 per liter dicatat sebagai pembanding, selisih sekitar 2% yang bila dipakai menurunkan hemat energi sekitar Rp 70 juta per tahun; (b) **tarif swap**: Rp 175 per km (swap.id) dipakai sebagai batas optimistis, sedangkan **Rp 200 per km dijadikan acuan pasar** dan Rp 222 per km sebagai batas atas; (c) **terverifikasi dalam rentang pasar**: harga BeAT Rp 19.380.000 (pasar Rp 18,98 sampai 20,38 juta), Vario Evo 160 Rp 28.525.000 (pasar Rp 28,1 sampai 29,5 juta), Genio Rp 20.500.000 (pasar Rp 19,73 sampai 21,5 juta), dan tarif kurir Rp 2.000 sampai 2.213 per paket (pasar Rp 2.000 sampai 3.000 per paket). (d) **Polytron Fox-200** dipakai Rp 11.500.000, sekitar 5% di bawah pasar Rp 12,1 sampai 12,5 juta (skema sewa baterai, Agustus 2026); dampaknya ke hemat CAPEX Model B hanya sekitar Rp 42 juta dari Rp 1,77 miliar, sehingga tidak mengubah kesimpulan. (e) **klaim truk listrik 19% lebih emisif**: arahnya didukung literatur (pada grid berbasis batubara, truk listrik dapat lebih emisif daripada diesel), tetapi angka 19% spesifik belum terkonfirmasi, sehingga tetap berlabel perlu dicek ulang.
 
 **Langkah 2. Hitung berurutan.**
 
@@ -222,11 +224,13 @@ Dua model disajikan, keduanya pada siklus penggantian kendaraan, horizon 5 tahun
 
 **Langkah 3. Kunci Model A (BCA sederhana, pajak di base).**
 
-| Metrik | Base (swap Rp 175/km) | Prudent (swap Rp 200/km) |
-| --- | --- | --- |
-| Net benefit per tahun | Rp 2.655.774.479 | Rp 2.400.274.479 |
-| Arus kas Tahun-0 | +Rp 1.814.506.447 | +Rp 1.814.506.447 |
-| NPV @10% (5 tahun) | Rp 11.881.981.206 | Rp 10.913.435.187 |
+| Metrik | Rp 175/km (asumsi swap.id, optimistis) | **Rp 200/km (batas bawah pasar, acuan)** | Rp 222/km (batas atas pasar) |
+| --- | --- | --- | --- |
+| Net benefit per tahun | Rp 2.655.774.479 | **Rp 2.400.274.479** | Rp 2.175.434.479 |
+| Arus kas Tahun-0 | +Rp 1.814.506.447 | **+Rp 1.814.506.447** | +Rp 1.814.506.447 |
+| NPV @10% (5 tahun) | Rp 11.881.981.206 | **Rp 10.913.435.187** | Rp 10.061.114.689 |
+
+Acuan keputusan adalah **Rp 200 per km**, karena tarif swap Rp 175 per km dari swap.id berpotensi rendah dan rentang pasar adalah Rp 200 sampai 222 per km. Bahkan pada batas atas pasar Rp 222, net benefit tetap Rp 2,18 miliar per tahun dan NPV Rp 10,06 miliar, sehingga kesimpulan tidak berubah.
 
 TCO 5 tahun per unit. ICE Scoopy: harga Rp 23.376.000 + BBNKB Rp 1.899.300 + 5 × (BBM Rp 10.714.039 + servis Rp 2.880.000 + PKB Rp 303.888) = **Rp 94.764.935**. EV Zuzu: harga Rp 19.900.000 + 5 × (swap Rp 5.110.000 + servis Rp 1.200.000) = **Rp 51.450.000**. Maka **BCR = 94.764.935 ÷ 51.450.000 = 1,84 kali**, artinya EV sekitar 46% lebih murah dimiliki. Payback: tidak ada periode balik modal, karena arus kas Tahun-0 sudah positif (EV lebih murah dibeli ditambah hemat BBNKB).
 
@@ -257,16 +261,30 @@ Model ini memakai tiga kelas kendaraan, sehingga tidak ada rata-rata antar merek
 | NPV @10% (5 tahun) | Rp 15.490.164.448 |
 | TCO 5 tahun (ICE Rp 33.655.367.522 vs EV Rp 15.109.461.103) | 2,227 kali |
 | Emisi turun per tahun | 291,8 ton CO₂ |
+| Net benefit bila tarif swap M1 mengikuti acuan pasar (Rp 200/km) | Rp 3.376.174.588 |
+| Net benefit bila tarif swap M1 di batas atas pasar (Rp 222/km) | Rp 3.263.754.588 |
 
 Catatan: kelas M1 (BeAT) memang **lebih mahal dibeli** sebagai EV (hemat CAPEX −Rp 91 juta); kelas M2 dan M3 menutupinya sehingga total +Rp 1,77 miliar. Jadi klaim "EV lebih murah dibeli" berlaku pada agregat, bukan pada setiap kelas. Biaya pelatihan Rp 66.848.553 = 350 unit × 1 hari × (UMP DKI Rp 5.729.876 ÷ 30 hari). Tarif listrik depot untuk 175 unit berbasis charge Rp 1.444,70 per kWh dengan efisiensi charging 90%.
 
 **Langkah 5. Hitung titik kritis.**
+
+Model A (satu kelas, Scoopy ↔ Zuzu):
 
 | Pertanyaan | Jawaban |
 | --- | --- |
 | Tarif swap saat biaya energi EV sama dengan biaya bensin | Rp 366,92 per km (naik 2,10× dari Rp 175) |
 | Tarif swap saat net operasional nol | Sekitar Rp 424,45 per km |
 | Harga Pertamax saat energi Scoopy sama dengan swap Rp 175 | Sekitar Rp 7.752 per liter |
+
+Model B (tiga kelas, batas kritis dihitung per kelas):
+
+| Kelas | Batas energi setara | Batas net operasional nol |
+| --- | --- | --- |
+| M1 (swap) | swap Rp 359,68 per km (naik 2,06×) | swap Rp 417,21 per km |
+| M2 (charge) | tarif listrik Rp 14.600 per kWh (naik 10,1×) | tarif listrik Rp 16.518 per kWh |
+| M3 (charge) | tarif listrik Rp 12.216 per kWh (naik 8,5×) | tarif listrik Rp 14.134 per kWh |
+
+Bacaan manajerialnya: kelas berbasis charge jauh lebih tahan terhadap kenaikan tarif listrik daripada kelas swap terhadap kenaikan tarif swap. Untuk M1, harga Pertamax saat energi setara swap Rp 175 adalah sekitar Rp 7.908 per liter.
 
 **Langkah 6. Hitung emisi.** Scoopy: 2,31 ÷ 44,2985 = 0,05215 kg CO₂ per km. Zuzu: (0,027 ÷ 0,90) × 0,87 = 0,02610 kg CO₂ per km. Penurunan sekitar 49,9%, atau sekitar 266 ton CO₂ per tahun untuk 350 unit pada Model A. Pada Model B (campuran tiga kelas), penurunan total 291,8 ton CO₂ per tahun.
 
@@ -339,7 +357,7 @@ Angka payback ini adalah estimasi tim, bukan data kasus.
 
 ## MENGAPA
 
-Pertama, kapasitas kosong sudah dibayar. Mengisinya menghasilkan kontribusi tanpa modal infrastruktur baru, sedangkan hub baru butuh modal besar dan baru menghasilkan di tahun ketiga sampai kelima. Kedua, jangkauan bukan masalahnya. Paket per outlet hampir sama antar wilayah (Jawa 1.449, Maluku & Papua 1.400), sehingga yang timpang adalah utilisasi hub. Membuka kota baru berarti menambah outlet di jaringan yang sudah merata sambil membangun hub di tempat yang belum membutuhkannya. Ketiga, ekspansi harus bisa dihentikan. Kasus menunjukkan syok regulasi (TikTok Shop) bisa menjatuhkan volume dalam satu kuartal, sehingga model sponsor dan JV yang tidak mengunci modal GC lebih aman. Keempat, ada tiga peringatan yang harus dijaga: perang harga (tarif turun 10% memotong kontribusi Rp 3.000 menjadi sekitar Rp 2.000), konsentrasi pada beberapa platform, dan syok regulasi. Satu catatan jujur: seluruh perhitungan kontribusi bergantung pada asumsi Rp 3.000 per paket, dan nilai payback hub baru adalah estimasi yang perlu divalidasi dengan data biaya GC.
+Pertama, kapasitas kosong sudah dibayar. Mengisinya menghasilkan kontribusi tanpa modal infrastruktur baru, sedangkan hub baru butuh modal besar dan baru menghasilkan di tahun ketiga sampai kelima. Kedua, jangkauan bukan masalahnya. Jaringan sudah tersebar di 3.200 titik, jadi membuka kota baru berarti menambah outlet di jaringan yang sudah ada, bukan mengisi kekosongan. Ketimpangannya ada di dua tingkat sekaligus: utilisasi hub (Jakarta 90,4% lawan Jayapura 28,1%) dan keluaran per outlet (Jawa 1.052 paket per outlet per hari lawan Maluku & Papua 420, dihitung dari Tabel 1). Karena itu yang perlu didorong adalah pemakaian aset yang sudah dibayar, bukan menambah hub di kota baru. Ketiga, ekspansi harus bisa dihentikan. Kasus menunjukkan syok regulasi (TikTok Shop) bisa menjatuhkan volume dalam satu kuartal, sehingga model sponsor dan JV yang tidak mengunci modal GC lebih aman. Keempat, ada tiga peringatan yang harus dijaga. Pertama, perang harga: dengan tarif rata-rata sekitar Rp 10.000 per paket dan biaya variabel sekitar Rp 7.000, kontribusi per paket sekitar Rp 3.000; tarif turun 10% (Rp 1.000) langsung memotong kontribusi menjadi sekitar Rp 2.000, turun sepertiga. Kedua, konsentrasi pada beberapa platform. Ketiga, syok regulasi. Satu catatan jujur: seluruh perhitungan kontribusi bergantung pada asumsi Rp 3.000 per paket, dan nilai payback hub baru adalah estimasi yang perlu divalidasi dengan data biaya GC.
 
 ---
 
@@ -349,7 +367,7 @@ Pertama, kapasitas kosong sudah dibayar. Mengisinya menghasilkan kontribusi tanp
 
 **Gabungkan tujuh tuas efisiensi dengan absorpsi biaya tetap dari pertumbuhan volume, dan tambahkan tiga sumber pendapatan dari aset yang sudah dimiliki.**
 
-Hasilnya cost-to-sales turun dari 31,34% menjadi 28,35%, atau 26,8% bila sponsor selektif (Tantangan 1) berhasil. Biaya yang dihindarkan sekitar Rp 11,53 triliun, dan sekitar 65% di antaranya berasal dari volume, bukan dari pemotongan.
+Hasilnya cost-to-sales turun dari 31,34% menjadi 28,35%, atau 26,8% bila sponsor selektif (Tantangan 1) berhasil. Biaya yang dihindarkan sekitar Rp 11,54 triliun, dan sekitar 65% di antaranya berasal dari volume, bukan dari pemotongan.
 
 ## BAGAIMANA
 
@@ -357,7 +375,7 @@ Hasilnya cost-to-sales turun dari 31,34% menjadi 28,35%, atau 26,8% bila sponsor
 
 | # | Tuas | Dampak biaya variabel | Catatan |
 | --- | --- | --- | --- |
-| 1 | Produktivitas last-mile dan COD | −3,0% | Berjangkar hitungan Tantangan 3 |
+| 1 | Produktivitas last-mile dan COD | −3,0% | Berjangkar hitungan Tantangan 3: COD sekitar 35% volume × pengurangan waktu per paket 30,4% (17,25 ke 12,0 menit) × porsi biaya last-mile sekitar 28% dari biaya variabel = 3,0% |
 | 2 | Modal shift darat ke laut untuk paket tidak mendesak | −1,0% | Estimasi |
 | 3 | Kualitas alamat dan gagal antar | −1,0% | Estimasi |
 | 4 | Right-size packaging | −0,5% | Estimasi |
@@ -375,7 +393,7 @@ Hasilnya cost-to-sales turun dari 31,34% menjadi 28,35%, atau 26,8% bila sponsor
 | Volume: 1.110 juta menjadi 1.347,5 juta paket (+21,4%, setara utilisasi 61,8% ke 75%) |  |
 | Biaya bila struktur lama ikut naik: 99,54 × 1,214 | Rp 120,84 T |
 | Biaya bila biaya tetap konstan: 34,84 + (64,70 × 1,214) | Rp 113,39 T |
-| **Manfaat absorpsi** | **Rp 7,45 T** |
+| **Manfaat absorpsi** | **Rp 7,46 T** |
 
 **Langkah 3. Susun jembatan cost-to-sales.**
 
@@ -390,7 +408,7 @@ Hasilnya cost-to-sales turun dari 31,34% menjadi 28,35%, atau 26,8% bila sponsor
 
 Asumsi: fee mitra menggantikan penuh biaya operasi hub terkait, tanpa biaya transisi atau koordinasi sisa. Fee dihitung dari pendapatan proyeksi (B Rp 85,06 T × 26% + C Rp 16,89 T × 22% = Rp 25,83 T); biaya GC yang keluar memakai rasio nasional 31,34% (hub timur sebenarnya berbiaya tetap lebih tinggi, sehingga estimasi ini konservatif).
 
-Total biaya dihindarkan tanpa sponsor: Rp 7,45 T + Rp 4,08 T = Rp 11,53 T.
+Total biaya dihindarkan tanpa sponsor: Rp 7,46 T + Rp 4,08 T = Rp 11,54 T.
 
 **Langkah 4. Tambahkan tiga sumber pendapatan dari aset yang sudah ada.**
 

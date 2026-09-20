@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 /**
  * Analitik penjual (role SELLER) — turunan dari `seller.ts`.
  *
@@ -123,21 +124,33 @@ export function scoreCustomer(rec: CustomerRecord): CustomerScore {
   let action: string;
   if (score >= 80) {
     segment = "Champion";
-    action = "Pertahankan: kirim voucher loyalitas & minta ulasan.";
+    action = m.sa01();
   } else if (score >= 65) {
     segment = "Loyal";
-    action = "Naikkan keranjang: tawarkan bundling produk terkait.";
+    action = m.sa02();
   } else if (score >= 45) {
     segment = "Potensial";
-    action = "Dorong pembelian ulang dengan promo terbatas.";
+    action = m.sa03();
   } else if (rec.failedRate >= 0.2) {
     segment = "Berisiko";
-    action = "Alihkan ke pre-payment atau titik PUDO untuk hindari gagal antar.";
+    action = m.sa04();
   } else {
     segment = "Pasif";
-    action = "Reaktivasi: kirim pengingat + diskon ongkir.";
+    action = m.sa05();
   }
   return { record: rec, score: round1(score), recency: round1(recency), frequency: round1(frequency), monetary: round1(monetary), risk: round1(risk), segment, action };
+}
+
+/** Label segmen pelanggan sesuai locale (nilai segmen tetap sebagai ID data). */
+export function segmentLabel(segment: CustomerScore["segment"]): string {
+  const map: Record<CustomerScore["segment"], () => string> = {
+    Champion: () => m.segl01(),
+    Loyal: () => m.segl02(),
+    Potensial: () => m.segl03(),
+    Berisiko: () => m.segl04(),
+    Pasif: () => m.segl05(),
+  };
+  return map[segment]();
 }
 
 /** Semua pelanggan (basis demo + pelanggan nyata opsional), skor menurun. */

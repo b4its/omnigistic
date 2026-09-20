@@ -1,16 +1,19 @@
 <script lang="ts">
+  import { courierLabel } from "$lib/i18n/labels";
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import { resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import type { IconName } from "$lib/icon-names";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
-  import { formatRupiah } from "$lib/shop/catalog";
-  import { shop, cartDetail, ORDER_STATUS_FLOW, ORDER_STATUS_LABEL, PRESENCE_LABEL, COURIER_TASK, nextStatus, progressForStatus, lastOutForDeliveryOrder, type Order, type PresenceStatus } from "$lib/stores/shop";
+  import { formatRupiah, productName } from "$lib/shop/catalog";
+  import { shop, cartDetail, ORDER_STATUS_FLOW, orderStatusLabel, presenceLabel, courierTask, nextStatus, progressForStatus, lastOutForDeliveryOrder, type Order, type PresenceStatus } from "$lib/stores/shop";
   import { HUB_LABEL, etaForCity, distanceForCity, remainingKm, remainingEtaMin } from "$lib/logistics";
   import { notify } from "$lib/toast";
 
   interface CartLine {
+    productId: string;
     name: string;
     icon: string;
     qty: number;
@@ -30,7 +33,7 @@
   onMount(() => {
     shop.init();
     const unsubCart = cartDetail.subscribe((d) => {
-      cartLines = d.items.map((i) => ({ name: i.product.name, icon: i.product.icon, qty: i.qty, lineTotal: i.lineTotal }));
+      cartLines = d.items.map((i) => ({ productId: i.product.id, name: i.product.name, icon: i.product.icon, qty: i.qty, lineTotal: i.lineTotal }));
       cartSubtotal = d.subtotal;
       cartCount = d.count;
     });
@@ -75,7 +78,7 @@
     const nowOpen = !openIds.has(id);
     if (nowOpen) openIds.add(id);
     else openIds.delete(id);
-    if (label) notify({ message: `${nowOpen ? "Buka" : "Tutup"} detail pesanan ${label}`, type: "info", title: "Pesanan Saya" });
+    if (label) notify({ message: m.cd3t1({ state: nowOpen ? m.cw2t1() : m.cd2t1(), label }), type: "info", title: m.cw2t2() });
   }
 
   // ── Pelacakan realtime dari status NYATA (hasil aksi kurir) ──
@@ -85,7 +88,7 @@
   const tripKm = $derived(tracked ? distanceForCity(tracked.address.city) : 0);
   const progress = $derived(tracked ? progressForStatus(tracked.status) : 0);
   const reached = $derived(!!tracked && tracked.status === "terkirim");
-  const reachLabel = $derived(tracked ? tracked.address.street.split(",")[0] : "Alamat penerima");
+  const reachLabel = $derived(tracked ? tracked.address.street.split(",")[0] : m.cw2t3());
   const kmLeft = $derived(tracked ? remainingKm(tracked.address.city, progress) : 0);
   const etaLeft = $derived(tracked ? remainingEtaMin(tracked.address.city, progress) : 0);
 
@@ -97,12 +100,12 @@
     if (!tracked) return;
     const err = shop.setPresence(tracked.id, presence);
     notify({
-      message: err ?? `Kurir diberi tahu: ${PRESENCE_LABEL[presence]}`,
+      message: err ?? m.cd3t2({ presence: presenceLabel(presence) }),
       type: err ? "warn" : presence === "di-rumah" ? "success" : "info",
       title: "Kehadiran"
     });
   }
-  const currentTask = $derived(tracked ? COURIER_TASK[tracked.status] : null);
+  const currentTask = $derived(tracked ? courierTask(tracked.status) : null);
   const upcomingStatus = $derived(tracked ? nextStatus(tracked.status) : null);
 
   // Pesanan ditampilkan pada daftar accordion (5 terbaru).
@@ -113,16 +116,16 @@
 <div class="space-y-6">
   <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div class="space-y-1">
-      <h1 class="font-heading text-xl font-semibold tracking-tight">Dashboard Saya</h1>
-      <p class="text-sm text-muted-foreground">Ringkasan belanja, pembayaran, dan pelacakan pengantaran realtime.</p>
+      <h1 class="font-heading text-xl font-semibold tracking-tight">{m.cd201()}</h1>
+      <p class="text-sm text-muted-foreground">{m.cd202()}</p>
     </div>
     <div class="flex shrink-0 items-center gap-2">
       <a href={resolveHref("/dashboard/customer/cart")} class="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
-        <Icon name="stack" cls="h-4 w-4" /> Keranjang
+        <Icon name="stack" cls="h-4 w-4" /> {m.cd4t1()}
         {#if cartCount > 0}<span class="rounded-full bg-muted px-1.5 text-xs tabular-nums">{cartCount}</span>{/if}
       </a>
       <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px">
-        <Icon name="map" cls="h-4 w-4" /> Semua pesanan
+        <Icon name="map" cls="h-4 w-4" /> {m.cd203()}
       </a>
     </div>
   </header>
@@ -130,39 +133,39 @@
   <!-- KPI -->
   <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Icon name="stack" cls="h-3.5 w-3.5" /> Keranjang</p>
-      <p class="mt-2 text-2xl font-bold tabular-nums text-foreground">{cartCount} <span class="text-base font-medium text-muted-foreground">item</span></p>
+      <p class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Icon name="stack" cls="h-3.5 w-3.5" /> {m.cd204()}</p>
+      <p class="mt-2 text-2xl font-bold tabular-nums text-foreground">{cartCount} <span class="text-base font-medium text-muted-foreground">{m.cd205()}</span></p>
       <p class="mt-1 text-xs text-muted-foreground">{formatRupiah(cartSubtotal)}</p>
     </div>
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Icon name="globe" cls="h-3.5 w-3.5" /> Pesanan</p>
+      <p class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Icon name="globe" cls="h-3.5 w-3.5" /> {m.cd206()}</p>
       <p class="mt-2 text-2xl font-bold tabular-nums text-foreground">{totalOrders}</p>
       <p class="mt-1 text-xs text-muted-foreground">{activeCount} aktif · {deliveredCount} terkirim</p>
     </div>
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Icon name="currency" cls="h-3.5 w-3.5" /> Total biaya</p>
+      <p class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Icon name="currency" cls="h-3.5 w-3.5" /> {m.cd207()}</p>
       <p class="mt-2 text-2xl font-bold tabular-nums text-foreground">{formatRupiah(totalSpend)}</p>
-      <p class="mt-1 text-xs text-muted-foreground">seluruh pesanan</p>
+      <p class="mt-1 text-xs text-muted-foreground">{m.cd208()}</p>
     </div>
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Icon name="shield" cls="h-3.5 w-3.5" /> COD vs Digital</p>
+      <p class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Icon name="shield" cls="h-3.5 w-3.5" /> {m.cd209()}</p>
       <p class="mt-2 text-base font-bold tabular-nums text-foreground">{formatRupiah(totalCod)}</p>
       <p class="text-base font-bold tabular-nums text-foreground">{formatRupiah(totalDigital)}</p>
       <div class="mt-2 flex h-1.5 overflow-hidden rounded-full bg-muted">
         <div class="h-full bg-primary" style="width:{codPct}%"></div>
         <div class="h-full bg-[var(--color-chart-4)]" style="width:{100 - codPct}%"></div>
       </div>
-      <p class="mt-1 text-[11px] text-muted-foreground"><span class="text-primary">■</span> COD · <span class="text-[color:var(--color-chart-4)]">■</span> Digital</p>
+      <p class="mt-1 text-[11px] text-muted-foreground"><span class="text-primary">■</span> {m.cd210()} <span class="text-[color:var(--color-chart-4)]">■</span> {m.cd211()}</p>
     </div>
   </section>
 
   <!-- Pelacakan realtime -->
   <section class="space-y-4">
     <div class="flex items-center justify-between">
-      <h2 class="text-sm font-semibold text-muted-foreground">Pelacakan pengantaran realtime</h2>
+      <h2 class="text-sm font-semibold text-muted-foreground">{m.cd212()}</h2>
       {#if tracked}
         <span class="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-semibold text-foreground">
-          <Icon name={tracked.payment === "COD" ? "currency" : "shield"} cls="h-3.5 w-3.5" /> {tracked.payment === "COD" ? "COD" : "Digital"} · {ORDER_STATUS_LABEL[tracked.status]}
+          <Icon name={tracked.payment === "COD" ? "currency" : "shield"} cls="h-3.5 w-3.5" /> {tracked.payment === "COD" ? "COD" : "Digital"} · {orderStatusLabel(tracked.status)}
         </span>
       {/if}
     </div>
@@ -170,10 +173,10 @@
     {#if !tracked}
       <div class="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
         <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="map" cls="h-7 w-7" /></span>
-        <p class="mt-4 text-base font-semibold text-foreground">Belum ada pesanan untuk dilacak</p>
-        <p class="mt-1 text-sm text-muted-foreground">Buat pesanan dulu, lalu pantau kurir bergerak menuju alamatmu di sini.</p>
+        <p class="mt-4 text-base font-semibold text-foreground">{m.cd213()}</p>
+        <p class="mt-1 text-sm text-muted-foreground">{m.cd214()}</p>
         <a href={resolveHref("/dashboard/customer/overview")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px">
-          <Icon name="search" cls="h-4 w-4" /> Mulai belanja
+          <Icon name="search" cls="h-4 w-4" /> {m.cd215()}
         </a>
       </div>
     {:else}
@@ -183,14 +186,14 @@
           <DeliveryMap progress={progress} city={tracked.address.city} originLabel={HUB_LABEL} destLabel={reachLabel} etaMin={tripMinutes} height={380} role="CUSTOMER" />
 
           <!-- Linimasa status -->
-          <ol class="flex items-center gap-1" aria-label="Status pengantaran">
+          <ol class="flex items-center gap-1" aria-label={m.ax11()}>
             {#each steps as step, i (step)}
               {@const done = i <= stepIndex}
               <li class="flex flex-1 flex-col items-center gap-1.5 text-center">
                 <span class="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold {done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}">
                   {#if i < stepIndex}<Icon name="check" cls="h-3.5 w-3.5" weight="bold" />{:else}{i + 1}{/if}
                 </span>
-                <span class="text-[10.5px] leading-tight {done ? 'font-semibold text-foreground' : 'text-muted-foreground'}">{ORDER_STATUS_LABEL[step]}</span>
+                <span class="text-[10.5px] leading-tight {done ? 'font-semibold text-foreground' : 'text-muted-foreground'}">{orderStatusLabel(step)}</span>
               </li>
               {#if i < steps.length - 1}
                 <span class="mb-4 h-0.5 flex-1 rounded-full {i < stepIndex ? 'bg-primary' : 'bg-muted'}" aria-hidden="true"></span>
@@ -203,17 +206,17 @@
         <aside class="space-y-4">
           <div class="space-y-4 rounded-2xl border border-border bg-card p-5">
             <div class="flex items-center justify-between">
-              <h3 class="text-sm font-semibold text-foreground">Status pengantaran</h3>
+              <h3 class="text-sm font-semibold text-foreground">{m.cd216()}</h3>
               <span class="rounded-full px-2.5 py-1 text-xs font-semibold {reached ? 'bg-success/15 text-success-foreground' : 'bg-primary/10 text-primary'}">{reached ? "Tiba" : "Dalam perjalanan"}</span>
             </div>
 
             <!-- Kondisi paket terkini (ditulis kurir) -->
             <div class="rounded-xl border {reached ? 'border-success/40 bg-success/5' : 'border-primary/30 bg-accent/40'} p-3">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Kondisi paket terkini</p>
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{m.cd217()}</p>
               <p class="mt-1 text-sm font-medium text-foreground">{tracked.statusNote}</p>
               <p class="mt-0.5 text-[11px] text-muted-foreground">
                 {new Date(tracked.updatedAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                {#if tracked.courier} · {tracked.courier}{/if}
+                {#if tracked.courier} · {courierLabel(tracked.courier)}{/if}
               </p>
             </div>
 
@@ -221,7 +224,7 @@
             {#if tracked.status === "dikirim"}
               <div class="rounded-xl border border-primary/30 bg-primary/5 p-3">
                 <p class="flex items-center gap-1.5 text-xs font-semibold text-primary">
-                  <Icon name="users" cls="h-3.5 w-3.5" /> Beri tahu kurir apakah kamu di rumah
+                  <Icon name="users" cls="h-3.5 w-3.5" /> {m.cd218()}
                 </p>
                 <div class="mt-2 flex flex-wrap gap-2">
                   <button
@@ -230,7 +233,7 @@
                     aria-pressed={tracked.presenceStatus === "di-rumah"}
                     class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {tracked.presenceStatus === 'di-rumah' ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-success/50 text-success-foreground hover:bg-success/10'}"
                   >
-                    <Icon name="check" cls="h-3.5 w-3.5" weight="bold" /> Ada di rumah
+                    <Icon name="check" cls="h-3.5 w-3.5" weight="bold" /> {m.cd219()}
                   </button>
                   <button
                     type="button"
@@ -238,11 +241,11 @@
                     aria-pressed={tracked.presenceStatus === "tidak-di-rumah"}
                     class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {tracked.presenceStatus === 'tidak-di-rumah' ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-warning/50 text-warning-foreground hover:bg-warning/10'}"
                   >
-                    <Icon name="warn" cls="h-3.5 w-3.5" /> Tidak di rumah
+                    <Icon name="warn" cls="h-3.5 w-3.5" /> {m.cd220()}
                   </button>
                 </div>
                 {#if tracked.presenceStatus}
-                  <p class="mt-2 text-[11px] text-muted-foreground">Terkirim ke kurir: <span class="font-medium text-foreground">{PRESENCE_LABEL[tracked.presenceStatus]}</span></p>
+                  <p class="mt-2 text-[11px] text-muted-foreground">{m.cd221()} <span class="font-medium text-foreground">{presenceLabel(tracked.presenceStatus)}</span></p>
                 {/if}
               </div>
             {/if}
@@ -251,14 +254,14 @@
             <!-- Progres bar (dari status nyata) -->
             <div class="space-y-1">
               <div class="flex justify-between text-xs text-muted-foreground">
-                <span>Progres</span>
+                <span>{m.cd222()}</span>
                 <span class="tabular-nums">{Math.round(progress * 100)}%</span>
               </div>
-              <div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label="Progres pengantaran">
+              <div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={m.ax12()}>
                 <div class="h-full rounded-full bg-[var(--primary)] transition-all" style="width:{Math.round(progress * 100)}%"></div>
               </div>
               <p class="text-[11px] text-muted-foreground">
-                {#if reached}Paket sudah tiba di {tracked.address.city}.{:else}± {kmLeft} km · sisa ETA ± {etaLeft} menit menuju {tracked.address.city} (total {tripKm} km).{/if}
+                {#if reached}{m.cd3f1()} {tracked.address.city}.{:else}± {kmLeft} km · sisa ETA ± {etaLeft} {m.cd3f2()} {tracked.address.city} (total {tripKm} km).{/if}
               </p>
             </div>
 
@@ -269,7 +272,7 @@
                   <Icon name={currentTask.icon as never} cls="h-4 w-4" />
                 </span>
                 <div class="min-w-0">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{reached ? "Selesai" : "Kurir saat ini"}</p>
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{reached ? m.cd4t2() : m.cd4t3()}</p>
                   <p class="text-sm font-semibold text-foreground">{currentTask.title}</p>
                   <p class="mt-0.5 text-xs text-muted-foreground">{currentTask.detail}</p>
                 </div>
@@ -278,25 +281,25 @@
 
             <p class="text-[11px] text-muted-foreground">
               {#if reached}
-                Paket sudah kamu terima. Terima kasih!
+                {m.cd3f3()}
               {:else if upcomingStatus}
-                Menunggu pembaruan kurir: <span class="font-semibold text-foreground">{ORDER_STATUS_LABEL[upcomingStatus]}</span>.
+                {m.cd3f4()} <span class="font-semibold text-foreground">{orderStatusLabel(upcomingStatus)}</span>.
               {:else}
-                Status diperbarui otomatis oleh kurir.
+                {m.cd3f5()}
               {/if}
             </p>
           </div>
 
           <!-- Detail tujuan -->
           <div class="space-y-2 rounded-2xl border border-border bg-card p-5 text-sm">
-            <h3 class="text-sm font-semibold text-foreground">Detail pengantaran</h3>
-            <p class="text-muted-foreground"><span class="font-medium text-foreground">Penerima:</span> {tracked.address.recipient}</p>
-            <p class="text-muted-foreground"><span class="font-medium text-foreground">Alamat:</span> {tracked.address.street}, {tracked.address.city}</p>
-            <p class="text-muted-foreground"><span class="font-medium text-foreground">Total:</span> {formatRupiah(tracked.total)}</p>
+            <h3 class="text-sm font-semibold text-foreground">{m.cd223()}</h3>
+            <p class="text-muted-foreground"><span class="font-medium text-foreground">{m.cd224()}</span> {tracked.address.recipient}</p>
+            <p class="text-muted-foreground"><span class="font-medium text-foreground">{m.cd225()}</span> {tracked.address.street}, {tracked.address.city}</p>
+            <p class="text-muted-foreground"><span class="font-medium text-foreground">{m.cd226()}</span> {formatRupiah(tracked.total)}</p>
             {#if tracked.payment === "COD" && tracked.codScore !== null}
-              <p class="text-muted-foreground"><span class="font-medium text-foreground">Pembayaran:</span> COD (bayar saat tiba)</p>
+              <p class="text-muted-foreground"><span class="font-medium text-foreground">{m.cd227()}</span> {m.cd228()}</p>
             {:else}
-              <p class="text-muted-foreground"><span class="font-medium text-foreground">Pembayaran:</span> Digital / Transfer</p>
+              <p class="text-muted-foreground"><span class="font-medium text-foreground">{m.cd229()}</span> {m.cd230()}</p>
             {/if}
           </div>
         </aside>
@@ -308,23 +311,23 @@
   <section class="grid gap-5 lg:grid-cols-2">
     <div class="rounded-2xl border border-border bg-card p-5">
       <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-sm font-semibold text-foreground">Item di keranjang</h2>
-        <a href={resolveHref("/dashboard/customer/cart")} class="text-xs font-semibold text-primary hover:underline">Kelola</a>
+        <h2 class="text-sm font-semibold text-foreground">{m.cd231()}</h2>
+        <a href={resolveHref("/dashboard/customer/cart")} class="text-xs font-semibold text-primary hover:underline">{m.cd232()}</a>
       </div>
       {#if cartLines.length === 0}
-        <p class="py-6 text-center text-sm text-muted-foreground">Keranjang kosong.</p>
+        <p class="py-6 text-center text-sm text-muted-foreground">{m.cd233()}</p>
       {:else}
         <ul class="space-y-2">
           {#each cartLines as line (line.name)}
             <li class="flex items-center gap-3 text-sm">
               <Icon name={line.icon as IconName} cls="h-4.5 w-4.5 text-[var(--bitcoin)]" />
-              <span class="min-w-0 flex-1 truncate text-muted-foreground">{line.name} × {line.qty}</span>
+              <span class="min-w-0 flex-1 truncate text-muted-foreground">{productName(line.productId, line.name)} × {line.qty}</span>
               <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(line.lineTotal)}</span>
             </li>
           {/each}
         </ul>
         <div class="mt-3 flex justify-between border-t border-border pt-3 text-sm">
-          <span class="text-muted-foreground">Subtotal</span>
+          <span class="text-muted-foreground">{m.cd234()}</span>
           <span class="font-bold tabular-nums text-foreground">{formatRupiah(cartSubtotal)}</span>
         </div>
       {/if}
@@ -332,11 +335,11 @@
 
     <div class="rounded-2xl border border-border bg-card p-5">
       <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-sm font-semibold text-foreground">Pesanan terbaru</h2>
-        <a href={resolveHref("/dashboard/customer/orders")} class="text-xs font-semibold text-primary hover:underline">Semua</a>
+        <h2 class="text-sm font-semibold text-foreground">{m.cd235()}</h2>
+        <a href={resolveHref("/dashboard/customer/orders")} class="text-xs font-semibold text-primary hover:underline">{m.cd236()}</a>
       </div>
       {#if orders.length === 0}
-        <p class="py-6 text-center text-sm text-muted-foreground">Belum ada pesanan.</p>
+        <p class="py-6 text-center text-sm text-muted-foreground">{m.cd237()}</p>
       {:else}
         <ul class="space-y-2">
           {#each recentOrders as o (o.id)}
@@ -355,9 +358,9 @@
               >
                 <Icon name={open ? "caret-down" : "arrow-right"} cls="h-3.5 w-3.5 shrink-0 text-muted-foreground" weight="bold" />
                 <span class="shrink-0 font-mono text-xs text-muted-foreground">{o.id.split("-").slice(-1)}</span>
-                <span class="min-w-0 flex-1 truncate text-muted-foreground">{ORDER_STATUS_LABEL[o.status]}</span>
+                <span class="min-w-0 flex-1 truncate text-muted-foreground">{orderStatusLabel(o.status)}</span>
                 {#if isFocus && !delivered}
-                  <span class="shrink-0 rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-2 py-0.5 text-[10.5px] font-semibold text-[var(--bitcoin)]">Dilacak</span>
+                  <span class="shrink-0 rounded-full border border-[color-mix(in_oklab,var(--bitcoin)_40%,transparent)] bg-[color-mix(in_oklab,var(--bitcoin)_10%,transparent)] px-2 py-0.5 text-[10.5px] font-semibold text-[var(--bitcoin)]">{m.cd238()}</span>
                 {/if}
                 <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold {o.payment === 'COD' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}">{o.payment}</span>
                 <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(o.total)}</span>
@@ -368,19 +371,19 @@
                 <div id={`pesanan-detail-${o.id}`} class="space-y-3 border-t border-border px-3 py-3">
                   <!-- Ringkasan status + kondisi terkini -->
                   <div class="flex items-center justify-between gap-2">
-                    <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {delivered ? 'bg-success/15 text-success-foreground' : 'bg-primary/10 text-primary'}">{ORDER_STATUS_LABEL[o.status]}</span>
+                    <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {delivered ? 'bg-success/15 text-success-foreground' : 'bg-primary/10 text-primary'}">{orderStatusLabel(o.status)}</span>
                     <span class="text-[11px] text-muted-foreground">{new Date(o.updatedAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
                   </div>
 
                   <!-- Mini linimasa status -->
-                  <ol class="flex items-center gap-0.5" aria-label={`Status pesanan ${o.id}`}>
+                  <ol class="flex items-center gap-0.5" aria-label={m.cd3t3({ id: o.id })}>
                     {#each ORDER_STATUS_FLOW as step, i (step)}
                       {@const done = i <= idx}
                       <li class="flex flex-1 flex-col items-center gap-1 text-center">
                         <span class="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold {done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}">
                           {#if i < idx}<Icon name="check" cls="h-3 w-3" weight="bold" />{:else}{i + 1}{/if}
                         </span>
-                        <span class="text-[9.5px] leading-tight {done ? 'font-semibold text-foreground' : 'text-muted-foreground'}">{ORDER_STATUS_LABEL[step]}</span>
+                        <span class="text-[9.5px] leading-tight {done ? 'font-semibold text-foreground' : 'text-muted-foreground'}">{orderStatusLabel(step)}</span>
                       </li>
                       {#if i < ORDER_STATUS_FLOW.length - 1}
                         <span class="mb-3 h-0.5 flex-1 rounded-full {i < idx ? 'bg-primary' : 'bg-muted'}" aria-hidden="true"></span>
@@ -390,9 +393,9 @@
 
                   <!-- Kondisi paket terkini (ditulis kurir) -->
                   <div class="rounded-lg border {delivered ? 'border-success/40 bg-success/5' : 'border-primary/30 bg-accent/40'} px-3 py-2">
-                    <p class="text-[10.5px] font-semibold uppercase tracking-wide text-muted-foreground">Kondisi paket terkini</p>
+                    <p class="text-[10.5px] font-semibold uppercase tracking-wide text-muted-foreground">{m.cd239()}</p>
                     <p class="text-sm text-foreground">{o.statusNote}</p>
-                    {#if o.courier}<p class="mt-0.5 text-[11px] text-muted-foreground">{o.courier}</p>{/if}
+                    {#if o.courier}<p class="mt-0.5 text-[11px] text-muted-foreground">{courierLabel(o.courier)}</p>{/if}
                   </div>
 
                   <!-- Item pesanan -->
@@ -400,7 +403,7 @@
                     {#each o.items as it (it.productId)}
                       <li class="flex items-center gap-2 text-sm">
                         <Icon name={(it.icon as IconName) ?? "box"} cls="h-4 w-4 text-[var(--bitcoin)]" />
-                        <span class="min-w-0 flex-1 truncate text-muted-foreground">{it.name} × {it.qty}</span>
+                        <span class="min-w-0 flex-1 truncate text-muted-foreground">{productName(it.productId, it.name)} × {it.qty}</span>
                         <span class="shrink-0 font-medium tabular-nums text-foreground">{formatRupiah(it.price * it.qty)}</span>
                       </li>
                     {/each}
@@ -410,17 +413,17 @@
                   <div class="space-y-0.5 text-xs text-muted-foreground">
                     <p><span class="font-medium text-foreground">{o.address.recipient}</span> · {o.address.city}</p>
                     <p>{o.address.street}</p>
-                    {#if o.slot}<p>Slot pengantaran: <span class="font-medium text-foreground">{o.slot}</span></p>{/if}
-                    {#if o.routedToPudo}<p class="font-medium text-warning-foreground">Dialihkan ke PUDO — ambil di gerai mitra.</p>{/if}
+                    {#if o.slot}<p>{m.cd240()} <span class="font-medium text-foreground">{o.slot}</span></p>{/if}
+                    {#if o.routedToPudo}<p class="font-medium text-warning-foreground">{m.cd241()}</p>{/if}
                   </div>
 
                   <div class="flex justify-between border-t border-border pt-2 text-sm">
-                    <span class="text-muted-foreground">Total</span>
+                    <span class="text-muted-foreground">{m.cd242()}</span>
                     <span class="font-bold tabular-nums text-foreground">{formatRupiah(o.total)}</span>
                   </div>
 
                   <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">
-                    Lacak &amp; lihat detail lengkap <Icon name="arrow-up-right" cls="h-3 w-3" weight="bold" />
+                    {m.cd243()} <Icon name="arrow-up-right" cls="h-3 w-3" weight="bold" />
                   </a>
                 </div>
               {/if}
@@ -428,7 +431,7 @@
           {/each}
         </ul>
         <p class="mt-3 text-[11px] text-muted-foreground">
-          Hanya pesanan terakhir yang sedang dalam pengantaran dibuka otomatis; klik pesanan lain untuk melihat detail.
+          {m.cd244()}
         </p>
       {/if}
     </div>

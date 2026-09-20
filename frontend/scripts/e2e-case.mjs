@@ -18,6 +18,11 @@ import { mkdirSync } from "node:fs";
 import { launchOptions } from "./_browser.mjs";
 
 const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
+/**
+ * Prefix locale untuk uji: asersi skrip ini berbahasa Indonesia,
+ * jadi default-nya halaman /id. Set E2E_LANG=en untuk uji asap versi Inggris.
+ */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
 mkdirSync("/tmp/opencode/shots", { recursive: true });
@@ -30,8 +35,18 @@ async function openPage(path, onRequest) {
   const errs = [];
   page.on("pageerror", (e) => errs.push(String(e.message).slice(0, 120)));
   if (onRequest) page.on("request", onRequest);
-  await page.goto(BASE + path, { waitUntil: "load", timeout: 40000 });
-  await page.waitForTimeout(2200);
+  await page.goto(BASE + LANG_PREFIX + path, { waitUntil: "load", timeout: 40000 });
+  // Tunggu DATA, bukan sekadar waktu tetap: halaman ini mengambil angka dari API
+  // setelah mount, jadi jeda tetap bisa jatuh sebelum KPI/tabel terisi.
+  await page
+    .waitForFunction(
+      () =>
+        document.querySelectorAll("tbody tr").length > 0 ||
+        /coba lagi|muat ulang|tidak tersedia/i.test(document.body.innerText),
+      { timeout: 20000 }
+    )
+    .catch(() => {});
+  await page.waitForTimeout(1200);
   return { ctx, page, errs };
 }
 
@@ -105,7 +120,7 @@ try {
     // Geser target utilisasi → volume inkremental naik.
     const getAdd = async () => {
       const t = await page.locator("body").innerText();
-      const m = t.match(/Volume terealisasi thn-1\s*\n\s*([\d.,]+)/i);
+      const m = t.match(/Volume terealisasi tahun-1\s*\n\s*([\d.,]+)/i);
       return m ? m[1] : null;
     };
     const vBefore = await getAdd();
@@ -126,10 +141,11 @@ try {
     const { ctx, page, errs } = await openPage("/dashboard/pusat/pnl");
     const txt = await page.locator("body").innerText();
     R(/Cost-Waterfall/.test(txt), "pnl: judul");
-    R(/total hemat/i.test(txt), "pnl: KPI total hemat");
+    R(/penghematan tuas/i.test(txt), "pnl: KPI penghematan tuas");
     R(/cost-to-sales/i.test(txt), "pnl: KPI cost-to-sales");
     const rowsBefore = await page.locator("tbody tr").count();
-    await page.locator('button[role=switch]', { hasText: "Sustainability" }).click();
+    // Kait stabil: label toggle terlokalisasi (Sustainability/Keberlanjutan).
+    await page.locator('[data-testid="toggle-sustainability"]').click();
     await page.waitForTimeout(1500);
     const rowsAfter = await page.locator("tbody tr").count();
     R(rowsAfter < rowsBefore, "pnl: matikan sustainability → tuas lebih sedikit", `${rowsBefore} -> ${rowsAfter}`);

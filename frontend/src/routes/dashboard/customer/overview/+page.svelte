@@ -1,8 +1,9 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { resolveHref, numId } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
-  import { PRODUCTS, CATEGORIES, searchProducts, formatRupiah, type Product } from "$lib/shop/catalog";
+  import { PRODUCTS, CATEGORIES, searchProducts, formatRupiah, productName, productDesc, categoryLabel, type Product } from "$lib/shop/catalog";
   import { shop, cartCount, orderCount, buyerReputation } from "$lib/stores/shop";
   import { BUYER_PERSONAS, type Reputation } from "$lib/shop/reputation";
   import { notify } from "$lib/toast";
@@ -35,7 +36,7 @@
   function setPersona(id: string) {
     shop.setBuyer(id);
     const p = BUYER_PERSONAS.find((x) => x.id === id);
-    notify({ message: `Mode demo: ${p?.name} (${id === "BUY-GOOD" ? "reputasi baik" : "reputasi buruk"})`, type: "info", title: "Persona" });
+    notify({ message: id === "BUY-GOOD" ? m.ctDemoGood({ name: p?.name ?? "" }) : m.ctDemoBad({ name: p?.name ?? "" }), type: "info", title: "Persona" });
   }
 
   function setCategory(c: string) {
@@ -75,7 +76,7 @@
     justAdded = p.id;
     if (addedTimer) clearTimeout(addedTimer);
     addedTimer = setTimeout(() => (justAdded = null), 1400);
-    notify({ message: `${p.name} ditambahkan ke keranjang`, type: "success", title: "Keranjang" });
+    notify({ message: m.ctAdded({ name: productName(p.id, p.name) }), type: "success", title: m.cc201() });
   }
 </script>
 
@@ -83,15 +84,15 @@
   <!-- Header toko + ringkasan -->
   <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div class="space-y-1">
-      <h1 class="font-heading text-xl font-semibold tracking-tight">Omnigistic Shop</h1>
-      <p class="text-sm text-muted-foreground">Belanja dari ribuan penjual — cari produk, masukkan keranjang, checkout, lalu bayar COD atau transfer.</p>
+      <h1 class="font-heading text-xl font-semibold tracking-tight">{m.oc01()}</h1>
+      <p class="text-sm text-muted-foreground">{m.oc02()}</p>
     </div>
     <div class="flex shrink-0 items-center gap-2">
       <a href={resolveHref("/dashboard/customer/orders")} class="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
-        <Icon name="map" cls="h-4 w-4" /> Pesanan<span class="rounded-full bg-muted px-1.5 text-xs tabular-nums">{orders}</span>
+        <Icon name="map" cls="h-4 w-4" /> {m.oc03()}<span class="rounded-full bg-muted px-1.5 text-xs tabular-nums">{orders}</span>
       </a>
       <a href={resolveHref("/dashboard/customer/cart")} class="relative inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px">
-        <Icon name="stack" cls="h-4 w-4" /> Keranjang
+        <Icon name="stack" cls="h-4 w-4" /> {m.cc201()}
         {#if cart > 0}<span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--background)] px-1 text-xs font-bold tabular-nums text-[var(--bitcoin)]">{cart}</span>{/if}
       </a>
     </div>
@@ -126,10 +127,10 @@
   <!-- Banner alur -->
   <section class="grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-4">
     {#each [
-      { icon: "search", t: "Cari produk", d: "Filter kategori & urutkan" },
-      { icon: "stack", t: "Keranjang", d: "Atur jumlah item" },
+      { icon: "search", t: m.cu2t1(), d: m.cu2t2() },
+      { icon: "stack", t: m.cc201(), d: m.cu2t3() },
       { icon: "currency", t: "Checkout", d: "COD bila reputasi baik" },
-      { icon: "map", t: "Lacak kirim", d: "Sampai ke tanganmu" }
+      { icon: "map", t: m.cv2t1(), d: m.cv2t2() }
     ] as step, i (step.t)}
       <div class="flex items-start gap-3">
         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground"><Icon name={step.icon as never} cls="h-4 w-4" /></span>
@@ -150,21 +151,21 @@
           type="search"
           enterkeyhint="search"
           bind:value={query}
-          placeholder="Cari produk, kategori, atau toko…"
-          aria-label="Cari produk"
+          placeholder={m.cu2t4()}
+          aria-label={m.cu2t1()}
           class="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none"
         />
         {#if query}
-          <button type="button" onclick={() => { query = ""; notify({ message: "Pencarian dihapus", type: "info", title: "Belanja" }); }} aria-label="Hapus pencarian" class="text-muted-foreground hover:text-foreground"><Icon name="x" cls="h-4 w-4" /></button>
+          <button type="button" onclick={() => { query = ""; notify({ message: "Pencarian dihapus", type: "info", title: "Belanja" }); }} aria-label={m.ax01()} class="text-muted-foreground hover:text-foreground"><Icon name="x" cls="h-4 w-4" /></button>
         {/if}
       </label>
       <label class="flex items-center gap-2 text-sm text-muted-foreground">
-        <span class="shrink-0">Urutkan</span>
-        <select value={sort} onchange={(e) => setSort((e.currentTarget as HTMLSelectElement).value as typeof sort)} aria-label="Urutkan produk" class="rounded-full border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50">
-          <option value="populer">Terpopuler</option>
-          <option value="murah">Harga terendah</option>
-          <option value="mahal">Harga tertinggi</option>
-          <option value="rating">Rating tertinggi</option>
+        <span class="shrink-0">{m.oc04()}</span>
+        <select value={sort} onchange={(e) => setSort((e.currentTarget as HTMLSelectElement).value as typeof sort)} aria-label={m.ax13()} class="rounded-full border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50">
+          <option value="populer">{m.oc05()}</option>
+          <option value="murah">{m.oc06()}</option>
+          <option value="mahal">{m.oc07()}</option>
+          <option value="rating">{m.oc08()}</option>
         </select>
       </label>
     </div>
@@ -177,19 +178,19 @@
           aria-pressed={category === c}
           class="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors {category === c ? 'border-transparent bg-[var(--primary)] text-[var(--primary-foreground)]' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'}"
         >
-          {c}
+          {categoryLabel(c)}
         </button>
       {/each}
     </div>
-    <p class="text-xs text-muted-foreground">{results.length} dari {PRODUCTS.length} produk</p>
+    <p class="text-xs text-muted-foreground">{m.ctOfProducts({ shown: results.length, total: PRODUCTS.length })}</p>
   </section>
 
   <!-- Grid produk -->
   {#if results.length === 0}
     <div class="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
       <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="search" cls="h-6 w-6" /></span>
-      <p class="mt-3 text-sm font-semibold text-foreground">Produk tidak ditemukan</p>
-      <p class="text-xs text-muted-foreground">Coba kata kunci lain atau ubah kategori.</p>
+      <p class="mt-3 text-sm font-semibold text-foreground">{m.oc09()}</p>
+      <p class="text-xs text-muted-foreground">{m.oc10()}</p>
     </div>
   {:else}
     <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -198,17 +199,17 @@
           <div class="relative flex h-36 items-center justify-center" style="background:color-mix(in srgb, {p.accent} 12%, var(--color-card))">
             <Icon name={p.icon} cls="h-14 w-14" style="color:{p.accent}" />
             {#if p.strikePrice}<span class="absolute left-2 top-2 rounded-full bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground">-{discountPct(p)}%</span>{/if}
-            {#if p.tags?.includes("COD")}<span class="absolute right-2 top-2 rounded-full bg-card/90 px-2 py-0.5 text-[11px] font-bold text-foreground ring-1 ring-border">COD</span>{/if}
+            {#if p.tags?.includes("COD")}<span class="absolute right-2 top-2 rounded-full bg-card/90 px-2 py-0.5 text-[11px] font-bold text-foreground ring-1 ring-border">{m.oc11()}</span>{/if}
           </div>
           <div class="flex min-h-0 flex-1 flex-col gap-2 p-4">
             <div class="min-w-0 flex-1">
-              <h3 class="line-clamp-2 text-sm font-semibold leading-snug text-foreground">{p.name}</h3>
-              <p class="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{p.desc}</p>
+              <h3 class="line-clamp-2 text-sm font-semibold leading-snug text-foreground">{productName(p.id, p.name)}</h3>
+              <p class="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{productDesc(p.id, p.desc)}</p>
             </div>
             <div class="flex items-center gap-2 text-[11px] text-muted-foreground">
               <span class="inline-flex items-center gap-0.5 font-semibold text-warning-foreground"><Icon name="sparkles" cls="h-3 w-3" weight="bold" /> {numId(p.rating, 1)}</span>
               <span>·</span>
-              <span>{new Intl.NumberFormat("id-ID").format(p.sold)} terjual</span>
+              <span>{new Intl.NumberFormat("id-ID").format(p.sold)} {m.ctSold()}</span>
             </div>
             <div class="flex items-end justify-between gap-2">
               <div class="min-w-0">
@@ -223,7 +224,7 @@
               class="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 px-3 py-2 text-sm font-semibold transition-colors {justAdded === p.id ? 'border-success bg-success text-success-foreground' : 'bg-primary text-primary-foreground hover:opacity-90'}"
             >
               <Icon name={justAdded === p.id ? "check" : "plus"} cls="h-4 w-4" weight="bold" />
-              {justAdded === p.id ? "Ditambahkan" : "Keranjang"}
+              {justAdded === p.id ? m.ctAddedShort() : m.cc201()}
             </button>
           </div>
         </article>

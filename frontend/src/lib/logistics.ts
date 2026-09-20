@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 /**
  * Konstanta & helper logistik — SATU sumber kebenaran untuk seluruh simulasi
  * pengantaran lintas role (Customer & Kurir).
@@ -319,7 +320,7 @@ export function pudoDropRecommendation(city: string): {
   const { pudo, distanceKm } = nearestPudo(from, city);
   // Rute sederhana tujuan → PUDO (dua titik, garis lurus) untuk visualisasi.
   const route: [number, number][] = [from, pudo.coord];
-  const etaMin = Math.max(4, Math.round(distanceKm * 2.4)); // ~25 km/jam → menit
+  const etaMin = Math.max(4, Math.round(distanceKm * 2.4)); // sekitar 25 kilometer per jam, dikonversi ke menit
   return { pudo, distanceKm, etaMin, from, route };
 }
 
@@ -361,11 +362,11 @@ export function buildSlot(start: string, end: string): string {
  * Kembalikan pesan error (Indonesia) atau null bila valid.
  */
 export function validateSlot(start: string, end: string): string | null {
-  if (!start || !end) return "Isi jam mulai dan jam selesai.";
+  if (!start || !end) return m.lg01();
   const s = timeToMinutes(start);
   const e = timeToMinutes(end);
-  if (s === null || e === null) return "Format jam tidak valid.";
-  if (e <= s) return "Jam selesai harus setelah jam mulai.";
+  if (s === null || e === null) return m.lg02();
+  if (e <= s) return m.lg03();
   return null;
 }
 
@@ -381,7 +382,7 @@ export const COURIER = {
   code: "JKT-04",
   /** String aktor untuk event log (mis. "Kurir Baits · JKT-04"). */
   get actor(): string {
-    return `Kurir ${this.name} · ${this.code}`;
+    return m.lg18({ name: this.name, code: this.code });
   },
 } as const;
 
@@ -467,25 +468,25 @@ export function calculateSimTelemetry(
 
   // Segment variation
   let segMult = 1.0;
-  let phase = "Keberangkatan";
+  let phase = m.lg10();
   if (frac < 0.12) {
     segMult = 0.7;
-    phase = `Keberangkatan dari ${HUB_LABEL}`;
+    phase = m.lg11({ hub: HUB_LABEL });
   } else if (frac < 0.35) {
     segMult = 1.05;
-    phase = "Jalur Arteri Utama & Akses Tol";
+    phase = m.lg12();
   } else if (frac < 0.70) {
     segMult = 1.18;
-    phase = "Koridor Cepat Tol Bebas Hambatan";
+    phase = m.lg13();
   } else if (frac < 0.90) {
     segMult = 0.88;
-    phase = `Memasuki Wilayah ${city}`;
+    phase = m.lg14({ city });
   } else if (frac < 1.0) {
     segMult = 0.65;
-    phase = "Jalan Kolektor & Area Permukiman";
+    phase = m.lg15();
   } else {
     segMult = 0.0;
-    phase = pudoDiverted ? `Tiba di Gerai Mitra PUDO (${city})` : `Tiba di Alamat Penerima (${city})`;
+    phase = pudoDiverted ? m.lg16({ city }) : m.lg17({ city });
   }
 
   const currentSpeed = frac >= 1.0 ? 0 : Math.round(nominalSpeed * segMult * 10) / 10;
@@ -499,15 +500,15 @@ export function calculateSimTelemetry(
 
   let event: string | null = null;
   if (frac === 0) {
-    event = "Kurir siap di Hub. Telemetri aktif.";
+    event = m.lg04();
   } else if (frac >= 1.0) {
-    event = pudoDiverted ? "Kurir tiba di gerai PUDO mitra." : "Kurir tiba di alamat penerima! Paket siap diserahterimakan.";
+    event = pudoDiverted ? m.lg05() : m.lg06();
   } else if (pudoDiverted && frac > 0.5 && frac < 0.7) {
-    event = "Rute dialihkan ke titik PUDO terdekat (penerima tidak di rumah).";
+    event = m.lg07();
   } else if (weather === "hujan" && frac > 0.25 && frac < 0.45) {
-    event = "Cuaca hujan: kurir menurunkan kecepatan untuk keselamatan berkendara.";
+    event = m.lg08();
   } else if (traffic === "macet" && frac > 0.4 && frac < 0.65) {
-    event = "Kepadatan jalan tinggi: navigasi kurir mengarahkan ke koridor efisien.";
+    event = m.lg09();
   }
 
   return {

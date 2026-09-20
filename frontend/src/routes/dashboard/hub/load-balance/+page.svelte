@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m as msg } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import Icon from "$lib/components/Icon.svelte";
   import MetricCard from "$lib/components/MetricCard.svelte";
@@ -28,7 +29,7 @@
     } catch {
       opt = null;
       failed = true;
-      if (userTriggered) notify({ message: "Gagal menjalankan optimizer", type: "error", title: "Load Balancing" });
+      if (userTriggered) notify({ message: msg.lb2t1(), type: "error", title: "Load Balancing" });
     }
   }
 
@@ -42,7 +43,7 @@
     } catch {
       opt = null;
       failed = true;
-      if (userTriggered) notify({ message: "Gagal memuat optimizer", type: "error", title: "Load Balancing" });
+      if (userTriggered) notify({ message: msg.lb2t2(), type: "error", title: "Load Balancing" });
     }
     loaded = true;
   }
@@ -77,9 +78,9 @@
 <div class="space-y-6">
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="font-heading text-xl font-semibold tracking-tight">Load Balancing</h1>
+      <h1 class="font-heading text-xl font-semibold tracking-tight">{msg.hl01()}</h1>
       <p class="text-sm text-muted-foreground">
-        Optimizer jaringan: alihkan overflow hub over-utilisasi (&gt;65%) ke hub ber-headroom (&lt;50%). Kasus: Double 12 2022.
+        {msg.hl02()}
       </p>
     </div>
     <button
@@ -87,31 +88,31 @@
       onclick={resetDefaults}
       class="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold hover:border-primary/40"
     >
-      <Icon name="trend" cls="h-3.5 w-3.5" /> Reset ambang
+      <Icon name="trend" cls="h-3.5 w-3.5" /> {msg.hl03()}
     </button>
   </div>
 
   {#if loaded && opt}
     <!-- Panel simulasi ambang (interaktif) -->
     <div class="rounded-2xl border border-primary/30 bg-primary/5 p-5">
-      <p class="text-sm font-semibold">Simulasi ambang optimizer</p>
-      <p class="mt-1 text-xs text-muted-foreground">Geser lalu klik Jalankan — engine menyusun ulang rencana pengalihan dari ambang baru.</p>
+      <p class="text-sm font-semibold">{msg.hl04()}</p>
+      <p class="mt-1 text-xs text-muted-foreground">{msg.hl05()}</p>
       <div class="mt-4 grid gap-5 sm:grid-cols-3">
         <label class="block">
           <span class="flex items-center justify-between text-xs font-medium text-muted-foreground">
-            <span>Ambang kritis (over-utilisasi)</span><span class="kpi-value text-foreground">{critical}%</span>
+            <span>{msg.hl06()}</span><span class="kpi-value text-foreground">{critical}%</span>
           </span>
           <input type="range" min="50" max="95" step="1" bind:value={critical} aria-label="Ambang kritis persen" class="mt-2 w-full accent-[var(--color-primary)]" />
         </label>
         <label class="block">
           <span class="flex items-center justify-between text-xs font-medium text-muted-foreground">
-            <span>Lantai aman hub sumber</span><span class="kpi-value text-foreground">{safeFloor}%</span>
+            <span>{msg.hl07()}</span><span class="kpi-value text-foreground">{safeFloor}%</span>
           </span>
           <input type="range" min="30" max={critical} step="1" bind:value={safeFloor} aria-label="Lantai aman persen" class="mt-2 w-full accent-[var(--color-primary)]" />
         </label>
         <label class="block">
           <span class="flex items-center justify-between text-xs font-medium text-muted-foreground">
-            <span>Maks kapasitas boleh dialihkan</span><span class="kpi-value text-foreground">{maxDivert}%</span>
+            <span>{msg.hl08()}</span><span class="kpi-value text-foreground">{maxDivert}%</span>
           </span>
           <input type="range" min="5" max="60" step="5" bind:value={maxDivert} aria-label="Maks porsi dialihkan persen" class="mt-2 w-full accent-[var(--color-primary)]" />
         </label>
@@ -121,7 +122,7 @@
         onclick={() => recompute(true)}
         class="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-xs font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px active:translate-y-0"
       >
-        <Icon name="trend" cls="h-3.5 w-3.5" /> Jalankan optimizer
+        <Icon name="trend" cls="h-3.5 w-3.5" /> {msg.hl09()}
       </button>
     </div>
 
@@ -133,35 +134,35 @@
         accent
       />
       <MetricCard
-        label="Hub Overload"
+        label=msg.lb2t3()
         value={`${opt.summary.overloadedBefore} → ${opt.summary.overloadedAfter}`}
         sub="sebelum → sesudah (util > 65%)"
         deltaTone={opt.summary.overloadedBefore - opt.summary.overloadedAfter >= 0 ? "up" : "warn"}
         delta={`${opt.summary.overloadedBefore - opt.summary.overloadedAfter >= 0 ? "-" : "+"}${Math.abs(opt.summary.overloadedBefore - opt.summary.overloadedAfter)}`}
       />
       <MetricCard
-        label="Utilisasi Timur (rata²)"
+        label=msg.lb2t4()
         value={`${fmt1(opt.summary.eastAvgUtilAfter)}%`}
-        sub={`dari ${fmt1(opt.summary.eastAvgUtilBefore)}%`}
+        sub={msg.lb3t1({ pct: fmt1(opt.summary.eastAvgUtilBefore) })}
         deltaTone="up"
         delta={`+${fmt1(opt.summary.eastAvgUtilAfter - opt.summary.eastAvgUtilBefore)}`}
       />
       <MetricCard
         label="Kebutuhan Tak Terlayani"
         value={`${fmt3(opt.summary.unmetM)}M`}
-        sub={opt.summary.unmetM === 0 ? "semua tuntas terlayani" : "kapasitas tujuan kurang"}
+        sub={opt.summary.unmetM === 0 ? "semua tuntas terlayani" : msg.lb2t5()}
         valueColor={opt.summary.unmetM === 0 ? "var(--color-success-foreground, var(--color-primary))" : "var(--color-destructive-foreground, var(--color-primary))"}
       />
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
       <div class="rounded-2xl border border-border bg-card p-5">
-        <p class="mb-3 text-sm font-medium">Utilisasi sebelum vs sesudah (hub berubah)</p>
-        <EChart option={utilChart} height={300} label="Utilisasi hub sebelum dan sesudah optimasi" />
+        <p class="mb-3 text-sm font-medium">{msg.hl10()}</p>
+        <EChart option={utilChart} height={300} label={msg.lb2t6()} />
       </div>
 
       <div class="rounded-2xl border border-border bg-card p-5">
-        <p class="mb-3 text-sm font-medium">Rencana Pergerakan</p>
+        <p class="mb-3 text-sm font-medium">{msg.hl11()}</p>
         <div class="max-h-[300px] space-y-2 overflow-y-auto pr-1">
           {#each opt.moves as m (m.fromCode + m.toCode)}
             <div class="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
@@ -170,7 +171,7 @@
                 <Icon name="arrow-up-right" cls="h-3.5 w-3.5 text-muted-foreground" />
                 <span>{m.toCode}</span>
                 {#if !m.sameRegion}
-                  <span class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">antar-region</span>
+                  <span class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">{msg.hl12()}</span>
                 {/if}
               </span>
               <span class="kpi-value text-chart-3">{fmt3(m.quantityM)}M</span>
@@ -178,7 +179,7 @@
           {/each}
         </div>
         <p class="mt-3 text-xs text-muted-foreground">
-          Engine: {opt.engine}. Biaya = indeks relatif antar-region (proxy prototipe), bukan tarif nyata.
+          Engine: {opt.engine}{msg.lb3f1()}
         </p>
       </div>
     </div>
@@ -187,12 +188,12 @@
       <table class="w-full text-sm">
         <thead class="bg-muted/50 text-xs text-muted-foreground">
           <tr>
-            <th class="px-4 py-2.5 text-left font-medium">Hub</th>
-            <th class="px-4 py-2.5 text-right font-medium">Sebelum</th>
-            <th class="px-4 py-2.5 text-right font-medium">Sesudah</th>
+            <th class="px-4 py-2.5 text-left font-medium">{msg.hl13()}</th>
+            <th class="px-4 py-2.5 text-right font-medium">{msg.hl14()}</th>
+            <th class="px-4 py-2.5 text-right font-medium">{msg.hl15()}</th>
             <th class="px-4 py-2.5 text-right font-medium">Δ</th>
-            <th class="px-4 py-2.5 text-right font-medium">Masuk</th>
-            <th class="px-4 py-2.5 text-right font-medium">Keluar</th>
+            <th class="px-4 py-2.5 text-right font-medium">{msg.hl16()}</th>
+            <th class="px-4 py-2.5 text-right font-medium">{msg.hl17()}</th>
           </tr>
         </thead>
         <tbody>
@@ -220,18 +221,18 @@
     </div>
 
     <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm">
-      <span class="font-medium">Insight:</span> Overflow diarahkan ke hub ber-headroom terdekat secara biaya (greedy cheapest-link-first),
-      dengan lantai aman {opt.thresholds.safeFloor}% pada hub sumber dan maks {Math.round(opt.thresholds.maxDivertFrac * 100)}% kapasitas boleh dialihkan.
-      Ini mencegah pengalihan mendadak ala Double 12 2022 dan menaikkan utilisasi timur tanpa capex baru.
+      <span class="font-medium">{msg.hl18()}</span> {msg.lb3f2()}
+      {msg.lb3f3()} {opt.thresholds.safeFloor}{msg.lb3f4()} {Math.round(opt.thresholds.maxDivertFrac * 100)}{msg.lb3f5()}
+      {msg.lb3f6()}
     </div>
   {:else if loaded && failed}
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
-      <p class="text-sm font-semibold text-foreground">Gagal memuat optimizer</p>
-      <p class="mt-1 text-xs text-muted-foreground">Backend offline. Muat ulang setelah backend aktif.</p>
-      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
+      <p class="text-sm font-semibold text-foreground">{msg.hl19()}</p>
+      <p class="mt-1 text-xs text-muted-foreground">{msg.hl20()}</p>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">{msg.hl21()}</button>
     </div>
   {:else if loaded}
-    <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">Data optimizer tidak tersedia.</div>
+    <div class="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">{msg.hl22()}</div>
   {:else}
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {#each Array(4) as _, i (i)}<div class="h-28 animate-pulse rounded-2xl border border-border bg-card/60"></div>{/each}

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { handledBy } from "$lib/i18n/labels";
+  import { m } from "$lib/paraglide/messages";
   /**
    * Tugas Pengantaran (KURIR) — halaman aksi kurir untuk pesanan NYATA pembeli.
    *
@@ -13,14 +15,14 @@
   import Icon from "$lib/components/Icon.svelte";
   import DeliveryMap from "$lib/map/DeliveryMap.svelte";
   import { resolveHref } from "$lib/utils";
-  import { formatRupiah } from "$lib/shop/catalog";
+  import { formatRupiah, productName } from "$lib/shop/catalog";
   import {
     shop,
     ORDER_STATUS_FLOW,
-    ORDER_STATUS_LABEL,
-    DEFAULT_COURIER_NOTE,
-    COURIER_TASK,
-    PRESENCE_LABEL,
+    orderStatusLabel,
+    defaultCourierNote,
+    courierTask,
+    presenceLabel,
     isOutForDelivery,
     nextStatus,
     progressForStatus,
@@ -119,17 +121,17 @@
   function selectOrderForSim(id: string) {
     focusedOrderId = id;
     openMapId = id;
-    toast(`Rute pesanan ${id} dipilih`, "info");
+    toast(m.kt4t1({ id }), "info");
   }
 
   /** Notifikasi aksi kurir (dengan jenis: sukses/info/peringatan). */
   function toast(message: string, type: TxType = "success") {
-    notify({ message, type, title: "Tugas Pengantaran" });
+    notify({ message, type, title: m.kt2t1() });
   }
 
   function handleOrderSimArrival(o: Order) {
     if (o.status !== "terkirim") {
-      toast(`Kurir tiba di lokasi ${o.address.recipient} (${o.address.city}). Paket siap diserahterimakan.`, "info");
+      toast(m.kt4t2({ recipient: o.address.recipient, city: o.address.city }), "info");
     }
   }
 
@@ -141,14 +143,14 @@
     const draft = noteDraft[o.id]?.trim();
     const applied = shop.courierAdvance(o.id, actor(), draft || undefined) ?? next;
     noteDraft = { ...noteDraft, [o.id]: "" };
-    toast(`Paket ${o.id} → ${ORDER_STATUS_LABEL[applied]}`);
+    toast(m.kt4t3({ id: o.id, status: orderStatusLabel(applied) }));
   }
 
   /** Kurir hanya memperbarui keterangan kondisi tanpa mengubah status. */
   function writeNote(o: Order) {
     const clean = noteDraft[o.id]?.trim();
     if (!clean) {
-      toast("Tulis keterangan kondisi paket dulu", "warn");
+      toast(m.kt2t2(), "warn");
       return;
     }
     shop.courierNote(o.id, actor(), clean);
@@ -178,12 +180,12 @@
   /** Kurir alihkan paket ke PUDO. */
   function toPudo(o: Order) {
     shop.routeToPudo(o.id, actor());
-    toast(`Paket ${o.id} dialihkan ke PUDO`, "info");
+    toast(m.cr4t1({ id: o.id }), "info");
   }
 
   function reset() {
     shop.reset();
-    toast("Riwayat pesanan dihapus", "warn");
+    toast(m.kt2t3(), "warn");
   }
 
   function toggleMap(id: string) {
@@ -195,9 +197,9 @@
 <div class="space-y-6">
   <header class="flex flex-wrap items-center justify-between gap-4">
     <div class="space-y-1">
-      <h1 class="font-heading text-xl font-semibold tracking-tight">Tugas Pengantaran</h1>
+      <h1 class="font-heading text-xl font-semibold tracking-tight">{m.kt01()}</h1>
       <p class="text-sm text-muted-foreground">
-        Paket dari pembeli yang perlu kamu tangani. Perbarui status &amp; kondisi terkini — pembeli langsung melihatnya.
+        {m.kt02()}
       </p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
@@ -218,9 +220,9 @@
   {#if orders.length === 0}
     <div class="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
       <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="compass" cls="h-7 w-7" /></span>
-      <p class="mt-4 text-base font-semibold text-foreground">Belum ada tugas pengantaran</p>
+      <p class="mt-4 text-base font-semibold text-foreground">{m.kt03()}</p>
       <p class="mt-1 text-sm text-muted-foreground">
-        Tugas muncul otomatis saat pembeli menyelesaikan checkout. Buka portal <span class="font-medium text-foreground">Customer</span> untuk membuat pesanan.
+        {m.kt04()} <span class="font-medium text-foreground">{m.kt05()}</span> {m.kt06()}
       </p>
     </div>
   {:else}
@@ -230,16 +232,16 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div class="flex flex-wrap items-center gap-2">
-              <p class="text-base font-semibold">Peta Rute &amp; Simulasi Pengantaran Kurir</p>
+              <p class="text-base font-semibold">{m.kt07()}</p>
               <span class="rounded-full bg-primary/10 px-2.5 py-0.5 font-mono text-[10.5px] font-semibold text-primary">
                 Klaster {focusedOrder.address.city}
               </span>
               <span class="rounded-full bg-success/15 px-2.5 py-0.5 font-mono text-[10.5px] font-semibold text-success-foreground">
-                LIVE TELEMETRI
+                {m.kt08()}
               </span>
             </div>
             <p class="text-[13.5px] text-muted-foreground">
-              Eksplorasi koridor pengantaran last-mile per wilayah. Jalankan simulasi untuk menganalisis waktu tempuh, kepadatan jalan, dan titik PUDO (Cockpit Simulasi Pengantaran Riil).
+              {m.kt09()}
             </p>
           </div>
 
@@ -263,11 +265,11 @@
               type="button"
               onclick={() => toggleMap(focusedOrder.id)}
               aria-expanded={openMapId !== null}
-              aria-label={openMapId !== null ? "Sembunyikan peta lengkap" : "Lihat peta lengkap"}
+              aria-label={openMapId !== null ? m.kt2t4() : m.kt2t5()}
               class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-accent"
             >
               <Icon name="map" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" />
-              <span>{openMapId !== null ? "Sembunyikan peta lengkap" : "Lihat peta lengkap"}</span>
+              <span>{openMapId !== null ? m.kt2t4() : m.kt2t5()}</span>
             </button>
           </div>
         </div>
@@ -277,9 +279,9 @@
             <!-- Detail Penerima & Pesanan yang Sedang Disimulasikan -->
             <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-2 text-xs">
               <div class="flex flex-wrap items-center gap-2">
-                <span class="font-bold text-foreground">Pesanan Disimulasikan:</span>
+                <span class="font-bold text-foreground">{m.kt10()}</span>
                 <span class="font-mono font-semibold text-primary">{focusedOrder.id}</span>
-                <span class="text-muted-foreground">· Penerima:</span>
+                <span class="text-muted-foreground">{m.kt11()}</span>
                 <span class="font-medium text-foreground">{focusedOrder.address.recipient}</span>
                 <span class="text-muted-foreground">({focusedOrder.address.street}, {focusedOrder.address.city})</span>
                 {#if focusedOrder.address.lat && focusedOrder.address.lng}
@@ -289,7 +291,7 @@
                 {/if}
               </div>
               <div class="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
-                <span>Status: <b class="text-foreground">{ORDER_STATUS_LABEL[focusedOrder.status]}</b></span>
+                <span>{m.kt12()} <b class="text-foreground">{orderStatusLabel(focusedOrder.status)}</b></span>
                 <span>·</span>
                 <span>{focusedOrder.payment === "COD" ? `COD ${formatRupiah(focusedOrder.total)}` : "Non-COD"}</span>
               </div>
@@ -304,7 +306,7 @@
               destLabel={`${focusedOrder.address.recipient} (${focusedOrder.address.street}, ${focusedOrder.address.city})`}
               etaMin={etaForCity(focusedOrder.address.city)}
               height={400}
-              role="KURIR"
+              role={m.kt2t6()}
               routeIntel
               compact={false}
               showSimulation={true}
@@ -314,7 +316,7 @@
 
             <p class="text-[11px] text-muted-foreground">
               Rute {HUB_LABEL} → Klaster {focusedOrder.address.city} ({distanceForCity(focusedOrder.address.city)} km · perkiraan waktu tempuh normal {etaForCity(focusedOrder.address.city)} menit).
-              Simulasi disesuaikan dengan pesanan <b>{focusedOrder.id}</b> untuk <b>{focusedOrder.address.recipient}</b>. Bilah simulasi, analisis rute, dan legenda dapat dibuka-tutup secara mandiri di bawah peta.
+              {m.kt3f1()} <b>{focusedOrder.id}</b> {m.kt13()} <b>{focusedOrder.address.recipient}</b>{m.kt14()}
             </p>
           </div>
         {/if}
@@ -324,7 +326,7 @@
     <ul class="space-y-4">
       {#each tasks as o (o.id)}
         {@const idx = statusIndex(o.status)}
-        {@const task = COURIER_TASK[o.status]}
+        {@const task = courierTask(o.status)}
         {@const next = nextStatus(o.status)}
         {@const done = o.status === "terkirim"}
         <li class="overflow-hidden rounded-2xl border border-border bg-card {done ? 'opacity-80' : ''}">
@@ -332,10 +334,10 @@
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3.5">
             <div class="flex items-center gap-3">
               <span class="font-mono text-sm font-semibold text-foreground">{o.id}</span>
-              <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {done ? 'bg-success/15 text-success-foreground' : 'bg-primary/10 text-primary'}">{ORDER_STATUS_LABEL[o.status]}</span>
+              <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {done ? 'bg-success/15 text-success-foreground' : 'bg-primary/10 text-primary'}">{orderStatusLabel(o.status)}</span>
               <span class="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{o.payment === "COD" ? "COD" : "Transfer"}</span>
             </div>
-            <span class="text-xs text-muted-foreground">Diperbarui {new Date(o.updatedAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+            <span class="text-xs text-muted-foreground">{m.cd4t4({ date: new Date(o.updatedAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) })}</span>
           </div>
 
           <div class="grid gap-4 p-5 lg:grid-cols-[1fr_300px]">
@@ -346,21 +348,21 @@
                   <Icon name={task.icon as never} cls="h-5 w-5" />
                 </span>
                 <div class="min-w-0">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tugas saat ini</p>
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{m.kt15()}</p>
                   <p class="text-sm font-semibold text-foreground">{task.title}</p>
                   <p class="mt-0.5 text-xs text-muted-foreground">{task.detail}</p>
                 </div>
               </div>
 
               <!-- Timeline status -->
-              <ol class="flex items-center gap-1" aria-label="Status pengantaran">
+              <ol class="flex items-center gap-1" aria-label={m.ax11()}>
                 {#each ORDER_STATUS_FLOW as step, i (step)}
                   {@const stepDone = i <= idx}
                   <li class="flex flex-1 flex-col items-center gap-1.5 text-center">
                     <span class="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold {stepDone ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}">
                       {#if i < idx}<Icon name="check" cls="h-3.5 w-3.5" weight="bold" />{:else}{i + 1}{/if}
                     </span>
-                    <span class="text-[10.5px] leading-tight {stepDone ? 'font-semibold text-foreground' : 'text-muted-foreground'}">{ORDER_STATUS_LABEL[step]}</span>
+                    <span class="text-[10.5px] leading-tight {stepDone ? 'font-semibold text-foreground' : 'text-muted-foreground'}">{orderStatusLabel(step)}</span>
                   </li>
                   {#if i < ORDER_STATUS_FLOW.length - 1}
                     <span class="mb-4 h-0.5 flex-1 rounded-full {i < idx ? 'bg-primary' : 'bg-muted'}" aria-hidden="true"></span>
@@ -375,10 +377,10 @@
                     <Icon name={o.presenceStatus === "di-rumah" ? "check" : "warn"} cls="h-4 w-4" weight={o.presenceStatus === "di-rumah" ? "bold" : "regular"} />
                   </span>
                   <div class="min-w-0">
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Pemberitahuan pembeli</p>
-                    <p class="text-sm font-semibold text-foreground">{PRESENCE_LABEL[o.presenceStatus]}</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{m.kt16()}</p>
+                    <p class="text-sm font-semibold text-foreground">{presenceLabel(o.presenceStatus)}</p>
                     <p class="mt-0.5 text-xs text-muted-foreground">
-                      {o.presenceStatus === "di-rumah" ? "Boleh langsung antar ke alamat." : "Tawarkan PUDO / jadwalkan ulang sebelum menunggu."}
+                      {o.presenceStatus === "di-rumah" ? m.kt2t7() : "Tawarkan PUDO / jadwalkan ulang sebelum menunggu."}
                     </p>
                   </div>
                 </div>
@@ -387,10 +389,10 @@
               <!-- Kondisi paket terkini -->
               <div class="rounded-xl border border-border bg-muted/30 p-4">
                 <p class="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                  <Icon name="bell" cls="h-3.5 w-3.5" /> Kondisi paket terkini (dilihat pembeli)
+                  <Icon name="bell" cls="h-3.5 w-3.5" /> {m.kt17()}
                 </p>
                 <p class="mt-1 text-sm text-foreground">{o.statusNote}</p>
-                {#if o.courier}<p class="mt-1 text-[11px] text-muted-foreground">Ditangani {o.courier}</p>{/if}
+                {#if o.courier}<p class="mt-1 text-[11px] text-muted-foreground">{handledBy(o.courier)}</p>{/if}
               </div>
 
               <!-- Aksi kurir -->
@@ -399,11 +401,11 @@
                   <textarea
                     rows="2"
                     bind:value={noteDraft[o.id]}
-                    placeholder={DEFAULT_COURIER_NOTE[next ?? o.status]}
-                    aria-label={`Keterangan kondisi paket ${o.id}`}
+                    placeholder={defaultCourierNote(next ?? o.status)}
+                    aria-label={m.kt4t4({ id: o.id })}
                     class="w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/50"
                   ></textarea>
-                  <p class="text-[11px] text-muted-foreground">Kosongkan untuk memakai catatan bawaan. Kamu bisa klik “Perbarui kondisi” tanpa mengubah status.</p>
+                  <p class="text-[11px] text-muted-foreground">{m.kt18()}</p>
                   <div class="flex flex-wrap gap-2">
                     <button
                       type="button"
@@ -417,7 +419,7 @@
                       onclick={() => writeNote(o)}
                       class="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
                     >
-                      <Icon name="edit" cls="h-4 w-4" /> Perbarui kondisi
+                      <Icon name="edit" cls="h-4 w-4" /> {m.kt19()}
                     </button>
                   </div>
 
@@ -425,16 +427,16 @@
                   <div class="flex flex-wrap items-center gap-2 border-t border-border pt-3">
                     <div class="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                       <label class="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        Mulai
+                        {m.kt20()}
                         <input
                           type="time"
                           bind:value={slotDraft[o.id].start}
-                          aria-label={`Jam mulai slot ${o.id}`}
+                          aria-label={m.sw4t1({ id: o.id })}
                           class="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-primary/50"
                         />
                       </label>
                       <label class="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        Selesai
+                        {m.kt21()}
                         <input
                           type="time"
                           bind:value={slotDraft[o.id].end}
@@ -443,7 +445,7 @@
                         />
                       </label>
                       <button type="button" onclick={() => confirmSlot(o)} class="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent">
-                        Konfirmasi slot
+                        {m.kt22()}
                       </button>
                     </div>
                     {#if o.payment === "COD"}
@@ -458,13 +460,13 @@
                     {/if}
                     {#if !o.routedToPudo}
                       <button type="button" onclick={() => toPudo(o)} class="rounded-lg border border-warning/50 px-3 py-1.5 text-xs font-semibold text-warning-foreground transition-colors hover:bg-warning/10">
-                        Alihkan ke PUDO
+                        {m.kt23()}
                       </button>
                     {/if}
                   </div>
                 </div>
               {:else}
-                <p class="inline-flex items-center gap-2 text-sm font-semibold text-success-foreground"><Icon name="check" cls="h-4 w-4" weight="bold" /> Paket telah sampai ke penerima</p>
+                <p class="inline-flex items-center gap-2 text-sm font-semibold text-success-foreground"><Icon name="check" cls="h-4 w-4" weight="bold" /> {m.kt24()}</p>
               {/if}
             </div>
 
@@ -480,7 +482,7 @@
                   {#each o.items as it (it.productId)}
                     <li class="flex items-center gap-2 text-xs">
                       <Icon name={it.icon as IconName} cls="h-4 w-4 text-[var(--bitcoin)]" />
-                      <span class="min-w-0 flex-1 truncate text-muted-foreground">{it.name} × {it.qty}</span>
+                      <span class="min-w-0 flex-1 truncate text-muted-foreground">{productName(it.productId, it.name)} × {it.qty}</span>
                     </li>
                   {/each}
                 </ul>
@@ -495,14 +497,14 @@
                   </div>
                 {/if}
                 {#if o.slot}
-                  <p class="text-xs text-muted-foreground">Slot: <span class="font-medium text-foreground">{o.slot}</span></p>
+                  <p class="text-xs text-muted-foreground">{m.kt25()} <span class="font-medium text-foreground">{o.slot}</span></p>
                 {/if}
                 {#if o.routedToPudo}
-                  <p class="text-xs font-semibold text-warning-foreground">Sudah dialihkan ke PUDO</p>
+                  <p class="text-xs font-semibold text-warning-foreground">{m.kt26()}</p>
                 {/if}
                 {#if o.payment === "COD"}
                   <p class="text-xs {o.codCollected ? 'font-semibold text-success-foreground' : 'text-muted-foreground'}">
-                    {o.codCollected ? "Tunai sudah diterima" : "Tunai belum diterima"}
+                    {o.codCollected ? m.kt2t8() : m.kt2t9()}
                   </p>
                 {/if}
               </div>
@@ -513,13 +515,13 @@
                 aria-expanded={openMapId === o.id}
                 class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-accent"
               >
-                <Icon name="map" cls="h-3.5 w-3.5" /> {openMapId === o.id ? "Sembunyikan peta lengkap" : "Lihat peta lengkap"}
+                <Icon name="map" cls="h-3.5 w-3.5" /> {openMapId === o.id ? m.kt2t4() : m.kt2t5()}
               </button>
               {#if openMapId === o.id}
                 <p class="rounded-xl border border-primary/20 bg-primary/5 p-2.5 text-[11px] leading-snug text-muted-foreground">
-                  <span class="font-semibold text-foreground">Peta rute aktif di panel atas:</span> titik awal {HUB_LABEL} → tujuan {o.address.city} · {o.address.recipient}
-                  ({distanceForCity(o.address.city)} km · ETA {etaForCity(o.address.city)} mnt).
-                  Gunakan bilah kontrol simulasi di atas untuk menganalisis waktu tempuh, kepadatan jalan, dan titik PUDO.
+                  <span class="font-semibold text-foreground">{m.kt27()}</span> titik awal {HUB_LABEL} → tujuan {o.address.city} · {o.address.recipient}
+                  ({distanceForCity(o.address.city)} km · ETA {etaForCity(o.address.city)} menit).
+                  {m.kt3f2()}
                 </p>
               {/if}
             </aside>
@@ -530,7 +532,7 @@
 
     <div class="flex justify-end">
       <button type="button" onclick={reset} class="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-destructive/50 hover:text-destructive-foreground">
-        <Icon name="trash" cls="h-3.5 w-3.5" /> Hapus semua pesanan (demo)
+        <Icon name="trash" cls="h-3.5 w-3.5" /> {m.kt28()}
       </button>
     </div>
   {/if}

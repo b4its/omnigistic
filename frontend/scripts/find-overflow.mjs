@@ -2,13 +2,18 @@ import { chromium } from "playwright-core";
 import { launchOptions } from "./_browser.mjs";
 
 const BASE = process.env.SHOT_BASE || "http://127.0.0.1:3077";
+/**
+ * Prefix locale untuk uji: asersi skrip ini berbahasa Indonesia,
+ * jadi default-nya halaman /id. Set E2E_LANG=en untuk uji asap versi Inggris.
+ */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const path = process.env.SHOT_PATH || "/analisis";
 const width = Number(process.env.SHOT_W || 320);
 
 const b = await chromium.launch({ ...launchOptions(), executablePath: process.env.PLAYWRIGHT_CHROMIUM || launchOptions().executablePath });
 const ctx = await b.newContext({ viewport: { width, height: 900 } });
 const p = await ctx.newPage();
-await p.goto(BASE + path, { waitUntil: "load", timeout: 40000 });
+await p.goto(BASE + LANG_PREFIX + path, { waitUntil: "load", timeout: 40000 });
 await p.waitForTimeout(2000);
 const offenders = await p.evaluate(() => {
   const vw = document.documentElement.clientWidth;

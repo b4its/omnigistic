@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { api, type NetworkRow } from "$lib/api";
   import EChart from "$lib/components/EChart.svelte";
@@ -34,8 +35,8 @@
 </script>
 
 <div class="space-y-6">
-  <h1 class="font-heading text-xl font-semibold tracking-tight">Network Expansion</h1>
-  <p class="text-sm text-muted-foreground">Infrastructure growth end-2020 vs end-2023</p>
+  <h1 class="font-heading text-xl font-semibold tracking-tight">{m.pnw01()}</h1>
+  <p class="text-sm text-muted-foreground">{m.pnw02()}</p>
 
   {#if loaded && rows.length}
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -53,7 +54,7 @@
     </div>
 
     <div class="rounded-2xl border bg-card p-5">
-      <p class="mb-3 text-sm font-medium">Growth comparison</p>
+      <p class="mb-3 text-sm font-medium">{m.pnw03()}</p>
       <EChart
         option={barChart(
           rows.map((g) => g.item),
@@ -67,9 +68,9 @@
     </div>
 
     <div class="rounded-2xl border-l-4 border-chart-3 bg-muted/30 p-4 text-sm text-muted-foreground">
-      <span class="font-medium text-foreground">Warning:</span> network partner grew 23,9x (20→478) but &ldquo;operational expenses grew faster than sales&rdquo;, the exact trap Omnigistic addresses via data-driven capacity.
+      <span class="font-medium text-foreground">{m.pnw04()}</span> {m.pnw05()}
     </div>
   {:else}
-    <PageState loading={!loaded && !failed} error={failed} errorTitle="Gagal memuat data jaringan" onretry={load} skeletonCards={0} skeletonHeight={240} />
+    <PageState loading={!loaded && !failed} error={failed} errorTitle={m.nw2t1()} onretry={load} skeletonCards={0} skeletonHeight={240} />
   {/if}
 </div>

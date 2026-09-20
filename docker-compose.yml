@@ -27,6 +27,9 @@ services:
       # Hot reload: source host → container (uvicorn --reload memantau /code/app).
       - ./backend/app:/code/app
       - ./shared/data-kas.json:/shared/data-kas.json:ro
+      # Overlay Inggris: ikut di-mount agar perubahan langsung terpakai di dev
+      # (tanpa rebuild image) dan tetap sinkron dengan berkas kanonik di atas.
+      - ./shared/data-kas.en.json:/shared/data-kas.en.json:ro
     develop:
       watch:
         - action: rebuild

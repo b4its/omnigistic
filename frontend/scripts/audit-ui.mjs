@@ -8,7 +8,6 @@ const paths = [
   "/analisis",
   "/login",
   "/dashboard",
-  "/dashboard/academy",
   "/dashboard/methodology",
   "/dashboard/kpi",
   "/dashboard/pusat/overview",

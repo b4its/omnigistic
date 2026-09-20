@@ -2,67 +2,69 @@
 from __future__ import annotations
 from fastapi import APIRouter
 
-from app.db.loader import load
+from app.api.localized_route import LocalizedRoute
 
-router = APIRouter(prefix="/api", tags=["data"])
+from app.db.loader import load_localized
+
+router = APIRouter(prefix="/api", tags=["data"], route_class=LocalizedRoute)
 
 
 @router.get("/hubs")
-def hubs():
-    return load()["hubs"]
+def hubs(lang: str = "id"):
+    return load_localized(lang)["hubs"]
 
 
 @router.get("/regions")
-def regions():
-    return load()["regions"]
+def regions(lang: str = "id"):
+    return load_localized(lang)["regions"]
 
 
 @router.get("/demand")
-def demand():
-    return load()["monthlyDemand"]
+def demand(lang: str = "id"):
+    return load_localized(lang)["monthlyDemand"]
 
 
 @router.get("/financial")
-def financial():
-    return load()["financial"]
+def financial(lang: str = "id"):
+    return load_localized(lang)["financial"]
 
 
 @router.get("/network")
-def network():
-    return load()["networkGrowth"]
+def network(lang: str = "id"):
+    return load_localized(lang)["networkGrowth"]
 
 
 @router.get("/addresses")
-def addresses():
-    return load()["ambiguousAddresses"]
+def addresses(lang: str = "id"):
+    return load_localized(lang)["ambiguousAddresses"]
 
 
 @router.get("/routes")
-def routes():
-    return load()["routeCompare"]
+def routes(lang: str = "id"):
+    return load_localized(lang)["routeCompare"]
 
 
 @router.get("/courier-quotes")
-def courier_quotes():
-    return load()["courierQuotes"]
+def courier_quotes(lang: str = "id"):
+    return load_localized(lang)["courierQuotes"]
 
 
 @router.get("/fleet")
-def fleet():
-    return load()["fleet"]
+def fleet(lang: str = "id"):
+    return load_localized(lang)["fleet"]
 
 
 @router.get("/kpi-targets")
-def kpi_targets():
-    return load()["kpiTargets"]
+def kpi_targets(lang: str = "id"):
+    return load_localized(lang)["kpiTargets"]
 
 
 @router.get("/root-causes")
-def root_causes():
-    return load()["rootCauses"]
+def root_causes(lang: str = "id"):
+    return load_localized(lang)["rootCauses"]
 
 
 @router.get("/all")
-def all_data():
+def all_data(lang: str = "id"):
     """Endpoint gabungan utk SPA (fetch tunggal)."""
-    return load()
+    return load_localized(lang)

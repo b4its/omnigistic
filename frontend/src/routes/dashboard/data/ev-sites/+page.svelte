@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import GlitterIcon from "$lib/components/ui/GlitterIcon.svelte";
   import MetricCard from "$lib/components/MetricCard.svelte";
@@ -19,7 +20,7 @@
   async function load(userTriggered = false) {
     failed = false;
     loaded = false;
-    if (userTriggered) notify({ message: "Memuat ulang data hub…", type: "info", title: "EV Sites" });
+    if (userTriggered) notify({ message: m.ev2t1(), type: "info", title: "EV Sites" });
     try {
       hubs = await api.hubs();
       evTarget = (await api.metricFleet()).evTarget;
@@ -27,7 +28,7 @@
     } catch {
       hubs = [];
       failed = true;
-      if (userTriggered) notify({ message: "Gagal memuat data", type: "error", title: "EV Sites" });
+      if (userTriggered) notify({ message: m.ev2t2(), type: "error", title: "EV Sites" });
     }
     loaded = true;
   }
@@ -88,54 +89,54 @@
   });
 
   const curveChart = $derived(
-    lineChart(curve.map((c) => c.year), [{ name: "Armada bersih kumulatif (%)", data: curve.map((c) => c.cleanPct), color: "var(--color-primary)", area: true }])
+    lineChart(curve.map((c) => c.year), [{ name: m.ev2t3(), data: curve.map((c) => c.cleanPct), color: "var(--color-primary)", area: true }])
   );
 </script>
 
 <div class="space-y-6">
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="font-heading text-xl font-semibold tracking-tight">EV Site Selection</h1>
-      <p class="text-sm text-muted-foreground">Data-driven charging infrastructure · koridor diturunkan dari utilisasi hub nyata (Table 1).</p>
+      <h1 class="font-heading text-xl font-semibold tracking-tight">{m.es01()}</h1>
+      <p class="text-sm text-muted-foreground">{m.es02()}</p>
     </div>
-    <span class="hub-label text-muted-foreground">Simulasi</span>
+    <span class="hub-label text-muted-foreground">{m.es03()}</span>
   </div>
 
   {#if loaded && failed}
     <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
-      <p class="text-sm font-semibold text-foreground">Gagal memuat data hub</p>
-      <p class="mt-1 text-xs text-muted-foreground">Backend offline. Muat ulang setelah backend aktif.</p>
-      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
+      <p class="text-sm font-semibold text-foreground">{m.es04()}</p>
+      <p class="mt-1 text-xs text-muted-foreground">{m.es05()}</p>
+      <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">{m.es06()}</button>
     </div>
   {:else if loaded}
     <div class="grid gap-4 sm:grid-cols-3">
-      <MetricCard label="Target EV" value={`${evTarget} unit`} sub="akhir 2026 (studi kasus)" accent />
-      <MetricCard label="Koridor Diprioritaskan" value={`${scored.length}`} sub="dari pasangan hub padat" />
-      <MetricCard label="Tahun ke Armada Bersih" value={`±${yearsToTarget} thn`} sub={`setara target ${numId((evTarget / 14180) * 100, 2)}% armada`} />
+      <MetricCard label={m.ev2t4()} value={`${evTarget} unit`} sub={m.ev2t5()} accent />
+      <MetricCard label="Koridor Diprioritaskan" value={`${scored.length}`} sub={m.ev2t6()} />
+      <MetricCard label={m.ev2t7()} value={m.es3t2({ years: yearsToTarget })} sub={m.es3t1({ pct: numId((evTarget / 14180) * 100, 2) })} />
     </div>
 
     <div class="rounded-2xl border-2 border-primary/40 bg-primary/10 p-5 shadow-card">
       <div class="flex items-start gap-3">
         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)]"><GlitterIcon cls="h-5 w-5" /></span>
         <div class="min-w-0">
-          <p class="text-[13.5px] font-semibold uppercase tracking-wider text-primary">Saran Nigi AI</p>
+          <p class="text-[13.5px] font-semibold uppercase tracking-wider text-primary">{m.es07()}</p>
           <p class="mt-1.5 text-sm font-medium leading-relaxed text-foreground">
-            Prioritaskan koridor urban Jawa (utilisasi tinggi, 70% last-mile terjadi di Jawa). Koridor timur (utilisasi rendah) perlu Regional Sponsor + modal laut dulu sebelum charging EV.
+            {m.es08()}
           </p>
         </div>
       </div>
     </div>
 
     <div class="rounded-2xl border bg-card p-5">
-      <p class="mb-3 text-sm font-medium">Koridor prioritas (skor = 60% utilisasi + 40% volume relatif, dari Table 1)</p>
+      <p class="mb-3 text-sm font-medium">{m.es09()}</p>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b bg-muted/50 text-left text-xs text-muted-foreground">
-              <th scope="col" class="px-4 py-2">Koridor</th>
-              <th scope="col" class="px-4 py-2 text-right">Utilisasi</th>
-              <th scope="col" class="px-4 py-2 text-right">Indeks volume*</th>
-              <th scope="col" class="px-4 py-2 text-right">Skor</th>
+              <th scope="col" class="px-4 py-2">{m.es10()}</th>
+              <th scope="col" class="px-4 py-2 text-right">{m.es11()}</th>
+              <th scope="col" class="px-4 py-2 text-right">{m.es12()}</th>
+              <th scope="col" class="px-4 py-2 text-right">{m.es13()}</th>
             </tr>
           </thead>
           <tbody>
@@ -150,26 +151,26 @@
           </tbody>
         </table>
       </div>
-      <p class="mt-3 text-[13px] italic text-muted-foreground">*indeks volume relatif (kapasitas × utilisasi harian), bukan agregat. Skor = simulasi tim dari data Table 1.</p>
+      <p class="mt-3 text-[13px] italic text-muted-foreground">{m.es14()}</p>
     </div>
 
     <div class="rounded-2xl border bg-card p-5">
-      <p class="mb-1 text-sm font-medium">Kebijakan penyusutan {depreciationYears} tahun → kurva transformasi EV</p>
-      <p class="mb-3 text-sm text-muted-foreground">Kendaraan fosil yang mencapai umur ekonomis diganti EV — tanpa lonjakan capex. Turnover ≈ {new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(turnoverPct)}%/th.</p>
+      <p class="mb-1 text-sm font-medium">Kebijakan penyusutan {depreciationYears} {m.es3f1()}</p>
+      <p class="mb-3 text-sm text-muted-foreground">{m.es3f2()} {new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(turnoverPct)}%/th.</p>
 
       <label class="block max-w-sm">
-        <span class="flex items-center justify-between text-sm font-medium"><span>Umur ekonomis kendaraan</span><span class="kpi-value text-primary">{depreciationYears} thn</span></span>
+        <span class="flex items-center justify-between text-sm font-medium"><span>{m.es15()}</span><span class="kpi-value text-primary">{depreciationYears} thn</span></span>
         <input type="range" min="4" max="12" step="1" value={depreciationYears} oninput={(e) => (depreciationYears = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => notify({ message: `Umur ekonomis ${depreciationYears} tahun`, type: "info", title: "EV Sites" })} aria-label="Umur ekonomis kendaraan" class="mt-2 w-full accent-[var(--color-primary)]" />
       </label>
       <label class="block mt-4 max-w-sm">
-        <span class="flex items-center justify-between text-sm font-medium"><span>Target EV pada 2026</span><span class="kpi-value text-primary">{evTarget} unit</span></span>
-        <input type="range" min="50" max="500" step="25" value={evTarget} oninput={(e) => (evTarget = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => notify({ message: `Target EV ${evTarget} unit`, type: "info", title: "EV Sites" })} aria-label="Target EV unit" class="mt-2 w-full accent-[var(--color-primary)]" />
+        <span class="flex items-center justify-between text-sm font-medium"><span>{m.es16()}</span><span class="kpi-value text-primary">{evTarget} unit</span></span>
+        <input type="range" min="50" max="500" step="25" value={evTarget} oninput={(e) => (evTarget = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => notify({ message: `Target EV ${evTarget} unit`, type: "info", title: "EV Sites" })} aria-label={m.ax14()} class="mt-2 w-full accent-[var(--color-primary)]" />
       </label>
 
       <div class="mt-4">
-        <EChart option={curveChart} height={260} label="Kurva transformasi armada bersih" />
+        <EChart option={curveChart} height={260} label={m.ev2t8()} />
       </div>
-      <p class="mt-2 text-xs text-muted-foreground">Tahun ke-10: {fleetAt10}% armada fosil tergantikan secara alami tanpa capex spike. Target {evTarget} unit ≈ {numId((evTarget / 14180) * 100, 2)}% armada tercapai dalam ±{yearsToTarget} tahun pada laju ini.</p>
+      <p class="mt-2 text-xs text-muted-foreground">{m.es3f3()} {fleetAt10}{m.es3f4()} {evTarget} unit ≈ {numId((evTarget / 14180) * 100, 2)}{m.es3f5()}{yearsToTarget} {m.es3f6()}</p>
     </div>
   {:else}
     <div class="h-72 animate-pulse rounded-2xl border border-border bg-card/60"></div>

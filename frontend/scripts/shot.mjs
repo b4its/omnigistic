@@ -4,6 +4,11 @@ import { launchOptions } from "./_browser.mjs";
 
 mkdirSync("/tmp/opencode/shots", { recursive: true });
 const BASE = process.env.SHOT_BASE || "http://127.0.0.1:3077";
+/**
+ * Prefix locale untuk uji: asersi skrip ini berbahasa Indonesia,
+ * jadi default-nya halaman /id. Set E2E_LANG=en untuk uji asap versi Inggris.
+ */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const pages = (process.env.SHOT_PAGES || "/dashboard/hub/load-balance").split(",");
 const tag = process.env.SHOT_TAG || "shot";
 
@@ -15,7 +20,7 @@ p.on("pageerror", (e) => errs.push("JS: " + String(e.message).slice(0, 160)));
 p.on("console", (m) => { if (m.type() === "error") errs.push("CON: " + m.text().slice(0, 160)); });
 
 for (const path of pages) {
-  await p.goto(BASE + path, { waitUntil: "networkidle", timeout: 40000 }).catch((e) => errs.push("NAV " + path + ": " + e.message.slice(0, 80)));
+  await p.goto(BASE + LANG_PREFIX + path, { waitUntil: "networkidle", timeout: 40000 }).catch((e) => errs.push("NAV " + path + ": " + e.message.slice(0, 80)));
   await p.waitForTimeout(2500);
   const name = tag + "-" + path.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
   await p.screenshot({ path: `/tmp/opencode/shots/${name}.png`, fullPage: false });

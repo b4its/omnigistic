@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { api, type ChatResp, type Insights } from "$lib/api";
   import ChatMarkdown from "./ChatMarkdown.svelte";
@@ -8,12 +9,12 @@
   let { role = "PUSAT" }: { role?: string } = $props();
 
   const ROLE_CHIPS: Record<string, string[]> = {
-    PUSAT: ["Kenapa biaya naik lebih cepat dari sales?", "Kenapa Jakarta overload?"],
-    HUB: ["Berapa utilisasi hub Bandung?", "Kenapa demand naik turun?"],
-    KURIR: ["Kenapa COD lebih lambat?", "Apa itu Slot Confirmation?"],
-    DATA: ["Kenapa alamat bisa ambigu?", "Berapa tingkat komplain?"],
-    CUSTOMER: ["Kenapa COD lebih lambat?", "Apa itu PUDO?"],
-    SELLER: ["Berapa tingkat komplain?", "Kenapa COD lebih lambat?"]
+    PUSAT: [m.aict1(), "Kenapa Jakarta overload?"],
+    HUB: [m.aict2(), "Kenapa demand naik turun?"],
+    KURIR: [m.aict3(), m.aict4()],
+    DATA: [m.aict5(), m.aic2t1()],
+    CUSTOMER: [m.aict3(), m.aict6()],
+    SELLER: [m.aic2t1(), m.aict3()]
   };
 
   let greeting = $state("");
@@ -43,7 +44,7 @@
       const data = (await api.chat(role, query)) as ChatResp;
       answer = data.content ?? "";
     } catch {
-      answer = "Gagal menghubungi Nigi AI. Coba lagi.";
+      answer = m.aict7();
     } finally {
       busy = false;
       input = "";
@@ -68,13 +69,13 @@
       <GlitterIcon cls="h-4 w-4" />
     </span>
     <div class="min-w-0 leading-tight">
-      <p class="font-heading text-sm font-semibold tracking-tight">Nigi AI</p>
-      <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Asisten data studi kasus</p>
+      <p class="font-heading text-sm font-semibold tracking-tight">{m.aicp01()}</p>
+      <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{m.aicp02()}</p>
     </div>
     <button
       type="button"
       onclick={expand}
-      aria-label="Perluas ke panel penuh"
+      aria-label={m.aic2t2()}
       class="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-[color-mix(in_oklab,var(--bitcoin)_50%,transparent)] hover:text-[var(--bitcoin)]"
     >
       <Icon name="arrow-up-right" cls="h-4 w-4" weight="bold" />
@@ -83,9 +84,9 @@
 
   <div bind:this={ansEl} class="max-h-[200px] min-h-[56px] overflow-y-auto rounded-xl border border-border bg-background/60 p-3 text-[15px] leading-relaxed" role="status" aria-live="polite">
     {#if error}
-      <p class="text-muted-foreground">Ringkasan tidak tersedia. Buka panel penuh untuk bertanya.</p>
+      <p class="text-muted-foreground">{m.aicp03()}</p>
     {:else if busy}
-      <p class="flex items-center gap-2 text-muted-foreground"><Icon name="dots" cls="h-4 w-4 animate-pulse" weight="bold" /> mengetik</p>
+      <p class="flex items-center gap-2 text-muted-foreground"><Icon name="dots" cls="h-4 w-4 animate-pulse" weight="bold" /> {m.aicp04()}</p>
     {:else if answer}
       <ChatMarkdown text={answer} />
     {:else if greeting}
@@ -98,7 +99,7 @@
         </ul>
       {/if}
     {:else}
-      <p class="text-muted-foreground">Memuat ringkasan…</p>
+      <p class="text-muted-foreground">{m.aicp05()}</p>
     {/if}
   </div>
 
@@ -131,7 +132,7 @@
     <button
       type="submit"
       disabled={busy || !input.trim()}
-      aria-label="Kirim"
+      aria-label={m.ac3t1()}
       class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] transition-transform hover:scale-105 disabled:scale-100 disabled:opacity-40"
     >
       <Icon name="send" cls="h-4 w-4" weight="fill" />

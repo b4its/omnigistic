@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   /**
    * Pemilih Titik Koordinat Pengantaran (Leaflet)
    *
@@ -166,10 +167,10 @@
     <div class="space-y-0.5">
       <p class="text-xs font-semibold text-foreground flex items-center gap-1.5">
         <Icon name="target" cls="h-3.5 w-3.5 text-[var(--bitcoin)]" />
-        Peta Penentu Titik Koordinat Pengantaran
+        {m.cp3f1()}
       </p>
       <p class="text-[11px] text-muted-foreground">
-        Klik langsung pada peta atau seret pin lokasi untuk menentukan titik temu presisi kurir.
+        {m.cp3f2()}
       </p>
     </div>
   </div>
@@ -190,7 +191,7 @@
 
   <!-- Kanvas Peta Leaflet Interaktif -->
   <div class="relative isolate z-0 h-[280px] w-full overflow-hidden rounded-xl border border-border">
-    <div bind:this={mapEl} class="absolute inset-0" aria-label="Kanvas peta interaktif penentu koordinat pengantaran"></div>
+    <div bind:this={mapEl} class="absolute inset-0" aria-label={m.ax06()}></div>
   </div>
 
   <!-- HUD Status Titik Terpilih -->

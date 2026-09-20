@@ -4,7 +4,13 @@
 from __future__ import annotations
 import logging
 import os
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter
+
+from fastapi import HTTPException
+
+from starlette.requests import Request
+
+from app.api.localized_route import LocalizedRoute
 from pydantic import BaseModel
 
 from app.security.guard import (
@@ -14,8 +20,9 @@ from app.security.formatter import format_chat_response
 from app.security.quota import is_quota_error
 from app.security.prompts import build_system_prompt, FACTS_DIGEST
 from app.api.qa import match_chat_qa
+from app.i18n import normalize_lang, translate
 
-router = APIRouter(prefix="/api", tags=["chat"])
+router = APIRouter(prefix="/api", tags=["chat"], route_class=LocalizedRoute)
 log = logging.getLogger("omnigistic.chat")
 VALID = {"PUSAT", "HUB", "KURIR", "DATA", "CUSTOMER", "SELLER"}
 # chip saran sebaiknya punya padanan di bank QA (54 entri di data-kas.json) supaya klik → jawab DB
@@ -30,14 +37,25 @@ _ROLE_SUGGESTIONS = {
 }
 
 
-def default_suggestions(role: str) -> list[str]:
+def default_suggestions(role: str, lang: str = "id") -> list[str]:
     """Salinan daftar saran untuk role — copy agar respons tak meng-*alias* list
-    modul (mutasi di satu respons tidak merusak respons lain)."""
-    return list(_ROLE_SUGGESTIONS.get((role or "").upper(), _DEFAULT_SUGGESTIONS))
+    modul (mutasi di satu respons tidak merusak respons lain).
+
+    Saat `lang=en`, tiap saran diterjemahkan lewat katalog sehingga chip tetap
+    cocok dengan bank QA berbahasa Inggris.
+    """
+    items = list(_ROLE_SUGGESTIONS.get((role or "").upper(), _DEFAULT_SUGGESTIONS))
+    if normalize_lang(lang) == "en":
+        return [translate(item, lang) for item in items]
+    return items
 
 
 class ChatBody(BaseModel):
     role: str
+    # Boleh dikosongkan: kalau kosong, `lang` diambil dari query string
+    # (klien menyisipkan ?lang=… pada SETIAP permintaan) agar tidak ada jalur
+    # yang diam-diam jatuh ke Indonesia.
+    lang: str | None = None
     query: str
 
 
@@ -106,15 +124,16 @@ def _call_llm(role: str, user_msg: str, session: str, qa: dict | None = None) ->
 async def chat(body: ChatBody, req: Request):
     role = (body.role or "").upper()
     query = (body.query or "").replace("\u0000", "").strip()
+    lang = normalize_lang(body.lang or req.query_params.get("lang"))
     if not query or role not in VALID:
         raise HTTPException(status_code=400, detail="invalid params")
 
     if not check_rate(_client_key(req, role)):
-        return format_chat_response("Terlalu banyak percobaan. Jeda sebentar lalu coba lagi.", default_suggestions(role), "exhausted")
+        return format_chat_response("Terlalu banyak percobaan. Jeda sebentar lalu coba lagi.", default_suggestions(role, lang), "exhausted")
 
     clean = sanitize_input(query)
     if clean["blocked"]:
-        return format_chat_response(HARD_REFUSAL, default_suggestions(role))
+        return format_chat_response(HARD_REFUSAL, default_suggestions(role, lang))
 
     session = _client_key(req, role)
 
@@ -122,7 +141,7 @@ async def chat(body: ChatBody, req: Request):
     # bank QA. Hanya 'hard' (blocked) yang benar-benar dilewati menjawab.
     # (Dulu: 'harden' melewati bank QA → pertanyaan wajar dijawab "offline".)
     # 1) Ambil fakta terkunci (bank QA) sebagai grounding LLM.
-    qa = match_chat_qa(role, clean["query"])
+    qa = match_chat_qa(role, clean["query"], lang)
 
     # 2) LLM hanya untuk input 'ok' — input 'harden' tidak dikirim ke LLM (aman),
     #    cukup dijawab dari bank QA pada langkah 3.
@@ -131,16 +150,16 @@ async def chat(body: ChatBody, req: Request):
         reply = _call_llm(role, wrap_untrusted(clean["query"]), session, qa)
     out = filter_output(reply) if reply else ""
     if out.strip():
-        return format_chat_response(out, default_suggestions(role))
+        return format_chat_response(out, default_suggestions(role, lang))
 
     # 3) Fallback bank QA kasus (angka terkunci) bila LLM gagal/offline/limit
     if qa:
         from app.security.formatter import clean_text
         return format_chat_response(
             clean_text(qa["answer"]),
-            (qa["followups"] or default_suggestions(role)[:2]),
+            (qa["followups"] or default_suggestions(role, lang)[:2]),
             "fallback",
             mode="fallback",
         )
 
-    return format_chat_response("Nigi AI sedang offline.", default_suggestions(role), "exhausted", mode="offline")
+    return format_chat_response("Nigi AI sedang offline.", default_suggestions(role, lang), "exhausted", mode="offline")

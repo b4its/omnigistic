@@ -1,4 +1,5 @@
 import { resolve } from "$app/paths";
+import { deLocalizeUrl, localizeHref } from "$lib/paraglide/runtime";
 
 /** `resolve` dengan signature longgar (runtime hanya menggabungkan base path). */
 const resolvePath = resolve as unknown as (path: string) => string;
@@ -9,12 +10,27 @@ export function cn(...parts: Array<string | false | null | undefined>): string {
 }
 
 /**
- * Bungkus path internal dengan `resolve()` SvelteKit (menghormati `paths.base`).
- * Anchor (#...) dan URL absolut dibiarkan apa adanya agar aman untuk nav campuran.
+ * Bungkus path internal dengan `resolve()` SvelteKit (menghormati `paths.base`)
+ * lalu `localizeHref()` Paraglide, sehingga setiap tautan internal otomatis
+ * memakai prefix locale aktif (`/id/...` untuk Indonesia, tanpa prefix untuk
+ * bahasa dasar Inggris). Anchor (#...) dan URL absolut dibiarkan apa adanya.
  */
 export function resolveHref(path: string): string {
   if (!path || path.startsWith("#") || /^[a-z]+:|^\/\//i.test(path)) return path;
-  return resolvePath(path);
+  return localizeHref(resolvePath(path));
+}
+
+/**
+ * Kebalikan `resolveHref`: buang prefix locale dari sebuah pathname supaya
+ * penguraian segmen path (mis. deteksi role) tetap benar baik di `/dashboard/...`
+ * maupun di `/id/dashboard/...`.
+ */
+export function deLocalizedPath(pathname: string): string {
+  try {
+    return deLocalizeUrl(new URL(pathname, "http://localhost")).pathname;
+  } catch {
+    return pathname;
+  }
 }
 
 export function formatId(n: number): string {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { page } from "$app/state";
   import { resolveHref } from "$lib/utils";
@@ -58,21 +59,20 @@
   <!-- Pembeli tidak boleh melihat skor prediktif pelanggan lain -->
   <div class="mx-auto max-w-lg space-y-5 py-12 text-center">
     <span class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="shield" cls="h-8 w-8" /></span>
-    <h1 class="font-heading text-xl font-semibold text-foreground">Halaman internal</h1>
+    <h1 class="font-heading text-xl font-semibold text-foreground">{m.pcd01()}</h1>
     <p class="text-sm text-muted-foreground">
-      Prediksi <strong class="font-semibold text-foreground">Predictive COD</strong> hanya tersedia untuk tim internal
-      (Pusat, Hub, Kurir, Data, Penjual). Sebagai pembeli, kamu hanya melihat status COD di akunmu.
+      {m.pcd02()} <strong class="font-semibold text-foreground">{m.pcd03()}</strong> {m.pcd04()}
     </p>
     <a href={resolveHref("/dashboard/customer/overview")} class="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px">
-      <Icon name="arrow-left" cls="h-4 w-4" /> Kembali ke toko
+      <Icon name="arrow-left" cls="h-4 w-4" /> {m.pcd05()}
     </a>
   </div>
 {:else}
   <div class="space-y-6">
     <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="space-y-1">
-        <h1 class="font-heading text-xl font-semibold tracking-tight">Predictive COD</h1>
-        <p class="text-sm text-muted-foreground">Prediksi kelayakan COD tiap pembeli dari reputasi. Hanya untuk tim internal.</p>
+        <h1 class="font-heading text-xl font-semibold tracking-tight">{m.pcd06()}</h1>
+        <p class="text-sm text-muted-foreground">{m.pcd07()}</p>
       </div>
       <span class="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground">
         <Icon name="shield" cls="h-3.5 w-3.5" /> Ambang COD: skor ≥ {COD_MIN_SCORE}
@@ -86,15 +86,15 @@
       </div>
       <div class="grid gap-4 sm:grid-cols-3">
         <div class="rounded-2xl border border-border bg-card p-5">
-          <p class="text-xs font-medium text-muted-foreground">Total pembeli diprediksi</p>
+          <p class="text-xs font-medium text-muted-foreground">{m.pcd08()}</p>
           <p class="mt-2 text-2xl font-bold tabular-nums text-foreground">{buyers.length}</p>
         </div>
         <div class="rounded-2xl border border-border bg-card p-5">
-          <p class="text-xs font-medium text-muted-foreground">COD tersedia</p>
+          <p class="text-xs font-medium text-muted-foreground">{m.pcd09()}</p>
           <p class="mt-2 text-2xl font-bold tabular-nums text-success-foreground">{allowedCount}</p>
         </div>
         <div class="rounded-2xl border border-border bg-card p-5">
-          <p class="text-xs font-medium text-muted-foreground">COD diblokir</p>
+          <p class="text-xs font-medium text-muted-foreground">{m.pcd10()}</p>
           <p class="mt-2 text-2xl font-bold tabular-nums text-destructive-foreground">{blockedCount}</p>
         </div>
       </div>
@@ -102,7 +102,7 @@
 
     <!-- Daftar pembeli -->
     <section class="space-y-3">
-      <h2 class="text-sm font-semibold text-muted-foreground">Prediksi per pembeli</h2>
+      <h2 class="text-sm font-semibold text-muted-foreground">{m.pcd11()}</h2>
       <ul class="space-y-3">
         {#each buyers as b (b.profile.id)}
           <li class="rounded-2xl border border-border bg-card p-5">

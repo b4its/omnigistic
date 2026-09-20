@@ -15,6 +15,8 @@ import { mkdirSync } from "node:fs";
 import { launchOptions } from "./_browser.mjs";
 
 const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
+/** Prefix locale uji: asersi berbahasa Indonesia → default /id (E2E_LANG=en untuk Inggris). */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const STORAGE_KEY = "omnigistic-shop-v1";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
@@ -62,7 +64,7 @@ try {
   await page.addInitScript(([k, v]) => localStorage.setItem(k, v), [STORAGE_KEY, JSON.stringify(seededState)]);
 
   // ── 1. Halaman Tugas Pengantaran (/dashboard/kurir/tasks) ──
-  await page.goto(BASE + "/dashboard/kurir/tasks", { waitUntil: "load", timeout: 40000 });
+  await page.goto(BASE + LANG_PREFIX + "/dashboard/kurir/tasks", { waitUntil: "load", timeout: 40000 });
   await page.waitForTimeout(3000);
 
   const txt = await page.locator("body").innerText();
@@ -83,7 +85,7 @@ try {
   R((await slider.count()) > 0, "delivery-sim: scrubber range input hadir");
 
   // Cek Speedometer & Telemetri
-  R(/km\/j/i.test(txt), "delivery-sim: speedometer km/j tampil");
+  R(/kilometer per jam/i.test(txt), "delivery-sim: speedometer (kilometer per jam) tampil");
   R(/ETA Tersisa|Baterai EV|Hemat CO₂/i.test(txt), "delivery-sim: kartu telemetri lengkap tampil");
 
   // ── 4. Interaktivitas: Play / Pause Simulasi ──
@@ -121,7 +123,7 @@ try {
   await page.screenshot({ path: "/tmp/opencode/shots/e2e-courier-delivery-sim.png" });
 
   // ── 7. Halaman Route Clustering (/dashboard/kurir/routes) ──
-  await page.goto(BASE + "/dashboard/kurir/routes", { waitUntil: "load", timeout: 40000 });
+  await page.goto(BASE + LANG_PREFIX + "/dashboard/kurir/routes", { waitUntil: "load", timeout: 40000 });
   await page.waitForTimeout(3000);
 
   const routeTxt = await page.locator("body").innerText();

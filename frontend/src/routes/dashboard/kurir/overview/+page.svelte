@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import { api, type Insights } from "$lib/api";
   import { notify } from "$lib/toast";
@@ -8,6 +9,7 @@
   import { shop, codAtRiskCandidates, type Order } from "$lib/stores/shop";
   import { formatRupiah } from "$lib/shop/catalog";
   import { numId } from "$lib/utils";
+  import RoleHubLinks from "$lib/components/RoleHubLinks.svelte";
 
   let routes = $state<Array<{ type: string; durationMin: number; productivity: number }>>([]);
   let greeting = $state("");
@@ -27,16 +29,16 @@
 
   async function load(userTriggered = false) {
     failed = false;
-    if (userTriggered) notify({ message: "Memuat ulang ringkasan kurir…", type: "info", title: "Ringkasan Kurir" });
+    if (userTriggered) notify({ message: m.ko2t1(), type: "info", title: m.kv2t1() });
     try {
       [routes, { greeting, insights }] = await Promise.all([
         api.routes().catch(() => []),
-        api.insights("KURIR").catch(() => ({ greeting: "", insights: [] }))
+        api.insights(m.ko2t2()).catch(() => ({ greeting: "", insights: [] }))
       ]);
-      if (userTriggered) notify({ message: "Ringkasan dimuat ulang", type: "success", title: "Ringkasan Kurir" });
+      if (userTriggered) notify({ message: "Ringkasan dimuat ulang", type: "success", title: m.ko2t3() });
     } catch {
       failed = true;
-      if (userTriggered) notify({ message: "Gagal memuat ringkasan kurir", type: "error", title: "Ringkasan Kurir" });
+      if (userTriggered) notify({ message: m.ko2t4(), type: "error", title: m.ko2t3() });
     }
     loaded = true;
   }
@@ -55,29 +57,29 @@
   const kpi = $derived(
     hasReal
       ? [
-          { label: "Tugas aktif", value: String(active), sub: `${delivered} terkirim · ${orders.length} total`, accent: "var(--color-primary)" },
-          { label: "Tunai COD tertagih", value: formatRupiah(cashDue), sub: "belum diterima", accent: "var(--color-destructive-foreground)" },
-          { label: "Slot belum dikonfirmasi", value: String(pendingSlots), sub: "pesanan aktif", accent: "var(--color-warning-foreground)" },
+          { label: m.ko2t5(), value: String(active), sub: `${delivered} terkirim · ${orders.length} total`, accent: "var(--color-primary)" },
+          { label: "Tunai COD tertagih", value: formatRupiah(cashDue), sub: m.ko2t6(), accent: "var(--color-destructive-foreground)" },
+          { label: m.ko2t7(), value: String(pendingSlots), sub: m.ko2t8(), accent: "var(--color-warning-foreground)" },
           { label: "Kandidat PUDO", value: String(toPudo), sub: "COD berisiko", accent: "var(--color-chart-4)" }
         ]
       : routes.length
         ? [
-            { label: "Rute Kunjungan COD", value: cod ? `${cod.durationMin} menit` : "—", sub: "8 paket, studi kasus", accent: "var(--color-destructive-foreground)" },
-            { label: "Rute Non-COD", value: nonCod ? `${nonCod.durationMin} menit` : "—", sub: "8 paket, studi kasus", accent: "var(--color-success-foreground)" },
+            { label: "Rute Kunjungan COD", value: cod ? `${cod.durationMin} menit` : "—", sub: m.kv2t2(), accent: "var(--color-destructive-foreground)" },
+            { label: "Rute Non-COD", value: nonCod ? `${nonCod.durationMin} menit` : "—", sub: m.kv2t2(), accent: "var(--color-success-foreground)" },
             // Produktivitas & hambatan DITURUNKAN dari data kasus (bukan hardcode).
-            { label: "Produktivitas COD", value: cod ? `${numId(cod.productivity, 2)}/jam` : "—", sub: nonCod ? `vs ${numId(nonCod.productivity, 2)} non-COD` : "—" },
-            { label: "Hambatan", value: cod && nonCod && nonCod.durationMin ? `+${numId((cod.durationMin / nonCod.durationMin - 1) * 100, 0)}%` : "—", sub: "COD lebih lama dari non-COD" }
+            { label: m.ko3t3(), value: cod ? m.ko3t1({ v: numId(cod.productivity, 2) }) : "—", sub: nonCod ? m.ko3t2b({ v: numId(nonCod.productivity, 2) }) : "—" },
+            { label: "Hambatan", value: cod && nonCod && nonCod.durationMin ? `+${numId((cod.durationMin / nonCod.durationMin - 1) * 100, 0)}%` : "—", sub: m.kv2t3() }
           ]
         : []
   );
 </script>
 
 {#if loaded && (routes.length || hasReal || failed)}
-  <RoleOverview role="KURIR" kpi={kpi} greeting={greeting} insights={insights}>
+  <RoleOverview role={m.ko2t2()} kpi={kpi} greeting={greeting} insights={insights}>
     {#snippet chart()}
       {#if hasReal}
         <div class="space-y-3">
-          <p class="text-sm font-medium">Status pesanan aktif (data nyata)</p>
+          <p class="text-sm font-medium">{m.ok01()}</p>
           <div class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-5">
             {#each [
               { k: "dikemas", l: "Dikemas" },
@@ -107,9 +109,9 @@
   </RoleOverview>
 {:else if failed && !hasReal}
   <div class="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
-    <p class="text-sm font-semibold text-foreground">Gagal memuat ringkasan kurir</p>
-    <p class="mt-1 text-xs text-muted-foreground">Backend offline. Buat pesanan dari portal Customer atau coba lagi.</p>
-    <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">Coba lagi</button>
+    <p class="text-sm font-semibold text-foreground">{m.ok02()}</p>
+    <p class="mt-1 text-xs text-muted-foreground">{m.ok03()}</p>
+    <button type="button" onclick={() => load(true)} class="mt-3 rounded-full bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)]">{m.ok04()}</button>
   </div>
 {:else}
   <div class="space-y-5">
@@ -119,3 +121,18 @@
     </div>
   </div>
 {/if}
+
+<RoleHubLinks
+  links={[
+    { label: m.hbl_tasks(), href: "/dashboard/kurir/tasks", icon: "map", desc: m.hbk01() },
+    { label: "Route Clustering", href: "/dashboard/kurir/routes", icon: "compass", desc: m.hbk02() },
+    { label: "Predictive COD", href: "/dashboard/kurir/cod-risk", icon: "currency", desc: m.hbk03() },
+    { label: "COD Intelligence", href: "/dashboard/kurir/cod-intel", icon: "trend", desc: m.hbk04() },
+    { label: "COD Cash Risk", href: "/dashboard/kurir/cod-cash", icon: "wallet", desc: m.hbk05() },
+    { label: m.hbl_buyer(), href: "/dashboard/predictive-cod", icon: "users", desc: m.hbk06() },
+    { label: m.ko2t9(), href: "/dashboard/kurir/slot", icon: "bell", desc: m.hbk07() },
+    { label: "Digital Payment", href: "/dashboard/kurir/payment", icon: "shield", desc: m.hbk08() },
+    { label: "PUDO Network", href: "/dashboard/kurir/pudo", icon: "map", desc: m.hbk09() },
+    { label: "Nigi AI", href: "/dashboard/kurir/assistant", icon: "chat", desc: m.hbk10() }
+  ]}
+/>

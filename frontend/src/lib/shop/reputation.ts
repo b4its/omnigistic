@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 /**
  * Reputasi pembeli & aturan kelayakan COD.
  *
@@ -61,8 +62,8 @@ function finalize(p: BuyerProfile, score: number): Reputation {
     tier: codAllowed ? "baik" : "buruk",
     codAllowed,
     buyerNote: codAllowed
-      ? "Reputasimu baik — kamu bisa membayar di tempat (COD)."
-      : "Reputasi akun belum memenuhi syarat COD. Selesaikan dengan transfer / bayar di muka."
+      ? m.rp01()
+      : m.rp02()
   };
 }
 

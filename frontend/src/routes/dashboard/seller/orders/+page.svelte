@@ -1,10 +1,11 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import type { IconName } from "$lib/icon-names";
   import { resolveHref } from "$lib/utils";
   import Icon from "$lib/components/Icon.svelte";
   import { SELLER_PRODUCTS } from "$lib/shop/seller";
-  import { shop, ORDER_STATUS_LABEL, type Order } from "$lib/stores/shop";
+  import { shop, orderStatusLabel, type Order } from "$lib/stores/shop";
   import { COD_DECISION_LABEL } from "$lib/logistics";
 
   const rupiah = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
@@ -39,21 +40,21 @@
 
 <div class="space-y-6">
   <header class="space-y-1">
-    <h1 class="font-heading text-xl font-semibold tracking-tight">Pesanan Masuk</h1>
-    <p class="text-sm text-muted-foreground">Pesanan yang memuat produkmu, dari pemesanan hingga sampai ke pembeli.</p>
+    <h1 class="font-heading text-xl font-semibold tracking-tight">{m.so01()}</h1>
+    <p class="text-sm text-muted-foreground">{m.so02()}</p>
   </header>
 
   <section class="grid gap-4 sm:grid-cols-3">
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="text-xs font-medium text-muted-foreground">Pesanan produk saya</p>
+      <p class="text-xs font-medium text-muted-foreground">{m.so03()}</p>
       <p class="mt-2 text-2xl font-bold tabular-nums text-foreground">{myOrders.length}</p>
     </div>
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="text-xs font-medium text-muted-foreground">Nilai penjualan</p>
+      <p class="text-xs font-medium text-muted-foreground">{m.so04()}</p>
       <p class="mt-2 text-2xl font-bold tabular-nums text-success-foreground">{rupiah(revenue)}</p>
     </div>
     <div class="rounded-2xl border border-border bg-card p-5">
-      <p class="text-xs font-medium text-muted-foreground">Pesanan COD</p>
+      <p class="text-xs font-medium text-muted-foreground">{m.so05()}</p>
       <p class="mt-2 text-2xl font-bold tabular-nums text-foreground">{codOrders}</p>
     </div>
   </section>
@@ -61,10 +62,10 @@
   {#if myOrders.length === 0}
     <div class="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
       <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon name="globe" cls="h-7 w-7" /></span>
-      <p class="mt-4 text-base font-semibold text-foreground">Belum ada pesanan masuk</p>
-      <p class="mt-1 text-sm text-muted-foreground">Pesanan dari pembeli (portal Customer) yang memuat produkmu akan tampil di sini.</p>
+      <p class="mt-4 text-base font-semibold text-foreground">{m.so06()}</p>
+      <p class="mt-1 text-sm text-muted-foreground">{m.so07()}</p>
       <a href={resolveHref("/dashboard/seller/products")} class="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition-transform hover:-translate-y-px">
-        <Icon name="stack" cls="h-4 w-4" /> Lihat produk saya
+        <Icon name="stack" cls="h-4 w-4" /> {m.so08()}
       </a>
     </div>
   {:else}
@@ -74,7 +75,7 @@
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
             <div class="flex items-center gap-3">
               <span class="font-mono text-sm font-semibold text-foreground">{x.order.id}</span>
-              <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {statusTone[x.order.status] ?? 'bg-muted text-muted-foreground'}">{ORDER_STATUS_LABEL[x.order.status]}</span>
+              <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {statusTone[x.order.status] ?? 'bg-muted text-muted-foreground'}">{orderStatusLabel(x.order.status)}</span>
               <span class="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{x.order.payment}</span>
             </div>
             <span class="text-xs text-muted-foreground">{x.order.address.recipient} · {x.order.address.city}</span>
@@ -89,7 +90,7 @@
             {/each}
           </ul>
           {#if x.order.payment === "COD" && x.order.codScore !== null}
-            <p class="mt-3 text-xs text-muted-foreground">Kesiapan bayar COD pembeli: <span class="font-semibold text-foreground">{(x.order.codScore * 100).toFixed(0)}%</span> ({COD_DECISION_LABEL[x.order.codDecision ?? ""] ?? x.order.codDecision})</p>
+            <p class="mt-3 text-xs text-muted-foreground">{m.so09()} <span class="font-semibold text-foreground">{(x.order.codScore * 100).toFixed(0)}%</span> ({COD_DECISION_LABEL[x.order.codDecision ?? ""] ?? x.order.codDecision})</p>
           {/if}
         </li>
       {/each}

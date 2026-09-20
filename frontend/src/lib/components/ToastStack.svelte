@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { onMount } from "svelte";
   import Icon from "./Icon.svelte";
   import { TOAST_EVENT, type ToastDetail, type ToastType } from "$lib/toast";
@@ -63,7 +64,7 @@
         {#if t.title}<p class="text-[11px] font-semibold uppercase tracking-wide opacity-70">{t.title}</p>{/if}
         <p class="leading-snug">{t.message}</p>
       </div>
-      <button type="button" onclick={() => dismiss(t.id)} aria-label="Tutup notifikasi" class="shrink-0 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100">
+      <button type="button" onclick={() => dismiss(t.id)} aria-label={m.ax03()} class="shrink-0 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100">
         <Icon name="x" cls="h-3.5 w-3.5" />
       </button>
     </div>

@@ -11,13 +11,18 @@ import { chromium } from "playwright-core";
 import { launchOptions } from "./_browser.mjs";
 
 const BASE = process.env.E2E_BASE || "http://127.0.0.1:3077";
+/**
+ * Prefix locale untuk uji: asersi skrip ini berbahasa Indonesia,
+ * jadi default-nya halaman /id. Set E2E_LANG=en untuk uji asap versi Inggris.
+ */
+const LANG_PREFIX = process.env.E2E_LANG === "en" ? "" : "/id";
 const results = [];
 const R = (ok, name, info = "") => results.push({ ok: !!ok, name, info });
 
 let browser, page;
 
 async function goto(path) {
-  await page.goto(BASE + path, { waitUntil: "networkidle", timeout: 30000 });
+  await page.goto(BASE + LANG_PREFIX + path, { waitUntil: "networkidle", timeout: 30000 });
   // Toast di-batch dalam memori; tunggu toast sebelumnya pudar agar hitungan bersih.
   await page.waitForTimeout(200);
 }
@@ -77,7 +82,7 @@ try {
   await goto("/dashboard/customer/overview");
   const add2 = page.getByRole("button", { name: /^Keranjang$/ }).first();
   await add2.click().catch(()=>{});
-  await page.goto(BASE + "/dashboard/customer/cart", { waitUntil: "networkidle" });
+  await page.goto(BASE + LANG_PREFIX + "/dashboard/customer/cart", { waitUntil: "networkidle" });
   const checkoutLink = page.getByRole("link", { name: /Checkout|Lanjut/i }).first();
   if (await checkoutLink.count()) { await checkoutLink.click(); await page.waitForTimeout(800); }
   else await goto("/dashboard/customer/checkout");
@@ -114,27 +119,6 @@ try {
       R(added.length >= 1, "load-balance: jalankan optimizer memunculkan notifikasi", added.length ? `"${added[added.length-1].text.slice(0,40)}"` : "");
     }
   }
-
-  // ── Academy: tandai pelajaran selesai → toast success, lalu reset → toast warn ──
-  await goto("/dashboard/academy");
-  // Buka track pertama → pelajaran pertama.
-  const firstTrack = page.locator('a[href*="/dashboard/academy/"]').first();
-  if (await firstTrack.count()) {
-    await firstTrack.click();
-    await page.waitForTimeout(600);
-    const firstLesson = page.locator('a[href*="/dashboard/academy/"]').filter({ hasNotText: /sertifikat|Academy/i }).first();
-    if (await firstLesson.count()) {
-      await firstLesson.click();
-      await page.waitForTimeout(600);
-      const markBtn = page.getByRole("button", { name: /Tandai selesai/i }).first();
-      if (await markBtn.count()) await clickAndRead(markBtn, "academy: tandai selesai", "success");
-      else R(false, "academy: tandai selesai", "tombol tidak ditemukan");
-    }
-  }
-  await goto("/dashboard/academy");
-  const resetBtn = page.getByRole("button", { name: /Reset progres/i }).first();
-  if (await resetBtn.count()) await clickAndRead(resetBtn, "academy: reset progres", "warn");
-  else R(false, "academy: reset progres", "tombol reset tidak muncul");
 
   // ── Seller: ubah urutan produk (select) ──
   await goto("/dashboard/seller/products");

@@ -1,0 +1,919 @@
+{
+ "courierQuotes": [
+  {
+   "quote": "If we arrive and nobody is home, we have no choice but to wait. Sometimes five minutes, sometimes 15 to 20."
+  },
+  {
+   "quote": "If the parcel is COD it is harder. We are not just delivering; we have to wait until the person is ready to pay. If we wait, the next stop runs late too."
+  },
+  {
+   "quote": "On an ordinary day it may still be catchable. But when parcels are heavy, 10 minutes at one home can cost us several deliveries after it."
+  }
+ ],
+ "kpiTargets": [
+  {
+   "kpi": null,
+   "baseline": "41.5%",
+   "target": "≥55% (24 months)"
+  },
+  {
+   "kpi": "Complaint rate",
+   "baseline": "5.5 per million",
+   "target": "below 3 per million"
+  },
+  {
+   "kpi": null,
+   "baseline": "138 minutes",
+   "target": "≤100 minutes"
+  },
+  {
+   "kpi": "COD productivity",
+   "baseline": "3.48 per hour",
+   "target": "≥4.8 per hour"
+  },
+  {
+   "kpi": "Forecast accuracy",
+   "baseline": "-",
+   "target": "MAPE <10%"
+  },
+  {
+   "kpi": null,
+   "baseline": "57.7%",
+   "target": "<20%"
+  },
+  {
+   "kpi": "Clean fleet",
+   "baseline": "0%",
+   "target": "3-phase roadmap; 14,180 base (13,340 motorcycles + vans + trucks)"
+  }
+ ],
+ "rootCauses": [
+  {
+   "symptoms": null,
+   "solution": null,
+   "kpi": null
+  },
+  {
+   "symptoms": null,
+   "solution": null,
+   "kpi": null
+  },
+  {
+   "symptoms": null,
+   "solution": null,
+   "kpi": null
+  },
+  {
+   "symptoms": null,
+   "solution": null,
+   "kpi": null
+  },
+  {
+   "symptoms": "Acknowledged in the case: 'lacked deep operational expertise, management experience, and technical knowledge'. The business model remains 'under review'.",
+   "solution": "Nigi Academy plus an in-house data science team plus a Digital Twin as a decision-testing tool.",
+   "kpi": null
+  },
+  {
+   "symptoms": null,
+   "solution": null,
+   "kpi": null
+  }
+ ],
+ "fallbackChatQA": [
+  {
+   "question": null,
+   "answer": null,
+   "followups": [
+    "Apa penyebab utamanya?",
+    "Bagaimana solusinya?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": null,
+   "followups": [
+    "Apa beda kedua model itu?",
+    "Region mana yang cocok untuk sponsor model?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": null,
+   "followups": [
+    "Hub mana yang bisa menampung overflow?",
+    "Kenapa ketimpangan ini terjadi?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": null,
+   "followups": [
+    "Model mana yang direkomendasikan?",
+    "Apa risiko transisinya?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": null,
+   "followups": [
+    "Apa yang menyebabkan kerugian 2023?",
+    "Bagaimana proyeksi ke depan?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": null,
+   "followups": [
+    "Bagaimana tren volume paket bulanan?",
+    "Who are the main competitors?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": "The network of partners grew 23.9x from 20 (2020) to 478 (2023), driven by the pandemic demand surge and e-commerce growth. This expansion more than doubled the network size in three years, but operating costs grew faster than sales.",
+   "followups": [
+    "Apa dampaknya ke biaya?",
+    "Bagaimana solusi Omnigistic?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": "Eastern hub utilisation is targeted to rise from 41.5% to at least 55% within 24 months, the complaint rate to fall from 5.5 to below 3 per million parcels, and COD routes to be trimmed from 138 minutes to at most 100 minutes.",
+   "followups": [
+    "See the full KPI detail",
+    "Bagaimana tahapan implementasinya?"
+   ]
+  },
+  {
+   "question": "Who wrote this case?",
+   "answer": "This case study was written by Lala Ayu Kantari and Prof. I Nyoman Pujawan from ISCEA Indonesia for the national-level ISCEA Global Case Competition 2026. The data and descriptions in the case do not represent a real company.",
+   "followups": [
+    "Apa tema kompetisi tahun ini?",
+    "Apa 6 pertanyaan strategis di kasus ini?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": "Monthly demand fluctuates between 78 million (January) and 105 million parcels (April and August), a range of 34.6%. E-commerce demand is even more volatile, falling 29.8% during the TikTok Shop suspension in September and October 2023.",
+   "followups": [
+    "Apa penyebab shock TikTok Shop?",
+    "Bagaimana cara mengantisipasinya?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": null,
+   "followups": [
+    "Hub mana yang jadi tujuan overflow?",
+    "Berapa kapasitas Bandung sekarang?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": null,
+   "followups": [
+    "Bagaimana dibanding hub Jawa lain?",
+    "Kapan perlu buffer tambahan?"
+   ]
+  },
+  {
+   "question": "When does a hub need a seasonal courier buffer?",
+   "answer": "The system uses three capacity tiers: trough (78 million parcels, core couriers only), normal (92.5 million), and peak (105 million plus a 15% buffer and activation of rental couriers). Activation is forecast-based rather than waiting for an overload event.",
+   "followups": [
+    "How does the forecast work?",
+    "What happens when capacity is exceeded?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": "Seven hubs across Kalimantan, Sulawesi, Maluku, and Papua average below 50% utilisation. Jayapura is lowest at 28.1%. Capacity was built to follow the 2021-2023 expansion without matching the real demand in those regions.",
+   "followups": [
+    "Apa solusinya?",
+    "Berapa target utilisasi timur ke depan?"
+   ]
+  },
+  {
+   "question": "What happens during shopping festivals?",
+   "answer": "The Indonesian logistics industry's record can handle more than 3 million parcels per day during peak season. The volume surge slows sorting and hurts customer satisfaction, as happened during Double 12 2022.",
+   "followups": [
+    "How do Java hubs handle it?",
+    "What is the flexible-capacity strategy?"
+   ]
+  },
+  {
+   "question": "How many pick-up and delivery outlets does the Bandung hub have?",
+   "answer": "The Bandung hub serves 240 pick-up and delivery outlets, below Jakarta (420) but on par with Surabaya (300) and Medan (240).",
+   "followups": [
+    "How does it compare with other Java hubs?",
+    "What is the outlet expansion plan?"
+   ]
+  },
+  {
+   "question": "Why are Java hubs always congested?",
+   "answer": "Eight hubs on Java carry a combined capacity of 2.58 million parcels per day out of 23 hubs, with average utilisation above 65%. This reflects the high concentration of demand on Java compared with other regions.",
+   "followups": [
+    "What is the redistribution strategy beyond Java?",
+    "What role does the Regional Sponsor Model play?"
+   ]
+  },
+  {
+   "question": "What is Capacity Alert?",
+   "answer": "An early-warning system that notifies before a hub overloads, especially for Java hubs already averaging above 65% utilisation. It prevents sudden diversions such as the Double 12 case.",
+   "followups": [
+    "Which hubs are above the threshold right now?",
+    "How does the notification work?"
+   ]
+  },
+  {
+   "question": "Why is COD slower?",
+   "answer": "A COD route of 8 parcels takes 138 minutes, while non-COD takes only 75 minutes for the same distance and parcel count, 84% slower. The causes: the courier must verify the recipient, wait until payment is ready, and capture confirmation before handing over the parcel.",
+   "followups": [
+    "What is COD courier productivity?",
+    "What is the Predictive COD solution?"
+   ]
+  },
+  {
+   "question": "What is Predictive COD?",
+   "answer": "A model that computes the probability of successful COD per parcel from address history, parcel value, and delivery hour. Low-risk parcels are delivered normally; high-risk parcels move to a payment point (PUDO) or digital pre-payment.",
+   "followups": [
+    "How much capacity can be added?",
+    "How does PUDO work?"
+   ]
+  },
+  {
+   "question": "What is courier productivity for COD against non-COD?",
+   "answer": "A non-COD courier completes 6.4 parcels per hour. A COD courier manages only 3.48 parcels per hour, just 54.3% of non-COD productivity, because of verification and payment waiting time.",
+   "followups": [
+    "What is the impact of reducing COD?",
+    "Why is COD still dominant in Indonesia?"
+   ]
+  },
+  {
+   "question": "Why does the courier have to wait for the recipient?",
+   "answer": "Couriers often have to wait because the recipient is not at home, cannot be reached, or needs time to prepare the COD payment. A single attempt can take 10 to 20 minutes where access is difficult, and a failed attempt sends the parcel back to the drop point.",
+   "followups": [
+    "What is the staged-notification solution?",
+    "How does slot confirmation work?"
+   ]
+  },
+  {
+   "question": "What is Slot Confirmation?",
+   "answer": "A three-stage notification system before the courier arrives: day-1 notice, an estimate 30 to 60 minutes before arrival, and confirmation that the recipient is ready. The goal is to cut unproductive waiting at the location.",
+   "followups": [
+    "How much time can be saved?",
+    "What do couriers say about it?"
+   ]
+  },
+  {
+   "question": "Why is COD still popular in Indonesia?",
+   "answer": "Most online buyers still lack a credit card, bank account, or digital wallet for online transactions. Cash remains the most trusted payment method, even though it slows delivery.",
+   "followups": [
+    "How does digital payment help?",
+    "What is the risk of manual cash reconciliation?"
+   ]
+  },
+  {
+   "question": "Why is cash reconciliation complicated?",
+   "answer": "Couriers collect cash that is recorded and reconciled before settlement to the merchant. Hubs currently run this cash-management system, but the process is complex, time-consuming, and prone to human error.",
+   "followups": [
+    "What is the digital payment solution?",
+    "How much error reduction is possible?"
+   ]
+  },
+  {
+   "question": "What percentage of parcels is delivered by motorcycle?",
+   "answer": "About 70% of last-mile parcels in major urban areas are delivered by motorcycle. Of the 13,340 operational units, motorcycles dominate at 93.7% (12,500 units).",
+   "followups": [
+    "What are the challenges of a motorcycle fleet?",
+    "What is the EV transition plan?"
+   ]
+  },
+  {
+   "question": "Which parcel category is the largest?",
+   "answer": "Fashion is the largest delivery category, contributing more than 45% of total delivery volume, followed by documents and beauty products.",
+   "followups": [
+    "What is the seasonal shipping pattern?",
+    "How does it affect courier routes?"
+   ]
+  },
+  {
+   "question": "Why can addresses be ambiguous?",
+   "answer": "The same street name, 'Jl. Raya Jakarta-Bogor No.12', appears in three different locations: Cibinong (Bogor Regency), Sukamaju (Depok City), and Rempoa (South Tangerang City), tens of kilometres apart.",
+   "followups": [
+    "How does Address Intelligence solve it?",
+    "What is the impact on complaints?"
+   ]
+  },
+  {
+   "question": "What is GC Logistics' complaint rate?",
+   "answer": "An average of 5.5 complaints per million parcels in 2023. Out of 1,110 million parcels a year, that is about 6,105 cases, small as a ratio but significant in absolute terms given the operating scale.",
+   "followups": [
+    "What is the main cause of complaints?",
+    "What is the reduction target?"
+   ]
+  },
+  {
+   "question": "What is Address Intelligence?",
+   "answer": "An NLP system that breaks addresses into structured components, matches them to coordinates using fuzzy matching, and requires geotagging at checkout to prevent routing errors at the source.",
+   "followups": [
+    "How does fuzzy matching work?",
+    "What is the address accuracy target?"
+   ]
+  },
+  {
+   "question": "Why doesn't GC run sea and air modes directly?",
+   "answer": "GC Logistics uses three transport modes: road (vans, trucks, motorcycles, self-managed), air (commercial belly capacity plus dedicated cargo planes), and sea (container cargo via third-party partners). Sea and air modes are fully handled by partners, not by GC.",
+   "followups": [
+    "What is the Multimodal Control Tower?",
+    "Why does coordination get more complex?"
+   ]
+  },
+  {
+   "question": "What is the Multimodal Control Tower?",
+   "answer": "API and GPS/IoT integration with sea and air partners, showing every estimated time of arrival in one dashboard. The system predicts delays and offers automatic alternatives without GC owning those modal assets.",
+   "followups": [
+    "What share of shipments has an integrated ETA?",
+    "How does the modal shift optimizer work?"
+   ]
+  },
+  {
+   "question": "What is the electric vehicle target?",
+   "answer": "A target of more than 200 clean vehicles by the end of 2026, but that is only about 1.4% of the 14,180-unit fleet (840 line-haul, 12,500 motorcycles, 280 vans, 560 trucks). The target is small relative to the operating scale.",
+   "followups": [
+    "What is the 8-year depreciation roadmap solution?",
+    "Why do motorcycles dominate the fleet?"
+   ]
+  },
+  {
+   "question": "What is GC Logistics' sustainability strategy?",
+   "answer": "A focus on fleet decarbonisation and eco-friendly packaging: fully degradable waterproof delivery bags, and reusable transit bags for sorting and transport.",
+   "followups": [
+    "What is the 3-phase sustainability roadmap?",
+    "What is the emissions impact per parcel?"
+   ]
+  },
+  {
+   "question": "How large is the GC Logistics fleet?",
+   "answer": "At the end of 2023: about 12,500 motorcycles, 280 vans, and 560 trucks. Total line-haul vehicles rose from 545 (2020) to 840 (2023), with self-owned vehicles rising from 194 to 260 units.",
+   "followups": [
+    "What percentage of last mile uses motorcycles?",
+    "What is the fleet electrification target?"
+   ]
+  },
+  {
+   "question": "Why does address intelligence data matter?",
+   "answer": "The address problem is the most basic root that poisons other systems: wrong routing, wrong ETA predictions, and rising complaints. Solving it upstream (at checkout) prevents recurring cost in sorting and delivery.",
+   "followups": [
+    "What is the impact on the complaint rate?",
+    "How does this connect to the other root causes?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": "Shipping expense rose 46.5% (from Rp33.76 trillion to Rp49.46 trillion) between 2020 and 2023, below fulfilment (+54.9%) but still above sales growth (+48.7%). Outbound transport, sorting, and delivery hubs are the largest logistics cost components.",
+   "followups": [
+    "What is the biggest cost component?",
+    "How does Omnigistic hold it down?"
+   ]
+  },
+  {
+   "question": "What are GC Logistics' main innovations?",
+   "answer": "GC Logistics was the first logistics company in Indonesia to provide real-time package tracking, a breakthrough for Southeast Asia at the time. It set the company apart from local competitors and underlined its commitment to technology.",
+   "followups": [
+    "What other innovations exist?",
+    "How does Nigi AI contribute?"
+   ]
+  },
+  {
+   "question": "What share of parcels comes from merchants?",
+   "answer": "About 62% of parcels are collected from merchants (service points, agents, corporate pickup, marketplace pickup), while 38% come from individual customers and other service points.",
+   "followups": [
+    "What does it mean for B2B volume?",
+    "How does the network structure handle it?"
+   ]
+  },
+  {
+   "question": "What is the Regional Sponsor trade-off?",
+   "answer": "The sponsor model creates a local partnership with equity participation and operational independence. Upside: faster, more capital-efficient scaling. Risk: headquarters cannot dictate local pricing strategy or operational adjustments, and dozens of processes need standardising.",
+   "followups": [
+    "Model mana yang direkomendasikan?",
+    "Apa risiko transisinya?"
+   ]
+  },
+  {
+   "question": "What does the 3 million parcels per day record mean?",
+   "answer": "The Indonesian logistics industry's record can handle more than 3 million parcels per day in peak season. GC's own daily average in 2023 was already 3.04 million parcels, and peak months (April and August) reached about 3.5 million per day, so internal capacity must be designed to absorb market surges, not just its own average.",
+   "followups": [
+    "What does it imply for capacity?",
+    "How does load balancing help?"
+   ]
+  },
+  {
+   "question": "What is the largest parcel category?",
+   "answer": "Fashion is the largest delivery category, contributing more than 45% of total delivery volume, followed by documents and beauty products.",
+   "followups": [
+    "What is the seasonal pattern?",
+    "What does it imply for routes?"
+   ]
+  },
+  {
+   "question": "What are the 4 steps of GC's operating flow?",
+   "answer": "GC Logistics moves the supply chain through four steps: collect, sort, transport, deliver. The process runs across a fragmented archipelago and is standardised through Omnigistic.",
+   "followups": [
+    "Where does the biggest problem occur?",
+    "How does Omnigistic help each shipment?"
+   ]
+  },
+  {
+   "question": "Why is COD prone to disputes?",
+   "answer": "Couriers report disputes and misunderstandings around COD that make delivery harder: verifying the recipient, payment not ready, wanting to open the parcel first. All of it adds waiting time and pushes the next stops late.",
+   "followups": [
+    "How do we reduce disputes?",
+    "What is the digital payment solution?"
+   ]
+  },
+  {
+   "question": "Why do multiple payment options matter?",
+   "answer": "Most online buyers still lack a credit card, bank account, or digital wallet. Offering a range of payment methods matters to overcome limited online channel access and to help e-commerce partners reach more customers.",
+   "followups": [
+    "How does PUDO help the unbanked?",
+    "What is QRIS's role?"
+   ]
+  },
+  {
+   "question": "What is GC Logistics' sustainable packaging solution?",
+   "answer": "GC Logistics is exploring fully degradable waterproof delivery bags to reduce single-use packaging impact, plus reusable transit bags for sorting and transport.",
+   "followups": [
+    "What is the packaging roadmap?",
+    "What is the emissions impact per parcel?"
+   ]
+  },
+  {
+   "question": "Why are there fleet figures of 13,340 and 14,180?",
+   "answer": "13,340 refers to daily operational vehicles (12,500 motorcycles + 280 vans + 560 trucks). 14,180 adds the 840-unit line-haul fleet so that the EV claim 'only 1.4% of the total fleet' is consistent: 200/14,180 is about 1.41%.",
+   "followups": [
+    "What proportion are motorcycles?",
+    "What is the electrification target?"
+   ]
+  },
+  {
+   "question": "How do staged notifications work?",
+   "answer": "A three-stage notification system before the courier arrives: day-1 notice that the parcel comes tomorrow; 30 to 60 minutes before arrival an estimate plus readiness confirmation; then final confirmation. The goal is to cut unproductive waiting at the location (10 to 20 minutes per failed attempt).",
+   "followups": [
+    "How much time can be saved?",
+    "What do couriers say about it?"
+   ]
+  },
+  {
+   "question": "Why does my COD order take longer?",
+   "answer": "A COD route of 8 parcels takes 138 minutes while non-COD takes only 75 minutes for the same distance and parcel count, 84% slower. The courier must verify the recipient and wait for the money to be ready. Have exact change ready and confirm a slot so delivery is faster.",
+   "followups": [
+    "What is Slot Confirmation?",
+    "Apa itu PUDO?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": "PUDO (Pick-Up Drop-Off) is the nearest parcel collection point, for example a minimarket. Parcels are routed there when the recipient is often away from home. The upside is you collect it whenever it suits you, and the courier does not wait at your door.",
+   "followups": [
+    "Why does my COD order take longer?",
+    "Bagaimana cara melacak paket saya?"
+   ]
+  },
+  {
+   "question": null,
+   "answer": "Open the My Orders menu. There is a five-stage timeline: packed, picked up by courier, hub transit, out for delivery, delivered. For COD parcels, the risk score and waiting estimate are also shown so you can prepare.",
+   "followups": [
+    "Why does my COD order take longer?",
+    "Apa itu PUDO?"
+   ]
+  },
+  {
+   "question": "What is the network complaint rate and how is it reduced?",
+   "answer": "The 2023 complaint rate was 5.5 per million parcels, about 6,105 cases out of 1,110 million parcels. The target is below 3 per million. The reduction is driven by precise addresses, clear arrival estimates, and routing risky COD parcels to a PUDO or pre-payment.",
+   "followups": [
+    "Why is COD slower?",
+    "How do I choose a PUDO for buyers?"
+   ]
+  },
+  {
+   "question": "Why is COD slower and riskier?",
+   "answer": "A COD route uses 138 minutes for 8 parcels against 75 minutes for non-COD (84% slower), with productivity of 3.48 against 6.4 parcels per hour. Risk rises with high parcel value, night-time delivery hours, ambiguous addresses, and hard-to-reach zones. The Predictive COD model gives a 0-1 score and recommends normal delivery, a PUDO, or pre-payment.",
+   "followups": [
+    "What is the network complaint rate and how is it reduced?",
+    "How do I choose a PUDO for buyers?"
+   ]
+  },
+  {
+   "question": "How do I choose a PUDO for buyers?",
+   "answer": "Prioritise buyers with a high COD risk score, a history of failed delivery, or an address in a hard-to-reach zone. Route the parcel to the PUDO point nearest the buyer so they can collect it whenever suits them. This holds down repeat delivery attempts that cost 10 to 20 minutes per failed visit.",
+   "followups": [
+    "Why is COD slower and riskier?",
+    "What is the network complaint rate and how is it reduced?"
+   ]
+  }
+ ],
+ "suggestedQuestions": [
+  {
+   "question": null,
+   "followups": [
+    "Berapa lama tunggu kurir?",
+    "Apa itu PUDO?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Sampai mana paket saya sekarang?",
+    "Kapan perkiraan tiba?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Bagaimana menekan risiko COD?",
+    "Siapa pembeli yang aman?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Apa keuntungan PUDO?",
+    "Kapan pakai PUDO vs antar rumah?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Apa penyebab utamanya?",
+    "Bagaimana solusinya?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Apa yang menyebabkan kerugian 2023?",
+    "Bagaimana proyeksi ke depan?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "What is the biggest cost component?",
+    "How does Omnigistic hold it down?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Apa beda Direct Operation dan Regional Sponsor?",
+    "Region mana yang cocok untuk sponsor model?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Model mana yang direkomendasikan?",
+    "Apa risiko transisinya?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Hub mana yang bisa menampung overflow?",
+    "Kenapa ketimpangan ini terjadi?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Apa solusinya?",
+    "Berapa target utilisasi timur ke depan?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "What is the impact on cost?",
+    "Bagaimana solusi Omnigistic?"
+   ]
+  },
+  {
+   "question": "What does the 3 million parcels per day record mean?",
+   "followups": [
+    "What does it imply for capacity?",
+    "How does load balancing help?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Apa yang menyebabkan kerugian 2023?",
+    "Bagaimana proyeksi ke depan?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "See the full KPI detail",
+    "Bagaimana tahapan implementasinya?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Bagaimana dibanding hub Jawa lain?",
+    "Kapan perlu buffer tambahan?"
+   ]
+  },
+  {
+   "question": "Why are Java hubs always congested?",
+   "followups": [
+    "What is the redistribution strategy beyond Java?",
+    "What role does the Regional Sponsor Model play?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Apa penyebab shock TikTok Shop?",
+    "Bagaimana cara mengantisipasinya?"
+   ]
+  },
+  {
+   "question": "What happens during shopping festivals?",
+   "followups": [
+    "How do Java hubs handle it?",
+    "What is the flexible-capacity strategy?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "Hub mana yang jadi tujuan overflow?",
+    "Berapa kapasitas Bandung sekarang?"
+   ]
+  },
+  {
+   "question": "When does a hub need a seasonal courier buffer?",
+   "followups": [
+    "How does the forecast work?",
+    "What happens when capacity is exceeded?"
+   ]
+  },
+  {
+   "question": "What is Capacity Alert?",
+   "followups": [
+    "Which hubs are above the threshold right now?",
+    "How does the notification work?"
+   ]
+  },
+  {
+   "question": "Why is COD slower?",
+   "followups": [
+    "What is COD courier productivity?",
+    "What is the Predictive COD solution?"
+   ]
+  },
+  {
+   "question": "What is courier productivity for COD against non-COD?",
+   "followups": [
+    "What is the impact of reducing COD?",
+    "Why is COD still dominant?"
+   ]
+  },
+  {
+   "question": "What is Predictive COD?",
+   "followups": [
+    "How much capacity can be added?",
+    "How does PUDO work?"
+   ]
+  },
+  {
+   "question": "What is courier productivity for COD against non-COD?",
+   "followups": [
+    "What is the impact of reducing COD?",
+    "Why is COD still dominant?"
+   ]
+  },
+  {
+   "question": "What is Slot Confirmation?",
+   "followups": [
+    "How much time can be saved?",
+    "What do couriers say about it?"
+   ]
+  },
+  {
+   "question": "Why does the courier have to wait for the recipient?",
+   "followups": [
+    "What is the staged-notification solution?",
+    "How does slot confirmation work?"
+   ]
+  },
+  {
+   "question": "Why is COD still popular in Indonesia?",
+   "followups": [
+    "How does digital payment help?",
+    "What is the risk of manual cash reconciliation?"
+   ]
+  },
+  {
+   "question": "Why is cash reconciliation complicated?",
+   "followups": [
+    "What is the digital payment solution?",
+    "How much error reduction is possible?"
+   ]
+  },
+  {
+   "question": "Why is COD prone to disputes?",
+   "followups": [
+    "How do we reduce disputes?",
+    "What is the digital payment solution?"
+   ]
+  },
+  {
+   "question": null,
+   "followups": [
+    "How much capacity can be added?",
+    "How does the retail partnership work?"
+   ]
+  },
+  {
+   "question": "How does Predictive COD decide a PUDO?",
+   "followups": [
+    "What happens to high-risk parcels?",
+    "How is access kept open for the unbanked?"
+   ]
+  },
+  {
+   "question": "How large a PUDO network is needed?",
+   "followups": [
+    "Why does modern retail become a node?",
+    "What is the commission model?"
+   ]
+  },
+  {
+   "question": "Why can addresses be ambiguous?",
+   "followups": [
+    "How does Address Intelligence solve it?",
+    "What is the impact on complaints?"
+   ]
+  },
+  {
+   "question": "What is Address Intelligence?",
+   "followups": [
+    "How does fuzzy matching work?",
+    "What is the address accuracy target?"
+   ]
+  },
+  {
+   "question": "What is GC Logistics' complaint rate?",
+   "followups": [
+    "What is the main cause of complaints?",
+    "What is the reduction target?"
+   ]
+  },
+  {
+   "question": "Why does address intelligence data matter?",
+   "followups": [
+    "What is the impact on the complaint rate?",
+    "How does this connect to the other root causes?"
+   ]
+  },
+  {
+   "question": "Why doesn't GC run sea and air modes directly?",
+   "followups": [
+    "What is the Multimodal Control Tower?",
+    "Why does coordination get more complex?"
+   ]
+  },
+  {
+   "question": "What is the Multimodal Control Tower?",
+   "followups": [
+    "What share of shipments has an integrated ETA?",
+    "How does the modal shift optimizer work?"
+   ]
+  },
+  {
+   "question": "How large is the GC Logistics fleet?",
+   "followups": [
+    "What percentage of last mile uses motorcycles?",
+    "What is the fleet electrification target?"
+   ]
+  },
+  {
+   "question": "What is the electric vehicle target?",
+   "followups": [
+    "What is the 8-year depreciation roadmap solution?",
+    "Why do motorcycles dominate the fleet?"
+   ]
+  },
+  {
+   "question": "What is GC Logistics' sustainability strategy?",
+   "followups": [
+    "What is the 3-phase sustainability roadmap?",
+    "What is the emissions impact per parcel?"
+   ]
+  },
+  {
+   "question": "How does GC choose EV charging locations?",
+   "followups": [
+    "What are the data sources?",
+    "What are the feasibility metrics?"
+   ]
+  },
+  {
+   "question": "How does the 8-year depreciation work?",
+   "followups": [
+    "What is the annual replacement rate?",
+    "What are the transition risks?"
+   ]
+  }
+ ],
+ "fallbackInsights": {
+  "PUSAT": {
+   "greeting": null,
+   "insights": [
+    {
+     "title": null
+    },
+    {
+     "title": "Jakarta Overload"
+    },
+    {
+     "title": "Digital Twin Ready"
+    }
+   ]
+  },
+  "HUB": {
+   "greeting": null,
+   "insights": [
+    {
+     "title": "Demand Rising"
+    },
+    {
+     "title": null
+    },
+    {
+     "title": null
+    }
+   ]
+  },
+  "KURIR": {
+   "greeting": null,
+   "insights": [
+    {
+     "title": "COD 84% Slower"
+    },
+    {
+     "title": "Slot Confirmation"
+    },
+    {
+     "title": "Digital Payment"
+    }
+   ]
+  },
+  "DATA": {
+   "greeting": null,
+   "insights": [
+    {
+     "title": "Address Problem"
+    },
+    {
+     "title": "Complaint Rate"
+    },
+    {
+     "title": null
+    }
+   ]
+  },
+  "CUSTOMER": {
+   "greeting": null,
+   "insights": [
+    {
+     "title": null
+    },
+    {
+     "title": "Precise Addresses"
+    },
+    {
+     "title": "Choose a PUDO"
+    }
+   ]
+  },
+  "SELLER": {
+   "greeting": null,
+   "insights": [
+    {
+     "title": "COD Risk"
+    },
+    {
+     "title": null
+    },
+    {
+     "title": "Loyal Customers"
+    }
+   ]
+  }
+ }
+}

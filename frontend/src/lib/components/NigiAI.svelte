@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m as msg } from "$lib/paraglide/messages";
   import { onMount, untrack } from "svelte";
   import { api, type ChatResp, type Insights } from "$lib/api";
   import { fly } from "svelte/transition";
@@ -23,7 +24,7 @@
     suggestions?: string[];
   }
 
-  const EMPTY_CHIPS = ["Apa masalah utama GC Logistics?", "Kenapa biaya naik lebih cepat dari sales?", "Berapa utilisasi Jakarta?"];
+  const EMPTY_CHIPS = ["Apa masalah utama GC Logistics?", msg.niga1(), msg.niga2()];
   const priorityDot: Record<string, string> = { high: "bg-destructive", medium: "bg-warning", low: "bg-success" };
 
   let screenOpen = $state(false);
@@ -51,7 +52,7 @@
 
   function closePanel() {
     screenOpen = false;
-    requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('button[aria-label="Buka Nigi Chat"]')?.focus());
+    requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('[data-testid="nigi-fab"]')?.focus());
   }
   $effect(() => {
     if (screenOpen) panelEl?.focus?.();
@@ -113,7 +114,7 @@
       const data = (await api.chat(role, q)) as ChatResp;
       msgs = [...msgs, { role: "assistant", content: data.content ?? "", suggestions: data.suggestions ?? [] }];
     } catch {
-      msgs = [...msgs, { role: "assistant", content: "Gagal terhubung ke Nigi AI. Coba lagi.", suggestions: [] }];
+      msgs = [...msgs, { role: "assistant", content: msg.niga4(), suggestions: [] }];
     } finally {
       busy = false;
       input = "";
@@ -145,11 +146,11 @@
           <GlitterIcon cls="h-4 w-4" />
         </span>
         <div class="leading-tight">
-          <p class="text-sm font-semibold tracking-tight">Nigi AI</p>
-          <p class="text-xs text-muted-foreground">Asisten Omnigistic, menjaga data kasus</p>
+          <p class="text-sm font-semibold tracking-tight">{msg.nai01()}</p>
+          <p class="text-xs text-muted-foreground">{msg.nai02()}</p>
         </div>
       </div>
-      <button type="button" onclick={() => (screenOpen = false)} aria-label="Tutup Nigi Chat" class="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+      <button type="button" onclick={() => (screenOpen = false)} data-testid="nigi-close" aria-label={msg.nai09()} class="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
         <Icon name="x" cls="h-4 w-4" />
       </button>
     </div>
@@ -158,14 +159,14 @@
         <div bind:this={logEl} class="overscroll-isolate min-h-0 flex-1 space-y-2.5 overflow-y-auto p-4" role="log" aria-live="polite" aria-label="Percakapan Nigi AI">
         {#if introError}
           <div class="flex items-center justify-between gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-xs text-destructive-foreground">
-            <span>Gagal memuat ringkasan Nigi AI.</span>
+            <span>{msg.nai03()}</span>
             <button
               type="button"
               onclick={() => { introError = false; intro = { greeting: `${greetingByTime()}. Tanyakan apa saja soal data GC Logistics.`, insights: [] }; introVisible = true; }}
               aria-label="Coba lagi"
               class="min-h-11 shrink-0 rounded-lg border border-destructive/40 px-3 py-1.5 font-semibold text-destructive-foreground transition-colors hover:bg-destructive/20"
             >
-              Coba lagi
+              {msg.nai04()}
             </button>
           </div>
         {/if}
@@ -173,7 +174,7 @@
         {#if introVisible}
           <div class="space-y-3">
             <div class="flex gap-2">
-              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">Nigi</span>
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{msg.nai05()}</span>
               <div class="rounded-2xl rounded-bl-sm border border-border bg-card px-3 py-2 text-[15px] leading-relaxed text-foreground">
                 {greetingWords}
                 {#if !greetingDone && !reduce}<span class="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-primary align-middle"></span>{/if}
@@ -212,7 +213,7 @@
         {#each msgs as m, i (i)}
           <div class={cn("flex gap-2", m.role === "user" && "justify-end")}>
             {#if m.role === "assistant"}
-              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">Nigi</span>
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{msg.nai06()}</span>
             {/if}
             <div class={cn("max-w-[82%] rounded-2xl px-3 py-2 text-[15px] leading-relaxed", m.role === "user" ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm border border-border bg-card text-foreground")}>
               {#if m.role === "assistant"}
@@ -227,7 +228,7 @@
         {#if busy}
           <div class="flex items-center gap-2 pl-8 text-xs text-muted-foreground">
             <Icon name="dots" cls="h-4 w-4 animate-pulse" weight="bold" />
-            mengetik
+            {msg.nai07()}
           </div>
         {/if}
       </div>
@@ -241,8 +242,9 @@
             type="text"
             autocomplete="off"
             bind:value={input}
-            placeholder="Tanya apa saja soal data GC Logistics"
-            aria-label="Pesan untuk Nigi Chat"
+            placeholder={msg.nai08()}
+            data-testid="nigi-input"
+            aria-label={msg.niga2t1()}
             readonly={busy}
             enterkeyhint="send"
             class="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
@@ -250,7 +252,7 @@
           <button
             type="submit"
             disabled={busy || !input.trim()}
-            aria-label="Kirim"
+            aria-label={msg.ni3t1()}
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-all hover:scale-105 disabled:scale-100 disabled:opacity-40"
           >
             <Icon name="send" cls="h-4 w-4" weight="fill" />
@@ -263,7 +265,8 @@
   <button
     type="button"
     onclick={() => (screenOpen = true)}
-    aria-label="Buka Nigi Chat"
+    data-testid="nigi-fab"
+    aria-label={msg.niga2t2()}
     class="fixed z-50 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg transition-shadow hover:shadow-xl"
     style="bottom:{mode === 'compact' ? '104px' : '20px'}; right: 20px"
   >
