@@ -1,254 +1,606 @@
-# Omnigistic — SvelteKit + FastAPI (Local-only)
+# Omnigistic
 
-**ISCEA Global Case Competition 2026** — proposed "Delivering Promises" solution (GC Logistics).
-This is a **full 1:1 migration** from Next.js → **SvelteKit 2 (full-stack server adapter-node) + FastAPI (Python 3.14 + ML)**.
+**Bilingual (English / Indonesian) decision-support prototype for the ISCEA Global Case Competition 2026 "Delivering Promises" case (GC Logistics).** SvelteKit 2 (Svelte 5 runes, adapter-node) + FastAPI (Python, ML), runs entirely on `localhost`: no deployment, no cloud dependency.
 
-**No deploy.** Everything runs at `localhost` for recording a **≤15-minute video** submission (judges only see video, not the server). The frontend + backend + optional Postgres all work offline; API falls back to `data-kas.json` if Postgres/Neon is unreachable.
+[![SvelteKit](https://img.shields.io/badge/SvelteKit-2.70-ff3e00?logo=svelte&logoColor=white)](https://svelte.dev)
+[![Svelte](https://img.shields.io/badge/Svelte-5.57-ff3e00?logo=svelte&logoColor=white)](https://svelte.dev)
+[![Vite](https://img.shields.io/badge/Vite-8.2-646cff?logo=vite&logoColor=white)](https://vite.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.3-06b6d4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Python](https://img.shields.io/badge/Python-3.12-3776ab?logo=python&logoColor=white)](https://www.python.org)
+[![Node](https://img.shields.io/badge/Node-22-5fa04e?logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![Paraglide](https://img.shields.io/badge/Paraglide-2.25-2f9e44)](https://inlang.com/m/gerwegn8/plugin-js)
+[![License](https://img.shields.io/badge/license-proprietary-red)](#license)
+
+> Bahasa Indonesia: **[README.id.md](README.id.md)**
 
 ---
 
-## What runs locally
+## Table of Contents
 
-| Service | Command | URL |
+- [About](#about)
+- [The six strategic questions](#the-six-strategic-questions)
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project structure](#project-structure)
+- [Getting started](#getting-started)
+- [Configuration](#configuration)
+- [Bilingual (English / Indonesian)](#bilingual-english--indonesian)
+- [Engines and models](#engines-and-models)
+- [Design system](#design-system)
+- [Security](#security)
+- [Testing and verification](#testing-and-verification)
+- [Numbers and provenance](#numbers-and-provenance)
+- [Documentation](#documentation)
+- [Troubleshooting](#troubleshooting)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Credits and attribution](#credits-and-attribution)
+- [Author](#author)
+
+---
+
+## About
+
+The case asks how **GC Logistics** (a fictional Indonesian logistics operator in the ISCEA 2026 case) should fix a business where **fulfilment expense grew faster than sales**. Between 2020 and 2023 fulfilment expense rose 54.9% while net sales rose 48.7%, the partner network expanded 23.9x (20 to 478 partners) without demand alignment, and the company recorded a loss in 2023.
+
+This repository is a **working prototype** of *Omnigistic*: the proposed data-driven operating layer that answers the case's six strategic questions with interactive engines built on the case's own numbers (Table 1 to Table 4, Figure 1 and Figure 2).
+
+What it is:
+
+- **A decision-support prototype**, not a production service. Every engine exposes interactive controls (sliders, thresholds, toggles) that recompute results instead of showing static charts.
+- **Runs fully local** (`localhost` only). The submission format is a video of at most 15 minutes, so the app is built to be demonstrated from a laptop.
+- **Bilingual**, English by default and Indonesian under `/id`, with a language switcher in the interface.
+- **Traceable**: derived numbers are computed in one place (`backend/app/ml/metrics.py`) and reconciled against the case document, including the document's own inconsistency.
+
+What it is not: it is not deployed, has no official data contract with GC Logistics, and its ML models are labelled as presentation prototypes (see the honesty labels in the UI and [Numbers and provenance](#numbers-and-provenance)).
+
+---
+
+## The six strategic questions
+
+Each question maps to one engine and one page. All six are reachable from every role portal.
+
+| # | Question | Engine (endpoint) | Page |
+|---|---|---|---|
+| Q1 | Should GC move from Direct Operation to a Regional Sponsor model? | `GET\|POST /ml/sponsor/compare`, `GET /ml/sponsor/sensitivity` | `/dashboard/pusat/digital-twin` |
+| Q2 | How should dramatic demand swings be handled? | `GET\|POST /ml/sim/surge`, `GET\|POST /ml/forecast` | `/dashboard/hub/surge`, `/dashboard/hub/forecast` |
+| Q3 | How should the COD system be fixed? | `POST /ml/cod-cash/risk`, `POST /ml/cod-intel`, `GET /ml/cod-risk/demo` | `/dashboard/kurir/cod-cash`, `/dashboard/kurir/cod-intel` |
+| Q4 | What are the roadmap and benefit-cost of sustainability? | `GET /ml/ev-bca`, `GET /ml/metrics/fleet` | `/dashboard/pusat/ev-bca`, `/dashboard/data/fleet` |
+| Q5 | Is market expansion profitable? | `GET\|POST /ml/expansion/roi` | `/dashboard/pusat/expansion` |
+| Q6 | What other strategy cuts cost while protecting revenue? | `GET /ml/pnl/waterfall`, `GET\|POST /ml/modalshift/optimize` | `/dashboard/pusat/pnl`, `/dashboard/data/multimodal` |
+
+---
+
+## Features
+
+### Six role portals
+
+One shared shell, six perspectives on the same data. Navigation adapts per role (4 content items plus the AI assistant).
+
+| Portal | Role | Focus |
 |---|---|---|
-| FastAPI backend | `cd backend && .venv/bin/uvicorn app.main:app --port 8077` | http://127.0.0.1:8077 |
-| Swagger "API evidence" | (same process, open docs) | **http://127.0.0.1:8077/docs** |
-| SvelteKit frontend node build | `cd frontend && node build/index.js` (env `PORT=3179`) | http://127.0.0.1:3179 |
+| `/dashboard/pusat` | HQ (Dalila) | Financials, Digital Twin, network expansion, ROI, cost waterfall |
+| `/dashboard/hub` | Hub (Marwah) | Utilisation, load balancing, capacity alerts, demand forecast |
+| `/dashboard/kurir` | Courier (Baits) | Task delivery, route intelligence, COD triage, cash reconciliation, PUDO |
+| `/dashboard/data` | Data (Virgiawan) | Address intelligence, complaints, multimodal control tower, fleet and emissions |
+| `/dashboard/customer` | Buyer (Sari) | Shop, cart, COD checkout, order tracking, recipient presence |
+| `/dashboard/seller` | Seller (Rina) | Products, incoming orders, customer scoring |
 
-First time / on changes: `cd frontend && npm run build` (uses vite).
+### Interactive engines and simulations
 
----
+- **Challenge engines** for Q1 to Q6 (table above), each with live parameter controls.
+- **Network load balancing**: transportation heuristic that diverts overflow from hubs above the critical threshold to hubs with headroom, under a safe floor and a maximum divert fraction.
+- **Demand forecast**: seasonal index + OLS trend + event flags, with what-if event strength sliders.
+- **Metrics and reconciliation**: derived figures and audit checks for every case table.
+- **Modal shift optimizer**: mode choice per corridor against a weighted objective (cost, emissions, SLA).
+- **Route intelligence**: candidate corridors with BPR travel-time model, scoring fastest and most efficient routes.
 
-## Cara pakai Docker (paling enak — 2 container, tinggal up)
+### Interactive pages
 
-**Default `docker compose up -d` = mode DEV + HOT RELOAD.** Source di-bind-mount dari host:
-edit file di `frontend/src` atau `backend/app` → browser/API reload otomatis tanpa rebuild.
+Result-changing controls on every simulation page (nothing is a static preset):
 
-```bash
-# 1) Tanpa DB sama sekali (mode default — fallback JSON). Browser buka port host.
-docker compose up -d
-# FE: http://127.0.0.1:3077 (vite dev + HMR)   API: http://127.0.0.1:8077 (uvicorn --reload)
-# Swagger/bukti: http://127.0.0.1:8077/docs
-
-# 2) Postgres LOKAL + backend benar2 pakai DB (profile db):
-docker compose --profile db up -d --build
-#   → db(:5510) + db-seed jalan, backend SKIP_DB=0 connected; chat/qa dari baris DB.
-#   Tanpa profile ini default = SKIP_DB=1 (semua /api dari shared/data-kas.json — nol dependensi, paling aman utk demo).
-
-# 3) Neon asli (bukan lokal):
-SKIP_DB=0 DATABASE_URL="postgres://user:pass@ep-xxx.aws.neon.tech/db?sslmode=require" docker compose up -d
-# auto init table.
-
-# 4) PROD (image build, tanpa bind mount):
-docker compose --profile prod up -d --build
-
-# Hentikan + bersihin:
-docker compose down -v     # (-v = hapus volume db + data)
-```
-
-**API base buat browser** = `PUBLIC_API_BASE_URL` (default `http://127.0.0.1:8077`) supaya client-side fetch ke container backend via port host. Untuk akses dari jaringan lain, ubah `PUBLIC_API_BASE_URL` → `docker compose up -d` (dev) atau `docker compose --profile prod up -d --build` (prod).
-
-| File | Untuk apa |
+| Page | Controls |
 |---|---|
-| `docker-compose.yml` | default `backend`+`frontend` **dev (hot reload)**; profile `prod` utk image produksi; profile `db` utk postgres+seeder |
-| `backend/Dockerfile.dev` | python:3.12-slim + deps; `uvicorn --reload` (bind-mount `backend/app`) |
-| `backend/Dockerfile` | python:3.12-slim multi-stage (deps→runtime slim) — **prod** |
-| `frontend/Dockerfile.dev` | node:22-slim + `npm ci`; `vite dev` (bind-mount `frontend`, node_modules dari image) — **dev** |
-| `frontend/Dockerfile` | node:22-slim multi-stage (`npm ci`→`vite build`→run `build/index.js`) — **prod** |
-| `.dockerignore` | context = repo root; exclude Next lama/venv/build agar image ramping |
+| `/dashboard/hub/surge` | Peak amplification and flexible capacity sliders, plus seasonal, festival, and Double 12 presets |
+| `/dashboard/hub/capacity` | Demand level (trough, normal, peak) rescaling volume and overflow per hub |
+| `/dashboard/hub/load-balance` | Three thresholds (critical, safe floor, maximum divert fraction) and a recomputed diversion plan |
+| `/dashboard/hub/forecast` | Three event-strength sliders recomputing projection and fluctuation |
+| `/dashboard/kurir/cod-cash` | COD share slider plus four digital interventions |
+| `/dashboard/kurir/cod-intel` | COD share, parcels per shift, and intervention toggles |
+| `/dashboard/kurir/tasks` and `/dashboard/kurir/pudo` | Route density slider and route picker (fastest or most efficient) |
+| `/dashboard/pusat/pnl` | Sustainability lever toggle rebuilding the cost-to-sales bridge |
+| `/dashboard/pusat/expansion` | Capex per hub and target utilisation sliders |
+| `/dashboard/pusat/roi` | Four levers (COD, EV, fuel, complaints) recomputing ROI, capex, and payback |
+| `/dashboard/pusat/digital-twin` | Direct against Regional Sponsor parameters with sensitivity |
+| `/dashboard/data/multimodal` | Cost, emissions, and speed weights plus an SLA limit |
+| `/dashboard/data/fleet` | EV adoption slider changing the fleet mix and emissions |
+| `/dashboard/data/address` | Free-text address with fuzzy matching to three candidates |
+| `/dashboard/data/ev-sites`, `/dashboard/data/complaint` | Corridor and coverage parameters with recomputed projections |
 
-## Cara pakai lokal klasik (tanpa Docker, sama seperti sebelumnya)
+### Maps
 
-| Service | Command | URL |
+Leaflet maps with collapsible legends: hub utilisation (search, filter by tier and region, sortable hub list, detail cards), delivery simulation (route, telemetry, PUDO drop), and address disambiguation (three ambiguous candidates for the same street name). Partner PUDO points carry real coordinates and addresses from OpenStreetMap.
+
+### Cross-role order flow
+
+A simulated order journey stored in `localStorage`: buyer checkout, courier handling (packed, picked up, transit, out for delivery, delivered), slot confirmation, COD cash, PUDO diversion, buyer tracking. While a parcel is out for delivery, the buyer can tell the courier whether they are at home and the courier records arrival status, both visible to the other side (the case's root cause: couriers waiting without certainty).
+
+### Bilingual interface
+
+English without a prefix, Indonesian under `/id`, with a switcher in the top bar, landing page, and login. The choice is stored in a cookie and survives navigation.
+
+### Nigi AI assistant
+
+Optional LLM (configured through environment variables) with a deterministic fallback: a curated QA bank, role greeting, and insights from the case data. Without API credentials the assistant still answers, and it never crashes.
+
+### Material 3 responsive shell
+
+Bottom navigation (compact), navigation rail (medium), and full sidebar (expanded), backed by a working light and dark theme.
+
+---
+
+## Tech stack
+
+| Layer | Technology | Version |
 |---|---|---|
-| FastAPI backend | `cd backend && SKIP_DB=1 .venv/bin/uvicorn app.main:app --port 8077` | http://127.0.0.1:8077 |
-| SvelteKit frontend node build | `cd frontend && npm run build && PORT=3179 HOST=127.0.0.1 node build/index.js` | http://127.0.0.1:3179 |
+| Frontend framework | SvelteKit (adapter-node) | 2.70.3 |
+| UI library | Svelte (runes) | 5.57.0 |
+| Build tool | Vite | 8.2.2 |
+| Language | TypeScript | 6.0 |
+| Styling | Tailwind CSS (v4) | 4.3.3 |
+| i18n | `@inlang/paraglide-js` | 2.25.4 |
+| Charts | Apache ECharts | 6.1.0 |
+| Maps | Leaflet | 1.9.4 |
+| Motion | GSAP | 3.15.0 |
+| Fonts | Fontsource variable: Fraunces, Inter, JetBrains Mono, Space Grotesk | 5.3.0 |
+| Backend | FastAPI + Uvicorn | 0.115+ / 0.30+ |
+| Runtime | Python (images use 3.12-slim, verified locally on 3.14.4) | 3.12+ |
+| Data / ML | pandas, numpy, statsmodels, scikit-learn, rapidfuzz | see `backend/requirements.txt` |
+| Persistence (optional) | SQLModel + psycopg (PostgreSQL / Neon) | 0.0.16+ / 3.2+ |
+| LLM client (optional) | openai SDK | 1.40+ |
+| Tooling | ESLint, Prettier, ruff, playwright-core, Make, Docker Compose | see `frontend/package.json` |
 
-First time / on changes: `cd frontend && npm run build` (uses vite).
-
-## Cara pakai via Makefile (paling ringkas)
-
-Semua perintah umum dibungkus di `Makefile` (lihat daftar lengkap: `make` atau `make help`).
-Tidak butuh dependensi tambahan — cukup `make` + python/node (Docker hanya untuk target `docker:*`).
-
-```bash
-make install        # install deps backend (venv+pip) + frontend (npm ci)
-make check          # GERBANG HIJAU: uji backend (307 assert) + typecheck frontend
-make verify         # check + validasi shared/data-kas.json
-make dev            # info menjalankan dev lokal (2 terminal)
-make backend-dev    # FastAPI --reload          → http://127.0.0.1:8077  (/docs)
-make frontend-dev   # SvelteKit vite HMR        → http://127.0.0.1:3177
-
-make up             # Docker DEV + hot reload   → FE :3077 · API :8077
-make up-db          # Docker + Postgres lokal (auto-seed)
-make up-refresh     # rebuild + recreate dgn volume anon fresh (setelah ubah package.json/lock)
-make up-prod        # Docker PROD (image build)
-make down           # hentikan container
-make down-v         # hentikan + hapus volume (bersih)
-
-make test           # uji backend + typecheck
-make lint           # lint backend (ruff) + frontend (eslint)
-make e2e            # uji e2e (butuh FE+BE jalan; lihat `make e2e-help`)
-make clean          # bersihkan cache & artefak build
-make version        # versi python/node/npm/ruff/docker
-```
-
-Semua target didokumentasikan lewat komentar `##`; `make help` mencetaknya. Override port/host tanpa
-mengubah file, mis. `make backend-dev BACKEND_PORT=9077` atau `make e2e E2E_BASE=http://127.0.0.1:3077`.
-
-### Troubleshooting Docker
-
-- **`Cannot find module '<pkg>' ... imported from '/app/src/...'` setelah menambah dependency.**
-  Container DEV menyimpan `node_modules` di *volume anonim* yang dibuat dari image lama; `make up`
-  (atau `docker compose up -d --build`) hanya me-rebuild image **tanpa** me-refresh volume tsb,
-  sehingga dependency baru tak terpasang. Perbaikan: jalankan `make up-refresh`
-  (setara `docker compose up -d --build --force-recreate --renew-anon-volumes`).
-
-## Project structure (monorepo)
-
-```
-omnigistic/
-├── shared/data-kas.json         ← Single source of truth (48 QA · 41 suggested · 23 hub · 6 root-causes)
-├── backend/                     ← FastAPI (Python 3.14), uvicorn app.main:app:8077
-│   ├── app/
-│   │   ├── main.py              ← FastAPI + Swagger /docs
-│   │   ├── api/                 ← /api (chat, qa, insights, data, ml-routes)
-│   │   ├── ml/                  ← forecast.py (musiman+tren OLS), cod_risk.py (sklearn), address_parse.py (rapidfuzz),
-│   │   │                          optimize.py (Network Optimization Engine), cod_intel.py (COD per-shift), metrics.py (turunan+rekonsiliasi)
-│   │   ├── security/            ← OWASP-aligned guard/port, port formatter.ts (scrub AI), port quota.ts, prompts (anonim)
-│   │   └── db/                  ← loader.py + seed.py + SQLModel (opsional — fallback JSON)
-│   ├── tests/run_tests.py       ← harness uji backend tanpa pytest (217 assert, TestClient)
-│   └── requirements.txt
-├── frontend/                    ← SvelteKit 2 (Svelte 5 runes), adapter-node
-│   ├── src/
-│   │   ├── app.css              ← Tailwind v4 + token sistem "Bitcoin DeFi" (dark+light, glow/grid/glass)
-│   │   ├── routes/              ← landing, login/**; dashboard (M3+role), 13+3 halaman + 3 shared
-│   │   └── lib/                 ← components (M3Nav, nigi-ai, role, drawer, chat, map), stores, charts (ECharts), api
-│   │   ├── lib/map/             ← Leaflet AddressMap (offline-tile fallback, kurir-animated)
-│   │   └── lib/charts/options.ts ← token-aware ECharts helpers
-│   └── tsconfig, svelte.config, vite
-├── docs/                        ← audit laporan (angka + audit codebase 2026-09-08)
-├── scripts/                     ← harness lokal: e2e.mjs, shot-audit/chat-evidence, redteam, ai-security-test
-├── Makefile                     ← perintah umum (install/dev/test/lint/e2e/docker/clean) — `make help`
-├── docker-compose.yml + .dockerignore   ← dev container lokal (fe :3077, be :8077, profil db opsional)
-└── .gitignore                   ← + venv, node_modules, build, __pycache__
-```
+---
 
 ## Architecture
 
-- **Data flow**: `shared/data-kas.json` → FastAPI `/api/*` + `/ml/*` (read-only JSON fallback, if Neon up, seed) → SvelteKit `onMount` `fetch(API_BASE)/data-kas.json`
-- **Nigi AI (AI)**: LLM via env `AI_API_{BASE_URL,KEY,MODEL}`; tanpa key → fallback (54 QA/insights) → non-crash
-- **ML (3 model dasar)**: forecast (seasonal-index sentris + tren OLS + event-flags, backtest MAPE ~1,3%), COD-risk (sklearn LogisticRegression + data sintetik), address-parse (rapidfuzz fuzzy); label "prototipe presentasi". `/ml/sim/digital-twin` + `cod-impact` ported from TS.
-- **Mesin analitik baru** (semua punya **kontrol interaktif** — bukan preset statis):
-  - `GET|POST /ml/optimize/load-balance` — Network Optimization Engine (transportation heuristic greedy cheapest-link-first): alihkan overflow hub >65% ke hub <50% dengan kendala headroom, lantai aman 60%, maks 35%. **POST** menerima `critical`/`safe_floor`/`max_divert_frac` → pengguna menggeser ambang & rencana dihitung ulang. Output: moves, util sebelum/sesudah per hub, agregat timur.
-  - `POST /ml/cod-intel` + `GET /ml/cod-intel/scenarios` — COD Decision Intelligence: dampak per-shift kurir dari Figure 2 (138 vs 75 mnt), 4 intervensi digital, hemat menit/paket/rupiah/CO₂. Slider porsi COD & paket + checkbox intervensi.
-  - `GET|POST /ml/forecast` — Demand forecast (seasonal-index sentris + tren OLS + event-flags). **POST** menerima `horizon` + `event_scale` → simulasi "bagaimana jika" (matikan/perkuat Harbolnas atau shock TikTok).
-  - `GET /ml/metrics/{regions,financial,demand,fleet,audit}` — metrik turunan + rekonsiliasi (temuan dokumen: e-commerce Tabel 4 tertulis 641 vs hasil jumlah baris 651).
-  - `GET|POST /ml/sponsor/compare` + `GET /ml/sponsor/sensitivity` — **Direct-vs-Sponsor Comparator** (Pertanyaan 1): unit cost nasional dari Tabel 3 & 4 (Rp89.676/paket), model Direct vs Sponsor per region (capex exposure, laba HQ, skor kontrol), parameter ekuitas/biaya interaktif + uji sensitivitas.
-  - `GET|POST /ml/modalshift/optimize` + `GET /ml/modalshift/levers` — **Modal-Shift & Cost-Lever Optimizer** (Pertanyaan 6): pilih moda (darat/laut/udara) per 11 koridor dengan objektif berbobot (biaya/emisi/SLA), hemat ~16,7% biaya & ~18,4% emisi; portofolio 7 tuas pengurangan biaya + dampak sustainability.
-- **Mesin solusi tantangan kasus (baru)** — semua berbasis data kasus Table 1–4/Figure 1–2:
-  - `GET|POST /ml/sim/surge` — **Peak-Surge Stress-Test** (Pertanyaan 2): beban puncak (amplifikasi ×basis harian 3,04jt) didistribusi per pangsa beban hub → breach, spillover ke hub headroom, backlog & waktu pemulihan. Puncak musiman 1,15× → 1 hub breach (persis "Jakarta 1 overload"); Double 12 3× → 21 hub.
-  - `POST /ml/cod-cash/risk` + `GET /ml/cod-cash/scenarios` — **COD Cash-Reconciliation Risk** (Pertanyaan 3): uang kas beredar, laju human-error, biaya selisih, waktu rekonsiliasi; 4 intervensi digital → risiko turun ~80%.
-  - `GET|POST /ml/expansion/roi` — **Market-Expansion ROI** (Pertanyaan 5): kelayakan ekspansi per 23 hub (headroom × tarikan permintaan × unit-economics Table 3); ROI & payback portofolio.
-  - `GET /ml/pnl/waterfall` — **Unified Cost-Waterfall & P&L** (Pertanyaan 6): jembatan cost-to-sales dengan absorpsi biaya tetap dari pertumbuhan volume +21,4% → **31,34% → 29,40% (absorpsi) → 28,35% (7 tuas) → 26,8% (sponsor selektif)**. Biaya absolut naik karena volume naik; biaya dihindarkan Rp 17,66 T relatif terhadap skenario tanpa tindakan (Rp 11,54 T tanpa sponsor). Param `include_sponsor` (default true) mematikan lapis sponsor.
-  - `GET|POST /ml/route/plan` — **Route Intelligence** (navigasi kurir, Pertanyaan 2/3): kandidat jalur (arteri/tol/alternatif) dgn profil kepadatan berbeda; waktu tempuh memakai kurva BPR (`delay ∝ a·(v/c)^b`) → jalur tercepat & jalur terefisien (skor waktu 55% + biaya 20% + emisi 15% + keandalan 10%). POST menerima `distance_km`/`density_override`/`base_speed_kmh`.
-- **Halaman simulasi interaktif** (menggerakkan angka nyata, bukan label kosong):
-  - `/dashboard/hub/surge` — **Peak-Surge Stress-Test** (Q2): slider amplifikasi puncak & kapasitas elastis + preset (Musiman/Festival/Double 12) → breach, spillover, pemulihan.
-  - `/dashboard/kurir/cod-cash` — **COD Cash-Reconciliation Risk** (Q3): slider porsi COD + 4 intervensi digital → risiko & penghematan kas.
-  - `/dashboard/pusat/expansion` — **Market-Expansion ROI** (Q5): slider capex & target util → prioritas, ROI, payback 23 hub.
-  - `/dashboard/pusat/pnl` — **Cost-Waterfall & P&L** (Q6): toggle sustainability → jembatan cost-to-sales (baseline → absorpsi volume → 7 tuas → sponsor selektif) + rincian tuas & dampak margin.
-  - `/dashboard/kurir/tasks` & `/dashboard/kurir/pudo` — **Route Intelligence** (navigasi): peta menampilkan 3 kandidat jalur berwarna sesuai kepadatan; slider kepadatan (jam sibuk) + pemilih jalur (badge tercepat/efisien) → waktu tempuh, biaya, emisi, & skor dihitung ulang.
-  - `/dashboard/hub/capacity` — level permintaan (Lembah/Normal/Puncak) men-skala volume → jumlah hub menembus ambang & overflow dihitung ulang.
-  - `/dashboard/hub/load-balance` — 3 slider ambang (kritis/lantai/maks porsi) → POST & rencana ulang.
-  - `/dashboard/hub/forecast` — 3 slider kekuatan event → proyeksi & fluktuasi ulang.
-  - `/dashboard/pusat/roi` — 4 slider tuas (COD/EV/BBM/komplain) → ROI, capex, payback real-time.
-  - `/dashboard/data/fleet` — slider adopsi EV → bauran armada & penurunan emisi (faktor = asumsi tim, dilabel).
-  - `/dashboard/data/address` — input alamat bebas → fuzzy-match 3 kandidat + ETA.
-  - `/dashboard/data/multimodal`, `/dashboard/pusat/digital-twin`, `/dashboard/kurir/cod-intel`, `/dashboard/data/complaint`, `/dashboard/data/ev-sites` — sudah interaktif sebelumnya.
-- **Material 3 + sidebar kolaps**: bottom Navigation Bar (compact <600px) / Navigation Rail (medium 600–840px) / Sidebar penuh (expanded ≥840px). Sidebar bisa **dibuka/ditutup** (w-64 ⇄ rail ikon w-22) lewat tombol di header sidebar, hamburger di Topbar, atau pintasan **Ctrl/Cmd+B**; preferensi dipersist ke localStorage. Responsif penuh 320px–ultrawide, 0 overflow horizontal.
-- **Map**: Leaflet + 3 kandidat ambigu, path animasi + ETA menit ("Jl. Raya Jakarta-Bogor No.12") dengan Nigi AI saran. **Legenda peta lengkap & rinci** (collapsible) di 3 peta (DeliveryMap/AddressMap/HubMap): penanda, garis rute, warna jalur (kepadatan), sumber data. **Peta hub interaktif** (utilization): cari/filter tier & region, panel **daftar hub** yang bisa diurutkan (utilisasi/kapasitas/nama) dan diklik untuk fokus, kartu detail (peringkat nasional, pangsa kapasitas, headroom), ringkasan defisit beban, tombol "Semua hub" (reset view) — legenda menghitung jumlah titik PUDO secara dinamis. **Sebaran titik PUDO mitra ber-koordinat & alamat NYATA di 6 region** dari OpenStreetMap (Indomaret terdekat per kota, data © OSM/ODbL) — di-*warna per region* + ringkasan sebaran di legenda HubMap + Route Intelligence (lihat atas). Popup PUDO menampilkan alamat, region, jam, kapasitas & sumber koordinat.
-- **Alur pesanan lintas-peran (simulasi localStorage)**: Customer checkout → Kurir kelola (status: dikemas→dijemput→transit→**dalam pengantaran**→terkirim), slot, tunai COD, PUDO → Customer lacak. Saat **dalam pengantaran**: **pembeli memberi tahu kurir apakah ia di rumah/tidak** (pemberitahuan sebelum kurir tiba) & **kurir mencatat status kehadiran** saat tiba — saling terlihat (mencegah kurir menunggu tanpa kepastian, akar masalah COD kasus).
-
-## Sistem Desain — "Bitcoin DeFi"
-
-Seluruh UI memakai satu sistem desain yang **dipusatkan di token** (`frontend/src/app.css`),
-dengan **dua tema lengkap** (terang + gelap) lewat toggle.
-
-- **Palet (gelap)**: True Void `#030304` · Bitcoin Orange `#F7931A` · Burnt Orange `#EA580C` · Digital Gold `#FFD600` · Stardust `#94A3B8`; border ultra-tipis `rgba(255,255,255,.1)`; bayangan **berwarna** (orange/gold), bukan hitam. Terang = permukaan hampir putih + aksen orange/gold yang sama (toggle tetap bermakna).
-- **Tipografi**: Space Grotesk (heading) · Inter (body) · JetBrains Mono (data/label teknis, uppercase).
-- **Utility khas** (`app.css`): `glow-orange`/`glow-gold`, `glass`, `bg-grid`/`bg-grid-sm`, `text-gradient`, `ambient-glow`, `animate-float`/`animate-pulse-glow`, `spin-slow`, `btn-primary`.
-- **Komponen reusable** (`lib/components/ui/`): `Button` (primary/gold/outline/ghost/link), `Card` (solid/glass/outline), `Input` (border-b menyala) — memakai `cn()` + `$props()` mengikuti pola repo, **tanpa dependensi baru**.
-- **Ikon**: `Icon.svelte` internal (36+ ikon berbasis nama, stroke teknis) — **tanpa emoji** di seluruh UI.
-- **Tekstur void global**: satu layer grid blockchain + ambient glow di `dashboard/+layout` sehingga seluruh halaman mewarisi estetika tanpa duplikasi.
-- **Tema**: toggle pill sun/moon (`ThemeToggle`) — set/restore via `localStorage` + `prefers-color-scheme`, anti-flash di `app.html`; `prefers-reduced-motion` dihormati.
-
-## Env (backend/.env or .env.local di repo root, di-ignore)
-
-```
-DATABASE_URL=postgresql://user:pass@... (Neon, optional)
-AI_API_BASE_URL=https://api.provider/v1
-AI_API_KEY=...
-AI_MODEL=omnigistic-model
+```mermaid
+flowchart LR
+  subgraph Data
+    KAS[shared/data-kas.json<br/>single source of truth]
+    EN[shared/data-kas.en.json<br/>English overlay]
+  end
+  subgraph Backend["FastAPI :8077"]
+    API["/api/* (15 paths)<br/>chat, qa, insights, data"]
+    ML["/ml/* (29 paths)<br/>engines and simulations"]
+    I18N[i18n.py + catalog<br/>localize responses when lang=en]
+    SEC[security/<br/>guard, prompts, quota, formatter]
+    DB[(PostgreSQL / Neon<br/>optional)]
+  end
+  subgraph Frontend["SvelteKit :3077 (dev) / :3077 (prod image)"]
+    PG[Paraglide<br/>messages en + id]
+    UI[Pages, components, maps, charts]
+  end
+  KAS --> API
+  EN --> I18N
+  KAS --> ML
+  KAS -.-> DB
+  API --> I18N
+  ML --> I18N
+  I18N --> UI
+  SEC --> API
+  UI -->|fetch with lang| API
+  UI -->|fetch with lang| ML
 ```
 
-## Verifikasi angka → studi kasus
+- **Data flow**: `shared/data-kas.json` is the single source of truth (23 hubs, demand, QA bank, root causes, KPI targets). The backend serves it through `/api/*` and `/ml/*`; the frontend fetches it with the active language. PostgreSQL is optional and, when absent, the backend falls back to the JSON file with zero external dependencies.
+- **Backend**: 45 documented paths, 54 operations (15 under `/api`, 29 under `/ml`, plus the root). Engines live in `backend/app/ml/`, HTTP routing in `backend/app/api/`, request hardening in `backend/app/security/`, and text localisation in `backend/app/i18n.py`.
+- **Frontend**: SvelteKit with `adapter-node`. Server-rendered pages whose data arrives from the API at runtime, with a Paraglide message catalogue for both languages.
+- **i18n boundary**: engines keep returning Indonesian terms (the contract asserted by the test suite); translation happens at the API boundary, so numbers and case terms stay identical in both languages. See [Bilingual](#bilingual-english--indonesian).
 
-- Table 1 (23 hub), Table 2 (network), Table 3 (expenses), Table 4 (demand), Figure 2 (COD), Figure 1 (alamat), 6 akar 13 gejala + KPI, QA: **100% identik**.
-- **Fixes**: Sumatra region average **53,2%** (computed, bukan hardcoded 54,5), label KPI DB (bukan duplikat target), **14.180 basis / 1,41%** konsisten, QA +suggested (PUDO/EV/ROI).
-- **Temuan rekonsiliasi**: total e-commerce Tabel 4 pada dokumen tertulis **641** juta, tetapi baris dijumlahkan = **651** juta (selisih 10). Nilai kanonik = hitung baris; selisih dilaporkan via `/ml/metrics/audit` dan halaman Methodology. Total demand (1.110 juta) cocok.
-- Semua angka turunan kini dihitung oleh `backend/app/ml/metrics.py` (bukan hardcode FE) → satu sumber kebenaran.
+---
 
-## Testing
+## Project structure
+
+```
+omnigistic/
+├── shared/
+│   ├── data-kas.json              # single source of truth (never modified by i18n)
+│   └── data-kas.en.json           # English overlay, merged index by index at request time
+├── backend/
+│   ├── app/
+│   │   ├── main.py                # FastAPI app + Swagger at /docs
+│   │   ├── api/                   # chat, qa, insights, data, ml_routes, localized_route
+│   │   ├── ml/                    # 16 engine modules (see Engines and models)
+│   │   ├── security/              # guard, prompts (prompt-injection wrap), quota, formatter
+│   │   ├── db/                    # loader (JSON + overlay merge), seed, session (optional Postgres)
+│   │   ├── i18n.py                # translate() + localize() for API responses
+│   │   └── i18n_messages.json     # Indonesian engine text -> English catalogue
+│   ├── tests/run_tests.py         # self-contained test harness (no pytest), 392 assertions
+│   ├── Dockerfile                 # production image (multi-stage)
+│   └── Dockerfile.dev             # dev image (uvicorn --reload)
+├── frontend/
+│   ├── messages/{en,id}.json      # Paraglide message catalogue
+│   ├── project.inlang/            # Paraglide project settings (baseLocale en, locales en + id)
+│   ├── src/
+│   │   ├── app.css                # design tokens, two themes, utilities
+│   │   ├── hooks.server.ts        # Paraglide middleware, <html lang> handling
+│   │   ├── lib/i18n/              # bilingual content + shared label helpers
+│   │   ├── lib/components/        # shell, cards, AI assistant, maps UI
+│   │   ├── lib/map/               # Leaflet maps (delivery, hub, address, coordinate picker)
+│   │   ├── lib/stores/            # role, shop, widgets, theme
+│   │   ├── lib/shop/              # catalogue, analytics, reputation
+│   │   └── routes/                # 53 pages: landing, login, analisis, whitepaper, dashboard/*
+│   └── scripts/                   # 18 e2e suites, 3 i18n suites, utilities (see Testing)
+├── assets/                        # case figures used in this README
+├── docs/hasil-analisis-2026-09-19.md  # canonical analysis of the six challenges
+├── docker-compose.yml             # dev (default), prod and db profiles
+├── Makefile                       # canonical command entry point (make help)
+└── LICENSE                        # proprietary, all rights reserved
+```
+
+---
+
+## Getting started
+
+### Prerequisites
+
+| Requirement | Notes |
+|---|---|
+| Docker + Docker Compose | Recommended path. Nothing else is needed (Node and Python run inside the images). |
+| Node.js 22 | Only for the non-Docker frontend path |
+| Python 3.12 or newer | Only for the non-Docker backend path (verified locally on 3.14.4) |
+| GNU Make | The command wrapper used throughout this README |
+| Chromium (optional) | Only to run the browser test suites |
+
+### Path A: Docker (recommended)
 
 ```bash
-# Backend (217 assert, tanpa pytest)
-cd backend && SKIP_DB=1 .venv/bin/python tests/run_tests.py
-
-# Frontend E2E (52 assert; butuh backend :8077 + frontend dev :3077)
-cd frontend
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 E2E_API=http://127.0.0.1:8077 node scripts/e2e.mjs
-
-# Uji sidebar (15) + audit overflow responsif (8 viewport)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium node scripts/e2e-sidebar.mjs
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium SHOT_PATH=/dashboard/pusat/executive node scripts/responsive-shot.mjs
-
-# Uji accordion pesanan customer (15) + koherensi lintas role (31)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-customer-accordion.mjs
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-orders.mjs
-
-# Uji pemberitahuan kehadiran penerima dua arah saat dalam pengantaran (12)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-arrival.mjs
-
-# Uji mesin analitik interaktif (18) + widget dashboard (9)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-engines.mjs
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-widgets.mjs
-
-# Uji halaman simulasi interaktif — capacity/load-balance/forecast/roi/fleet/address (36)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-sims.mjs
-
-# Uji solusi tantangan kasus — surge/cod-cash/expansion/pnl (25)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-case.mjs
-
-# Uji Route Intelligence — jalur tercepat kurir (kepadatan + efisiensi) (9)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-route.mjs
-
-# Uji PUDO & legenda peta — koordinat asli + sebaran per-region (23)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-pudo.mjs
-
-# Uji peta lengkap halaman tugas pengantaran kurir (auto-buka + toggle + marker) (13)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-tasks-map.mjs
-
-# Uji konsistensi triase COD lintas halaman kurir (predikat & ambang tunggal) (13)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-cod-triage.mjs
-
-# Uji peta modal layar-penuh + legenda collapsible (open/close) (15)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-map-modal.mjs
-
-# Uji state error saat backend offline — 8 halaman (8)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-offline.mjs
-
-# Uji regresi audit menyeluruh — integritas angka/wording lintas-fitur (11)
-PLAYWRIGHT_CHROMIUM=/usr/bin/chromium E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-audit-fixes.mjs
+make up          # docker compose up -d --build  (dev, hot reload)
 ```
 
-Laporan audit detail: `docs/angka-audit-2026-09-07.md`, `docs/audit-penutupan-celah-2026-09-08.md`, `docs/audit-penyempurnaan-menyeluruh-2-2026-09-08.md`.
+| Service | URL | Notes |
+|---|---|---|
+| Frontend (English) | http://127.0.0.1:3077 | Vite dev server with hot reload, source bind-mounted |
+| Frontend (Indonesian) | http://127.0.0.1:3077/id | Same app, Indonesian locale |
+| API | http://127.0.0.1:8077 | FastAPI, `uvicorn --reload` |
+| API documentation | http://127.0.0.1:8077/docs | Swagger UI, usable as API evidence |
+
+Other Docker profiles:
+
+```bash
+make up-db       # add a local PostgreSQL (profile "db"), backend uses it, auto-seeded
+make up-prod     # production images (no bind mounts)
+make down        # stop containers
+make down-v      # stop and remove volumes (database data included)
+```
+
+After adding a Node dependency, run `make up-refresh`: the dev container keeps `node_modules` in an anonymous volume created from the old image, so a plain rebuild does not install the new package.
+
+### Path B: local, without Docker
+
+```bash
+make install              # backend venv + pip, frontend npm ci
+
+# terminal 1
+make backend-dev          # FastAPI on http://127.0.0.1:8077 (Swagger at /docs)
+
+# terminal 2
+make frontend-dev         # SvelteKit on http://127.0.0.1:3177
+```
+
+To serve a production build locally instead:
+
+```bash
+make build-frontend && make frontend-serve   # node build on http://127.0.0.1:3179
+```
+
+### Path C: Makefile reference
+
+`make help` prints every target. The most used ones:
+
+| Command | Purpose |
+|---|---|
+| `make install` | Install backend and frontend dependencies |
+| `make check` | Green gate: backend assertions + frontend type check |
+| `make verify` | `check` plus validation of `shared/data-kas.json` |
+| `make test` | Backend assertions + frontend type check |
+| `make lint` | ruff (backend) + ESLint (frontend) |
+| `make e2e` | Main end-to-end suite (requires frontend and backend running) |
+| `make e2e-help` | Prerequisites for the e2e suites |
+| `make routes` | List every backend endpoint from the live OpenAPI document |
+| `make status` | Git and container status summary |
+| `make clean` | Remove build caches and artefacts |
+
+Ports and host can be overridden without editing files, for example `make backend-dev BACKEND_PORT=9077` or `make frontend-dev FRONTEND_PORT=4177`.
+
+---
+
+## Configuration
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `PUBLIC_API_BASE_URL` | `http://127.0.0.1:8077` | API base used by the browser (`frontend/.env`, tracked because it is public) |
+| `SKIP_DB` | `1` in Docker dev | When `1`, all endpoints read `shared/data-kas.json` (no database needed) |
+| `DATABASE_URL` | unset | PostgreSQL or Neon connection string. When set with `SKIP_DB=0`, data comes from the database |
+| `DATA_KAS_PATH` | `/shared/data-kas.json` | Location of the canonical case data inside the container |
+| `AI_API_BASE_URL`, `AI_API_KEY`, `AI_MODEL` | unset | Optional LLM for the chat assistant. Without them the assistant uses its fallback QA bank |
+| `BACKEND_PORT`, `FRONTEND_PORT` | `8077`, `3177` | Host ports for the non-Docker path (Makefile overrides) |
+| `BACKEND_HOST`, `FRONTEND_HOST` | `127.0.0.1` | Bind host for Docker port publishing |
+
+Secrets are never committed: `backend/.env` is ignored, while `frontend/.env` is tracked on purpose because it only holds the public API URL.
+
+---
+
+## Bilingual (English / Indonesian)
+
+### Using it
+
+| Locale | URL | `<html lang>` |
+|---|---|---|
+| English (default, no prefix) | `/`, `/dashboard/pusat/pnl` | `en` |
+| Indonesian | `/id`, `/id/dashboard/pusat/pnl` | `id` |
+
+The switcher lives in the top bar (and on the landing and login pages). Switching keeps the current page, only the prefix changes, and the choice is stored in a cookie (`PARAGLIDE_LOCALE`).
+
+### How it works
+
+| Piece | Location | Role |
+|---|---|---|
+| Locale routing and cookie | `frontend/project.inlang/settings.json`, `src/hooks.server.ts`, `src/hooks.ts` | Paraglide middleware, `reroute` to de-localised paths |
+| Message catalogue | `frontend/messages/{en,id}.json` | All page and component strings, used as `m.key()` |
+| Bilingual long-form content | `frontend/src/lib/i18n/content.ts` | Landing, analysis, whitepaper and login copy for both locales |
+| Label helpers | `frontend/src/lib/i18n/labels.ts` | Role, courier and actor labels resolved at render time |
+| Backend translation | `backend/app/i18n.py`, `backend/app/i18n_messages.json` | Translates API payloads when `?lang=en` is present |
+| Case-data overlay | `shared/data-kas.en.json` | English for QA bank, suggested questions, KPI targets and insights, merged index by index |
+| Request language | `frontend/src/lib/api/index.ts` | Appends `lang=<locale>` to every API call and caches per locale |
+
+Design decisions worth knowing:
+
+1. **Engines keep returning Indonesian.** The ML modules were not modified, so the 392 backend assertions keep passing. Translation happens once, at the API boundary.
+2. **Numbers and case terms are never translated.** Names of hubs and cities, `COD`, `GC Logistics`, `ISCEA`, `PUDO`, `NPV`, `BCR`, `ROI`, `SLA`, `MAPE`, `Direct Operation`, `Regional Sponsor` and similar stay identical in both languages. This is verified automatically (see [Testing](#testing-and-verification)).
+3. **No abbreviations in interface text.** The Indonesian side writes `juta`, `miliar`, `triliun`, `ribu`, `menit`, `tahun`, `kilometer per jam` instead of `jt`, `M`, `T`, `rb`, `mnt`, `thn`, `km/j`.
+4. **Message values are evaluated at render time.** No locale-dependent module-level constants, so a server process can serve both locales without freezing the first one.
+5. **Search keywords stay Indonesian.** The QA bank's `keywords` field is matching data, not interface text, so it is intentionally left untranslated.
+
+### Adding text
+
+| Kind of text | Where to add |
+|---|---|
+| Page or component string | Add the key to **both** `frontend/messages/en.json` and `id.json`, then call `m.key()`. Parameterised: `m.key({ name })` with `{name}` in the value |
+| Landing, analysis, whitepaper, login copy | Add to both the `en` and `id` block in `lib/i18n/content.ts` |
+| Engine text (backend) | Add the Indonesian text as the key in `backend/app/i18n_messages.json` and its English value. Do not change the engine string: the test suite asserts it |
+| Case data (QA bank, KPI targets, insights) | Add the matching field at the same index in `shared/data-kas.en.json`. Never edit `shared/data-kas.json` for translation |
+
+---
+
+## Engines and models
+
+All endpoints are documented and runnable from Swagger at `/docs`. Every engine is labelled as a prototype and separates case data from team assumptions.
+
+| Engine | Endpoint | Answers | Interactive controls | Primary source |
+|---|---|---|---|---|
+| Sponsor comparator | `GET\|POST /ml/sponsor/compare` | Q1 | Equity, fee percentages, region selection, sensitivity | Tables 3 and 4 |
+| Peak-surge stress test | `GET\|POST /ml/sim/surge` | Q2 | Peak multiplier, flexible capacity, presets | Table 1 capacity, Table 4 demand |
+| Demand forecast | `GET\|POST /ml/forecast` | Q2 | Horizon, event strength (promo, TikTok shock) | Table 4 |
+| COD cash-reconciliation risk | `POST /ml/cod-cash/risk` | Q3 | COD share, four digital interventions | Table 4 volume, Figure 2 |
+| COD shift impact | `POST /ml/cod-intel` | Q3 | COD share, parcels per shift, intervention toggles | Figure 2 |
+| Predictive COD risk | `GET /ml/cod-risk/demo`, `POST /ml/cod-risk` | Q3 | Parcel attributes (value, hour, ambiguity, zone) | Synthetic training data, thresholds are team assumptions |
+| Route intelligence | `GET\|POST /ml/route/plan` | Q2, Q3 | Distance, density override, base speed | BPR delay model, team assumptions |
+| EV benefit-cost analysis | `GET /ml/ev-bca` | Q4 | Scenario, distance, escalation, Monte Carlo | Market benchmarks, BAU assumptions |
+| Fleet and emissions | `GET /ml/metrics/fleet` | Q4 | EV adoption slider (frontend) | Case fleet figures |
+| Expansion ROI | `GET\|POST /ml/expansion/roi` | Q5 | Capex per hub, target utilisation | Tables 3 and 4, Table 1 capacity |
+| Cost waterfall and P&L | `GET /ml/pnl/waterfall` | Q6 | Sustainability levers on or off | Tables 3 and 4 |
+| Modal shift optimizer | `GET\|POST /ml/modalshift/optimize` | Q6 | Mode weights, SLA limit, allowed modes | Corridor geography, team assumptions |
+| Load balancing | `GET\|POST /ml/optimize/load-balance` | Operations | Critical threshold, safe floor, maximum divert fraction | Table 1 utilisation |
+| Metrics and audit | `GET /ml/metrics/regions`, `GET /ml/metrics/financial`, `GET /ml/metrics/demand`, `GET /ml/metrics/fleet`, `GET /ml/metrics/audit` | All | Read-only | Tables 1 to 4 |
+| Address parsing | `GET\|POST /ml/address-parse` | Operations | Free-text address | Figure 1 |
+
+Honesty labels are part of the contract: text that comes from team assumptions is labelled as such in the API payload (`note`) and in the interface.
+
+---
+
+## Design system
+
+A token-driven editorial system in `frontend/src/app.css`, with two complete themes and a working toggle.
+
+- **Light theme ("editorial paper")**: warm cream background `#f6f3ec`, ink `#16140f`, emerald primary `#0f8a4d`, soft green accent `#e4f5ea`, hairline borders `rgba(22, 20, 15, 0.12)`.
+- **Dark theme ("editorial dark")**: near-black with a green undertone `#0a0d0b`, warm off-white ink `#e8e6df`, mint primary `#7fffb4`, very thin borders `rgba(232, 230, 223, 0.1)`.
+- **Copper accent** `#c98a5e` used sparingly as the secondary accent in both themes (charts, highlights, warnings).
+- **Typography**: Fraunces (editorial serif) for headings, Inter for body text, JetBrains Mono for data and technical labels. Space Grotesk remains available. All four are self-hosted through Fontsource variable fonts.
+- **Charts**: a five-colour token scale (`--chart-1` to `--chart-5`) driven by emerald, copper, and neutral tones, consumed by shared ECharts option builders.
+- **Components**: reusable `Button`, `Card`, and `Input`, plus an internal `Icon` component for interface glyphs. FontAwesome is bundled for a few decorative marks (for example the assistant sparkle), and emoji are used as compact map and telemetry markers (courier, parcel, hub, PUDO point, battery).
+- **Material 3 shell**: bottom navigation (compact), navigation rail (medium), full sidebar (expanded), collapsible with `Ctrl` or `Cmd` + `B`, preference stored in `localStorage`.
+- **Accessibility**: two themes verified, visible focus states, keyboard-operable controls, `prefers-reduced-motion` respected, and an anti-flash theme script in `app.html`.
+
+Reasons behind the main decisions: the palette separates two hierarchy levels (emerald for actions and data, copper only for attention) instead of covering the page in one accent, and the serif heading face distinguishes editorial pages (landing, analysis, whitepaper) from data-dense dashboard pages.
+
+---
+
+## Security
+
+- **Input hardening**: `backend/app/security/guard.py` inspects incoming chat text, blocks injection attempts, and `prompts.py` wraps untrusted user text before it reaches a model.
+- **Quota**: `backend/app/security/quota.py` rate-limits the assistant and reports quota status to the client instead of failing silently.
+- **Output scrubbing**: `backend/app/security/formatter.py` normalises assistant output before it is returned.
+- **No committed secrets**: `backend/.env` is ignored. `frontend/.env` is tracked on purpose and contains only the public API URL.
+- **Optional dependencies**: without `AI_*` credentials and without a database the application still runs, degrading to the curated QA bank and the JSON data file.
+- **Local only**: the stack binds to `127.0.0.1` by default. Exposing it to a network is a deliberate change of `BACKEND_HOST` or `FRONTEND_HOST`.
+
+---
+
+## Testing and verification
+
+Everything below was run on this repository and the numbers are the actual output.
+
+### Backend
+
+```bash
+make test-backend      # self-contained harness, no pytest, no server required
+```
+
+**392 assertions, all passing.** Covers every engine, the reconciliation checks, and the Indonesian response contract.
+
+### End-to-end (browser)
+
+Requires the frontend and backend running (`make up`) plus Chromium. Run one suite at a time, for example:
+
+```bash
+cd frontend
+E2E_BASE=http://127.0.0.1:3077 node scripts/e2e.mjs          # main suite, 52 checks
+E2E_LANG=en E2E_BASE=http://127.0.0.1:3077 node scripts/e2e-sidebar.mjs   # language-agnostic run
+```
+
+| Suite | Checks | Focus |
+|---|---|---|
+| `e2e.mjs` | 52 | Core flows across portals, pages, and API calls |
+| `e2e-sims.mjs` | 36 | Interactive simulations (capacity, load balance, forecast, ROI, fleet, address) |
+| `e2e-pudo.mjs` | 35 | PUDO network and map legend with real coordinates |
+| `e2e-orders.mjs` | 31 | Cross-role order coherence |
+| `e2e-case.mjs` | 25 | Challenge flows (surge, COD cash, expansion, P&L) |
+| `e2e-map-modal.mjs` | 21 | Full-screen map modal and collapsible legend |
+| `e2e-engines.mjs` | 18 | Analytics engine endpoints |
+| `e2e-delivery-sim.mjs` | 17 | Courier delivery simulation |
+| `e2e-sidebar.mjs` | 15 | Sidebar states across breakpoints, passes in both locales |
+| `e2e-customer-accordion.mjs` | 15 | Order accordion for buyers |
+| `e2e-toast.mjs` | 13 | Notification behaviour |
+| `e2e-tasks-map.mjs` | 13 | Delivery task map |
+| `e2e-cod-triage.mjs` | 13 | COD triage consistency across courier pages |
+| `e2e-audit-fixes.mjs` | 11 | Regression guard for earlier audit fixes |
+| `e2e-widgets.mjs` | 9 | Dashboard widget drawer |
+| `e2e-route.mjs` | 9 | Route intelligence corridors |
+| `e2e-arrival.mjs` | 8 | Recipient presence exchange |
+| `e2e-offline.mjs` | 8 | Error states when the API is unreachable |
+| `redteam.mjs` | security | Prompt-injection and leakage checks (reports no leak) |
+
+**349 checks across 18 passing suites** (plus security and DOM utilities).
+
+### Internationalisation
+
+```bash
+cd frontend
+node scripts/i18n-sweep.mjs              # 53 routes x 2 locales over HTTP: 106 checks
+node scripts/i18n-sweep.mjs --browser    # 53 routes rendered in Chromium: 53 checks
+node scripts/i18n-smoke.mjs              # both locales plus language switcher: 74 checks
+node scripts/i18n-parity.mjs             # identical numbers across locales: 6 canonical pages
+```
+
+The sweep checks the `lang` attribute, leftover message keys, double-escaped entities, and language leaks in both directions (Indonesian on English pages and English function words on Indonesian pages, excluding case terms). The parity script renders the six canonical pages in both locales, normalises thousand and decimal separators, and fails if any number differs.
+
+### Gates
+
+```bash
+make check     # backend assertions + frontend type check (svelte-check: 0 errors)
+make verify    # check + validate shared/data-kas.json
+```
+
+---
+
+## Numbers and provenance
+
+Derived figures are computed in `backend/app/ml/metrics.py` and exposed through `/ml/metrics/*`, so the interface never hardcodes them. Values verified against the live API and the case document:
+
+| Figure | Value | Source |
+|---|---|---|
+| Total demand 2023 | 1,110 million parcels | Table 4 rows |
+| Demand fluctuation | 34.6% (78 million in January to 105 million in April) | Table 4 |
+| TikTok Shop suspension shock | -29.8% e-commerce | Table 4 |
+| Fleet | 14,180 units (12,500 motorcycles, 280 vans, 560 trucks, 840 line-haul) | Case fleet data |
+| EV target 2026 | 200 units, 1.41% of the fleet | Case target |
+| Hub network | 23 hubs across 6 regions; Java 8 hubs at 69.4% average utilisation, Maluku and Papua 2 hubs at 30.1% | Table 1 |
+| COD route time | 138 minutes for 8 parcels against 75 minutes non-COD (5.3 km) | Figure 2 |
+| Cost to sales bridge | 31.34% (2023) to 29.40% (volume absorption) to 28.35% (seven levers) to 26.76% (selective sponsor) | Tables 3 and 4 |
+| Complaint rate | 5.5 per million parcels, target below 3 | Case KPI |
+| Reconciliation finding | Table 4 e-commerce rows sum to 651 million while the document prints 641 million (10 million gap). The row sum is treated as canonical and the gap is reported by `/ml/metrics/audit` and on the Methodology page | Case audit |
+
+Case figures are shown in the interface and in [`docs/hasil-analisis-2026-09-19.md`](docs/hasil-analisis-2026-09-19.md). Team assumptions (shares, tariffs, emission factors, model thresholds) are labelled as assumptions wherever they appear.
+
+The live audit endpoint reports these checks, all passing:
+
+- Number of hubs = 23
+- Total demand 2023 = 1,110 million parcels
+- Total e-commerce (row sum) = 651 million, the document prints 641 million
+- Total fleet = 14,180 units
+- EV target share = 1.41% of the fleet
+
+![Figure 1: the same street name in three different cities](assets/figure-1-ambiguous-addresses.png)
+
+*Figure 1 from the case: the same street name resolves to three different locations, the root of address complaints.*
+
+![Figure 2: COD against non-COD delivery time](assets/figure-2-non-cod-vs-cod.png)
+
+*Figure 2 from the case: 8 COD parcels take 138 minutes against 75 minutes for non-COD.*
+
+---
+
+## Documentation
+
+| Resource | What it contains |
+|---|---|
+| [`docs/hasil-analisis-2026-09-19.md`](docs/hasil-analisis-2026-09-19.md) | Canonical analysis of the six challenges (what, how, why) |
+| http://127.0.0.1:8077/docs | Swagger UI for all 54 backend operations, usable as API evidence |
+| `make help` | Every project command |
+| `make routes` | The endpoint list read from the live OpenAPI document |
+| `assets/` | Case figures reproduced in this README |
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `Cannot find module '<pkg>'` after adding a dependency | Dev container keeps `node_modules` in an anonymous volume built from the previous image | `make up-refresh` |
+| Pages show local or fallback data, API seems offline | Backend container not running, or the browser cannot reach `PUBLIC_API_BASE_URL` | `make ps`, then `make up`; check `PUBLIC_API_BASE_URL` |
+| Page loads but nothing is clickable | `npm run build` or `svelte-check` was executed while the dev server was serving the same tree, leaving it un-hydrated | Restart the frontend container: `docker restart omnigistic-frontend` |
+| Port already in use | Another process holds `3077` or `8077` | Override: `make frontend-dev FRONTEND_PORT=4177` or change the compose variables |
+| Browser suites fail to launch | Chromium is not installed for `playwright-core` | `npx playwright@1.63.0 install chromium`, then rerun |
+| Chat answers are generic | No LLM credentials configured | Expected: the assistant falls back to the curated QA bank. Set `AI_API_BASE_URL`, `AI_API_KEY`, `AI_MODEL` for model answers |
+
+---
+
+## Roadmap
+
+Honest state of the project:
+
+- **Deployment**: none by design. The submission is a recorded walkthrough, so the stack targets `localhost`.
+- **ML models**: forecast, COD risk, and address parsing are presentation prototypes. The COD model trains on synthetic data, and the forecast reports in-sample error, which is labelled in the interface.
+- **Database**: PostgreSQL is optional. The default path reads the JSON data file with no external dependency.
+- **Assistant**: model answers require credentials; the deterministic fallback is the shipped default.
+- **Known environment limits**: `ai-security-test.mjs` needs LLM credentials, and the browser suites need Chromium installed.
+
+---
+
+## Contributing
+
+This repository is a competition submission, so external contributions are not expected. If you work in the repository anyway:
+
+1. Create a branch, keep changes focused.
+2. Keep the gate green: `make check` (backend assertions plus type check) and, when touching the interface, the relevant e2e suite.
+3. For interface text, add both languages (see [Adding text](#adding-text)) and run the i18n suites.
+4. Commit with Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`) and stage files explicitly rather than everything at once.
+
+---
+
+## License
+
+**Proprietary, all rights reserved.** See [LICENSE](LICENSE). The repository is published for competition review; no permission is granted to use, copy, modify, or redistribute it without written consent from the author. Case materials belong to their respective owners (see below).
+
+---
+
+## Credits and attribution
+
+- **Case material**: ISCEA Global Case Competition 2026, "Delivering Promises" (GC Logistics). Case figures are reproduced in `assets/` for documentation; all case rights remain with their owners. Written by Lala Ayu Kantari and Prof. I Nyoman Pujawan, ISCEA Indonesia.
+- **Map data**: coordinates and addresses come from OpenStreetMap contributors, licensed under the Open Database License (ODbL). Map tiles are rendered by Leaflet.
+- **Open source**: SvelteKit, Svelte, Vite, Tailwind CSS, Paraglide (inlang), Apache ECharts, Leaflet, GSAP, Fontsource, FastAPI, Uvicorn, SQLModel, pandas, numpy, statsmodels, scikit-learn, rapidfuzz, and the OpenAI Python SDK.
+- **Icons and fonts**: internal SVG icon set, self-hosted variable fonts through Fontsource.
+
+---
+
+## Author
+
+**virgiawanprima** ([@b4its](https://github.com/b4its)) · virgiawanprimarizky@gmail.com
+
+Repository: https://github.com/b4its/omnigistic
