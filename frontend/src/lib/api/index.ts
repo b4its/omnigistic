@@ -382,6 +382,7 @@ export interface SponsorRegionRow {
   delta: { capexSavingPerDayIdr: number; profitDeltaPerDayIdr: number; controlLossPts: number };
   decisionScore: number;
   recommendation: string;
+  recommendationKey: "full" | "staged" | "direct";
 }
 /* ── Rencana kanonik per tantangan (analisis tim) ── */
 export interface TierPlan {

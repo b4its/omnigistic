@@ -315,10 +315,13 @@ def compare_models(
 
         if decision_score >= SPONSOR_FULL_THRESHOLD:
             recommendation = "Sponsor penuh"
+            recommendation_key = "full"
         elif decision_score >= SPONSOR_STAGED_THRESHOLD:
             recommendation = "Sponsor bertahap"
+            recommendation_key = "staged"
         else:
             recommendation = "Direct (pertahankan)"
+            recommendation_key = "direct"
 
         rows.append(
             {
@@ -346,6 +349,7 @@ def compare_models(
                 },
                 "decisionScore": decision_score,
                 "recommendation": recommendation,
+                "recommendationKey": recommendation_key,
             }
         )
 

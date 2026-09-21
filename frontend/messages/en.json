@@ -2002,5 +2002,13 @@
   "df4t1": "DATA · motorcycles dominant {pct}%",
   "df4t2": "(EV simulation {pct}%)",
   "df4t3": "(motorcycle dominant)",
-  "df4t4": "Motorcycles are {share}% of the last-mile fleet ({n} units). Target {target} EV ≈ {pct}% of {total} units."
+  "df4t4": "Motorcycles are {share}% of the last-mile fleet ({n} units). Target {target} EV ≈ {pct}% of {total} units.",
+  "dt41": "Tier",
+  "dt42": "National Unit Cost",
+  "dt43": "Sponsor recommendation",
+  "dt44": "Retain Direct",
+  "dt45": "regions",
+  "dt46": "· volume growth",
+  "dt47": "HQ equity share",
+  "dt48": "Local operating margin"
 }

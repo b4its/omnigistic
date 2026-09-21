@@ -208,6 +208,22 @@ sp_hi = client.post("/ml/sponsor/compare", json={"hq_equity": 0.8}).json()
 hi = next(r for r in sp_hi["regions"] if r["region"] == "Sumatra")
 check("ekuitas naik -> kontrol naik", hi["sponsor"]["controlScore"] > lo["sponsor"]["controlScore"], f"{lo['sponsor']['controlScore']}->{hi['sponsor']['controlScore']}")
 
+print("== 5b-2. Lokalisasi payload sponsor (ID default, EN via ?lang=en) ==")
+# ID default: istilah kanonik dipertahankan apa adanya.
+check("ID: rekomendasi kanonik", sp["regions"][0]["recommendation"] in ("Sponsor penuh", "Sponsor bertahap", "Direct (pertahankan)"), sp["regions"][0]["recommendation"])
+check("ID: guardrail kanonik", sp["tierPlan"]["guardrails"][0]["guardrail"] == "SLA on-time", sp["tierPlan"]["guardrails"][0]["guardrail"])
+sp_en = _get("/ml/sponsor/compare?lang=en")
+en_rec = {r["recommendationKey"]: r["recommendation"] for r in sp_en["regions"]}
+check("EN: label rekomendasi diterjemahkan", set(en_rec.values()) <= {"Full sponsor", "Phased sponsor", "Direct (retain)"}, str(sorted(set(en_rec.values()))))
+check("EN: kunci rekomendasi stabil", set(en_rec) <= {"full", "staged", "direct"}, str(sorted(en_rec)))
+check("EN: guardrail diterjemahkan", sp_en["tierPlan"]["guardrails"][0]["guardrail"] == "On-time SLA", sp_en["tierPlan"]["guardrails"][0]["guardrail"])
+check("EN: engine diterjemahkan", sp_en["tierPlan"]["engine"] == "Sponsor Tier Plan (3 tiers, based on Tables 1 & 3)", sp_en["tierPlan"]["engine"])
+check("EN: strategicNote diterjemahkan", "stays Direct" in sp_en["tierPlan"]["strategicNote"], sp_en["tierPlan"]["strategicNote"][:60])
+check("EN: note diterjemahkan", "full sponsor" in sp_en["tierPlan"]["note"].lower(), sp_en["tierPlan"]["note"][:60])
+check("EN: tidak ada sisa 'Tingkat'", "Tingkat" not in sp_en["tierPlan"]["engine"], sp_en["tierPlan"]["engine"])
+check("EN: kunci rekomendasi ada di ID juga", {r["recommendationKey"] for r in sp["regions"]} <= {"full", "staged", "direct"})
+check("EN: region tetap sama", [r["region"] for r in sp_en["regions"]] == [r["region"] for r in sp["regions"]])
+
 print("== 5c. Modal-Shift & Cost-Lever (Pertanyaan 6) ==")
 ms = _get("/ml/modalshift/optimize")
 check("11 koridor diproses", ms["summary"]["routes"] == 11, str(ms["summary"]["routes"]))

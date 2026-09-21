@@ -338,6 +338,14 @@
   "Udara (belly/cargo, mitra)": "Air (belly or cargo, partner)",
   "Aktifkan portofolio non-e-commerce (B2B, dokumen, cold chain).": "Activate the non-e-commerce portfolio (B2B, documents, cold chain).",
   "Kapasitas menganggur": "Idle capacity",
-  "Kurir telah tiba di titik tujuan! Siap serah terima paket.": "The courier has arrived at the destination. Ready for parcel handover."
+  "Kurir telah tiba di titik tujuan! Siap serah terima paket.": "The courier has arrived at the destination. Ready for parcel handover.",
+  "Sponsor penuh": "Full sponsor",
+  "Sponsor bertahap": "Phased sponsor",
+  "Direct (pertahankan)": "Direct (retain)",
+  "SLA on-time": "On-time SLA",
+  "Tarif pelanggan": "Customer tariff",
+  "Standar outlet": "Outlet standards",
+  "Sponsor Tier Plan (3 tingkat, basis Table 1 & 3)": "Sponsor Tier Plan (3 tiers, based on Tables 1 & 3)",
+  "sensitivity (hqEquity sweep)": "sensitivity (hqEquity sweep)"
  }
 }

@@ -2002,5 +2002,13 @@
   "df4t1": "DATA · motor dominan {pct}%",
   "df4t2": "(simulasi EV {pct}%)",
   "df4t3": "(motor dominan)",
-  "df4t4": "Motor {share}% dari armada last-mile ({n} unit). Target {target} EV ≈ {pct}% dari {total} unit."
+  "df4t4": "Motor {share}% dari armada last-mile ({n} unit). Target {target} EV ≈ {pct}% dari {total} unit.",
+  "dt41": "Tingkat",
+  "dt42": "Unit Cost Nasional",
+  "dt43": "Rekomendasi Sponsor",
+  "dt44": "Pertahankan Direct",
+  "dt45": "region",
+  "dt46": "· pertumbuhan volume",
+  "dt47": "Porsi ekuitas HQ",
+  "dt48": "Margin operasional lokal"
 }

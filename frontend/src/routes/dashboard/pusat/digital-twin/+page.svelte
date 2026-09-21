@@ -89,9 +89,9 @@
   );
 
   const tone: Record<string, string> = {
-    "Sponsor penuh": "bg-primary/10 text-primary",
-    "Sponsor bertahap": "bg-warning/15 text-warning-foreground",
-    "Direct (pertahankan)": "bg-muted text-muted-foreground"
+    full: "bg-primary/10 text-primary",
+    staged: "bg-warning/15 text-warning-foreground",
+    direct: "bg-muted text-muted-foreground"
   };
 </script>
 
@@ -115,7 +115,7 @@
       <div class="mt-4 grid gap-3 sm:grid-cols-3">
         {#each res.tierPlan.tiers as t (t.tier)}
           <div class="rounded-xl border border-border p-3">
-            <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Tingkat {t.tier}</p>
+            <p class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{m.dt41()} {t.tier}</p>
             <p class="mt-1 text-sm font-medium">{t.model}</p>
             <p class="mt-1 text-xs text-muted-foreground">
               {t.hubCount} {m.dt3f2()} {numId(t.volumeSharePct, 1)}%{#if t.feePct !== null} · fee {numId(t.feePct, 0)}%{/if}
@@ -154,14 +154,14 @@
           {/each}
         </ul>
       </div>
-      <p class="mt-3 text-xs text-muted-foreground">{m.dt3f3()} {numId(res.tierPlan.gcCostRatioPct, 2)}% · pertumbuhan volume {numId(res.tierPlan.volumeGrowthPct, 1)}%.</p>
+      <p class="mt-3 text-xs text-muted-foreground">{m.dt3f3()} {numId(res.tierPlan.gcCostRatioPct, 2)}% {m.dt46()} {numId(res.tierPlan.volumeGrowthPct, 1)}%.</p>
     </div>
 
     <!-- Basis & ringkasan -->
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <MetricCard label="Unit Cost Nasional" value={rp(res.nationalBasis.unitCostIdr)} sub={m.dt3t1({ trillion: res.nationalBasis.totalCostT, million: res.nationalBasis.parcelsM })} accent />
-      <MetricCard label="Rekomendasi Sponsor" value={`${res.summary.recommendSponsor} region`} sub={res.summary.sponsorRegions.join(", ") || "—"} />
-      <MetricCard label="Pertahankan Direct" value={`${res.summary.recommendDirect} region`} sub={res.summary.directRegions.join(", ") || "—"} />
+      <MetricCard label={m.dt42()} value={rp(res.nationalBasis.unitCostIdr)} sub={m.dt3t1({ trillion: res.nationalBasis.totalCostT, million: res.nationalBasis.parcelsM })} accent />
+      <MetricCard label={m.dt43()} value={`${res.summary.recommendSponsor} ${m.dt45()}`} sub={res.summary.sponsorRegions.join(", ") || "—"} />
+      <MetricCard label={m.dt44()} value={`${res.summary.recommendDirect} ${m.dt45()}`} sub={res.summary.directRegions.join(", ") || "—"} />
       <MetricCard label={m.dt4t1()} value={rpShort(res.summary.totalCapexSavingPerDayIdr)} sub={m.dt2t5()} />
     </div>
 
@@ -172,7 +172,7 @@
       <div class="mt-4 grid gap-5 sm:grid-cols-3">
         <label class="block">
           <span class="flex items-center justify-between text-sm font-medium"><span>{m.dt14()}</span><span class="kpi-value text-primary">{hqEquity}%</span></span>
-          <input type="range" min="10" max="90" step="5" value={hqEquity} oninput={(e) => (hqEquity = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label="Porsi ekuitas HQ" class="mt-2 w-full accent-[var(--color-primary)]" />
+          <input type="range" min="10" max="90" step="5" value={hqEquity} oninput={(e) => (hqEquity = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label={m.dt47()} class="mt-2 w-full accent-[var(--color-primary)]" />
           <span class="text-xs text-muted-foreground">{m.dt15()}</span>
         </label>
         <label class="block">
@@ -182,7 +182,7 @@
         </label>
         <label class="block">
           <span class="flex items-center justify-between text-sm font-medium"><span>{m.dt18()}</span><span class="kpi-value text-primary">{localMargin}%</span></span>
-          <input type="range" min="5" max="30" step="1" value={localMargin} oninput={(e) => (localMargin = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label="Margin operasional lokal" class="mt-2 w-full accent-[var(--color-primary)]" />
+          <input type="range" min="5" max="30" step="1" value={localMargin} oninput={(e) => (localMargin = Number((e.currentTarget as HTMLInputElement).value))} onchange={() => void recompute()} aria-label={m.dt48()} class="mt-2 w-full accent-[var(--color-primary)]" />
           <span class="text-xs text-muted-foreground">{m.dt19()}</span>
         </label>
       </div>
@@ -229,7 +229,7 @@
               <td class="px-4 py-2 text-right tabular-nums text-primary">{rpShort(r.delta.capexSavingPerDayIdr)}</td>
               <td class="px-4 py-2 text-right tabular-nums text-muted-foreground">−{r.delta.controlLossPts}</td>
               <td class="px-4 py-2">
-                <span class="inline-block rounded-md px-2 py-0.5 text-[12.5px] font-semibold {tone[r.recommendation] ?? 'bg-muted'}">{r.recommendation}</span>
+                <span class="inline-block rounded-md px-2 py-0.5 text-[12.5px] font-semibold {tone[r.recommendationKey] ?? 'bg-muted'}">{r.recommendation}</span>
               </td>
             </tr>
           {/each}
